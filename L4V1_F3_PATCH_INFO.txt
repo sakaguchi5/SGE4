@@ -1,0 +1,14 @@
+SGE4 L4V1-F3 Schema 18 Composition Contract reconstruction
+Base commit: eea6bfb3770f8879caf5e1d4000369a64ba6baf4
+Delivery: new and changed files only
+
+Purpose:
+- replace Prototype-A author-declared Import/Export authority
+- derive producer/consumer access, resource shape, minimum size, states, and synchronization from Schema 18 Leaf endpoints
+- freeze a deterministic canonical Composition Contract representation
+
+Apply at the SGE4 repository root, then run:
+  prepare_sge4_level4v1_f3.bat
+  run_sge4_level4v1_f3.bat
+
+No files are deleted.
