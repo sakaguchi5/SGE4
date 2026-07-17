@@ -1,0 +1,14 @@
+SGE4 L4V1-F2 Schema 18 Leaf Corpus
+
+Base commit:
+94c8cb8915437e25e3e0d6a3ae3c5277940114a0
+
+Scope:
+- Reconstruct the same 54 accepted source Semantic scenarios used by the Schema-17 canonical freeze.
+- Produce a separate Schema-18 Leaf corpus through the F1 Composition Leaf compiler.
+- Normalize only three Stage-K output boundaries with explicit Compute export proxies.
+- Freeze source, normalized-leaf, and endpoint-authoring identities.
+- Qualify fresh Debug and Debug/Release byte identity for all 54 emitted Packages.
+
+This patch contains new files only.
+The frozen main SemanticGpuEngine4.sln and the existing Schema-17 corpus are not modified.

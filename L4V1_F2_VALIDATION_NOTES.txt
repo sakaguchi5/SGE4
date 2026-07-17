@@ -1,0 +1,18 @@
+Validation completed before packaging:
+
+- Reconstructed base tree matches commit 94c8cb8915437e25e3e0d6a3ae3c5277940114a0 for inspected F1 and freeze files.
+- Portable C++23 compilation with -Wall -Wextra -Wpedantic -Werror passed for the corpus library and the F2 test translation unit.
+- Portable identity execution reproduced:
+  source   = 43322a7c33d2ae82bfa577c0fee79ad7b915bdd8d38655eac1631a4e81c89d9b
+  leaf     = 6ecafb273230ccf3e0ea0afe020fea440e5e26f9d4c7d330e1ef7922c5268d34
+  endpoint = 1455e539474d5433d4e827013279b3ca7e8f7a4561a8c56fb71b1d451fff057a
+- Portable cardinalities reproduced: 54 cases, 3 normalized cases, 12 endpoints, 9 ReadOnly, 3 WriteOnly.
+- Visual Studio project XML, GUIDs, references, and dependency cycles were checked structurally.
+- PowerShell/BAT encoding and line-ending contracts were checked before ZIP creation.
+
+Not executed in this Linux packaging environment:
+- Visual Studio 2026 / MSVC v145 build.
+- Windows D3DCompile execution.
+- Final Debug/Release 54-Package byte comparison.
+
+Run prepare_sge4_level4v1_f2.bat and run_sge4_level4v1_f2.bat on the target Windows environment for the authoritative F2 qualification.

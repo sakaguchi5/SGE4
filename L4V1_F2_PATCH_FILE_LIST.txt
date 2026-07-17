@@ -1,0 +1,18 @@
+All files in this patch are new relative to commit 94c8cb8915437e25e3e0d6a3ae3c5277940114a0.
+
+NEW  27A_Schema18LeafCorpus/27A_Schema18LeafCorpus.vcxproj
+NEW  27A_Schema18LeafCorpus/Schema18LeafCorpus.cpp
+NEW  27A_Schema18LeafCorpus/Schema18LeafCorpus.h
+NEW  46B_Schema18LeafCorpusTests/46B_Schema18LeafCorpusTests.vcxproj
+NEW  46B_Schema18LeafCorpusTests/main.cpp
+NEW  SemanticGpuEngine4_Level4v1_F2.sln
+NEW  Prepare-Level4v1F2.ps1
+NEW  prepare_sge4_level4v1_f2.bat
+NEW  run_sge4_level4v1_f2.bat
+NEW  tests/Run-Level4v1F2.ps1
+NEW  tests/Verify-Level4v1F2Boundaries.ps1
+NEW  docs/L4V1-F2_SCHEMA18_LEAF_CORPUS_JA.md
+NEW  L4V1_F2_PATCH_INFO.txt
+NEW  L4V1_F2_PATCH_FILE_LIST.txt
+NEW  L4V1_F2_DELETIONS.txt
+NEW  L4V1_F2_VALIDATION_NOTES.txt

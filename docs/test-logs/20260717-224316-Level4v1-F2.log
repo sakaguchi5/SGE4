@@ -1,0 +1,62 @@
+﻿SGE4 L4V1-F2 qualification
+Started=2026-07-17T22:43:16.0508244+09:00
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
+SGE4 dependency boundary check passed. Projects: 58, references: 436.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\Verify-Level4v1F1Boundaries.ps1
+L4V1-F1 dependency and authority boundaries passed.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\Verify-Level4v1F2Boundaries.ps1
+L4V1-F2 dependency, corpus, and freeze boundaries passed.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
+SGE4 script contract verification passed. Scripts: 40.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
+SOURCE_MANIFEST verification passed. Files: 258.
+> "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln /m /nologo /t:Build /p:Configuration=Debug /p:Platform=x64
+2026/07/17 22:43:20 にビルドを開始しました。
+
+     1>ノード 1 上のプロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (Build ターゲット)。
+     1>ValidateSolutionConfiguration:
+         ソリューション構成 "Debug|x64" をビルドしています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (1) は、ノード 1 上に "C:\Users\sokyu\Desktop\SGE4\10A_D3D12CompositionSchema18\10A_D3D12CompositionSchema18.vcxproj" (2) をビルドしています (既定のターゲット)。
+     2>プロジェクト "C:\Users\sokyu\Desktop\SGE4\10A_D3D12CompositionSchema18\10A_D3D12CompositionSchema18.vcxproj" (2) は、ノード 1 上に "C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj" (3) をビルドしています (既定のターゲット)。
+     3>C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(468,5): error MSB8013: このプロジェクトには、Debug|Win32 の構成とプラットフォームの組み合わせが含まれていません。 [C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj]
+     3>プロジェクト "C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj" (既定のターゲット) のビルドが終了しました -- 失敗。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (1) は、ノード 2 上に "C:\Users\sokyu\Desktop\SGE4\27A_Schema18LeafCorpus\27A_Schema18LeafCorpus.vcxproj" (6) をビルドしています (既定のターゲット)。
+     6>プロジェクト "C:\Users\sokyu\Desktop\SGE4\27A_Schema18LeafCorpus\27A_Schema18LeafCorpus.vcxproj" (6) は、ノード 5 上に "C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj" (10) をビルドしています (既定のターゲット)。
+    10>C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(468,5): error MSB8013: このプロジェクトには、Debug|Win32 の構成とプラットフォームの組み合わせが含まれていません。 [C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj]
+    10>プロジェクト "C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj" (既定のターゲット) のビルドが終了しました -- 失敗。
+     6>プロジェクト "C:\Users\sokyu\Desktop\SGE4\27A_Schema18LeafCorpus\27A_Schema18LeafCorpus.vcxproj" (6) は、ノード 1 上に "C:\Users\sokyu\Desktop\SGE4\24_SliceScenarios\24_SliceScenarios.vcxproj" (8) をビルドしています (既定のターゲット)。
+     8>プロジェクト "C:\Users\sokyu\Desktop\SGE4\24_SliceScenarios\24_SliceScenarios.vcxproj" (8) は、ノード 2 上に "C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj" (13) をビルドしています (既定のターゲット)。
+    13>C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(468,5): error MSB8013: このプロジェクトには、Debug|Win32 の構成とプラットフォームの組み合わせが含まれていません。 [C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj]
+    13>プロジェクト "C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj" (既定のターゲット) のビルドが終了しました -- 失敗。
+     2>プロジェクト "C:\Users\sokyu\Desktop\SGE4\10A_D3D12CompositionSchema18\10A_D3D12CompositionSchema18.vcxproj" (既定のターゲット) のビルドが終了しました -- 失敗。
+     8>プロジェクト "C:\Users\sokyu\Desktop\SGE4\24_SliceScenarios\24_SliceScenarios.vcxproj" (既定のターゲット) のビルドが終了しました -- 失敗。
+     6>プロジェクト "C:\Users\sokyu\Desktop\SGE4\27A_Schema18LeafCorpus\27A_Schema18LeafCorpus.vcxproj" (既定のターゲット) のビルドが終了しました -- 失敗。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (Build ターゲット) のビルドが終了しました -- 失敗。
+
+ビルドに失敗しました。
+
+       "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (Build ターゲット) (1) ->
+       "C:\Users\sokyu\Desktop\SGE4\10A_D3D12CompositionSchema18\10A_D3D12CompositionSchema18.vcxproj" (既定のターゲット) (2) ->
+       "C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj" (既定のターゲット) (3) ->
+       (PrepareForBuild ターゲット) -> 
+         C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(468,5): error MSB8013: このプロジェクトには、Debug|Win32 の構成とプラットフォームの組み合わせが含まれていません。 [C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj]
+
+
+       "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (Build ターゲット) (1) ->
+       "C:\Users\sokyu\Desktop\SGE4\27A_Schema18LeafCorpus\27A_Schema18LeafCorpus.vcxproj" (既定のターゲット) (6) ->
+       "C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj" (既定のターゲット) (10) ->
+         C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(468,5): error MSB8013: このプロジェクトには、Debug|Win32 の構成とプラットフォームの組み合わせが含まれていません。 [C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj]
+
+
+       "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln" (Build ターゲット) (1) ->
+       "C:\Users\sokyu\Desktop\SGE4\27A_Schema18LeafCorpus\27A_Schema18LeafCorpus.vcxproj" (既定のターゲット) (6) ->
+       "C:\Users\sokyu\Desktop\SGE4\24_SliceScenarios\24_SliceScenarios.vcxproj" (既定のターゲット) (8) ->
+       "C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj" (既定のターゲット) (13) ->
+         C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppBuild.targets(468,5): error MSB8013: このプロジェクトには、Debug|Win32 の構成とプラットフォームの組み合わせが含まれていません。 [C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj]
+
+    0 個の警告
+    3 エラー
+
+経過時間 00:00:01.21
+FAILED
+Command failed with exit code 1: "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4_Level4v1_F2.sln /m /nologo /t:Build /p:Configuration=Debug /p:Platform=x64
