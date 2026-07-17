@@ -32,15 +32,26 @@ foreach ($file in $scriptFiles) {
     $relative = Get-RelativePath $file.FullName
     $bytes = [IO.File]::ReadAllBytes($file.FullName)
 
-    if ($bytes.Length -lt 3 -or
-        $bytes[0] -ne 0xEF -or
-        $bytes[1] -ne 0xBB -or
-        $bytes[2] -ne 0xBF) {
-        Add-Failure "$relative must be UTF-8 with BOM for Windows PowerShell 5.1 compatibility."
-        continue
-    }
+    $hasUtf8Bom = $bytes.Length -ge 3 -and
+        $bytes[0] -eq 0xEF -and
+        $bytes[1] -eq 0xBB -and
+        $bytes[2] -eq 0xBF
 
-    $text = [Text.Encoding]::UTF8.GetString($bytes, 3, $bytes.Length - 3)
+    if ($file.Extension -eq '.ps1') {
+        if (-not $hasUtf8Bom) {
+            Add-Failure "$relative must be UTF-8 with BOM for Windows PowerShell 5.1 compatibility."
+            continue
+        }
+        $text = [Text.Encoding]::UTF8.GetString($bytes, 3, $bytes.Length - 3)
+    }
+    else {
+        # cmd.exe may expose a UTF-8 BOM as visible CP932 characters before
+        # '@echo off'. Accept historical BOM scripts, but also permit BOM-less
+        # UTF-8/ASCII entry-point BAT/CMD files.
+        $offset = 0
+        if ($hasUtf8Bom) { $offset = 3 }
+        $text = [Text.Encoding]::UTF8.GetString($bytes, $offset, $bytes.Length - $offset)
+    }
     if ($text.IndexOf([char]0) -ge 0) {
         Add-Failure "$relative contains a NUL character."
     }

@@ -1,0 +1,31 @@
+SGE4 L4V1-F1 validation notes
+
+Base:
+  Git commit e3730feb90be8690e1cc4e9d937c7c3b11899f89
+
+Validated in the artifact-generation environment:
+  - The two changed Core files were based on files whose SHA-256 matched the
+    e3730f SOURCE_MANIFEST entries before modification.
+  - XML parsing succeeded for all three new vcxproj files.
+  - All ProjectReference paths and GUIDs matched the referenced projects in the
+    merged source tree used for static validation.
+  - The project-reference graph was acyclic.
+  - g++ C++23 -Wall -Wextra -Wpedantic -Werror syntax checks passed for:
+      09_FrozenPackageCore/PackageReader.cpp
+      10A_D3D12CompositionSchema18/D3D12CompositionEncoding18.cpp
+      12A_CompositionLeafCompiler/CompositionLeafCompiler.cpp
+      46A_Schema18CompositionInterfaceTests/main.cpp
+  - Portable object compilation and linking succeeded for Foundation,
+    FrozenPackageCore, D3D12PackageSchema, and D3D12CompositionSchema18.
+  - Stable endpoint key smoke execution succeeded.
+  - New PowerShell and batch files satisfy the repository's BOM/CRLF conventions.
+
+Not executable in the artifact-generation environment:
+  - Visual Studio 2026 / MSVC v145 build
+  - Windows PowerShell 5.1 parser execution
+  - D3DCompile-based Schema-17 and Schema-18 qualification executable
+  - Debug/Release byte-identity run
+
+Run on Windows after extraction:
+  1. prepare_sge4_level4v1_f1.bat
+  2. run_sge4_level4v1_f1.bat

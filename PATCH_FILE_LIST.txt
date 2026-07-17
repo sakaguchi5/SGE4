@@ -1,0 +1,34 @@
+Base commit:
+  e3730feb90be8690e1cc4e9d937c7c3b11899f89
+
+Changed files included in this ZIP:
+  09_FrozenPackageCore/PackageFormat.h
+  09_FrozenPackageCore/PackageReader.cpp
+
+New files included in this ZIP:
+  10A_D3D12CompositionSchema18/10A_D3D12CompositionSchema18.vcxproj
+  10A_D3D12CompositionSchema18/D3D12CompositionEncoding18.cpp
+  10A_D3D12CompositionSchema18/D3D12CompositionEncoding18.h
+  10A_D3D12CompositionSchema18/D3D12CompositionSchema18.h
+  12A_CompositionLeafCompiler/12A_CompositionLeafCompiler.vcxproj
+  12A_CompositionLeafCompiler/CompositionLeafCompiler.cpp
+  12A_CompositionLeafCompiler/CompositionLeafCompiler.h
+  46A_Schema18CompositionInterfaceTests/46A_Schema18CompositionInterfaceTests.vcxproj
+  46A_Schema18CompositionInterfaceTests/main.cpp
+  PATCH_INFO.txt
+  PATCH_FILE_LIST.txt
+  Prepare-Level4v1F1.ps1
+  SemanticGpuEngine4_Level4v1_F1.sln
+  docs/L4V1-F1_SCHEMA18_COMPOSITION_INTERFACE_JA.md
+  prepare_sge4_level4v1_f1.bat
+  run_sge4_level4v1_f1.bat
+  tests/Run-Level4v1F1.ps1
+  tests/Verify-Level4v1F1Boundaries.ps1
+  VALIDATION_NOTES.txt
+  DELETIONS.txt
+
+Generated changed file after prepare_sge4_level4v1_f1.bat:
+  SOURCE_MANIFEST.sha256
+
+Files to delete:
+  None
