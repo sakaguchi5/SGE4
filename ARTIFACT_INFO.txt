@@ -1,0 +1,57 @@
+Semantic GPU Engine 4 - Stage 0D Source v0.1 Fix01
+
+Purpose:
+  Independent Level-4 foundation derived from the completed SGE3 reference.
+  Stage 0D preserves the Level-3 proof surface while separating candidate
+  planning from Package lowering and final compile orchestration.
+
+Solution:
+  SemanticGpuEngine4.sln
+
+Production namespace:
+  sge4
+
+Normal compiler boundary:
+  SemanticGraph -> CompilationInput -> CandidatePlanner
+  -> SGE4Compiler -> fresh VerifyAndSeal -> D3D12PackageLowering
+  -> FrozenExecutablePackage
+
+Stage-0C invariant:
+  08_CandidatePlanner has no Package Schema, Package Lowering, Runtime, or
+  Backend dependency. 12_SGE4Compiler is the sole normal Package orchestrator.
+
+Compatibility boundary:
+  28_SGE3CompatibilityOracle is test-only. It retains the historical canonical
+  path and a separate SGE3-style planning orchestration for Stage-0D regression
+  comparison. Only 33_PlanningTests may reference it.
+
+Wire ABI:
+  SGE2PKG / D3D12 Schema 17 / Runtime 17, intentionally retained.
+
+Authoritative Windows qualification:
+  cmd /c .\run_sge4_stage0d.bat
+
+Construction-environment validation:
+  See docs\Validation_Status.md. Windows/D3D12 Stage-0D qualification is not
+  claimed until the command above passes on Visual Studio 2026 / v145.
+
+Input SGE3.zip SHA-256:
+  e2aeebca46d983f75db13e31ec65dd4f284760b8f3ddf525b02e09ae98451e93
+
+
+## Stage 0D Freeze correction
+
+The generation-specific manifest identity is separated from the frozen SGE3 semantic-contract identity. Semantic corpus digests now remain generation-neutral for SGE3-to-SGE4 non-regression, while emitted SGE4 manifests retain an SGE4-specific identity. The frozen expected digest remains `43322a7c33d2ae82bfa577c0fee79ad7b915bdd8d38655eac1631a4e81c89d9b`; it was not replaced by the accidental generation-dependent digest.
+
+Tiered test operation:
+  tests\run_dev.bat         - daily non-GPU development checks
+  tests\run_gate.bat        - pre-commit Debug integration gate
+  tests\run_regression.bat  - full Debug regression with WARP and corpus
+  tests\run_freeze.bat      - formal Debug/Release fresh-process freeze
+
+Domain-specific suites:
+  Architecture, Semantic, Planning, Authority, Package, Runtime, Frontend,
+  Corpus, and Adversarial.
+
+Operations manual:
+  tests\OPERATIONS_GUIDE_JA.md
