@@ -1,0 +1,34 @@
+﻿SGE4 tiered test run
+Suite=Freeze
+Configuration=Debug
+Started=2026-07-17T16:04:47.4628527+09:00
+
+========================================================================
+Formal Stage 0D freeze qualification
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\run_sge4_stage0d.bat"
+Verifying SGE4 architecture, scripts, and frozen source inventory...
+SGE4 script contract verification passed. Scripts: 28.
+
+========================================================================
+Architectural dependency checks
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
+SGE4 dependency boundary check passed. Projects: 44, references: 286.
+
+========================================================================
+Script syntax and encoding checks
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
+SGE4 script contract verification passed. Scripts: 28.
+
+========================================================================
+Frozen source inventory check
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
+SGE4 test suite failed: Architecture (Debug)
+Get-FileHash : The term 'Get-FileHash' is not recognized as the name of a cmdle
+Log: C:\Users\sokyu\Desktop\SGE4\docs\test-logs\20260717-160448-Architecture-Debug.log
+SGE4 Stage 0D qualification failed.
+SGE4 test suite failed: Freeze (Debug)
+Command failed with exit code 1: "C:\Users\sokyu\Desktop\SGE4\run_sge4_stage0d.bat"

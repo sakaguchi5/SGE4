@@ -17,6 +17,17 @@ function Get-RelativePath([string]$FullName) {
     return Normalize-RelativePath ($FullName.Substring($root.Length).TrimStart('\', '/'))
 }
 
+function Get-Sha256Hex([string]$Path) {
+    $stream = [IO.File]::OpenRead($Path)
+    try {
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try { $digest = $sha.ComputeHash($stream) }
+        finally { $sha.Dispose() }
+    }
+    finally { $stream.Dispose() }
+    return ([BitConverter]::ToString($digest)).Replace('-', '').ToLowerInvariant()
+}
+
 function Test-ManifestExcludedPath([string]$RelativePath) {
     return ($RelativePath -eq 'SOURCE_MANIFEST.sha256' -or
             $RelativePath -like 'build/*' -or
@@ -40,9 +51,7 @@ foreach ($file in Get-ChildItem -Path $root -Recurse -File) {
         throw "Duplicate normalized file path: $relative"
     }
 
-    $digests[$relative] = (
-        Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName
-    ).Hash.ToLowerInvariant()
+    $digests[$relative] = Get-Sha256Hex $file.FullName
 }
 
 $relativePaths = [string[]]@($digests.Keys)

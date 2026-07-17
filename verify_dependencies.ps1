@@ -113,12 +113,33 @@ Assert-NoForbiddenDependency '14_D3D12Backend' $sourceSide
 Assert-NoForbiddenDependency '15_PlatformWin32' $sourceSide
 Assert-NoForbiddenDependency '36_D3D12ReadbackTests' $sourceSide
 Assert-NoForbiddenDependency '50_Launcher' $sourceSide
+Assert-NoForbiddenDependency '16_CompositionContract' ($sourceSide + $runtimeSide + @('17_LinkPlanModel','18_LinkPlanVerifier','19_PackageLinker','29_CompositionRuntime'))
+Assert-NoForbiddenDependency '17_LinkPlanModel' ($sourceSide + $runtimeSide + @('18_LinkPlanVerifier','19_PackageLinker','29_CompositionRuntime'))
+Assert-NoForbiddenDependency '18_LinkPlanVerifier' ($sourceSide + $runtimeSide + @('19_PackageLinker','29_CompositionRuntime'))
+Assert-NoForbiddenDependency '19_PackageLinker' ($sourceSide + $runtimeSide + @('29_CompositionRuntime'))
+Assert-NoForbiddenDependency '29_CompositionRuntime' $sourceSide
 
 Assert-DirectReferences '14_D3D12Backend' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema','13_PackageRuntime')
 Assert-DirectReferences '13_PackageRuntime' @('00_Foundation','09_FrozenPackageCore')
 Assert-DirectReferences '05A_CompilationInput' @('00_Foundation','02_SemanticModel','04_SemanticAnalysis','05_TargetContract')
 Assert-DirectReferences '08_CandidatePlanner' @('00_Foundation','02_SemanticModel','04_SemanticAnalysis','05_TargetContract','05A_CompilationInput','06_ExecutionPlanModel','07_ExecutionPlanVerifier')
 Assert-DirectReferences '12_SGE4Compiler' @('00_Foundation','02_SemanticModel','05_TargetContract','07_ExecutionPlanVerifier','08_CandidatePlanner','11_D3D12PackageLowering')
+Assert-DirectReferences '16_CompositionContract' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema')
+Assert-DirectReferences '17_LinkPlanModel' @('00_Foundation','16_CompositionContract')
+Assert-DirectReferences '18_LinkPlanVerifier' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema','16_CompositionContract','17_LinkPlanModel')
+Assert-DirectReferences '19_PackageLinker' @('00_Foundation','09_FrozenPackageCore','16_CompositionContract','17_LinkPlanModel','18_LinkPlanVerifier')
+Assert-DirectReferences '29_CompositionRuntime' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema','13_PackageRuntime','14_D3D12Backend','16_CompositionContract','17_LinkPlanModel','18_LinkPlanVerifier','19_PackageLinker')
+
+# Level 4 v1 runtime consumes only a verifier-sealed Frozen Composition. It may
+# decode and execute that artifact, but must never propose or recompute LinkPlanIR.
+$compositionRuntimeFiles = Get-ChildItem -Path (Join-Path $root '29_CompositionRuntime') -Recurse -File |
+    Where-Object { $_.Extension -in '.h','.cpp' }
+foreach ($source in $compositionRuntimeFiles) {
+    $text = Get-Content -Raw -LiteralPath $source.FullName
+    if ($text -match 'ProposeLinkPlan|ComputeLinkPlanIdentity|PackageLinker\.h') {
+        throw "CompositionRuntime leaked Link planning authority: $($source.FullName)"
+    }
+}
 
 $frontendIsolation = @{
     '21_ClassicalFrontend' = @('22_SdfFrontend','23_PgaFrontend')

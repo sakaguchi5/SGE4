@@ -36,6 +36,14 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "14_D3D12Backend", "14_D3D12
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "15_PlatformWin32", "15_PlatformWin32\15_PlatformWin32.vcxproj", "{EF8D7E7E-D8FE-54F2-9A57-E8B9C76A5593}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "16_CompositionContract", "16_CompositionContract\16_CompositionContract.vcxproj", "{A16C0A11-4B10-4A16-9010-000000000016}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "17_LinkPlanModel", "17_LinkPlanModel\17_LinkPlanModel.vcxproj", "{A17C0A11-4B10-4A17-9010-000000000017}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "18_LinkPlanVerifier", "18_LinkPlanVerifier\18_LinkPlanVerifier.vcxproj", "{A18C0A11-4B10-4A18-9010-000000000018}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "19_PackageLinker", "19_PackageLinker\19_PackageLinker.vcxproj", "{A19C0A11-4B10-4A19-9010-000000000019}"
+EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "20_ExperimentDomain", "20_ExperimentDomain\20_ExperimentDomain.vcxproj", "{4611B9AB-C7DA-54E9-9169-B12EF9AF01B4}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "21_ClassicalFrontend", "21_ClassicalFrontend\21_ClassicalFrontend.vcxproj", "{2B81B5B9-F8A5-5ADC-8E6D-73EDB15AFCFC}"
@@ -53,6 +61,8 @@ EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "27_RuntimeScenarios", "27_RuntimeScenarios\27_RuntimeScenarios.vcxproj", "{FC0C156B-956B-5A05-B0ED-23B78B892735}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "28_SGE3CompatibilityOracle", "28_SGE3CompatibilityOracle\28_SGE3CompatibilityOracle.vcxproj", "{BF765DCD-2802-5EE5-880B-6490855DDEB4}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "29_CompositionRuntime", "29_CompositionRuntime\29_CompositionRuntime.vcxproj", "{A29C0A11-4B10-4A29-9010-000000000029}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "30_SemanticContractTests", "30_SemanticContractTests\30_SemanticContractTests.vcxproj", "{89043E7B-24BD-55AA-9040-5602F4A26912}"
 EndProject
@@ -86,6 +96,14 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "44_CanonicalFreezeTests", "
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "45_PlannedRuntimeTests", "45_PlannedRuntimeTests\45_PlannedRuntimeTests.vcxproj", "{11EB6339-9397-53D2-8535-B5EBFE525020}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "46_CompositionContractTests", "46_CompositionContractTests\46_CompositionContractTests.vcxproj", "{A46C0A11-4B10-4A46-9010-000000000046}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "47_LinkPlanningTests", "47_LinkPlanningTests\47_LinkPlanningTests.vcxproj", "{A47C0A11-4B10-4A47-9010-000000000047}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "48_LinkAuthorityTests", "48_LinkAuthorityTests\48_LinkAuthorityTests.vcxproj", "{A48C0A11-4B10-4A48-9010-000000000048}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "49_CompositionRuntimeTests", "49_CompositionRuntimeTests\49_CompositionRuntimeTests.vcxproj", "{A49C0A11-4B10-4A49-9010-000000000049}"
+EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "50_Launcher", "50_Launcher\50_Launcher.vcxproj", "{8F1A7AAE-F969-5DE1-AF02-F47BD5721019}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "51_PackageCompiler", "51_PackageCompiler\51_PackageCompiler.vcxproj", "{9714A9F2-9002-52A3-B1F0-376D2D82D4FD}"
@@ -96,6 +114,42 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A29C0A11-4B10-4A29-9010-000000000029}.Debug|x64.ActiveCfg = Debug|x64
+		{A29C0A11-4B10-4A29-9010-000000000029}.Debug|x64.Build.0 = Debug|x64
+		{A29C0A11-4B10-4A29-9010-000000000029}.Release|x64.ActiveCfg = Release|x64
+		{A29C0A11-4B10-4A29-9010-000000000029}.Release|x64.Build.0 = Release|x64
+		{A46C0A11-4B10-4A46-9010-000000000046}.Debug|x64.ActiveCfg = Debug|x64
+		{A46C0A11-4B10-4A46-9010-000000000046}.Debug|x64.Build.0 = Debug|x64
+		{A46C0A11-4B10-4A46-9010-000000000046}.Release|x64.ActiveCfg = Release|x64
+		{A46C0A11-4B10-4A46-9010-000000000046}.Release|x64.Build.0 = Release|x64
+		{A47C0A11-4B10-4A47-9010-000000000047}.Debug|x64.ActiveCfg = Debug|x64
+		{A47C0A11-4B10-4A47-9010-000000000047}.Debug|x64.Build.0 = Debug|x64
+		{A47C0A11-4B10-4A47-9010-000000000047}.Release|x64.ActiveCfg = Release|x64
+		{A47C0A11-4B10-4A47-9010-000000000047}.Release|x64.Build.0 = Release|x64
+		{A48C0A11-4B10-4A48-9010-000000000048}.Debug|x64.ActiveCfg = Debug|x64
+		{A48C0A11-4B10-4A48-9010-000000000048}.Debug|x64.Build.0 = Debug|x64
+		{A48C0A11-4B10-4A48-9010-000000000048}.Release|x64.ActiveCfg = Release|x64
+		{A48C0A11-4B10-4A48-9010-000000000048}.Release|x64.Build.0 = Release|x64
+		{A49C0A11-4B10-4A49-9010-000000000049}.Debug|x64.ActiveCfg = Debug|x64
+		{A49C0A11-4B10-4A49-9010-000000000049}.Debug|x64.Build.0 = Debug|x64
+		{A49C0A11-4B10-4A49-9010-000000000049}.Release|x64.ActiveCfg = Release|x64
+		{A49C0A11-4B10-4A49-9010-000000000049}.Release|x64.Build.0 = Release|x64
+		{A16C0A11-4B10-4A16-9010-000000000016}.Debug|x64.ActiveCfg = Debug|x64
+		{A16C0A11-4B10-4A16-9010-000000000016}.Debug|x64.Build.0 = Debug|x64
+		{A16C0A11-4B10-4A16-9010-000000000016}.Release|x64.ActiveCfg = Release|x64
+		{A16C0A11-4B10-4A16-9010-000000000016}.Release|x64.Build.0 = Release|x64
+		{A17C0A11-4B10-4A17-9010-000000000017}.Debug|x64.ActiveCfg = Debug|x64
+		{A17C0A11-4B10-4A17-9010-000000000017}.Debug|x64.Build.0 = Debug|x64
+		{A17C0A11-4B10-4A17-9010-000000000017}.Release|x64.ActiveCfg = Release|x64
+		{A17C0A11-4B10-4A17-9010-000000000017}.Release|x64.Build.0 = Release|x64
+		{A18C0A11-4B10-4A18-9010-000000000018}.Debug|x64.ActiveCfg = Debug|x64
+		{A18C0A11-4B10-4A18-9010-000000000018}.Debug|x64.Build.0 = Debug|x64
+		{A18C0A11-4B10-4A18-9010-000000000018}.Release|x64.ActiveCfg = Release|x64
+		{A18C0A11-4B10-4A18-9010-000000000018}.Release|x64.Build.0 = Release|x64
+		{A19C0A11-4B10-4A19-9010-000000000019}.Debug|x64.ActiveCfg = Debug|x64
+		{A19C0A11-4B10-4A19-9010-000000000019}.Debug|x64.Build.0 = Debug|x64
+		{A19C0A11-4B10-4A19-9010-000000000019}.Release|x64.ActiveCfg = Release|x64
+		{A19C0A11-4B10-4A19-9010-000000000019}.Release|x64.Build.0 = Release|x64
 		{30960D57-0983-50E3-8847-AA3E9961FA22}.Debug|x64.ActiveCfg = Debug|x64
 		{30960D57-0983-50E3-8847-AA3E9961FA22}.Debug|x64.Build.0 = Debug|x64
 		{30960D57-0983-50E3-8847-AA3E9961FA22}.Release|x64.ActiveCfg = Release|x64

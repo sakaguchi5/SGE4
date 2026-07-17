@@ -129,6 +129,14 @@ public:
     virtual ~IPackageInstance() = default;
 };
 
+class IPackageDeviceDomain
+{
+public:
+    virtual ~IPackageDeviceDomain() = default;
+    [[nodiscard]] virtual std::uint64_t DeviceEpoch() const noexcept = 0;
+    [[nodiscard]] virtual DeviceRuntimeState State() const noexcept = 0;
+};
+
 class IPackageExecutor
 {
 public:

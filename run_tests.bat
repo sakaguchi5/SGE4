@@ -28,6 +28,9 @@ for %%T in (
   43_GeneratedGraphTests
   38_AdversarialBoundaryTests
   44_CanonicalFreezeTests
+  46_CompositionContractTests
+  47_LinkPlanningTests
+  48_LinkAuthorityTests
 ) do (
   echo Running %%T...
   "%BIN%\%%T.exe"
@@ -48,6 +51,10 @@ if errorlevel 1 goto :failed
 
 echo Running 45_PlannedRuntimeTests with verified alternative Plans...
 "%BIN%\45_PlannedRuntimeTests.exe"
+if errorlevel 1 goto :failed
+
+echo Running 49_CompositionRuntimeTests with WARP shared DeviceDomain and recovery...
+"%BIN%\49_CompositionRuntimeTests.exe"
 if errorlevel 1 goto :failed
 
 echo SGE4 %CONFIG% qualification passed.

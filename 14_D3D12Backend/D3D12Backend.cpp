@@ -213,6 +213,111 @@ const char* SemanticName(pkg::VertexMeaning meaning)
     }
 }
 
+class DeviceDomain final : public runtime::IPackageDeviceDomain
+{
+public:
+    explicit DeviceDomain(ExecutorOptions options) : options_(options) {}
+    [[nodiscard]] std::uint64_t DeviceEpoch() const noexcept override { return epoch_; }
+    [[nodiscard]] runtime::DeviceRuntimeState State() const noexcept override { return state_; }
+    [[nodiscard]] IDXGIFactory6* Factory() const noexcept { return factory_.Get(); }
+    [[nodiscard]] ID3D12Device* Device() const noexcept { return device_.Get(); }
+    [[nodiscard]] const LUID& AdapterLuid() const noexcept { return adapterLuid_; }
+
+    base::Result<void, runtime::RuntimeError> Initialize()
+    {
+        const auto& diagnostics = ConfigureD3D12DiagnosticsOnce(options_.enableDebugLayer);
+        UINT flags = 0;
+#if defined(_DEBUG)
+        if (options_.enableDebugLayer && diagnostics.debugLayerEnabled) flags |= DXGI_CREATE_FACTORY_DEBUG;
+#else
+        (void)diagnostics;
+#endif
+        factory_.Reset(); device_.Reset();
+        HRESULT hr = CreateDXGIFactory2(flags, IID_PPV_ARGS(&factory_));
+        if (FAILED(hr)) return base::Result<void, runtime::RuntimeError>::Failure(HResultError("domain/create-factory", hr));
+        ComPtr<IDXGIAdapter1> adapter; DXGI_ADAPTER_DESC1 selected{}; HRESULT candidateFailure = E_FAIL;
+        const auto accept = [&](ComPtr<IDXGIAdapter1> candidate)
+        {
+            if (!candidate) return false; DXGI_ADAPTER_DESC1 desc{};
+            ComPtr<ID3D12Device> candidateDevice;
+            candidateFailure = candidate->GetDesc1(&desc);
+            if (FAILED(candidateFailure)) return false;
+            candidateFailure = D3D12CreateDevice(candidate.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&candidateDevice));
+            if (FAILED(candidateFailure)) return false;
+            adapter=std::move(candidate); selected=desc; device_=std::move(candidateDevice); return true;
+        };
+        if (options_.forceWarp)
+        {
+            ComPtr<IDXGIAdapter1> warp; hr=factory_->EnumWarpAdapter(IID_PPV_ARGS(&warp));
+            if (FAILED(hr)) return base::Result<void, runtime::RuntimeError>::Failure(HResultError("domain/warp-adapter", hr));
+            if (!accept(std::move(warp))) return base::Result<void, runtime::RuntimeError>::Failure(HResultError("domain/create-warp-device", candidateFailure));
+        }
+        else
+        {
+            for (UINT index=0;;++index)
+            {
+                ComPtr<IDXGIAdapter1> candidate; hr=factory_->EnumAdapterByGpuPreference(index,DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,IID_PPV_ARGS(&candidate));
+                if (hr==DXGI_ERROR_NOT_FOUND) break; if (FAILED(hr)) continue; DXGI_ADAPTER_DESC1 desc{};
+                if (FAILED(candidate->GetDesc1(&desc)) || (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)) continue;
+                if (accept(std::move(candidate))) break;
+            }
+            if (!adapter) { ComPtr<IDXGIAdapter1> warp; if (SUCCEEDED(factory_->EnumWarpAdapter(IID_PPV_ARGS(&warp)))) accept(std::move(warp)); }
+        }
+        if (!adapter) return base::Result<void, runtime::RuntimeError>::Failure(Error("domain/no-adapter","no compatible D3D12 adapter is available"));
+        adapterLuid_=selected.AdapterLuid; state_=runtime::DeviceRuntimeState::Active;
+        return base::Result<void, runtime::RuntimeError>::Success();
+    }
+
+    base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError> Recover(runtime::DeviceRecoveryMode mode)
+    {
+        runtime::DeviceRecoveryReport report; report.previousDeviceEpoch=epoch_; report.newDeviceEpoch=epoch_; report.mode=mode;
+        report.stateBefore=state_; report.stateAfter=state_; report.forcedRemoval=mode==runtime::DeviceRecoveryMode::ForceRemovalForTest;
+        report.externalRebindRequired=true;
+        if (mode==runtime::DeviceRecoveryMode::RetryAdapterReacquisition)
+        {
+            if (state_!=runtime::DeviceRuntimeState::AwaitingAdapter)
+                return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(Error("domain/recovery-retry","DeviceDomain is not AwaitingAdapter"));
+            auto rebuilt=Initialize();
+            if(!rebuilt) { state_=runtime::DeviceRuntimeState::AwaitingAdapter; report.stateAfter=state_; return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Success(report); }
+            ++epoch_; report.newDeviceEpoch=epoch_; report.stateAfter=state_; report.adapterReacquired=true;
+            report.packageObjectsRebuilt=true; report.temporalHistoryReset=true;
+            return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Success(report);
+        }
+        if (state_!=runtime::DeviceRuntimeState::Active || !device_)
+            return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(Error("domain/recovery","DeviceDomain is not Active"));
+        if (mode==runtime::DeviceRecoveryMode::ForceRemovalForTest)
+        {
+            ComPtr<ID3D12Device5> removable; const HRESULT query=device_.As(&removable);
+            if (FAILED(query)) return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(HResultError("domain/recovery-query-device5",query,device_.Get()));
+            removable->RemoveDevice(); report.removalReason=static_cast<std::int64_t>(device_->GetDeviceRemovedReason());
+        }
+        else if (mode==runtime::DeviceRecoveryMode::RecoverDetectedLoss)
+        {
+            const HRESULT reason=device_->GetDeviceRemovedReason();
+            if (SUCCEEDED(reason)) return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(Error("domain/recovery-detected","device is not removed"));
+            report.removalReason=static_cast<std::int64_t>(reason);
+        }
+        else if (mode!=runtime::DeviceRecoveryMode::ControlledRebuild)
+            return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(Error("domain/recovery","unsupported DeviceDomain recovery mode"));
+        report.removedAdapterLuidLow=adapterLuid_.LowPart; report.removedAdapterLuidHigh=adapterLuid_.HighPart;
+        state_=runtime::DeviceRuntimeState::Lost; device_.Reset(); factory_.Reset();
+        auto rebuilt=Initialize();
+        if(!rebuilt)
+        {
+            if (mode==runtime::DeviceRecoveryMode::ControlledRebuild)
+                return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(rebuilt.Error());
+            state_=runtime::DeviceRuntimeState::AwaitingAdapter; report.stateAfter=state_;
+            return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Success(report);
+        }
+        ++epoch_; report.newDeviceEpoch=epoch_; report.stateAfter=state_; report.adapterReacquired=true; report.packageObjectsRebuilt=true;
+        report.temporalHistoryReset=true; report.externalRebindRequired=true;
+        return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Success(report);
+    }
+private:
+    ExecutorOptions options_; std::uint64_t epoch_=1; runtime::DeviceRuntimeState state_=runtime::DeviceRuntimeState::Active;
+    LUID adapterLuid_{}; ComPtr<IDXGIFactory6> factory_; ComPtr<ID3D12Device> device_;
+};
+
 class ExternalBufferResource final : public runtime::IExternalResource
 {
 public:
@@ -270,8 +375,8 @@ private:
 class Instance final : public runtime::IPackageInstance
 {
 public:
-    Instance(std::shared_ptr<const package::FrozenExecutablePackage> package, pkg::D3D12PackageView view, runtime::ISurfaceHost* surface, ExecutorOptions options)
-        : package_(std::move(package)), view_(std::move(view)), surface_(surface), options_(options) {}
+    Instance(std::shared_ptr<const package::FrozenExecutablePackage> package, pkg::D3D12PackageView view, runtime::ISurfaceHost* surface, ExecutorOptions options, DeviceDomain* domain = nullptr)
+        : package_(std::move(package)), view_(std::move(view)), surface_(surface), options_(options), domain_(domain) {}
 
     ~Instance() override
     {
@@ -283,6 +388,12 @@ public:
 
     base::Result<void, runtime::RuntimeError> Initialize()
     {
+        if (domain_)
+        {
+            if (domain_->State() != runtime::DeviceRuntimeState::Active)
+                return base::Result<void, runtime::RuntimeError>::Failure(Error("domain/load", "DeviceDomain is not Active"));
+            deviceEpoch_ = domain_->DeviceEpoch();
+        }
         auto baseObjects = CreateBaseObjects();
         if (!baseObjects) return baseObjects;
         resourceStates_.resize(view_.Resources().size());
@@ -337,6 +448,8 @@ public:
         uploadResources_.clear();
         return base::Result<void, runtime::RuntimeError>::Success();
     }
+
+    [[nodiscard]] const void* OwnerIdentity() const noexcept { return domain_ ? static_cast<const void*>(domain_) : static_cast<const void*>(this); }
 
     base::Result<ExternalBufferBinding, runtime::RuntimeError> CreateExternalBuffer(
         std::uint32_t slot,
@@ -469,9 +582,9 @@ public:
 
         TrackedState(contract.resource) = contract.requiredIncomingState;
         ExternalBufferBinding result;
-        result.resource = std::make_shared<ExternalBufferResource>(resource, this, deviceEpoch_,
+        result.resource = std::make_shared<ExternalBufferResource>(resource, OwnerIdentity(), deviceEpoch_,
             contract.minimumBytes, slot, contract.requiredIncomingState, contract.guaranteedOutgoingState);
-        result.availableAfter = std::make_shared<CompletionToken>(producerFence, 1, deviceEpoch_, this, slot);
+        result.availableAfter = std::make_shared<CompletionToken>(producerFence, 1, deviceEpoch_, OwnerIdentity(), slot);
         return base::Result<ExternalBufferBinding, runtime::RuntimeError>::Success(std::move(result));
     }
 
@@ -484,7 +597,7 @@ public:
                 Error("external/readback-device-state", "external readback requires an Active Package instance"));
         auto* native = dynamic_cast<ExternalBufferResource*>(resource.get());
         auto* token = dynamic_cast<CompletionToken*>(safeAfter.get());
-        if (!native || !token || native->Owner() != this || token->Owner() != this ||
+        if (domain_ || !native || !token || native->Owner() != OwnerIdentity() || token->Owner() != OwnerIdentity() ||
             native->DeviceEpoch() != deviceEpoch_ || token->DeviceEpoch() != deviceEpoch_ ||
             token->Slot() != native->Slot())
             return base::Result<ExternalBufferReadback, runtime::RuntimeError>::Failure(
@@ -606,7 +719,7 @@ public:
 
         native->SetCurrentState(contract.requiredIncomingState);
         TrackedState(contract.resource) = contract.requiredIncomingState;
-        result.availableAfter = std::make_shared<CompletionToken>(readbackFence, 1, deviceEpoch_, this, native->Slot());
+        result.availableAfter = std::make_shared<CompletionToken>(readbackFence, 1, deviceEpoch_, OwnerIdentity(), native->Slot());
         return base::Result<ExternalBufferReadback, runtime::RuntimeError>::Success(std::move(result));
     }
 
@@ -1012,11 +1125,11 @@ private:
                 return base::Result<void, runtime::RuntimeError>::Failure(Error("invocation", "external resource is smaller than the slot contract"));
             auto* nativeResource = dynamic_cast<ExternalBufferResource*>(binding.resource.get());
             auto* nativeToken = dynamic_cast<CompletionToken*>(binding.availableAfter.get());
-            if (!nativeResource || !nativeToken || nativeResource->Owner() != this || nativeToken->Owner() != this ||
-                nativeToken->Slot() != binding.slot)
+            if (!nativeResource || !nativeToken || nativeResource->Owner() != OwnerIdentity() || nativeToken->Owner() != OwnerIdentity() ||
+                nativeToken->Slot() != nativeResource->Slot())
                 return base::Result<void, runtime::RuntimeError>::Failure(
                     Error("invocation", "external resource/token was not created for this Package instance and slot"));
-            if (nativeResource->Slot() != binding.slot)
+            if (!domain_ && nativeResource->Slot() != binding.slot)
                 return base::Result<void, runtime::RuntimeError>::Failure(
                     Error("invocation", "external resource was created for a different Package slot"));
             externalBindings_[binding.slot] = binding;
@@ -1142,7 +1255,18 @@ private:
             ++frameBatchCounts[operation.queue.value];
         }
         const auto& diagnostics = ConfigureD3D12DiagnosticsOnce(options_.enableDebugLayer);
-
+        HRESULT hr = S_OK;
+        if (domain_)
+        {
+            factory_ = domain_->Factory();
+            device_ = domain_->Device();
+            activeAdapterLuid_ = domain_->AdapterLuid();
+            hasActiveAdapterLuid_ = true;
+            if (!factory_ || !device_)
+                return base::Result<void, runtime::RuntimeError>::Failure(Error("domain/load", "DeviceDomain native objects are unavailable"));
+        }
+        else
+        {
         UINT factoryFlags = 0;
 #if defined(_DEBUG)
         if (options_.enableDebugLayer && diagnostics.debugLayerEnabled)
@@ -1150,7 +1274,7 @@ private:
 #else
         (void)diagnostics;
 #endif
-        HRESULT hr = CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&factory_));
+        hr = CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&factory_));
         if (FAILED(hr)) return base::Result<void, runtime::RuntimeError>::Failure(HResultError("device/create-factory", hr));
 
         ComPtr<IDXGIAdapter1> adapter;
@@ -1204,6 +1328,7 @@ private:
         if (FAILED(hr)) return base::Result<void, runtime::RuntimeError>::Failure(HResultError("device/create-device", hr));
         activeAdapterLuid_ = selectedDesc.AdapterLuid;
         hasActiveAdapterLuid_ = true;
+        }
 
         for (auto& queue : queues_)
         {
@@ -1450,7 +1575,7 @@ private:
                     Error("frame/AcquireExternal", "external slot is invalid or already acquired"));
             const auto& contract = view_.ExternalSlots()[slot];
             auto* native = dynamic_cast<ExternalBufferResource*>(externalBindings_[slot].resource.get());
-            if (!native || native->Owner() != this || native->Slot() != slot ||
+            if (!native || native->Owner() != OwnerIdentity() || (!domain_ && native->Slot() != slot) ||
                 !contract.resource.IsValid() || contract.resource.value >= externalNativeResources_.size())
                 return base::Result<void, runtime::RuntimeError>::Failure(
                     Error("frame/AcquireExternal", "external resource implementation, ownership, slot, or Package resource is invalid"));
@@ -1512,7 +1637,8 @@ private:
                 !externalAcquired_[slot] || externalWaited_[slot])
                 return base::Result<void, runtime::RuntimeError>::Failure(Error("frame/WaitExternal", "external wait order, slot, or Package queue is invalid"));
             auto* token = dynamic_cast<CompletionToken*>(externalBindings_[slot].availableAfter.get());
-            if (!token || token->Owner() != this || token->Slot() != slot)
+            auto* native = dynamic_cast<ExternalBufferResource*>(externalBindings_[slot].resource.get());
+            if (!token || !native || token->Owner() != OwnerIdentity() || token->Slot() != native->Slot())
                 return base::Result<void, runtime::RuntimeError>::Failure(
                     Error("frame/WaitExternal", "external completion token implementation, ownership, or slot is invalid"));
             const HRESULT hr = NativeQueue(operation.queue)->Wait(token->NativeFence(), token->Value());
@@ -1679,12 +1805,12 @@ private:
             if (!(TrackedState(contract.resource) == contract.guaranteedOutgoingState))
                 return base::Result<void, runtime::RuntimeError>::Failure(Error("frame/ReleaseExternal", "external outgoing state does not match the package contract"));
             auto* native = dynamic_cast<ExternalBufferResource*>(externalBindings_[slot].resource.get());
-            if (!native || native->Owner() != this)
+            if (!native || native->Owner() != OwnerIdentity())
                 return base::Result<void, runtime::RuntimeError>::Failure(
                     Error("frame/ReleaseExternal", "external resource ownership is invalid"));
             native->SetCurrentState(contract.guaranteedOutgoingState);
             frameExternalReleases_.push_back({slot, std::make_shared<CompletionToken>(
-                FenceReference(signal->second.queue), signal->second.fenceValue, deviceEpoch_, this, slot)});
+                FenceReference(signal->second.queue), signal->second.fenceValue, deviceEpoch_, OwnerIdentity(), native->Slot())});
             externalReleased_[slot] = true;
             return base::Result<void, runtime::RuntimeError>::Success();
         }
@@ -2901,6 +3027,7 @@ private:
     pkg::D3D12PackageView view_;
     runtime::ISurfaceHost* surface_ = nullptr;
     ExecutorOptions options_;
+    DeviceDomain* domain_ = nullptr;
     std::uint64_t deviceEpoch_ = 1;
     runtime::DeviceRuntimeState runtimeState_ = runtime::DeviceRuntimeState::Active;
     LUID activeAdapterLuid_{};
@@ -2973,6 +3100,79 @@ base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError> 
     auto initialized = instance->Initialize();
     if (!initialized) return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(initialized.Error());
     return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Success(std::move(instance));
+}
+
+base::Result<std::unique_ptr<runtime::IPackageDeviceDomain>, runtime::RuntimeError> D3D12Backend::CreateDeviceDomain()
+{
+    auto domain=std::make_unique<DeviceDomain>(options_); auto initialized=domain->Initialize();
+    if(!initialized) return base::Result<std::unique_ptr<runtime::IPackageDeviceDomain>, runtime::RuntimeError>::Failure(initialized.Error());
+    return base::Result<std::unique_ptr<runtime::IPackageDeviceDomain>, runtime::RuntimeError>::Success(std::move(domain));
+}
+
+base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError> D3D12Backend::LoadIntoDomain(
+    runtime::IPackageDeviceDomain& domain,
+    std::shared_ptr<const package::FrozenExecutablePackage> package,
+    runtime::ISurfaceHost* surface)
+{
+    auto* nativeDomain=dynamic_cast<DeviceDomain*>(&domain);
+    if(!nativeDomain || nativeDomain->State()!=runtime::DeviceRuntimeState::Active)
+        return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(Error("domain/load","DeviceDomain belongs to another backend or is not Active"));
+    auto view=pkg::D3D12PackageView::Decode(*package);
+    if(!view) return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(Error("domain/package-decode",view.Error().message));
+    auto instance=std::make_unique<Instance>(std::move(package),std::move(view).Value(),surface,options_,nativeDomain);
+    auto initialized=instance->Initialize(); if(!initialized) return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(initialized.Error());
+    return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Success(std::move(instance));
+}
+
+base::Result<ExternalBufferBinding, runtime::RuntimeError> D3D12Backend::CreateSharedBuffer(
+    runtime::IPackageDeviceDomain& domain,
+    std::uint32_t resourceIdentity,
+    std::uint64_t sizeBytes,
+    pkg::ResourceState initialState,
+    std::span<const std::byte> initialBytes)
+{
+    auto* nativeDomain=dynamic_cast<DeviceDomain*>(&domain); if(!nativeDomain||nativeDomain->State()!=runtime::DeviceRuntimeState::Active||sizeBytes==0||initialBytes.size()>sizeBytes)
+        return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(Error("domain/shared-buffer","shared Buffer description or DeviceDomain is invalid"));
+    auto* device=nativeDomain->Device(); D3D12_RESOURCE_DESC desc{}; desc.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER; desc.Width=sizeBytes; desc.Height=1; desc.DepthOrArraySize=1; desc.MipLevels=1; desc.SampleDesc.Count=1; desc.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR; desc.Flags=D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    D3D12_HEAP_PROPERTIES defaultHeap{}; defaultHeap.Type=D3D12_HEAP_TYPE_DEFAULT; defaultHeap.CreationNodeMask=1; defaultHeap.VisibleNodeMask=1;
+    ComPtr<ID3D12Resource> resource; HRESULT hr=device->CreateCommittedResource(&defaultHeap,D3D12_HEAP_FLAG_NONE,&desc,D3D12_RESOURCE_STATE_COMMON,nullptr,IID_PPV_ARGS(&resource));
+    if(FAILED(hr)) return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/create-shared-buffer",hr,device));
+    D3D12_HEAP_PROPERTIES uploadHeap{}; uploadHeap.Type=D3D12_HEAP_TYPE_UPLOAD; uploadHeap.CreationNodeMask=1; uploadHeap.VisibleNodeMask=1; D3D12_RESOURCE_DESC uploadDesc=desc; uploadDesc.Flags=D3D12_RESOURCE_FLAG_NONE;
+    ComPtr<ID3D12Resource> upload; hr=device->CreateCommittedResource(&uploadHeap,D3D12_HEAP_FLAG_NONE,&uploadDesc,D3D12_RESOURCE_STATE_GENERIC_READ,nullptr,IID_PPV_ARGS(&upload));
+    if(FAILED(hr)) return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/create-shared-upload",hr,device));
+    void* mapped=nullptr; D3D12_RANGE noRead{0,0}; hr=upload->Map(0,&noRead,&mapped); if(FAILED(hr)) return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/map-shared-upload",hr,device));
+    std::memset(mapped,0,static_cast<std::size_t>(sizeBytes)); if(!initialBytes.empty()) std::memcpy(mapped,initialBytes.data(),initialBytes.size()); upload->Unmap(0,nullptr);
+    D3D12_COMMAND_QUEUE_DESC queueDesc{}; queueDesc.Type=D3D12_COMMAND_LIST_TYPE_DIRECT; ComPtr<ID3D12CommandQueue> queue; ComPtr<ID3D12CommandAllocator> allocator; ComPtr<ID3D12GraphicsCommandList> list; ComPtr<ID3D12Fence> fence;
+    if(FAILED(hr=device->CreateCommandQueue(&queueDesc,IID_PPV_ARGS(&queue)))||FAILED(hr=device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)))||FAILED(hr=device->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,allocator.Get(),nullptr,IID_PPV_ARGS(&list))))
+        return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/create-shared-upload-commands",hr,device));
+    auto toCopy=TransitionBarrier(resource.Get(),D3D12_RESOURCE_STATE_COMMON,D3D12_RESOURCE_STATE_COPY_DEST); list->ResourceBarrier(1,&toCopy); list->CopyBufferRegion(resource.Get(),0,upload.Get(),0,sizeBytes);
+    const auto nativeInitial=ToNativeState(initialState); if(nativeInitial!=D3D12_RESOURCE_STATE_COPY_DEST){auto toInitial=TransitionBarrier(resource.Get(),D3D12_RESOURCE_STATE_COPY_DEST,nativeInitial);list->ResourceBarrier(1,&toInitial);} if(FAILED(hr=list->Close())) return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/close-shared-upload",hr,device));
+    ID3D12CommandList* lists[]{list.Get()};queue->ExecuteCommandLists(1,lists);if(FAILED(hr=device->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)))||FAILED(hr=queue->Signal(fence.Get(),1)))return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/signal-shared-upload",hr,device));
+    HANDLE event=CreateEventW(nullptr,FALSE,FALSE,nullptr);if(!event)return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(Error("domain/shared-upload-event","CreateEventW failed"));if(fence->GetCompletedValue()<1){hr=fence->SetEventOnCompletion(1,event);if(SUCCEEDED(hr))WaitForSingleObject(event,INFINITE);}CloseHandle(event);if(FAILED(hr))return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Failure(HResultError("domain/wait-shared-upload",hr,device));
+    ExternalBufferBinding result;result.resource=std::make_shared<ExternalBufferResource>(resource,nativeDomain,nativeDomain->DeviceEpoch(),sizeBytes,resourceIdentity,initialState,initialState);result.availableAfter=std::make_shared<CompletionToken>(fence,1,nativeDomain->DeviceEpoch(),nativeDomain,resourceIdentity);
+    return base::Result<ExternalBufferBinding,runtime::RuntimeError>::Success(std::move(result));
+}
+
+base::Result<ExternalBufferReadback, runtime::RuntimeError> D3D12Backend::ReadSharedBuffer(
+    runtime::IPackageDeviceDomain& domain,
+    const std::shared_ptr<runtime::IExternalResource>& resource,
+    const std::shared_ptr<runtime::ICompletionToken>& safeAfter,
+    pkg::ResourceState restoreState)
+{
+    auto* nativeDomain=dynamic_cast<DeviceDomain*>(&domain);auto* native=dynamic_cast<ExternalBufferResource*>(resource.get());auto* token=dynamic_cast<CompletionToken*>(safeAfter.get());
+    if(!nativeDomain||!native||!token||nativeDomain->State()!=runtime::DeviceRuntimeState::Active||native->Owner()!=nativeDomain||token->Owner()!=nativeDomain||native->DeviceEpoch()!=nativeDomain->DeviceEpoch()||token->DeviceEpoch()!=nativeDomain->DeviceEpoch()||native->Slot()!=token->Slot()||native->CurrentState()!=restoreState)
+        return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(Error("domain/readback","shared resource/token owner, epoch, identity, or state is invalid"));
+    auto* device=nativeDomain->Device();D3D12_RESOURCE_DESC desc{};desc.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;desc.Width=native->SizeBytes();desc.Height=1;desc.DepthOrArraySize=1;desc.MipLevels=1;desc.SampleDesc.Count=1;desc.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;D3D12_HEAP_PROPERTIES heap{};heap.Type=D3D12_HEAP_TYPE_READBACK;heap.CreationNodeMask=1;heap.VisibleNodeMask=1;
+    ComPtr<ID3D12Resource> readback;HRESULT hr=device->CreateCommittedResource(&heap,D3D12_HEAP_FLAG_NONE,&desc,D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&readback));if(FAILED(hr))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/create-readback",hr,device));
+    D3D12_COMMAND_QUEUE_DESC queueDesc{};queueDesc.Type=D3D12_COMMAND_LIST_TYPE_DIRECT;ComPtr<ID3D12CommandQueue> queue;ComPtr<ID3D12CommandAllocator> allocator;ComPtr<ID3D12GraphicsCommandList> list;ComPtr<ID3D12Fence> fence;
+    if(FAILED(hr=device->CreateCommandQueue(&queueDesc,IID_PPV_ARGS(&queue)))||FAILED(hr=device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)))||FAILED(hr=device->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,allocator.Get(),nullptr,IID_PPV_ARGS(&list))))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/create-readback-commands",hr,device));
+    if(FAILED(hr=queue->Wait(token->NativeFence(),token->Value())))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/wait-readback-source",hr,device));const auto nativeState=ToNativeState(restoreState);if(nativeState!=D3D12_RESOURCE_STATE_COPY_SOURCE){auto toCopy=TransitionBarrier(native->Native(),nativeState,D3D12_RESOURCE_STATE_COPY_SOURCE);list->ResourceBarrier(1,&toCopy);}list->CopyBufferRegion(readback.Get(),0,native->Native(),0,native->SizeBytes());if(nativeState!=D3D12_RESOURCE_STATE_COPY_SOURCE){auto restore=TransitionBarrier(native->Native(),D3D12_RESOURCE_STATE_COPY_SOURCE,nativeState);list->ResourceBarrier(1,&restore);}if(FAILED(hr=list->Close()))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/close-readback",hr,device));ID3D12CommandList* lists[]{list.Get()};queue->ExecuteCommandLists(1,lists);if(FAILED(hr=device->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)))||FAILED(hr=queue->Signal(fence.Get(),1)))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/signal-readback",hr,device));
+    HANDLE event=CreateEventW(nullptr,FALSE,FALSE,nullptr);if(!event)return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(Error("domain/readback-event","CreateEventW failed"));if(fence->GetCompletedValue()<1){hr=fence->SetEventOnCompletion(1,event);if(SUCCEEDED(hr))WaitForSingleObject(event,INFINITE);}CloseHandle(event);if(FAILED(hr))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/wait-readback",hr,device));ExternalBufferReadback result;result.bytes.resize(static_cast<std::size_t>(native->SizeBytes()));void* mapped=nullptr;D3D12_RANGE range{0,static_cast<SIZE_T>(native->SizeBytes())};hr=readback->Map(0,&range,&mapped);if(FAILED(hr))return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Failure(HResultError("domain/map-readback",hr,device));std::memcpy(result.bytes.data(),mapped,result.bytes.size());readback->Unmap(0,nullptr);result.availableAfter=std::make_shared<CompletionToken>(fence,1,nativeDomain->DeviceEpoch(),nativeDomain,native->Slot());return base::Result<ExternalBufferReadback,runtime::RuntimeError>::Success(std::move(result));
+}
+
+base::Result<runtime::DeviceRecoveryReport,runtime::RuntimeError> D3D12Backend::RecoverDeviceDomain(runtime::IPackageDeviceDomain& domain,runtime::DeviceRecoveryMode mode)
+{
+    auto* native=dynamic_cast<DeviceDomain*>(&domain);if(!native)return base::Result<runtime::DeviceRecoveryReport,runtime::RuntimeError>::Failure(Error("domain/recovery","DeviceDomain belongs to another backend"));return native->Recover(mode);
 }
 
 base::Result<runtime::FrameSubmission, runtime::RuntimeError> D3D12Backend::Submit(

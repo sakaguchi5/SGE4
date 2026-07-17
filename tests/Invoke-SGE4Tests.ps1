@@ -3,7 +3,7 @@
     [ValidateSet(
         'Dev', 'Gate', 'Regression', 'Freeze',
         'Architecture', 'Semantic', 'Planning', 'Authority',
-        'Package', 'Runtime', 'Frontend', 'Corpus', 'Adversarial')]
+        'Package', 'Runtime', 'Composition', 'Frontend', 'Corpus', 'Adversarial')]
     [string]$Suite,
 
     [ValidateSet('Debug', 'Release')]
@@ -196,13 +196,27 @@ try {
                 '37_RuntimeSemanticTests',
                 '41_SliceExecutionTests',
                 '36_D3D12ReadbackTests',
-                '45_PlannedRuntimeTests'
+                '45_PlannedRuntimeTests',
+                '49_CompositionRuntimeTests'
             )
             $package = Generate-QualificationPackage
             Invoke-Test '37_RuntimeSemanticTests'
             Invoke-Test '41_SliceExecutionTests'
             Invoke-Test '36_D3D12ReadbackTests' @($package)
             Invoke-Test '45_PlannedRuntimeTests'
+            Invoke-Test '49_CompositionRuntimeTests'
+        }
+        'Composition' {
+            Build-Projects @(
+                '46_CompositionContractTests',
+                '47_LinkPlanningTests',
+                '48_LinkAuthorityTests',
+                '49_CompositionRuntimeTests'
+            )
+            Invoke-Test '46_CompositionContractTests'
+            Invoke-Test '47_LinkPlanningTests'
+            Invoke-Test '48_LinkAuthorityTests'
+            Invoke-Test '49_CompositionRuntimeTests'
         }
         'Frontend' {
             Build-Projects @('39_FrontendEquivalenceTests', '40_SliceScenarioTests')
@@ -249,7 +263,11 @@ try {
                 '38_AdversarialBoundaryTests',
                 '39_FrontendEquivalenceTests',
                 '40_SliceScenarioTests',
-                '42_MetamorphicTests'
+                '42_MetamorphicTests',
+                '46_CompositionContractTests',
+                '47_LinkPlanningTests',
+                '48_LinkAuthorityTests',
+                '49_CompositionRuntimeTests'
             )) {
                 Invoke-Test $name
             }
@@ -260,8 +278,8 @@ try {
             Invoke-Native (Join-Path $root 'run_tests.bat') @($Configuration)
         }
         'Freeze' {
-            Write-Section 'Formal Stage 0D freeze qualification'
-            Invoke-Native (Join-Path $root 'run_sge4_stage0d.bat')
+            Write-Section 'Formal Level 4 v1 freeze qualification'
+            Invoke-Native (Join-Path $root 'run_sge4_level4v1.bat')
         }
     }
 
