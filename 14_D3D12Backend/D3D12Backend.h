@@ -50,6 +50,39 @@ public:
         runtime::IPackageInstance& instance,
         runtime::DeviceRecoveryMode mode) override;
 
+    // Canonical Level 4 v1: one native DeviceDomain owns all Leaf devices,
+    // shared Buffers, tokens, and one monotonically increasing device epoch.
+    [[nodiscard]] base::Result<std::unique_ptr<runtime::IPackageDeviceDomain>, runtime::RuntimeError> CreateDeviceDomain();
+
+    [[nodiscard]] base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError> LoadIntoDomain(
+        runtime::IPackageDeviceDomain& domain,
+        std::shared_ptr<const package::FrozenExecutablePackage> package,
+        runtime::ISurfaceHost* surface = nullptr);
+
+    [[nodiscard]] base::Result<ExternalBufferBinding, runtime::RuntimeError> CreateSharedBuffer(
+        runtime::IPackageDeviceDomain& domain,
+        std::uint32_t resourceIdentity,
+        std::uint64_t sizeBytes,
+        package::d3d12_v13::ResourceState initialState,
+        std::span<const std::byte> initialBytes);
+
+    [[nodiscard]] base::Result<std::shared_ptr<runtime::ICompletionToken>, runtime::RuntimeError> TransitionSharedBuffer(
+        runtime::IPackageDeviceDomain& domain,
+        const std::shared_ptr<runtime::IExternalResource>& resource,
+        const std::shared_ptr<runtime::ICompletionToken>& safeAfter,
+        package::d3d12_v13::ResourceState beforeState,
+        package::d3d12_v13::ResourceState afterState);
+
+    [[nodiscard]] base::Result<ExternalBufferReadback, runtime::RuntimeError> ReadSharedBuffer(
+        runtime::IPackageDeviceDomain& domain,
+        const std::shared_ptr<runtime::IExternalResource>& resource,
+        const std::shared_ptr<runtime::ICompletionToken>& safeAfter,
+        package::d3d12_v13::ResourceState restoreState);
+
+    [[nodiscard]] base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError> RecoverDeviceDomain(
+        runtime::IPackageDeviceDomain& domain,
+        runtime::DeviceRecoveryMode mode);
+
     // Creates one executor-owned external Buffer for the exact Package slot.
     // The resource is initialized from the supplied bytes (zero-filled when the
     // span is shorter than the slot minimum) and returned in requiredIncomingState.
