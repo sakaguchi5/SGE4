@@ -11,7 +11,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
-$solution = Join-Path $root 'SemanticGpuEngine4_Level4v1_R3_R5.sln'
+$solution = Join-Path $root 'SemanticGpuEngine4.sln'
 $outputRoot = Join-Path $root 'build/tests/level4v1-r3-r5'
 $logRoot = Join-Path $root 'docs/test-logs'
 New-Item -ItemType Directory -Force -Path $outputRoot, $logRoot | Out-Null

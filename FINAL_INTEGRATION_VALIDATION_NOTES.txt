@@ -1,0 +1,11 @@
+Static validation performed before packaging:
+- main solution contains every repository vcxproj exactly once;
+- 57 unique project names, paths, and GUIDs;
+- Debug/Release ActiveCfg and Build mappings exist exactly once for every project;
+- canonical runners reference only SemanticGpuEngine4.sln;
+- script files use UTF-8 BOM and CRLF;
+- solution is ASCII with CRLF;
+- no Final Integration script invokes Git;
+- ZIP CRC verification passed.
+
+Windows MSVC v145, D3D12 WARP, actual RemoveDevice, and the final aggregate Freeze remain authoritative user-environment qualifications.

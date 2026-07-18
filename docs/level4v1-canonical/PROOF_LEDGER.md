@@ -92,9 +92,25 @@ constitutional change that explains why the old theorem is no longer required.
   frontend projects.
 - ARCH-002: Script contracts and the source inventory are qualification gates.
 
+## Final integration authority
+
+- INTEGRATION-001: Every repository C++ project is registered exactly once in
+  `SemanticGpuEngine4.sln`.
+- INTEGRATION-002: Debug and Release qualification builds use
+  `SemanticGpuEngine4.sln` as the sole canonical solution.
+- INTEGRATION-003: R1, R2, and R3-R5 canonical runners do not reference a
+  stage-specific solution.
+- INTEGRATION-004: The final integration runner executes the full R1-R5,
+  Architecture, source inventory, and Stage 0D Foundation qualification chain.
+
 ## Completion rule
 
 Level 4 v1 Canonical is complete only when every invariant above is mapped to
 at least one positive test or negative gate, Debug and Release pass on Windows
 with D3D12 WARP, actual RemoveDevice qualification passes, all Level 1-3
-regressions pass, and the final runner prints the canonical completion banner.
+regressions pass, the main solution integration checks pass, and the final
+runner prints:
+
+```text
+SGE4 LEVEL 4 V1 CANONICAL FINAL INTEGRATION FREEZE PASSED
+```

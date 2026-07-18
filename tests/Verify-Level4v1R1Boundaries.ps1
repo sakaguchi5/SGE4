@@ -95,7 +95,7 @@ foreach ($negativeGate in @(
     }
 }
 
-$solution = Get-Content -Raw -LiteralPath (Join-Path $root 'SemanticGpuEngine4_Level4v1_R1.sln') -Encoding UTF8
+$solution = Get-Content -Raw -LiteralPath (Join-Path $root 'SemanticGpuEngine4.sln') -Encoding UTF8
 foreach ($project in @('00_Foundation', '09_FrozenPackageCore', '16_FrozenCompositionArtifact', '46_CanonicalCompositionArtifactTests')) {
     if ($solution -notmatch [regex]::Escape($project)) {
         throw "R1 solution is missing project: $project"

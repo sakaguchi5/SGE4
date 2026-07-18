@@ -13,7 +13,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
-$project = Join-Path $root '47_CanonicalCompositionAuthorityTests/47_CanonicalCompositionAuthorityTests.vcxproj'
+$solution = Join-Path $root 'SemanticGpuEngine4.sln'
 $outputRoot = Join-Path $root 'build/tests/level4v1-r2'
 $logRoot = Join-Path $root 'docs/test-logs'
 New-Item -ItemType Directory -Force -Path $outputRoot, $logRoot | Out-Null
@@ -45,11 +45,9 @@ function Get-MSBuild {
 function Build-R2([string]$Configuration) {
     if ($NoBuild) { return }
     $msbuild = Get-MSBuild
-    $solutionDir = $root.TrimEnd('\', '/') + '\'
     Invoke-Native $msbuild @(
-        $project, '/m', '/nologo', '/t:Build',
-        "/p:Configuration=$Configuration", '/p:Platform=x64',
-        "/p:SolutionDir=$solutionDir")
+        $solution, '/m', '/nologo', '/t:Build',
+        "/p:Configuration=$Configuration", '/p:Platform=x64')
 }
 
 function Run-R2([string]$Configuration, [string]$OutputName) {
@@ -91,7 +89,7 @@ try {
         Invoke-Native 'powershell.exe' @(
             '-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass',
             '-File',(Join-Path $testsRoot 'Run-Level4v1R1.ps1'),
-            '-SkipFoundationFreeze')
+            '-NoBuild','-SkipFoundationFreeze')
     }
     if (-not $SkipFoundationFreeze) {
         Invoke-Native (Join-Path $testsRoot 'run_freeze.bat')

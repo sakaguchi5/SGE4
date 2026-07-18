@@ -25,7 +25,7 @@ $required = @(
     '48_CanonicalCompositionRuntimeTests/main.cpp',
     '49_CanonicalCompositionRecoveryTests/main.cpp',
     '49A_CanonicalLevel4v1FreezeTests/main.cpp',
-    'SemanticGpuEngine4_Level4v1_R3_R5.sln')
+    'SemanticGpuEngine4.sln')
 foreach ($file in $required) { [void](Read-Text $file) }
 
 # Preparation and qualification must be self-contained. No history extraction or

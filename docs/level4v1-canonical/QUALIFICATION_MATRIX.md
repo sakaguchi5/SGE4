@@ -13,6 +13,7 @@
 | Recovery | controlled whole-composition rematerialization | retry while Active, stale Resource/token, inactive Submit/Readback | actual RemoveDevice, removed-LUID exclusion, AwaitingAdapter, fresh process |
 | Determinism | Debug A == Debug B == Release | any byte mismatch fails | evidence manifests and frozen artifacts |
 | Regression | complete existing Level 1-3 suite | architecture and source inventory failures stop qualification | existing WARP and recovery observations remain accepted |
+| Integration | every `.vcxproj` appears exactly once in `SemanticGpuEngine4.sln`; Debug and Release main-solution builds | duplicate/missing project, missing configuration mapping, stage-specific runner reference | final runner executes R1-R5 and Stage 0D from the main solution build |
 
 ## Required WARP observations
 
@@ -30,14 +31,14 @@
 
 ## Completion accounting
 
-Every ledger ID must be referenced by at least one test name in the final test
-inventory. The final runner must emit a machine-readable manifest containing:
+Every ledger ID must be referenced by at least one test name or integration
+boundary check. The final qualification evidence includes:
 
-- source tree digest;
-- frozen composition digest;
-- proof-ledger revision;
+- source inventory qualification;
+- frozen composition and R5 evidence digests;
+- main solution digest;
 - Debug and Release configuration identity;
-- passed positive scenarios;
-- passed negative mutations;
+- passed positive scenarios and negative mutations;
 - recovery observations;
-- preserved Level 1-3 corpus identity.
+- preserved Level 1-3 corpus identity;
+- exact main-solution project inventory.

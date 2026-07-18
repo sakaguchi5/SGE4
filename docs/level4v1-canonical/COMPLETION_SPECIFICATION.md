@@ -5,8 +5,7 @@
 The canonical implementation proves only the following concrete capability:
 
 - embedded Schema-17 executable Leaf Packages;
-- validated composition Buffer endpoints with derived ReadOnly or WriteOnly
-  access;
+- validated composition Buffer endpoints with derived ReadOnly or WriteOnly access;
 - a finite static same-frame acyclic package graph;
 - exactly one writer and one or more readers for an internal shared Buffer;
 - composition input and composition output Buffers;
@@ -37,6 +36,7 @@ Validated executable Leaf
   -> Frozen Composition
   -> Composition Runtime
   -> Whole-composition Recovery
+  -> Main Solution Final Integration Freeze
 ```
 
 No stage may be bypassed.
@@ -79,22 +79,32 @@ AwaitingAdapter and execution is rejected until an eligible adapter exists.
 
 ### R5 - Final qualification
 
-One normal runner checks architecture, script contracts, source inventory,
-Debug and Release build, positive and negative authority tests, WARP scenarios,
-controlled and actual recovery, fresh-process determinism, and all existing
-Level 1-3 regressions.
+The canonical runner checks architecture, script contracts, source inventory,
+Debug and Release evidence, positive and negative authority tests, WARP
+scenarios, controlled and actual recovery, fresh-process determinism, and all
+existing Level 1-3 regressions.
+
+### Final Integration Freeze
+
+`SemanticGpuEngine4.sln` contains every repository C++ project exactly once.
+All canonical R1-R5 runners build or consume this main solution; stage-specific
+solutions are non-authoritative historical views. The integration runner builds
+the main solution in Debug and Release before executing the complete R1-R5 and
+Foundation qualification chain.
 
 ## Final banner
 
-Only a zero exit status and the following banner constitute completion:
+Only a zero exit status and the following banner constitute repository-level
+Level 4 v1 completion:
 
 ```text
-SGE4 LEVEL 4 V1 CANONICAL STATIC PACKAGE COMPOSITION FREEZE PASSED
+SGE4 LEVEL 4 V1 CANONICAL FINAL INTEGRATION FREEZE PASSED
 ```
 
 ## Validation honesty
 
 Repository authoring or successful static inspection is not the final proof.
 The Windows MSVC and D3D12 WARP run is authoritative for runtime qualification.
-Until that run passes, the branch is a canonical candidate rather than a
-completed Level 4 v1 release.
+An intermittent WARP device-removal observation remains under stability watch;
+it is not hidden by automatic retry and does not count as a pass unless the
+complete final runner exits successfully.
