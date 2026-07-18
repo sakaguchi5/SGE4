@@ -54,6 +54,132 @@ const package::FrozenExecutablePackage* SharedDeviceDomain::BasePackage(
     return leaf.value < basePackages_.size() ? basePackages_[leaf.value].get() : nullptr;
 }
 
+void SharedDeviceDomain::DiscardLeavesForRecovery() noexcept
+{
+    // Instance destruction retires its Package queues before native Domain loss.
+    instances_.clear();
+    basePackages_.clear();
+}
+
+base::Result<void, DomainError> SharedDeviceDomain::MaterializeLeaves()
+{
+    if (!backend_ || !domain_ || domain_->State() != runtime::DeviceRuntimeState::Active ||
+        domain_->DeviceEpoch() == 0)
+        return base::Result<void, DomainError>::Failure(
+            Error("domain/materialize", "DeviceDomain is not Active with a non-zero epoch"));
+
+    const auto& contract = artifact_.contract;
+    if (contract.leaves.empty() || contract.leaves.size() != artifact_.plan.schedule.size())
+        return base::Result<void, DomainError>::Failure(
+            Error("domain/contract", "Frozen Composition Leaf and schedule counts disagree"));
+    if (contract.presenterLeaf.IsValid() && surface_ == nullptr)
+        return base::Result<void, DomainError>::Failure(
+            Error("domain/surface", "the single presenter Leaf requires an ISurfaceHost"));
+
+    basePackages_.resize(contract.leaves.size());
+    instances_.resize(contract.leaves.size());
+    std::vector<bool> seen(contract.leaves.size(), false);
+    const auto epoch = domain_->DeviceEpoch();
+
+    for (const auto& leaf : contract.leaves)
+    {
+        if (leaf.id.value >= contract.leaves.size() || seen[leaf.id.value])
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/leaf-id", "Leaf IDs are not a canonical dense identity space"));
+        seen[leaf.id.value] = true;
+
+        auto schema18Package = package::PackageReader::Read(leaf.packageBytes);
+        if (!schema18Package)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/leaf-schema18", schema18Package.Error().message));
+        auto compositionView = package::d3d12_v18::CompositionLeafView::Decode(
+            schema18Package.Value());
+        if (!compositionView)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/leaf-interface", compositionView.Error().message));
+        auto schema17Package = package::PackageReader::Read(
+            compositionView.Value().Schema17BasePackageBytes());
+        if (!schema17Package)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/leaf-schema17", schema17Package.Error().message));
+        if (schema17Package.Value().Header().targetSchemaVersion != 17 ||
+            schema17Package.Value().Header().minimumRuntimeVersion != 17)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/leaf-schema17", "embedded execution package is not Schema 17 / Runtime 17"));
+
+        auto shared = std::make_shared<const package::FrozenExecutablePackage>(
+            std::move(schema17Package).Value());
+        runtime::ISurfaceHost* leafSurface =
+            contract.presenterLeaf.IsValid() && contract.presenterLeaf == leaf.id
+                ? surface_ : nullptr;
+        if (leaf.surfaceSlotCount != 0 && leafSurface == nullptr)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/surface", "a surface-bearing Leaf is not the authoritative presenter"));
+        if (leaf.surfaceSlotCount == 0 && leafSurface != nullptr)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/surface", "the authoritative presenter has no Surface slot"));
+
+        auto instance = backend_->LoadIntoDomain(*domain_, shared, leafSurface);
+        if (!instance)
+            return base::Result<void, DomainError>::Failure(Error(instance.Error()));
+        if (domain_->DeviceEpoch() != epoch ||
+            domain_->State() != runtime::DeviceRuntimeState::Active)
+            return base::Result<void, DomainError>::Failure(
+                Error("domain/epoch", "Leaf loading changed the shared DeviceDomain epoch or state"));
+        basePackages_[leaf.id.value] = std::move(shared);
+        instances_[leaf.id.value] = std::move(instance).Value();
+    }
+
+    if (std::ranges::any_of(instances_, [](const auto& value) { return !value; }))
+        return base::Result<void, DomainError>::Failure(
+            Error("domain/leaves", "one or more verified Leaves were not materialized"));
+    return base::Result<void, DomainError>::Success();
+}
+
+base::Result<runtime::DeviceRecoveryReport, DomainError>
+SharedDeviceDomain::Recover(runtime::DeviceRecoveryMode mode)
+{
+    if (!backend_ || !domain_)
+        return Failure<runtime::DeviceRecoveryReport>(
+            "domain/recovery", "Shared DeviceDomain is not materialized");
+
+    const auto oldEpoch = domain_->DeviceEpoch();
+    DiscardLeavesForRecovery();
+    auto recovered = backend_->RecoverDeviceDomain(*domain_, mode);
+    if (!recovered)
+        return base::Result<runtime::DeviceRecoveryReport, DomainError>::Failure(
+            Error(recovered.Error()));
+
+    auto report = std::move(recovered).Value();
+    if (report.previousDeviceEpoch != oldEpoch ||
+        report.newDeviceEpoch != domain_->DeviceEpoch() ||
+        report.stateAfter != domain_->State())
+        return Failure<runtime::DeviceRecoveryReport>(
+            "domain/recovery-report", "native DeviceDomain recovery report is inconsistent");
+
+    if (report.stateAfter != runtime::DeviceRuntimeState::Active)
+    {
+        if (report.packageObjectsRebuilt || !instances_.empty() || !basePackages_.empty())
+            return Failure<runtime::DeviceRecoveryReport>(
+                "domain/recovery-state", "inactive recovery retained or claimed rebuilt Leaf objects");
+        return base::Result<runtime::DeviceRecoveryReport, DomainError>::Success(
+            std::move(report));
+    }
+
+    if (domain_->DeviceEpoch() <= oldEpoch)
+        return Failure<runtime::DeviceRecoveryReport>(
+            "domain/recovery-epoch", "Active recovery did not advance the DeviceDomain epoch");
+    auto materialized = MaterializeLeaves();
+    if (!materialized)
+        return base::Result<runtime::DeviceRecoveryReport, DomainError>::Failure(
+            materialized.Error());
+    report.packageObjectsRebuilt = true;
+    report.temporalHistoryReset = true;
+    report.externalRebindRequired = true;
+    return base::Result<runtime::DeviceRecoveryReport, DomainError>::Success(
+        std::move(report));
+}
+
 base::Result<SharedDeviceDomain, DomainError> MaterializeSharedDeviceDomain(
     linking::FrozenCompositionArtifact artifact,
     d3d12::D3D12Backend& backend,
@@ -67,82 +193,15 @@ base::Result<SharedDeviceDomain, DomainError> MaterializeSharedDeviceDomain(
             authoritative.Error().stage + ": " + authoritative.Error().message);
     artifact = std::move(authoritative).Value();
 
-    const auto& preflightContract = artifact.contract;
-    if (preflightContract.leaves.empty() ||
-        preflightContract.leaves.size() != artifact.plan.schedule.size())
-        return Failure<SharedDeviceDomain>(
-            "domain/contract", "Frozen Composition Leaf and schedule counts disagree");
-    if (preflightContract.presenterLeaf.IsValid() && surface == nullptr)
-        return Failure<SharedDeviceDomain>(
-            "domain/surface", "the single presenter Leaf requires an ISurfaceHost");
-
-    SharedDeviceDomain loaded(std::move(artifact), backend);
-    const auto& contract = loaded.artifact_.contract;
+    SharedDeviceDomain loaded(std::move(artifact), backend, surface);
     auto domain = backend.CreateDeviceDomain();
     if (!domain)
         return base::Result<SharedDeviceDomain, DomainError>::Failure(Error(domain.Error()));
     loaded.domain_ = std::move(domain).Value();
-    const auto epoch = loaded.domain_->DeviceEpoch();
-    if (epoch == 0 || loaded.domain_->State() != runtime::DeviceRuntimeState::Active)
-        return Failure<SharedDeviceDomain>(
-            "domain/create", "new DeviceDomain is not Active with a non-zero epoch");
-
-    loaded.basePackages_.resize(contract.leaves.size());
-    loaded.instances_.resize(contract.leaves.size());
-    std::vector<bool> seen(contract.leaves.size(), false);
-
-    for (const auto& leaf : contract.leaves)
-    {
-        if (leaf.id.value >= contract.leaves.size() || seen[leaf.id.value])
-            return Failure<SharedDeviceDomain>(
-                "domain/leaf-id", "Leaf IDs are not a canonical dense identity space");
-        seen[leaf.id.value] = true;
-
-        auto schema18Package = package::PackageReader::Read(leaf.packageBytes);
-        if (!schema18Package)
-            return Failure<SharedDeviceDomain>(
-                "domain/leaf-schema18", schema18Package.Error().message);
-        auto compositionView = package::d3d12_v18::CompositionLeafView::Decode(
-            schema18Package.Value());
-        if (!compositionView)
-            return Failure<SharedDeviceDomain>(
-                "domain/leaf-interface", compositionView.Error().message);
-        auto schema17Package = package::PackageReader::Read(
-            compositionView.Value().Schema17BasePackageBytes());
-        if (!schema17Package)
-            return Failure<SharedDeviceDomain>(
-                "domain/leaf-schema17", schema17Package.Error().message);
-        if (schema17Package.Value().Header().targetSchemaVersion != 17 ||
-            schema17Package.Value().Header().minimumRuntimeVersion != 17)
-            return Failure<SharedDeviceDomain>(
-                "domain/leaf-schema17", "embedded execution package is not Schema 17 / Runtime 17");
-
-        auto shared = std::make_shared<const package::FrozenExecutablePackage>(
-            std::move(schema17Package).Value());
-        runtime::ISurfaceHost* leafSurface =
-            contract.presenterLeaf.IsValid() && contract.presenterLeaf == leaf.id
-                ? surface : nullptr;
-        if (leaf.surfaceSlotCount != 0 && leafSurface == nullptr)
-            return Failure<SharedDeviceDomain>(
-                "domain/surface", "a surface-bearing Leaf is not the authoritative presenter");
-        if (leaf.surfaceSlotCount == 0 && leafSurface != nullptr)
-            return Failure<SharedDeviceDomain>(
-                "domain/surface", "the authoritative presenter has no Surface slot");
-
-        auto instance = backend.LoadIntoDomain(*loaded.domain_, shared, leafSurface);
-        if (!instance)
-            return base::Result<SharedDeviceDomain, DomainError>::Failure(Error(instance.Error()));
-        if (loaded.domain_->DeviceEpoch() != epoch ||
-            loaded.domain_->State() != runtime::DeviceRuntimeState::Active)
-            return Failure<SharedDeviceDomain>(
-                "domain/epoch", "Leaf loading changed the shared DeviceDomain epoch or state");
-        loaded.basePackages_[leaf.id.value] = std::move(shared);
-        loaded.instances_[leaf.id.value] = std::move(instance).Value();
-    }
-
-    if (std::ranges::any_of(loaded.instances_, [](const auto& value) { return !value; }))
-        return Failure<SharedDeviceDomain>(
-            "domain/leaves", "one or more verified Leaves were not materialized");
+    auto materialized = loaded.MaterializeLeaves();
+    if (!materialized)
+        return base::Result<SharedDeviceDomain, DomainError>::Failure(
+            materialized.Error());
     return base::Result<SharedDeviceDomain, DomainError>::Success(std::move(loaded));
 }
 }

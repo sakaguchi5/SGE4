@@ -213,6 +213,7 @@ const char* SemanticName(pkg::VertexMeaning meaning)
     }
 }
 
+// SGE4 L4V1-F10-F11 DeviceDomain preserves removed-adapter exclusion across retry.
 class DeviceDomain final : public runtime::IPackageDeviceDomain
 {
 public:
@@ -242,6 +243,11 @@ public:
             ComPtr<ID3D12Device> candidateDevice;
             candidateFailure = candidate->GetDesc1(&desc);
             if (FAILED(candidateFailure)) return false;
+            if (hasExcludedAdapterLuid_ && SameLuid(desc.AdapterLuid, excludedAdapterLuid_))
+            {
+                candidateFailure = DXGI_ERROR_NOT_FOUND;
+                return false;
+            }
             candidateFailure = D3D12CreateDevice(candidate.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&candidateDevice));
             if (FAILED(candidateFailure)) return false;
             adapter=std::move(candidate); selected=desc; device_=std::move(candidateDevice); return true;
@@ -300,6 +306,11 @@ public:
         else if (mode!=runtime::DeviceRecoveryMode::ControlledRebuild)
             return base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError>::Failure(Error("domain/recovery","unsupported DeviceDomain recovery mode"));
         report.removedAdapterLuidLow=adapterLuid_.LowPart; report.removedAdapterLuidHigh=adapterLuid_.HighPart;
+        if (mode!=runtime::DeviceRecoveryMode::ControlledRebuild)
+        {
+            excludedAdapterLuid_=adapterLuid_;
+            hasExcludedAdapterLuid_=true;
+        }
         state_=runtime::DeviceRuntimeState::Lost; device_.Reset(); factory_.Reset();
         auto rebuilt=Initialize();
         if(!rebuilt)
@@ -315,7 +326,8 @@ public:
     }
 private:
     ExecutorOptions options_; std::uint64_t epoch_=1; runtime::DeviceRuntimeState state_=runtime::DeviceRuntimeState::Active;
-    LUID adapterLuid_{}; ComPtr<IDXGIFactory6> factory_; ComPtr<ID3D12Device> device_;
+    LUID adapterLuid_{}; LUID excludedAdapterLuid_{}; bool hasExcludedAdapterLuid_=false;
+    ComPtr<IDXGIFactory6> factory_; ComPtr<ID3D12Device> device_;
 };
 
 class ExternalBufferResource final : public runtime::IExternalResource

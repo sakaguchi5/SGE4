@@ -14,6 +14,7 @@
 
 namespace sge4::composition::schema18::runtime_v1
 {
+class StaticCompositionRecoveryAccess;
 struct StaticRuntimeError final
 {
     std::string stage;
@@ -88,10 +89,12 @@ private:
                             const StaticCompositionFrameInvocation&);
     friend base::Result<d3d12::ExternalBufferReadback, StaticRuntimeError>
     ReadStaticCompositionBuffer(LoadedStaticComposition&, ResourceFlowId);
+    friend class StaticCompositionRecoveryAccess;
 
     std::unique_ptr<SharedDeviceDomain> domain_;
     std::unique_ptr<SharedResourceTable> resources_;
     std::vector<std::shared_ptr<runtime::ICompletionToken>> endpointTokens_;
+    std::vector<SharedResourceInitialData> recoveryInitialResources_;
 };
 
 [[nodiscard]] base::Result<LoadedStaticComposition, StaticRuntimeError>

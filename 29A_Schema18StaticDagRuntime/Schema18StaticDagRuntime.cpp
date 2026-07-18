@@ -136,6 +136,7 @@ base::Result<LoadedStaticComposition, StaticRuntimeError> LoadStaticComposition(
             Error(resources.Error()));
 
     LoadedStaticComposition loaded;
+    loaded.recoveryInitialResources_ = input.initialResources;
     loaded.endpointTokens_.assign(
         domainOwner->Artifact().contract.endpoints.size(), nullptr);
     loaded.resources_ = std::make_unique<SharedResourceTable>(

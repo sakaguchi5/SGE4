@@ -39,9 +39,15 @@ public:
     [[nodiscard]] const runtime::IPackageInstance* Instance(LeafPackageId leaf) const noexcept;
     [[nodiscard]] const package::FrozenExecutablePackage* BasePackage(LeafPackageId leaf) const noexcept;
 
-    // Internal execution boundary used by F8/F9. Ownership remains here.
+    // Internal execution boundaries used by F8-F10. Ownership remains here.
     [[nodiscard]] d3d12::D3D12Backend& Backend() noexcept { return *backend_; }
     [[nodiscard]] runtime::IPackageDeviceDomain& NativeDomain() noexcept { return *domain_; }
+
+    // Whole-domain recovery destroys every Leaf instance before touching the
+    // native DeviceDomain. Active recovery states are then rematerialized only
+    // from the already verified Frozen Composition Artifact.
+    [[nodiscard]] base::Result<runtime::DeviceRecoveryReport, DomainError>
+    Recover(runtime::DeviceRecoveryMode mode);
 
 private:
     friend base::Result<SharedDeviceDomain, DomainError> MaterializeSharedDeviceDomain(
@@ -50,11 +56,16 @@ private:
         runtime::ISurfaceHost*);
 
     SharedDeviceDomain(linking::FrozenCompositionArtifact artifact,
-                       d3d12::D3D12Backend& backend)
-        : artifact_(std::move(artifact)), backend_(&backend) {}
+                       d3d12::D3D12Backend& backend,
+                       runtime::ISurfaceHost* surface)
+        : artifact_(std::move(artifact)), backend_(&backend), surface_(surface) {}
+
+    [[nodiscard]] base::Result<void, DomainError> MaterializeLeaves();
+    void DiscardLeavesForRecovery() noexcept;
 
     linking::FrozenCompositionArtifact artifact_;
     d3d12::D3D12Backend* backend_ = nullptr;
+    runtime::ISurfaceHost* surface_ = nullptr;
     std::unique_ptr<runtime::IPackageDeviceDomain> domain_;
     std::vector<std::shared_ptr<const package::FrozenExecutablePackage>> basePackages_;
     std::vector<std::unique_ptr<runtime::IPackageInstance>> instances_;

@@ -1,0 +1,15 @@
+SGE4 L4V1-F10-F11 same-topology Retry contract correction
+
+Observed Windows result:
+- actual RemoveDevice reached AwaitingAdapter correctly;
+- Retry returned success but remained AwaitingAdapter;
+- no Device epoch advance, Leaf rematerialization, or Resource rematerialization occurred.
+
+Correct contract:
+- the removed adapter LUID remains excluded for the DeviceDomain lifetime;
+- RetryAdapterReacquisition re-checks topology and must not clear that safety exclusion;
+- WARP-only qualification therefore remains AwaitingAdapter on same-topology Retry;
+- ControlledRebuild qualifies same-process whole-domain rematerialization;
+- fresh Debug/Release processes qualify Frozen Composition rematerialization after process restart.
+
+This matches the established SGE2/SGE4 Package recovery state machine and removes the unsupported claim that the same removed WARP adapter can be reactivated immediately.
