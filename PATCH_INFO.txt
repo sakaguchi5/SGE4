@@ -1,0 +1,18 @@
+SGE4 Level 4 v1 Canonical Reconstruction — R1 Frozen Composition Boundary
+
+Base commit:
+  bd686bde95eb357c87003fa807eac9438abb413b
+
+Scope:
+  New and changed files only. No Git operation is performed by this package.
+
+Purpose:
+  Establish the canonical Frozen Composition binary boundary before Contract,
+  Planner, Verifier, Runtime, or Recovery implementation.
+
+Apply:
+  1. Extract this ZIP into the SGE4 repository root.
+  2. Run prepare_sge4_level4v1_r1.bat.
+  3. Run run_sge4_level4v1_r1.bat.
+
+R1 is not complete until the Windows/MSVC qualification output passes.
