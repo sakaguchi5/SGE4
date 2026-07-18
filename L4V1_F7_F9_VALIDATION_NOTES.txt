@@ -1,0 +1,14 @@
+Validation performed before packaging:
+- Base commit identity verified through GitHub.
+- New F7/F8/F9 C++ sources compiled with a portable C++23 compiler.
+- 46G and 46H test translation units compiled with a portable C++23 compiler.
+- 46I test translation unit compiled with a minimal Windows-header syntax stub.
+- All new vcxproj files parsed as XML.
+- F7-F9 solution contains 44 projects and only Debug/Release x64 mappings.
+- Every ProjectReference in the focused solution has a corresponding project entry.
+- F9 source contains no Compiler, Planner, Verifier, or Freeze operation; the F6 artifact reader remains the sole load boundary.
+- Backend transition patch is idempotent and anchored before ReadSharedBuffer.
+- PowerShell and batch encoding contracts were checked before ZIP creation.
+- ZIP CRC and extracted-file SHA-256 checks are performed after creation.
+
+Final MSVC v145, D3D12, DXGI, D3DCompile, WARP, and window/swap-chain qualification must be established by run_sge4_level4v1_f7_f9.bat on Windows.

@@ -1,0 +1,18 @@
+SGE4 L4V1-F7-F9 changes-only patch
+
+Base commit:
+c5fda52924da3de9ee552036908eb4e8a74aaebf
+
+Scope:
+F7 Shared DeviceDomain
+F8 Composition-owned Shared Buffer and cross-Leaf state transition
+F9 Static Package DAG Runtime
+
+Existing file replaced by ZIP:
+14_D3D12Backend/D3D12Backend.h
+
+Existing file modified idempotently by Prepare-Level4v1F7F9.ps1:
+14_D3D12Backend/D3D12Backend.cpp
+
+All other implementation, project, test, solution, script, and documentation files are additions.
+No files are deleted.
