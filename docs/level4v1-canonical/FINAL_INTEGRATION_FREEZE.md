@@ -7,9 +7,9 @@ Every repository `.vcxproj`, including the R1-R5 Composition projects and their
 qualification executables, is registered exactly once in this solution with
 Debug x64 and Release x64 build mappings.
 
-The stage-specific solutions remain as historical and diagnostic views. They
-are not accepted as a completion build root and no canonical qualification
-runner may reference them.
+The stage-specific solutions were temporary construction views and are not
+part of the completed repository. Their history remains available in version
+control, while every canonical qualification runner uses only the main solution.
 
 ## Final integration boundary
 
@@ -32,7 +32,6 @@ SemanticGpuEngine4.sln
 ## Completion command
 
 ```powershell
-.\prepare_sge4_level4v1_final_integration.bat
 .\run_sge4_level4v1_final.bat
 ```
 

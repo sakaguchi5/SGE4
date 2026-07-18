@@ -85,7 +85,6 @@ foreach ($relative in $canonicalRunners) {
 }
 
 foreach ($relative in @(
-    'Prepare-Level4v1FinalIntegration.ps1',
     'tests/Run-Level4v1FinalIntegration.ps1',
     'tests/Verify-Level4v1FinalIntegration.ps1')) {
     $path = Join-Path $root ($relative.Replace('/','\'))
@@ -94,4 +93,34 @@ foreach ($relative in @(
     if ($text -match '(?im)^\s*git(?:\.exe)?\s') { throw "Final Integration script must not execute Git: $relative" }
 }
 
-Write-Host "Level 4 v1 Final Integration boundary verification passed. Main solution projects: $($entries.Count); canonical projects: $($canonicalProjects.Count)."
+$obsoleteFiles = @(
+    'ARTIFACT_INFO.txt',
+    'DELETIONS.txt',
+    'FINAL_INTEGRATION_PATCH_FILE_LIST.txt',
+    'FINAL_INTEGRATION_PATCH_INFO.txt',
+    'FINAL_INTEGRATION_VALIDATION_NOTES.txt',
+    'PATCH_FILE_LIST.txt',
+    'PATCH_INFO.txt',
+    'R3_R5_PATCH_FILE_LIST.txt',
+    'R3_R5_PATCH_INFO.txt',
+    'R3_R5_VALIDATION_NOTES.txt',
+    'VALIDATION_NOTES.txt',
+    'Prepare-Level4v1FinalIntegration.ps1',
+    'Prepare-Level4v1R1.ps1',
+    'Prepare-Level4v1R2.ps1',
+    'Prepare-Level4v1R3R5.ps1',
+    'prepare_sge4_level4v1_final_integration.bat',
+    'prepare_sge4_level4v1_r1.bat',
+    'prepare_sge4_level4v1_r2.bat',
+    'prepare_sge4_level4v1_r3_r5.bat',
+    'SemanticGpuEngine4_Level4v1_R1.sln',
+    'SemanticGpuEngine4_Level4v1_R2.sln',
+    'SemanticGpuEngine4_Level4v1_R3_R5.sln'
+)
+foreach ($relative in $obsoleteFiles) {
+    if (Test-Path -LiteralPath (Join-Path $root $relative)) {
+        throw "Obsolete Level 4 v1 delivery or stage file remains in the canonical repository: $relative"
+    }
+}
+
+Write-Host "Level 4 v1 Final Integration boundary verification passed. Main solution projects: $($entries.Count); canonical projects: $($canonicalProjects.Count); obsolete delivery files: none."

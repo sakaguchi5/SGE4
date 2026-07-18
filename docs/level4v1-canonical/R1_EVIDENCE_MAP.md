@@ -10,7 +10,7 @@ R1はR0 Proof LedgerのうちFrozen Artifact境界に関係する項目を、次
 | ARTIFACT-004 | Fresh Debug A/B、Debug/Release、declaration order、round tripのbyte identityを要求する。 | Windows qualification pending until runner passes |
 | REGRESSION-001 | Embedded executable LeafをD3D12 Schema 17 / Runtime 17に限定する。 | R1 proven |
 | ARCH-001 | Artifact ProjectはFoundationとFrozenPackageCoreだけを参照する。 | R1 boundary script |
-| ARCH-002 | Prepare時にdependency、script contract、SOURCE_MANIFESTを検証する。 | R1 prepare gate |
+| ARCH-002 | R1資格Runnerでdependency、script contract、SOURCE_MANIFESTを検証する。 | R1 qualification gate |
 
 ## R1で未成立のProof ID
 

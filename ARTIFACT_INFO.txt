@@ -1,7 +1,0 @@
-Artifact type: changes-only ZIP
-Stage: SGE4 Level 4 v1 Canonical R2
-Base commit: ab76dd59c750249d2459a7e1123699651c466494
-
-The ZIP contains only new or changed R2 files. It does not contain the complete repository.
-The preparation script updates SOURCE_MANIFEST.sha256 after extraction.
-The authoritative completion result is the Windows/MSVC v145 runner output.

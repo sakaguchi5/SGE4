@@ -1,13 +1,13 @@
 ﻿SGE4 Level 4 v1 Canonical R2 qualification
-Started=2026-07-18T17:37:20.0752283+09:00
+Started=2026-07-18T21:43:27.4600324+09:00
 > "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
 SGE4 dependency boundary check passed. Projects: 57, references: 412.
 > "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\Verify-Level4v1R2Boundaries.ps1
 Level 4 v1 Canonical R2 Contract, Plan and independent verifier boundaries passed.
 > "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
-SGE4 script contract verification passed. Scripts: 51.
+SGE4 script contract verification passed. Scripts: 43.
 > "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
-SOURCE_MANIFEST verification passed. Files: 278.
+SOURCE_MANIFEST verification passed. Files: 256.
 > "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\47_CanonicalCompositionAuthorityTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r2\Canonical_R2_Debug_A.sgec
 R2 Composition Contract and Independent Verification tests passed
 Contract: Leaf-derived Buffer endpoint authority and canonical Resource Flows
