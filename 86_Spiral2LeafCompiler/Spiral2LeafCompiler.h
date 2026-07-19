@@ -16,6 +16,8 @@ struct FrozenHierarchyLeafV1 final
     base::Digest256 fileDigest{};
     std::uint32_t lockedDynamicSlot=base::InvalidIndex;
     std::uint32_t lockedDynamicBytes=0;
+    std::uint32_t lockedReferenceSlot=base::InvalidIndex;
+    std::uint32_t lockedReferenceBytes=0;
     std::uint32_t inputStride=0;
     std::uint32_t outputStride=0;
     std::vector<std::byte> packageBytes;

@@ -170,6 +170,8 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "86_Spiral2LeafCompiler", "8
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "87_Spiral2Observer", "87_Spiral2Observer\87_Spiral2Observer.vcxproj", "{87000000-0000-5000-8000-000000000087}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "88_Spiral2Scenarios", "88_Spiral2Scenarios\88_Spiral2Scenarios.vcxproj", "{88000000-0000-5000-8000-000000000088}"
+EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "90_Spiral2SemanticTests", "90_Spiral2SemanticTests\90_Spiral2SemanticTests.vcxproj", "{90000000-0000-5000-8000-000000000090}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "91_Spiral2DynamicInvocationTests", "91_Spiral2DynamicInvocationTests\91_Spiral2DynamicInvocationTests.vcxproj", "{91000000-0000-5000-8000-000000000091}"
@@ -180,12 +182,22 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "93_Spiral2AuthorityMutation
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "94_Spiral2LeafPackageTests", "94_Spiral2LeafPackageTests\94_Spiral2LeafPackageTests.vcxproj", "{94000000-0000-5000-8000-000000000094}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "95_Spiral2CompositionTests", "95_Spiral2CompositionTests\95_Spiral2CompositionTests.vcxproj", "{95000000-0000-5000-8000-000000000095}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88000000-0000-5000-8000-000000000088}.Debug|x64.ActiveCfg = Debug|x64
+		{88000000-0000-5000-8000-000000000088}.Debug|x64.Build.0 = Debug|x64
+		{88000000-0000-5000-8000-000000000088}.Release|x64.ActiveCfg = Release|x64
+		{88000000-0000-5000-8000-000000000088}.Release|x64.Build.0 = Release|x64
+		{95000000-0000-5000-8000-000000000095}.Debug|x64.ActiveCfg = Debug|x64
+		{95000000-0000-5000-8000-000000000095}.Debug|x64.Build.0 = Debug|x64
+		{95000000-0000-5000-8000-000000000095}.Release|x64.ActiveCfg = Release|x64
+		{95000000-0000-5000-8000-000000000095}.Release|x64.Build.0 = Release|x64
 		{86000000-0000-5000-8000-000000000086}.Debug|x64.ActiveCfg = Debug|x64
 		{86000000-0000-5000-8000-000000000086}.Debug|x64.Build.0 = Debug|x64
 		{86000000-0000-5000-8000-000000000086}.Release|x64.ActiveCfg = Release|x64

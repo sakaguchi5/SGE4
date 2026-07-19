@@ -6,7 +6,7 @@
 | CU1 | S2-03-S2-05 | Qualified |
 | CU2 | S2-06-S2-08 | Qualified |
 | CU3 | S2-09-S2-12 | Qualified |
-| CU4 | S2-13-S2-14 | NotStarted |
+| CU4 | S2-13-S2-14 | Qualified |
 | CU5 | S2-15-S2-18 | NotStarted |
 | CU6 | S2-19-S2-22A | NotStarted |
 | Owner | S2-22B | OwnerDecisionRequired |

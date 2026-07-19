@@ -21,8 +21,10 @@ function Get-RelativePath([string]$FullName) {
 function Test-ManifestExcludedPath([string]$RelativePath) {
     return ($RelativePath -eq 'SOURCE_MANIFEST.sha256' -or
             $RelativePath -like 'build/*' -or
+            $RelativePath -like '*/build/*' -or
             $RelativePath -like 'docs/test-logs/*.log' -or
             $RelativePath -like '.vs/*' -or
+            $RelativePath -like '*/.vs/*' -or
             $RelativePath -like '.git/*' -or
             $RelativePath -like '*.user' -or
             $RelativePath -like '*.suo' -or
@@ -30,9 +32,11 @@ function Test-ManifestExcludedPath([string]$RelativePath) {
             $RelativePath -like '*.VC.opendb')
 }
 
+$manifestFiles = @(& git -C $root ls-files --cached --others --exclude-standard)
+if ($LASTEXITCODE -ne 0) { throw 'git ls-files failed.' }
 $digests = @{}
-foreach ($file in Get-ChildItem -Path $root -Recurse -File) {
-    $relative = Get-RelativePath $file.FullName
+foreach ($listedPath in $manifestFiles) {
+    $relative = Normalize-RelativePath $listedPath
     if (Test-ManifestExcludedPath $relative) {
         continue
     }
@@ -41,7 +45,9 @@ foreach ($file in Get-ChildItem -Path $root -Recurse -File) {
         throw "Duplicate normalized file path: $relative"
     }
 
-    $digests[$relative] = (Get-SGE4FileSha256 $file.FullName).ToLowerInvariant()
+    $fullName = Join-Path $root $listedPath
+    if (-not (Test-Path -LiteralPath $fullName -PathType Leaf)) { continue }
+    $digests[$relative] = (Get-SGE4FileSha256 $fullName).ToLowerInvariant()
 }
 
 $relativePaths = [string[]]@($digests.Keys)

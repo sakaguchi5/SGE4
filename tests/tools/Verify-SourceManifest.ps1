@@ -41,8 +41,10 @@ foreach ($line in Get-Content -LiteralPath $manifestPath -Encoding UTF8) {
 function Test-ManifestExcludedPath([string]$RelativePath) {
     return ($RelativePath -eq 'SOURCE_MANIFEST.sha256' -or
             $RelativePath -like 'build/*' -or
+            $RelativePath -like '*/build/*' -or
             $RelativePath -like 'docs/test-logs/*.log' -or
             $RelativePath -like '.vs/*' -or
+            $RelativePath -like '*/.vs/*' -or
             $RelativePath -like '.git/*' -or
             $RelativePath -like '*.user' -or
             $RelativePath -like '*.suo' -or
@@ -50,20 +52,18 @@ function Test-ManifestExcludedPath([string]$RelativePath) {
             $RelativePath -like '*.VC.opendb')
 }
 
-$actualFiles = @(
-    Get-ChildItem -Path $root -Recurse -File | Where-Object {
-        $relative = Get-RelativePath $_.FullName
-        -not (Test-ManifestExcludedPath $relative)
-    }
-)
-
+$listedFiles = @(& git -C $root ls-files --cached --others --exclude-standard)
+if ($LASTEXITCODE -ne 0) { throw 'git ls-files failed.' }
 $actual = @{}
-foreach ($file in $actualFiles) {
-    $relative = Get-RelativePath $file.FullName
+foreach ($listedPath in $listedFiles) {
+    $relative = Normalize-RelativePath $listedPath
+    if (Test-ManifestExcludedPath $relative) { continue }
     if ($actual.ContainsKey($relative)) {
         throw "Duplicate normalized file path: $relative"
     }
-    $actual[$relative] = (Get-SGE4FileSha256 $file.FullName).ToLowerInvariant()
+    $fullName = Join-Path $root $listedPath
+    if (-not (Test-Path -LiteralPath $fullName -PathType Leaf)) { continue }
+    $actual[$relative] = (Get-SGE4FileSha256 $fullName).ToLowerInvariant()
 }
 
 $missing = @($expected.Keys | Where-Object { -not $actual.ContainsKey($_) } | Sort-Object)
