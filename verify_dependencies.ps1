@@ -240,5 +240,8 @@ Assert-DirectReferences '85_HierarchyRepresentationVerifier' @('00_Foundation','
 Assert-NoForbiddenDependency '83_HierarchyRepresentationCandidate' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime')
 Assert-NoForbiddenDependency '84_HierarchyRepresentationPlanner' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime','85_HierarchyRepresentationVerifier')
 Assert-NoForbiddenDependency '85_HierarchyRepresentationVerifier' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime','84_HierarchyRepresentationPlanner')
+Assert-DirectReferences '86_Spiral2LeafCompiler' @('00_Foundation','03_SemanticBuilder','09_FrozenPackageCore','12_SGE4_5Compiler','66_Spiral1LeafCompiler','80_HierarchySemantic','85_HierarchyRepresentationVerifier')
+Assert-DirectReferences '87_Spiral2Observer' @('00_Foundation','82_Spiral2Corpus')
+Assert-NoForbiddenDependency '86_Spiral2LeafCompiler' @('13_PackageRuntime','14_D3D12Backend','22_CompositionRuntime','84_HierarchyRepresentationPlanner')
 
 Write-Host "SGE4-5 dependency boundary check passed. Projects: $($projectFiles.Count), references: $((($graph.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)."

@@ -166,6 +166,10 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "84_HierarchyRepresentationP
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "85_HierarchyRepresentationVerifier", "85_HierarchyRepresentationVerifier\85_HierarchyRepresentationVerifier.vcxproj", "{85000000-0000-5000-8000-000000000085}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "86_Spiral2LeafCompiler", "86_Spiral2LeafCompiler\86_Spiral2LeafCompiler.vcxproj", "{86000000-0000-5000-8000-000000000086}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "87_Spiral2Observer", "87_Spiral2Observer\87_Spiral2Observer.vcxproj", "{87000000-0000-5000-8000-000000000087}"
+EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "90_Spiral2SemanticTests", "90_Spiral2SemanticTests\90_Spiral2SemanticTests.vcxproj", "{90000000-0000-5000-8000-000000000090}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "91_Spiral2DynamicInvocationTests", "91_Spiral2DynamicInvocationTests\91_Spiral2DynamicInvocationTests.vcxproj", "{91000000-0000-5000-8000-000000000091}"
@@ -174,12 +178,26 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "92_Spiral2CandidateGraphTes
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "93_Spiral2AuthorityMutationTests", "93_Spiral2AuthorityMutationTests\93_Spiral2AuthorityMutationTests.vcxproj", "{93000000-0000-5000-8000-000000000093}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "94_Spiral2LeafPackageTests", "94_Spiral2LeafPackageTests\94_Spiral2LeafPackageTests.vcxproj", "{94000000-0000-5000-8000-000000000094}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86000000-0000-5000-8000-000000000086}.Debug|x64.ActiveCfg = Debug|x64
+		{86000000-0000-5000-8000-000000000086}.Debug|x64.Build.0 = Debug|x64
+		{86000000-0000-5000-8000-000000000086}.Release|x64.ActiveCfg = Release|x64
+		{86000000-0000-5000-8000-000000000086}.Release|x64.Build.0 = Release|x64
+		{87000000-0000-5000-8000-000000000087}.Debug|x64.ActiveCfg = Debug|x64
+		{87000000-0000-5000-8000-000000000087}.Debug|x64.Build.0 = Debug|x64
+		{87000000-0000-5000-8000-000000000087}.Release|x64.ActiveCfg = Release|x64
+		{87000000-0000-5000-8000-000000000087}.Release|x64.Build.0 = Release|x64
+		{94000000-0000-5000-8000-000000000094}.Debug|x64.ActiveCfg = Debug|x64
+		{94000000-0000-5000-8000-000000000094}.Debug|x64.Build.0 = Debug|x64
+		{94000000-0000-5000-8000-000000000094}.Release|x64.ActiveCfg = Release|x64
+		{94000000-0000-5000-8000-000000000094}.Release|x64.Build.0 = Release|x64
 		{83000000-0000-5000-8000-000000000083}.Debug|x64.ActiveCfg = Debug|x64
 		{83000000-0000-5000-8000-000000000083}.Debug|x64.Build.0 = Debug|x64
 		{83000000-0000-5000-8000-000000000083}.Release|x64.ActiveCfg = Release|x64
