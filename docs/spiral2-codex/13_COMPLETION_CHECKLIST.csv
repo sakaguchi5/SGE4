@@ -1,0 +1,25 @@
+Order,CompletionUnit,Stage,Name,InitialStatus,PrimaryEvidence,RequiredGate,OwnerOnly
+1,CU0,S2-00,Decision Closure,NotStarted,Selection record and milestone identity,Research-contract verifier,No
+2,CU0,S2-01,Completion Specification,NotStarted,Canonical Spiral 2 completion specification,Document/contract hash gate,No
+3,CU0,S2-02,Foundation Baseline Freeze,NotStarted,Baseline evidence ledger,"Foundation, Gate, strongest available Freeze",No
+4,CU1,S2-03,Canonical Hierarchy Semantic,NotStarted,80_HierarchySemantic,Semantic determinism and negative gate,No
+5,CU1,S2-04,Dynamic Motor Palette Authority,NotStarted,Dynamic palette and multi-submit tests,Dynamic authority gate,No
+6,CU1,S2-05,Corpus and CPU Reference,NotStarted,82_Spiral2Corpus,Fresh-process corpus determinism,No
+7,CU2,S2-06,Three Candidate Graphs,NotStarted,83/84 candidate and planner,Candidate identity and structure tests,No
+8,CU2,S2-07,Independent Hierarchy Verifier,NotStarted,85_HierarchyRepresentationVerifier,Raw graph non-executable gate,No
+9,CU2,S2-08,Authority Mutation Suite,NotStarted,Mutation ledger and tests,All mutations rejected at intended boundary,No
+10,CU3,S2-09,Dynamic Source Vertical Slice,NotStarted,Sufficiency finding,No hidden Runtime workaround,No
+11,CU3,S2-10,Matrix Leaf Group,NotStarted,Matrix Frozen Leaf group,Leaf-only WARP and rematerialization,No
+12,CU3,S2-11,Direct PGA Leaf Group,NotStarted,Direct PGA Frozen Leaf group,Leaf-only WARP and reference contract,No
+13,CU3,S2-12,Hybrid Leaf Group,NotStarted,Hybrid Frozen Leaf group,Leaf-only WARP and boundary authority,No
+14,CU4,S2-13,Ten-Leaf Frozen Comparison,NotStarted,Frozen comparison Composition,Composition authority tests,No
+15,CU4,S2-14,Level 4 Sufficiency Gate,NotStarted,Sufficiency/extension decision record,Level 4 + Spiral 1 full regression,No
+16,CU5,S2-15,WARP Hierarchy Corpus,NotStarted,WARP evidence corpus,Zero non-finite and zero contract mismatch,No
+17,CU5,S2-16,Multi-frame Dynamic Invocation,NotStarted,Multi-frame evidence,Order and repeatability tests,No
+18,CU5,S2-17,Determinism Freeze,NotStarted,Determinism manifests,Byte-identical gate,No
+19,CU5,S2-18,Recovery Qualification,NotStarted,Recovery evidence,Controlled and actual recovery gate,No
+20,CU6,S2-19,Architecture Final Freeze,NotStarted,Architecture final freeze,Spiral 2 Freeze runner,No
+21,CU6,S2-20,Real GPU Measurement,NotStarted,Binary evidence and report,Real adapter measurement,No
+22,CU6,S2-21,Decision Evidence Report,NotStarted,Decision Evidence Report,Report schema and evidence digests,No
+23,CU6,S2-22A,Evidence Closure,NotStarted,Measurement and Decision Evidence Complete,Deferred selection verifier,No
+24,Owner,S2-22B,Next Capability Selection,NotStarted,Owner selection record and final Experiment Complete banner,OWNER_DECISION_REQUIRED,Yes

@@ -1,0 +1,29 @@
+{
+  "pack_version": "1.0",
+  "generated_date": "2026-07-19",
+  "repository": "sakaguchi5/SGE4",
+  "baseline_commit": "afaed65d9400f3f80a7f5a9094edd9029082f95d",
+  "solution": "SemanticGpuEngine4-5.sln",
+  "toolset": "Visual Studio 2026 / v145",
+  "platforms": [
+    "x64 Debug",
+    "x64 Release"
+  ],
+  "target_abi": {
+    "d3d12_schema": 17,
+    "runtime": 17,
+    "extension_policy": "Only after S2-09/S2-14 evidence proves insufficiency"
+  },
+  "source_roadmap": {
+    "original_name": "SGE4-5 Spiral 2 Roadmap.docx",
+    "pack_name": "docs/spiral2-codex/reference/SPIRAL2_ROADMAP_SOURCE.docx",
+    "sha256": "c1f1210a5062e43e97a08ed5931192d2778bf72e35a2de3741de6a46646828d5"
+  },
+  "owner_overrides": {
+    "separate_independent_review": false,
+    "independent_software_verifier_required": true,
+    "autonomous_completion_through": "S2-22A",
+    "owner_only_gate": "S2-22B Next Capability Selection",
+    "next_capability_selection": "DeferredByOwner"
+  }
+}
