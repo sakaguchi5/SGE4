@@ -7,7 +7,7 @@
 #include "../25_GeneralGraphScenarios/GeneralGraphScenarios.h"
 #include "../26_GeneratedGraphCorpus/GeneratedGraphs.h"
 #include "../27_RuntimeScenarios/RuntimeScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 #include "../28_SGE3CompatibilityOracle/SGE3CompatibilityOracle.h"
 
 #include <algorithm>
@@ -20,16 +20,16 @@
 
 namespace
 {
-namespace compiler = sge4::compiler::d3d12;
-namespace l3c = sge4::compiler::d3d12::candidate;
-namespace l3 = sge4::planning;
-namespace verify = sge4::planning::verification;
-namespace generated = sge4::qualification::generated;
-namespace oracle = sge4::compatibility::sge3;
+namespace compiler = sge4_5::compiler::d3d12;
+namespace l3c = sge4_5::compiler::d3d12::candidate;
+namespace l3 = sge4_5::planning;
+namespace verify = sge4_5::planning::verification;
+namespace generated = sge4_5::qualification::generated;
+namespace oracle = sge4_5::compatibility::sge3;
 
-sge4::base::Digest256 ParseDigest(std::string_view text)
+sge4_5::base::Digest256 ParseDigest(std::string_view text)
 {
-    sge4::base::Digest256 result{};
+    sge4_5::base::Digest256 result{};
     const auto nibble = [](char value) -> std::uint8_t {
         if (value >= '0' && value <= '9') return static_cast<std::uint8_t>(value - '0');
         if (value >= 'a' && value <= 'f') return static_cast<std::uint8_t>(value - 'a' + 10);
@@ -43,13 +43,13 @@ sge4::base::Digest256 ParseDigest(std::string_view text)
 struct Case final
 {
     std::string name;
-    sge4::semantic::SemanticGraph graph;
-    sge4::target::D3D12TargetProfile profile;
+    sge4_5::semantic::SemanticGraph graph;
+    sge4_5::target::D3D12TargetProfile profile;
 };
 
-sge4::semantic::SemanticGraph BuildHeadlessGraph()
+sge4_5::semantic::SemanticGraph BuildHeadlessGraph()
 {
-    namespace sem = sge4::semantic;
+    namespace sem = sge4_5::semantic;
     sem::SemanticGraph graph;
     sem::Resource output;
     output.id = {0}; output.kind = sem::ResourceKind::Buffer;
@@ -111,31 +111,31 @@ std::vector<generated::GeneratedSpec> FrozenGeneratedSpecs()
 std::vector<Case> BuildCompatibilityCorpus()
 {
     std::vector<Case> cases;
-    for (const auto key : sge4::level1::StageAInputs())
+    for (const auto key : sge4_5::level1::StageAInputs())
     {
-        auto built = sge4::level1::BuildScenario(key);
+        auto built = sge4_5::level1::BuildScenario(key);
         if (built) cases.push_back({"Level1/" + built.Value().name,
             std::move(built.Value().graph), built.Value().targetProfile});
     }
-    for (const auto key : sge4::qualification::StageHInputs())
+    for (const auto key : sge4_5::qualification::StageHInputs())
     {
-        auto built = sge4::qualification::BuildStageHScenario(key);
+        auto built = sge4_5::qualification::BuildStageHScenario(key);
         if (built) cases.push_back({"StageH/" + built.Value().name,
             std::move(built.Value().graph), built.Value().targetProfile});
     }
-    sge4::target::D3D12TargetProfile headless;
+    sge4_5::target::D3D12TargetProfile headless;
     headless.computeQueueCount = 1; headless.copyQueueCount = 0; headless.surfaceImageCount = 0;
     headless.rtvDescriptorCount = 0; headless.dsvDescriptorCount = 0; headless.shaderDescriptorCount = 1;
     cases.push_back({"StageG/HeadlessCompute", BuildHeadlessGraph(), headless});
-    for (const auto scenario : {sge4::qualification::runtime_scenarios::Scenario::DynamicExternalPipeline,
-                                sge4::qualification::runtime_scenarios::Scenario::CrossQueueTemporal})
+    for (const auto scenario : {sge4_5::qualification::runtime_scenarios::Scenario::DynamicExternalPipeline,
+                                sge4_5::qualification::runtime_scenarios::Scenario::CrossQueueTemporal})
     {
-        auto built = sge4::qualification::runtime_scenarios::Build(scenario);
+        auto built = sge4_5::qualification::runtime_scenarios::Build(scenario);
         if (built) cases.push_back({"StageK/" + built.Value().name,
             std::move(built.Value().graph), built.Value().targetProfile});
     }
-    auto fallback = sge4::qualification::runtime_scenarios::Build(
-        sge4::qualification::runtime_scenarios::Scenario::DynamicExternalPipeline);
+    auto fallback = sge4_5::qualification::runtime_scenarios::Build(
+        sge4_5::qualification::runtime_scenarios::Scenario::DynamicExternalPipeline);
     if (fallback)
     {
         fallback.Value().targetProfile.computeQueueCount = 0;
@@ -251,8 +251,8 @@ int CheckCandidatesAndPolicies(const Case& item)
 {
     l3::CompilerPolicy safePolicy;
     safePolicy.kind = l3::CompilerPolicyKind::CanonicalSafe;
-    auto first = sge4::compiler::Compile(item.graph, item.profile, safePolicy);
-    auto repeated = sge4::compiler::Compile(item.graph, item.profile, safePolicy);
+    auto first = sge4_5::compiler::Compile(item.graph, item.profile, safePolicy);
+    auto repeated = sge4_5::compiler::Compile(item.graph, item.profile, safePolicy);
     if (!first || !repeated)
     {
         const auto* error = !first ? &first.Error() : &repeated.Error();
@@ -278,7 +278,7 @@ int CheckCandidatesAndPolicies(const Case& item)
     for (const auto& candidate : first.Value().manifest.candidates)
     {
         if (!candidate.verification.verified) continue;
-        plans.insert(sge4::base::ToHex(candidate.plan.identity));
+        plans.insert(sge4_5::base::ToHex(candidate.plan.identity));
         packages.insert(candidate.packageExecutionDigestHex);
     }
     if (plans.size() < 2 || packages.size() < 2)
@@ -300,8 +300,8 @@ int CheckCandidatesAndPolicies(const Case& item)
     directPolicy.kind = l3::CompilerPolicyKind::MinimizeQueueHandoffs;
     l3::CompilerPolicy dedicatedPolicy;
     dedicatedPolicy.kind = l3::CompilerPolicyKind::PreferDedicatedQueues;
-    auto direct = sge4::compiler::Compile(item.graph, item.profile, directPolicy);
-    auto dedicated = sge4::compiler::Compile(item.graph, item.profile, dedicatedPolicy);
+    auto direct = sge4_5::compiler::Compile(item.graph, item.profile, directPolicy);
+    auto dedicated = sge4_5::compiler::Compile(item.graph, item.profile, dedicatedPolicy);
     if (!direct || !dedicated || direct.Value().selectedPlan.identity == dedicated.Value().selectedPlan.identity)
     {
         std::cerr << "Queue policies did not select different Plans\n";
@@ -314,14 +314,14 @@ int CheckCandidatesAndPolicies(const Case& item)
     profile.targetProfileDigest = dedicated.Value().planningContract.digest;
     const std::string adapter = "WARP-Level3-Qualification";
     const std::string scenario = "DynamicExternalPipeline-OneFrame";
-    profile.adapterDriverFingerprint = sge4::base::Sha256(std::as_bytes(std::span(adapter)));
-    profile.measurementScenarioDigest = sge4::base::Sha256(std::as_bytes(std::span(scenario)));
+    profile.adapterDriverFingerprint = sge4_5::base::Sha256(std::as_bytes(std::span(adapter)));
+    profile.measurementScenarioDigest = sge4_5::base::Sha256(std::as_bytes(std::span(scenario)));
     profile.sampleCount = 8;
     profile.measuredNanoseconds = 1000;
     l3::CompilerPolicy profilePolicy;
     profilePolicy.kind = l3::CompilerPolicyKind::ProfileGuided;
     l3::ProfileSelectionContext context{profile.adapterDriverFingerprint, profile.measurementScenarioDigest, 4};
-    auto reselected = sge4::compiler::Compile(item.graph, item.profile, profilePolicy, &profile, &context);
+    auto reselected = sge4_5::compiler::Compile(item.graph, item.profile, profilePolicy, &profile, &context);
     if (!reselected || reselected.Value().selectedPlan.identity != profile.planIdentity)
     {
         std::cerr << "fixed Profile record did not deterministically reselect its Plan\n";
@@ -329,14 +329,14 @@ int CheckCandidatesAndPolicies(const Case& item)
     }
     auto stale = profile;
     stale.targetProfileDigest[0] = std::byte{0xff};
-    if (sge4::compiler::Compile(item.graph, item.profile, profilePolicy, &stale, &context))
+    if (sge4_5::compiler::Compile(item.graph, item.profile, profilePolicy, &stale, &context))
     {
         std::cerr << "stale Profile provenance was accepted\n";
         return 25;
     }
     stale = profile;
     stale.packageExecutionDigest[0] ^= std::byte{0x01};
-    if (sge4::compiler::Compile(item.graph, item.profile, profilePolicy, &stale, &context))
+    if (sge4_5::compiler::Compile(item.graph, item.profile, profilePolicy, &stale, &context))
     {
         std::cerr << "stale Package execution digest was accepted\n";
         return 26;
@@ -392,7 +392,7 @@ int CheckAllocationCandidates(const Case& item)
 
 struct ManifestText final { std::string value; };
 
-sge4::base::Result<ManifestText, std::string> BuildFreezeManifest(const std::vector<Case>& corpus)
+sge4_5::base::Result<ManifestText, std::string> BuildFreezeManifest(const std::vector<Case>& corpus)
 {
     std::ostringstream output;
     output << "identity=SGE4-Planning-D3D12-v1-FinalFreeze-Corpus1\n";
@@ -403,28 +403,28 @@ sge4::base::Result<ManifestText, std::string> BuildFreezeManifest(const std::vec
     for (const auto& item : corpus)
     {
         auto validated = compiler::ValidateSourceStage(item.graph, item.profile);
-        if (!validated) return sge4::base::Result<ManifestText, std::string>::Failure(item.name + ": validation failed");
+        if (!validated) return sge4_5::base::Result<ManifestText, std::string>::Failure(item.name + ": validation failed");
         auto obligation = l3::BuildSemanticObligation(item.graph, validated.Value().analyzed);
-        if (!obligation) return sge4::base::Result<ManifestText, std::string>::Failure(item.name + ": obligation failed");
+        if (!obligation) return sge4_5::base::Result<ManifestText, std::string>::Failure(item.name + ": obligation failed");
         const auto contract = l3::BuildPlanningContract(item.profile);
         const auto safe = l3c::BuildCanonicalSafePlan(obligation.Value(), contract);
         auto sealed = verify::VerifyAndSeal(obligation.Value(), contract, safe);
-        if (!sealed) return sge4::base::Result<ManifestText, std::string>::Failure(item.name + ": safe Plan rejected");
+        if (!sealed) return sge4_5::base::Result<ManifestText, std::string>::Failure(item.name + ": safe Plan rejected");
         auto oldPackage = oracle::Compile(item.graph, item.profile);
         auto newPackage = compiler::LowerVerifiedPlan(item.graph, item.profile, sealed.Value());
         if (!oldPackage || !newPackage || oldPackage.Value().packageBytes != newPackage.Value().packageBytes)
-            return sge4::base::Result<ManifestText, std::string>::Failure(item.name + ": SGE3 compatibility bytes changed");
+            return sge4_5::base::Result<ManifestText, std::string>::Failure(item.name + ": SGE3 compatibility bytes changed");
         output << "case=" << item.name
-               << "|obligation=" << sge4::base::ToHex(obligation.Value().digest)
-               << "|contract=" << sge4::base::ToHex(contract.digest)
-               << "|plan=" << sge4::base::ToHex(safe.identity)
-               << "|file=" << sge4::base::ToHex(sge4::base::Sha256(newPackage.Value().packageBytes))
+               << "|obligation=" << sge4_5::base::ToHex(obligation.Value().digest)
+               << "|contract=" << sge4_5::base::ToHex(contract.digest)
+               << "|plan=" << sge4_5::base::ToHex(safe.identity)
+               << "|file=" << sge4_5::base::ToHex(sge4_5::base::Sha256(newPackage.Value().packageBytes))
                << "|execution=" << newPackage.Value().executionDigestHex << '\n';
     }
     const auto candidate = std::find_if(corpus.begin(), corpus.end(), [](const auto& item) {
         return item.name.find("Independent") != std::string::npos;
     });
-    if (candidate == corpus.end()) return sge4::base::Result<ManifestText, std::string>::Failure("candidate case missing");
+    if (candidate == corpus.end()) return sge4_5::base::Result<ManifestText, std::string>::Failure("candidate case missing");
     for (const auto policyKind : {l3::CompilerPolicyKind::CanonicalSafe,
                                   l3::CompilerPolicyKind::MinimizePeakMemory,
                                   l3::CompilerPolicyKind::MinimizeQueueHandoffs,
@@ -432,24 +432,24 @@ sge4::base::Result<ManifestText, std::string> BuildFreezeManifest(const std::vec
                                   l3::CompilerPolicyKind::MinimizeOperationCount})
     {
         l3::CompilerPolicy policy; policy.kind = policyKind;
-        auto compiled = sge4::compiler::Compile(candidate->graph, candidate->profile, policy);
+        auto compiled = sge4_5::compiler::Compile(candidate->graph, candidate->profile, policy);
         auto reference = oracle::CompilePlanningReference(candidate->graph, candidate->profile, policy);
         if (!compiled || !reference)
-            return sge4::base::Result<ManifestText, std::string>::Failure("policy compile/reference failed");
+            return sge4_5::base::Result<ManifestText, std::string>::Failure("policy compile/reference failed");
         if (compiled.Value().manifest.canonicalBytes != reference.Value().manifest.canonicalBytes ||
             compiled.Value().selectedPlan.identity != reference.Value().selectedPlan.identity ||
             compiled.Value().selectedPackage.packageBytes != reference.Value().selectedPackage.packageBytes)
-            return sge4::base::Result<ManifestText, std::string>::Failure("SGE3 planning reference changed");
+            return sge4_5::base::Result<ManifestText, std::string>::Failure("SGE3 planning reference changed");
         output << "policy=" << static_cast<std::uint16_t>(policyKind)
-               << "|selected=" << sge4::base::ToHex(compiled.Value().selectedPlan.identity)
+               << "|selected=" << sge4_5::base::ToHex(compiled.Value().selectedPlan.identity)
                << "|execution=" << compiled.Value().selectedPackage.executionDigestHex
-               << "|manifest=" << sge4::base::ToHex(sge4::base::Sha256(compiled.Value().manifest.canonicalBytes))
+               << "|manifest=" << sge4_5::base::ToHex(sge4_5::base::Sha256(compiled.Value().manifest.canonicalBytes))
                << "|candidates=" << compiled.Value().manifest.candidates.size() << '\n';
     }
     const auto body = output.str();
-    output << "qualification-aggregate=" << sge4::base::ToHex(sge4::base::Sha256(
+    output << "qualification-aggregate=" << sge4_5::base::ToHex(sge4_5::base::Sha256(
         std::as_bytes(std::span(body)))) << '\n';
-    return sge4::base::Result<ManifestText, std::string>::Success({output.str()});
+    return sge4_5::base::Result<ManifestText, std::string>::Success({output.str()});
 }
 }
 
@@ -466,14 +466,14 @@ int main(int argc, char** argv)
         auto manifest = BuildFreezeManifest(corpus);
         if (!manifest) { std::cerr << manifest.Error() << '\n'; return 30; }
         const auto bytes = std::as_bytes(std::span(manifest.Value().value));
-        auto written = sge4::base::WriteAllBytes(argv[2], bytes);
+        auto written = sge4_5::base::WriteAllBytes(argv[2], bytes);
         if (!written) { std::cerr << written.Error() << '\n'; return 31; }
         return 0;
     }
     if (const auto result = CheckCanonicalCompatibility(corpus); result != 0) return result;
     const auto adversarial = std::find_if(corpus.begin(), corpus.end(), [](const auto& item) {
         return std::any_of(item.graph.resources.begin(), item.graph.resources.end(), [](const auto& resource) {
-            return resource.lifetime == sge4::semantic::LifetimeIntent::External;
+            return resource.lifetime == sge4_5::semantic::LifetimeIntent::External;
         }) && item.graph.works.size() >= 4;
     });
     if (adversarial == corpus.end()) { std::cerr << "external adversarial case is missing\n"; return 2; }

@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{E32BE246-A539-56A5-9398-CE50E61874EE}</ProjectGuid>
+    <ProjectGuid>{E4BCFD6C-3217-58D8-A96A-648211F7D450}</ProjectGuid>
     <RootNamespace>22_SdfFrontend</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -80,19 +80,19 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\01_MathVocabulary\01_MathVocabulary.vcxproj">
-      <Project>{AB78D594-17A3-59DC-AF84-F232BC31C612}</Project>
+      <Project>{FFB538CB-2CAF-51C8-832F-F94F26CB1118}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\02_SemanticModel\02_SemanticModel.vcxproj">
-      <Project>{B85D0D5C-95BF-5BD9-814B-E6514E5F4854}</Project>
+      <Project>{50B92123-BC0C-5BC5-8F4C-6715B4F100DE}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\20_ExperimentDomain\20_ExperimentDomain.vcxproj">
-      <Project>{4611B9AB-C7DA-54E9-9169-B12EF9AF01B4}</Project>
+      <Project>{238EEF72-36C7-54B2-9AAA-4D5A36EC4704}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

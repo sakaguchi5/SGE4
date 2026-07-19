@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions
 set "CONFIG=%~1"
 if "%CONFIG%"=="" set "CONFIG=Debug"
@@ -9,7 +9,7 @@ if errorlevel 1 exit /b 1
 set "BIN=%ROOT%build\bin\x64\%CONFIG%"
 set "TESTDIR=%ROOT%build\tests"
 if not exist "%TESTDIR%" mkdir "%TESTDIR%"
-set "PACKAGE=%TESTDIR%\SGE4_CommonExperiment.sgep"
+set "PACKAGE=%TESTDIR%\SGE4_5_CommonExperiment.sgep"
 
 echo Generating the independent Classical/SDF/PGA qualification Package...
 "%BIN%\51_PackageCompiler.exe" "%PACKAGE%" all
@@ -28,9 +28,6 @@ for %%T in (
   43_GeneratedGraphTests
   38_AdversarialBoundaryTests
   44_CanonicalFreezeTests
-  46_CompositionContractTests
-  47_LinkPlanningTests
-  48_LinkAuthorityTests
 ) do (
   echo Running %%T...
   "%BIN%\%%T.exe"
@@ -51,10 +48,6 @@ if errorlevel 1 goto :failed
 
 echo Running 45_PlannedRuntimeTests with verified alternative Plans...
 "%BIN%\45_PlannedRuntimeTests.exe"
-if errorlevel 1 goto :failed
-
-echo Running 49_CompositionRuntimeTests with WARP shared DeviceDomain and recovery...
-"%BIN%\49_CompositionRuntimeTests.exe"
 if errorlevel 1 goto :failed
 
 echo SGE4 %CONFIG% qualification passed.

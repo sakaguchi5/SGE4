@@ -43,7 +43,7 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxguid.lib")
 
-namespace sge4::compiler::d3d12
+namespace sge4_5::compiler::d3d12
 {
 using Microsoft::WRL::ComPtr;
 namespace pkg = package::d3d12_v13;

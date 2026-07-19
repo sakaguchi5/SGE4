@@ -10,13 +10,14 @@
 #include <span>
 #include <vector>
 
-namespace sge4::d3d12
+namespace sge4_5::d3d12
 {
 struct ExecutorOptions final
 {
     bool forceWarp = false;
     bool enableDebugLayer = true;
 };
+
 
 struct ExternalBufferBinding final
 {
@@ -27,6 +28,8 @@ struct ExternalBufferBinding final
 struct ExternalBufferReadback final
 {
     std::vector<std::byte> bytes;
+    // The observation command restores the Package slot's required incoming
+    // state. Reuse this token when rebinding the resource on a later frame.
     std::shared_ptr<runtime::ICompletionToken> availableAfter;
 };
 
@@ -47,6 +50,8 @@ public:
         runtime::IPackageInstance& instance,
         runtime::DeviceRecoveryMode mode) override;
 
+    // Canonical Level 4 v1: one native DeviceDomain owns all Leaf devices,
+    // shared Buffers, tokens, and one monotonically increasing device epoch.
     [[nodiscard]] base::Result<std::unique_ptr<runtime::IPackageDeviceDomain>, runtime::RuntimeError> CreateDeviceDomain();
 
     [[nodiscard]] base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError> LoadIntoDomain(
@@ -78,11 +83,17 @@ public:
         runtime::IPackageDeviceDomain& domain,
         runtime::DeviceRecoveryMode mode);
 
+    // Creates one executor-owned external Buffer for the exact Package slot.
+    // The resource is initialized from the supplied bytes (zero-filled when the
+    // span is shorter than the slot minimum) and returned in requiredIncomingState.
     [[nodiscard]] base::Result<ExternalBufferBinding, runtime::RuntimeError> CreateExternalBuffer(
         runtime::IPackageInstance& instance,
         std::uint32_t slot,
         std::span<const std::byte> initialBytes);
 
+    // Observes an executor-owned external Buffer after its Package release
+    // token. The helper performs an explicit copy, restores requiredIncomingState,
+    // and returns the token that must precede the next Package acquisition.
     [[nodiscard]] base::Result<ExternalBufferReadback, runtime::RuntimeError> ReadExternalBuffer(
         runtime::IPackageInstance& instance,
         const std::shared_ptr<runtime::IExternalResource>& resource,

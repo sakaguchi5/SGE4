@@ -14,7 +14,7 @@ Semantic / Analysis / Target Contract
   -> CandidatePlanner
 
 CandidatePlanner + D3D12PackageLowering
-  -> SGE4Compiler
+  -> SGE4_5Compiler
   -> FrozenPackage / Runtime / Backend
 ```
 
@@ -22,7 +22,7 @@ CandidatePlanner must not reference Package schema, Package lowering, Runtime, o
 
 ## Authority rule
 
-CandidatePlanner may report that a candidate verified, but it does not export a reusable verifier capability token. SGE4Compiler must call `VerifyAndSeal` immediately before `LowerVerifiedPlan`. A mutated raw Plan therefore cannot cross the Package boundary.
+CandidatePlanner may report that a candidate verified, but it does not export a reusable verifier capability token. SGE4_5Compiler must call `VerifyAndSeal` immediately before `LowerVerifiedPlan`. A mutated raw Plan therefore cannot cross the Package boundary.
 
 ## Compatibility rule
 

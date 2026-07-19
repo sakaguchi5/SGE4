@@ -10,7 +10,7 @@
 #include <sstream>
 #include <tuple>
 
-namespace sge4::compiler::d3d12::candidate
+namespace sge4_5::compiler::d3d12::candidate
 {
 namespace
 {

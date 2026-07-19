@@ -27,12 +27,12 @@
 #include <string>
 #include <vector>
 
-namespace sge4::planning::verification
+namespace sge4_5::planning::verification
 {
 class VerifiedExecutionPlan;
 }
 
-namespace sge4::compiler::d3d12
+namespace sge4_5::compiler::d3d12
 {
 using CompileError = compilation::CompilationError;
 using ValidatedSourceStage = compilation::ValidatedCompilationInput;

@@ -8,7 +8,7 @@
 #include <span>
 #include <tuple>
 
-namespace sge4::planning
+namespace sge4_5::planning
 {
 namespace
 {

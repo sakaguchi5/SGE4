@@ -3,7 +3,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 inline constexpr std::uint32_t InvalidIndex = 0xffff'ffffu;
 

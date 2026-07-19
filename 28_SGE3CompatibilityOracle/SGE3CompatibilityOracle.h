@@ -3,7 +3,7 @@
 #include "../08_CandidatePlanner/CandidatePlanner.h"
 #include "../11_D3D12PackageLowering/D3D12PackageLowering.h"
 
-namespace sge4::compatibility::sge3
+namespace sge4_5::compatibility::sge3
 {
 struct ReferencePlanningOutput final
 {
@@ -19,7 +19,7 @@ struct ReferencePlanningOutput final
     const semantic::SemanticGraph& graph,
     const target::D3D12TargetProfile& targetProfile);
 
-// Reproduces the SGE3 Level-3 orchestration outside SGE4Compiler so Stage 0D
+// Reproduces the SGE3 Level-3 orchestration outside SGE4_5Compiler so Stage 0D
 // can compare candidate manifests, selected Plan identity, and Package bytes.
 [[nodiscard]] base::Result<ReferencePlanningOutput, compiler::d3d12::CompileError> CompilePlanningReference(
     const semantic::SemanticGraph& graph,

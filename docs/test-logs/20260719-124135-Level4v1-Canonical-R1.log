@@ -1,0 +1,25 @@
+﻿SGE4-5 Level 4 v1 Canonical R1 qualification
+Started=2026-07-19T12:41:35.2566203+09:00
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
+SGE4-5 dependency boundary check passed. Projects: 57, references: 412.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\Verify-Level4v1R1Boundaries.ps1
+Level 4 v1 Canonical R1 dependency and artifact boundaries passed.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
+SGE4-5 script contract verification passed. Scripts: 46.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
+SOURCE_MANIFEST verification passed. Files: 265.
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\46_CanonicalCompositionArtifactTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r1\Canonical_R1_Debug_A.sgec
+Canonical Frozen Composition boundary tests passed.
+Artifact bytes: 1979
+Artifact SHA-256: 7e90ce481533fb91e638877af2880d8baf72be483a0aa1a0610bc964f7ef9cf7
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\46_CanonicalCompositionArtifactTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r1\Canonical_R1_Debug_B.sgec
+Canonical Frozen Composition boundary tests passed.
+Artifact bytes: 1979
+Artifact SHA-256: 7e90ce481533fb91e638877af2880d8baf72be483a0aa1a0610bc964f7ef9cf7
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Release\46_CanonicalCompositionArtifactTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r1\Canonical_R1_Release.sgec
+Canonical Frozen Composition boundary tests passed.
+Artifact bytes: 1979
+Artifact SHA-256: 7e90ce481533fb91e638877af2880d8baf72be483a0aa1a0610bc964f7ef9cf7
+PASSED
+Artifact bytes: 1979
+Artifact SHA-256: 7E90CE481533FB91E638877AF2880D8BAF72BE483A0AA1A0610BC964F7EF9CF7

@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{F6181843-3292-5068-A15E-A111FF29D06E}</ProjectGuid>
+    <ProjectGuid>{0BA55D0F-519A-500D-90A6-ACAD95DC6020}</ProjectGuid>
     <RootNamespace>42_MetamorphicTests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -87,47 +87,47 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\02_SemanticModel\02_SemanticModel.vcxproj">
-      <Project>{B85D0D5C-95BF-5BD9-814B-E6514E5F4854}</Project>
+      <Project>{50B92123-BC0C-5BC5-8F4C-6715B4F100DE}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\03_SemanticBuilder\03_SemanticBuilder.vcxproj">
-      <Project>{35E43ED1-2596-5CF1-87CA-5ECD4E862494}</Project>
+      <Project>{A8B7E571-A4D0-5E81-BEE6-CDB66B6FD8E5}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\04_SemanticAnalysis\04_SemanticAnalysis.vcxproj">
-      <Project>{1E31BE06-36FB-5CB2-BA93-874DF5C11E11}</Project>
+      <Project>{04957AC5-899F-5199-9F0A-15A1DD44E715}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\05_TargetContract\05_TargetContract.vcxproj">
-      <Project>{44226517-5A8B-5C6C-AF75-17B28C1FC74A}</Project>
+      <Project>{07D251E1-77C0-5602-BB95-B93AA3F87CC5}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\08_CandidatePlanner\08_CandidatePlanner.vcxproj">
-      <Project>{71C9CB73-B15C-5F1D-BBB1-F4C6EB0833A4}</Project>
+      <Project>{C00D749F-9DFA-529D-9794-FEBF5F507FB9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\11_D3D12PackageLowering\11_D3D12PackageLowering.vcxproj">
-      <Project>{F4BF6409-1F32-5436-9697-B40B7AC1273A}</Project>
+      <Project>{F6ADFCA2-7E22-5A41-8924-C26CD332EF00}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\12_SGE4Compiler\12_SGE4Compiler.vcxproj">
-      <Project>{805CF0F6-502E-5A0C-A7FC-E75B6D104DDD}</Project>
+    <ProjectReference Include="..\12_SGE4_5Compiler\12_SGE4_5Compiler.vcxproj">
+      <Project>{74C98EAC-0941-5A82-8951-BEA689E796CB}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\09_FrozenPackageCore\09_FrozenPackageCore.vcxproj">
-      <Project>{BD0B0FE4-8C5A-5A01-99B1-1794D98C856E}</Project>
+      <Project>{F98684BE-8950-50C1-9224-BFC168EBE432}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\10_D3D12PackageSchema\10_D3D12PackageSchema.vcxproj">
-      <Project>{56E9406C-8240-5BED-B98F-E06585E75D91}</Project>
+      <Project>{67E7BBE2-3DD2-59EB-8B45-1A3558DA75E6}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\25_GeneralGraphScenarios\25_GeneralGraphScenarios.vcxproj">
-      <Project>{7AFFB3B8-BDF9-5CC4-A73D-9D93083B0CDF}</Project>
+      <Project>{EDBB926A-D0C7-56F9-AA6D-E809F704D764}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

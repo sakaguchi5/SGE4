@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::planning
+namespace sge4_5::planning
 {
 inline constexpr std::uint32_t PlanContractVersion = 1;
 

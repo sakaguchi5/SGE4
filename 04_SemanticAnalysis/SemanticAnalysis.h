@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::analysis
+namespace sge4_5::analysis
 {
 struct Diagnostic final
 {

@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::compiler::d3d12::candidate
+namespace sge4_5::compiler::d3d12::candidate
 {
 using PlanningError = compilation::CompilationError;
 
@@ -19,7 +19,7 @@ struct CandidateRecord final
     planning::verification::VerificationReport verification;
     planning::CostVector cost;
 
-    // Filled only by SGE4Compiler after a verifier-sealed Plan is lowered.
+    // Filled only by SGE4_5Compiler after a verifier-sealed Plan is lowered.
     // CandidatePlanner never depends on Package schema or Package lowering.
     std::string packageExecutionDigestHex;
 };
@@ -74,7 +74,7 @@ struct PlanningSelection final
     const target::D3D12TargetProfile& targetProfile,
     const planning::CompilerPolicy& policy);
 
-// Selection phase: SGE4Compiler first fills Package execution digests for the
+// Selection phase: SGE4_5Compiler first fills Package execution digests for the
 // verifier-sealed candidates it actually lowered, then asks the planner to make
 // the deterministic policy/profile selection and freeze the planning manifest.
 [[nodiscard]] base::Result<PlanningSelection, PlanningError> SelectCandidate(

@@ -4,7 +4,7 @@
 #include "../13_PackageRuntime/PackageRuntime.h"
 #include "../14_D3D12Backend/D3D12Backend.h"
 #include "../27_RuntimeScenarios/RuntimeScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <array>
@@ -18,8 +18,8 @@
 
 namespace
 {
-namespace k = sge4::qualification::runtime_scenarios;
-namespace pkg = sge4::package::d3d12_v13;
+namespace k = sge4_5::qualification::runtime_scenarios;
+namespace pkg = sge4_5::package::d3d12_v13;
 
 std::span<const std::byte> Bytes(const k::Float4& value)
 {
@@ -47,8 +47,8 @@ void Print(const char* label, const k::Float4& value)
               << value[2] << ", " << value[3] << "]\n";
 }
 
-std::shared_ptr<sge4::runtime::ICompletionToken> ReleaseToken(
-    const sge4::runtime::FrameSubmission& submission,
+std::shared_ptr<sge4_5::runtime::ICompletionToken> ReleaseToken(
+    const sge4_5::runtime::FrameSubmission& submission,
     std::uint32_t slot)
 {
     const auto found = std::find_if(submission.releasedExternalResources.begin(),
@@ -59,7 +59,7 @@ std::shared_ptr<sge4::runtime::ICompletionToken> ReleaseToken(
 }
 
 
-bool HasQueueCompletion(const sge4::runtime::FrameSubmission& submission, std::uint32_t queue)
+bool HasQueueCompletion(const sge4_5::runtime::FrameSubmission& submission, std::uint32_t queue)
 {
     return std::any_of(submission.queues.begin(), submission.queues.end(),
         [queue](const auto& completion) { return completion.queue == queue && completion.value != 0; });
@@ -75,28 +75,28 @@ std::uint32_t Count(std::span<const pkg::OperationView> operations,
 struct CompiledScenario final
 {
     k::Input input;
-    sge4::package::FrozenExecutablePackage package;
+    sge4_5::package::FrozenExecutablePackage package;
 };
 
-sge4::base::Result<CompiledScenario, std::string> Compile(k::Scenario scenario, bool directFallback = false)
+sge4_5::base::Result<CompiledScenario, std::string> Compile(k::Scenario scenario, bool directFallback = false)
 {
     auto built = k::Build(scenario);
-    if (!built) return sge4::base::Result<CompiledScenario, std::string>::Failure(built.Error());
+    if (!built) return sge4_5::base::Result<CompiledScenario, std::string>::Failure(built.Error());
     auto input = std::move(built).Value();
     if (directFallback)
     {
         input.targetProfile.computeQueueCount = 0;
         input.targetProfile.copyQueueCount = 0;
     }
-    auto compiled = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
+    auto compiled = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
     if (!compiled)
-        return sge4::base::Result<CompiledScenario, std::string>::Failure(
+        return sge4_5::base::Result<CompiledScenario, std::string>::Failure(
             compiled.Error().stage + ": " + compiled.Error().message);
-    auto frozen = sge4::package::PackageReader::Read(std::move(compiled).Value().packageBytes);
+    auto frozen = sge4_5::package::PackageReader::Read(std::move(compiled).Value().packageBytes);
     if (!frozen)
-        return sge4::base::Result<CompiledScenario, std::string>::Failure(frozen.Error().message);
+        return sge4_5::base::Result<CompiledScenario, std::string>::Failure(frozen.Error().message);
     CompiledScenario result{std::move(input), std::move(frozen).Value()};
-    return sge4::base::Result<CompiledScenario, std::string>::Success(std::move(result));
+    return sge4_5::base::Result<CompiledScenario, std::string>::Success(std::move(result));
 }
 
 int ValidatePackageContracts()
@@ -202,12 +202,12 @@ int ValidatePackageContracts()
     return 0;
 }
 
-int ExpectInvocationFailure(sge4::runtime::LoadedPackage& loaded,
-                            sge4::d3d12::D3D12Backend& executor,
-                            const sge4::runtime::FrameInvocation& invocation,
+int ExpectInvocationFailure(sge4_5::runtime::LoadedPackage& loaded,
+                            sge4_5::d3d12::D3D12Backend& executor,
+                            const sge4_5::runtime::FrameInvocation& invocation,
                             std::string_view label)
 {
-    auto submitted = sge4::runtime::Submit(loaded, executor, invocation);
+    auto submitted = sge4_5::runtime::Submit(loaded, executor, invocation);
     if (submitted || submitted.Error().stage != "invocation")
     {
         std::cerr << "Stage-K invocation boundary did not reject " << label;
@@ -222,8 +222,8 @@ int ExecuteDynamicExternalPipeline()
 {
     auto compiled = Compile(k::Scenario::DynamicExternalPipeline);
     if (!compiled) { std::cerr << compiled.Error() << '\n'; return 1; }
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(compiled).Value().package, executor);
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(compiled).Value().package, executor);
     if (!loaded)
     {
         std::cerr << "Stage-K pipeline load failed at " << loaded.Error().stage
@@ -245,62 +245,62 @@ int ExecuteDynamicExternalPipeline()
 
     const k::Float4 boundaryA{1.0f, 2.0f, 3.0f, 4.0f};
     const k::Float4 boundaryB{5.0f, 6.0f, 7.0f, 8.0f};
-    const sge4::runtime::DynamicDataBinding validDynamic[2] = {{0, Bytes(boundaryA)}, {1, Bytes(boundaryB)}};
-    const sge4::runtime::ExternalResourceBinding validExternal[3] = {
+    const sge4_5::runtime::DynamicDataBinding validDynamic[2] = {{0, Bytes(boundaryA)}, {1, Bytes(boundaryB)}};
+    const sge4_5::runtime::ExternalResourceBinding validExternal[3] = {
         {0, input.Value().resource, input.Value().availableAfter},
         {1, outputA.Value().resource, outputA.Value().availableAfter},
         {2, outputB.Value().resource, outputB.Value().availableAfter}};
 
     // Runtime boundary: each invalid invocation must fail before any Package operation executes.
     {
-        sge4::runtime::FrameInvocation invocation{0, std::span(validDynamic, 1), validExternal};
+        sge4_5::runtime::FrameInvocation invocation{0, std::span(validDynamic, 1), validExternal};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "missing dynamic slot")) return 4;
     }
     {
-        const sge4::runtime::DynamicDataBinding duplicate[2] = {{0, Bytes(boundaryA)}, {0, Bytes(boundaryB)}};
-        sge4::runtime::FrameInvocation invocation{0, duplicate, validExternal};
+        const sge4_5::runtime::DynamicDataBinding duplicate[2] = {{0, Bytes(boundaryA)}, {0, Bytes(boundaryB)}};
+        sge4_5::runtime::FrameInvocation invocation{0, duplicate, validExternal};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "duplicate dynamic slot")) return 5;
     }
     {
-        const sge4::runtime::DynamicDataBinding unknown[2] = {{0, Bytes(boundaryA)}, {99, Bytes(boundaryB)}};
-        sge4::runtime::FrameInvocation invocation{0, unknown, validExternal};
+        const sge4_5::runtime::DynamicDataBinding unknown[2] = {{0, Bytes(boundaryA)}, {99, Bytes(boundaryB)}};
+        sge4_5::runtime::FrameInvocation invocation{0, unknown, validExternal};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "unknown dynamic slot")) return 6;
     }
     {
         const auto shortBytes = std::as_bytes(std::span<const float>(boundaryA.data(), 1));
-        const sge4::runtime::DynamicDataBinding wrongSize[2] = {{0, shortBytes}, {1, Bytes(boundaryB)}};
-        sge4::runtime::FrameInvocation invocation{0, wrongSize, validExternal};
+        const sge4_5::runtime::DynamicDataBinding wrongSize[2] = {{0, shortBytes}, {1, Bytes(boundaryB)}};
+        sge4_5::runtime::FrameInvocation invocation{0, wrongSize, validExternal};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "dynamic byte-size mismatch")) return 7;
     }
     {
-        sge4::runtime::FrameInvocation invocation{0, validDynamic, std::span(validExternal, 2)};
+        sge4_5::runtime::FrameInvocation invocation{0, validDynamic, std::span(validExternal, 2)};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "missing external slot")) return 8;
     }
     {
-        const sge4::runtime::ExternalResourceBinding duplicate[3] = {
+        const sge4_5::runtime::ExternalResourceBinding duplicate[3] = {
             validExternal[0], {0, outputA.Value().resource, outputA.Value().availableAfter}, validExternal[2]};
-        sge4::runtime::FrameInvocation invocation{0, validDynamic, duplicate};
+        sge4_5::runtime::FrameInvocation invocation{0, validDynamic, duplicate};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "duplicate external slot")) return 9;
     }
     {
-        const sge4::runtime::ExternalResourceBinding unknown[3] = {
+        const sge4_5::runtime::ExternalResourceBinding unknown[3] = {
             validExternal[0], validExternal[1], {99, outputB.Value().resource, outputB.Value().availableAfter}};
-        sge4::runtime::FrameInvocation invocation{0, validDynamic, unknown};
+        sge4_5::runtime::FrameInvocation invocation{0, validDynamic, unknown};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "unknown external slot")) return 10;
     }
     {
-        const sge4::runtime::ExternalResourceBinding wrongSlot[3] = {
+        const sge4_5::runtime::ExternalResourceBinding wrongSlot[3] = {
             validExternal[0], {1, outputB.Value().resource, outputB.Value().availableAfter},
             {2, outputA.Value().resource, outputA.Value().availableAfter}};
-        sge4::runtime::FrameInvocation invocation{0, validDynamic, wrongSlot};
+        sge4_5::runtime::FrameInvocation invocation{0, validDynamic, wrongSlot};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "slot-specific external resource mismatch")) return 11;
     }
     {
-        const sge4::runtime::ExternalResourceBinding wrongToken[3] = {
+        const sge4_5::runtime::ExternalResourceBinding wrongToken[3] = {
             validExternal[0],
             {1, outputA.Value().resource, outputB.Value().availableAfter},
             {2, outputB.Value().resource, outputA.Value().availableAfter}};
-        sge4::runtime::FrameInvocation invocation{0, validDynamic, wrongToken};
+        sge4_5::runtime::FrameInvocation invocation{0, validDynamic, wrongToken};
         if (ExpectInvocationFailure(loaded.Value(), executor, invocation, "slot-specific completion-token mismatch")) return 12;
     }
 
@@ -318,14 +318,14 @@ int ExecuteDynamicExternalPipeline()
     auto outputBBinding = outputB.Value();
     for (std::uint64_t frame = 0; frame < 3; ++frame)
     {
-        const sge4::runtime::DynamicDataBinding dynamic[2] = {
+        const sge4_5::runtime::DynamicDataBinding dynamic[2] = {
             {0, Bytes(dynamicA[frame])}, {1, Bytes(dynamicB[frame])}};
-        const sge4::runtime::ExternalResourceBinding external[3] = {
+        const sge4_5::runtime::ExternalResourceBinding external[3] = {
             {0, inputBinding.resource, inputBinding.availableAfter},
             {1, outputABinding.resource, outputABinding.availableAfter},
             {2, outputBBinding.resource, outputBBinding.availableAfter}};
-        sge4::runtime::FrameInvocation invocation{frame, dynamic, external};
-        auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        sge4_5::runtime::FrameInvocation invocation{frame, dynamic, external};
+        auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submitted)
         {
             std::cerr << "Stage-K pipeline frame " << frame << " failed at " << submitted.Error().stage
@@ -365,33 +365,33 @@ int ExecuteDynamicExternalPipeline()
         outputBBinding.availableAfter = readB.Value().availableAfter;
     }
 
-    auto recovered = sge4::runtime::RecoverDevice(loaded.Value(), executor,
-        sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    auto recovered = sge4_5::runtime::RecoverDevice(loaded.Value(), executor,
+        sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
     if (!recovered || recovered.Value().newDeviceEpoch != 2 ||
         !recovered.Value().packageObjectsRebuilt || !recovered.Value().externalRebindRequired)
     {
         if (!recovered) std::cerr << recovered.Error().stage << ": " << recovered.Error().message << '\n';
         return 17;
     }
-    const sge4::runtime::DynamicDataBinding staleDynamic[2] = {
+    const sge4_5::runtime::DynamicDataBinding staleDynamic[2] = {
         {0, Bytes(dynamicA[0])}, {1, Bytes(dynamicB[0])}};
-    const sge4::runtime::ExternalResourceBinding staleExternal[3] = {
+    const sge4_5::runtime::ExternalResourceBinding staleExternal[3] = {
         {0, inputBinding.resource, inputBinding.availableAfter},
         {1, outputABinding.resource, outputABinding.availableAfter},
         {2, outputBBinding.resource, outputBBinding.availableAfter}};
-    sge4::runtime::FrameInvocation stale{0, staleDynamic, staleExternal};
+    sge4_5::runtime::FrameInvocation stale{0, staleDynamic, staleExternal};
     if (ExpectInvocationFailure(loaded.Value(), executor, stale, "stale external epoch after reconstruction")) return 18;
 
     auto reboundInput = executor.CreateExternalBuffer(loaded.Value().Instance(), 0, Bytes(externalInput));
     auto reboundA = executor.CreateExternalBuffer(loaded.Value().Instance(), 1, Bytes(zero));
     auto reboundB = executor.CreateExternalBuffer(loaded.Value().Instance(), 2, Bytes(zero));
     if (!reboundInput || !reboundA || !reboundB) return 19;
-    const sge4::runtime::ExternalResourceBinding reboundExternal[3] = {
+    const sge4_5::runtime::ExternalResourceBinding reboundExternal[3] = {
         {0, reboundInput.Value().resource, reboundInput.Value().availableAfter},
         {1, reboundA.Value().resource, reboundA.Value().availableAfter},
         {2, reboundB.Value().resource, reboundB.Value().availableAfter}};
-    sge4::runtime::FrameInvocation reboundInvocation{0, staleDynamic, reboundExternal};
-    auto reboundSubmitted = sge4::runtime::Submit(loaded.Value(), executor, reboundInvocation);
+    sge4_5::runtime::FrameInvocation reboundInvocation{0, staleDynamic, reboundExternal};
+    auto reboundSubmitted = sge4_5::runtime::Submit(loaded.Value(), executor, reboundInvocation);
     if (!reboundSubmitted) return 20;
     auto reboundRead = executor.ReadExternalBuffer(loaded.Value().Instance(), reboundB.Value().resource,
         ReleaseToken(reboundSubmitted.Value(), 2));
@@ -407,8 +407,8 @@ int ExecuteDirectFallbackPipeline()
 {
     auto compiled = Compile(k::Scenario::DynamicExternalPipeline, true);
     if (!compiled) { std::cerr << compiled.Error() << '\n'; return 1; }
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(compiled).Value().package, executor);
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(compiled).Value().package, executor);
     if (!loaded) return 2;
 
     const k::Float4 externalInput{0.75f, 1.25f, 1.75f, 2.25f};
@@ -420,14 +420,14 @@ int ExecuteDirectFallbackPipeline()
     auto outputB = executor.CreateExternalBuffer(loaded.Value().Instance(), 2, Bytes(zero));
     if (!input || !outputA || !outputB) return 3;
 
-    const sge4::runtime::DynamicDataBinding dynamic[2] = {
+    const sge4_5::runtime::DynamicDataBinding dynamic[2] = {
         {0, Bytes(dynamicA)}, {1, Bytes(dynamicB)}};
-    const sge4::runtime::ExternalResourceBinding external[3] = {
+    const sge4_5::runtime::ExternalResourceBinding external[3] = {
         {0, input.Value().resource, input.Value().availableAfter},
         {1, outputA.Value().resource, outputA.Value().availableAfter},
         {2, outputB.Value().resource, outputB.Value().availableAfter}};
-    sge4::runtime::FrameInvocation invocation{0, dynamic, external};
-    auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+    sge4_5::runtime::FrameInvocation invocation{0, dynamic, external};
+    auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
     if (!submitted || submitted.Value().queues.size() != 1 ||
         !HasQueueCompletion(submitted.Value(), 0))
         return 4;
@@ -445,8 +445,8 @@ int ExecuteCrossQueueTemporal()
 {
     auto compiled = Compile(k::Scenario::CrossQueueTemporal);
     if (!compiled) { std::cerr << compiled.Error() << '\n'; return 1; }
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(compiled).Value().package, executor);
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(compiled).Value().package, executor);
     if (!loaded)
     {
         std::cerr << "Stage-K Temporal load failed at " << loaded.Error().stage
@@ -464,14 +464,14 @@ int ExecuteCrossQueueTemporal()
 
     for (std::uint64_t frame = 0; frame < values.size(); ++frame)
     {
-        const sge4::runtime::DynamicDataBinding dynamic{0, Bytes(values[frame])};
-        const sge4::runtime::ExternalResourceBinding external{
+        const sge4_5::runtime::DynamicDataBinding dynamic{0, Bytes(values[frame])};
+        const sge4_5::runtime::ExternalResourceBinding external{
             0, outputBinding.resource, outputBinding.availableAfter};
-        sge4::runtime::FrameInvocation invocation;
+        sge4_5::runtime::FrameInvocation invocation;
         invocation.frameNumber = frame;
         invocation.dynamicData = std::span(&dynamic, 1);
         invocation.externalResources = std::span(&external, 1);
-        auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submitted)
         {
             std::cerr << "Stage-K Temporal frame " << frame << " failed at " << submitted.Error().stage
@@ -511,31 +511,31 @@ int ExecuteCrossQueueTemporal()
     }
 
     // Temporal frame numbers are part of the Runtime contract.
-    const sge4::runtime::DynamicDataBinding skippedDynamic{0, Bytes(values[0])};
-    const sge4::runtime::ExternalResourceBinding skippedExternal{
+    const sge4_5::runtime::DynamicDataBinding skippedDynamic{0, Bytes(values[0])};
+    const sge4_5::runtime::ExternalResourceBinding skippedExternal{
         0, outputBinding.resource, outputBinding.availableAfter};
-    sge4::runtime::FrameInvocation skipped;
+    sge4_5::runtime::FrameInvocation skipped;
     skipped.frameNumber = 4;
     skipped.dynamicData = std::span(&skippedDynamic, 1);
     skipped.externalResources = std::span(&skippedExternal, 1);
     if (ExpectInvocationFailure(loaded.Value(), executor, skipped, "non-consecutive Temporal frame number")) return 8;
 
-    auto recovered = sge4::runtime::RecoverDevice(loaded.Value(), executor,
-        sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    auto recovered = sge4_5::runtime::RecoverDevice(loaded.Value(), executor,
+        sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
     if (!recovered || !recovered.Value().temporalHistoryReset ||
         !recovered.Value().externalRebindRequired || recovered.Value().newDeviceEpoch != 2)
         return 9;
     auto rebound = executor.CreateExternalBuffer(loaded.Value().Instance(), 0, Bytes(zero));
     if (!rebound) return 10;
     const k::Float4 recoveryValue{100.0f, 200.0f, 300.0f, 400.0f};
-    const sge4::runtime::DynamicDataBinding dynamic{0, Bytes(recoveryValue)};
-    const sge4::runtime::ExternalResourceBinding external{
+    const sge4_5::runtime::DynamicDataBinding dynamic{0, Bytes(recoveryValue)};
+    const sge4_5::runtime::ExternalResourceBinding external{
         0, rebound.Value().resource, rebound.Value().availableAfter};
-    sge4::runtime::FrameInvocation invocation;
+    sge4_5::runtime::FrameInvocation invocation;
     invocation.frameNumber = 0;
     invocation.dynamicData = std::span(&dynamic, 1);
     invocation.externalResources = std::span(&external, 1);
-    auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+    auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
     if (!submitted || submitted.Value().temporalDependencyFenceValue != 0) return 11;
     auto readback = executor.ReadExternalBuffer(loaded.Value().Instance(), rebound.Value().resource,
         ReleaseToken(submitted.Value(), 0));

@@ -10,7 +10,7 @@
 #include <span>
 #include <vector>
 
-namespace sge4::package::d3d12_v13
+namespace sge4_5::package::d3d12_v13
 {
 template<class Tag> using Id32 = base::Id32<Tag>;
 struct ResourceTag; struct AllocationTag; struct ViewTag; struct ShaderTag; struct ProgramTag;

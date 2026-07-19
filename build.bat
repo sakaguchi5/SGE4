@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions
 
 set "ROOT=%~dp0"
@@ -25,5 +25,5 @@ if not defined MSBUILD (
   exit /b 1
 )
 
-"%MSBUILD%" "%ROOT%SemanticGpuEngine4.sln" /m /nologo /t:Build /p:Configuration=%CONFIG% /p:Platform=x64
+"%MSBUILD%" "%ROOT%SemanticGpuEngine4-5.sln" /m /nologo /t:Build /p:Configuration=%CONFIG% /p:Platform=x64
 exit /b %errorlevel%

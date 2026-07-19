@@ -4,7 +4,7 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 namespace
 {

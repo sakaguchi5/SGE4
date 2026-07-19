@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <limits>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 [[nodiscard]] inline bool CheckedAdd(std::uint64_t a, std::uint64_t b, std::uint64_t& out) noexcept
 {

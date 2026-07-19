@@ -3,7 +3,7 @@
 #include "../09_FrozenPackageCore/PackageReader.h"
 #include "../10_D3D12PackageSchema/D3D12Encoding.h"
 #include "../24_SliceScenarios/SliceScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -16,9 +16,9 @@
 
 namespace
 {
-namespace sem = sge4::semantic;
-namespace pkg = sge4::package::d3d12_v13;
-namespace lvl = sge4::level1;
+namespace sem = sge4_5::semantic;
+namespace pkg = sge4_5::package::d3d12_v13;
+namespace lvl = sge4_5::level1;
 
 std::size_t Count(
     std::span<const pkg::OperationView> operations,
@@ -92,7 +92,7 @@ int ValidateGraph(const lvl::ScenarioInput& input)
     const auto& graph = input.graph;
     const auto& expected = input.expectations;
 
-    auto analyzed = sge4::analysis::Analyze(graph);
+    auto analyzed = sge4_5::analysis::Analyze(graph);
     if (!analyzed)
     {
         std::cerr << input.name << ": SemanticAnalysis rejected the scenario";
@@ -258,8 +258,8 @@ int main()
         if (const auto validation = ValidateGraph(input); validation != 0)
             return 10 + validation;
 
-        auto first = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
-        auto second = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
+        auto first = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
+        auto second = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
         if (!first || !second)
         {
             const auto& error = !first ? first.Error() : second.Error();
@@ -273,7 +273,7 @@ int main()
             return 21;
         }
 
-        auto frozen = sge4::package::PackageReader::Read(first.Value().packageBytes);
+        auto frozen = sge4_5::package::PackageReader::Read(first.Value().packageBytes);
         if (!frozen)
         {
             std::cerr << input.name << ": " << frozen.Error().message << '\n';

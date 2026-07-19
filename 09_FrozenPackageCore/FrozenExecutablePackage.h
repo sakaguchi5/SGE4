@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-namespace sge4::package
+namespace sge4_5::package
 {
 struct SectionView final
 {

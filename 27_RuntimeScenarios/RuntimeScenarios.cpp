@@ -5,7 +5,7 @@
 #include <span>
 #include <utility>
 
-namespace sge4::qualification::runtime_scenarios
+namespace sge4_5::qualification::runtime_scenarios
 {
 namespace
 {

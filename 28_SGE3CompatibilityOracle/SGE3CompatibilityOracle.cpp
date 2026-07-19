@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace sge4::compatibility::sge3
+namespace sge4_5::compatibility::sge3
 {
 base::Result<compiler::d3d12::CompileOutput, compiler::d3d12::CompileError> Compile(
     const semantic::SemanticGraph& graph,

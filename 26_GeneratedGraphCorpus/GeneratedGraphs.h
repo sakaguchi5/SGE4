@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::qualification::generated
+namespace sge4_5::qualification::generated
 {
 enum class NodeKind : std::uint16_t
 {

@@ -1,6 +1,6 @@
 #include "../00_Foundation/Sha256.h"
 #include "../11_D3D12PackageLowering/D3D12PackageLowering.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 #include "../08_CandidatePlanner/CandidatePlanner.h"
 #include "../07_ExecutionPlanVerifier/ExecutionPlanVerifier.h"
 #include "../27_RuntimeScenarios/RuntimeScenarios.h"
@@ -18,11 +18,11 @@
 
 namespace
 {
-namespace compiler = sge4::compiler::d3d12;
-namespace l3c = sge4::compiler::d3d12::candidate;
-namespace l3 = sge4::planning;
-namespace verify = sge4::planning::verification;
-namespace scenarios = sge4::qualification::runtime_scenarios;
+namespace compiler = sge4_5::compiler::d3d12;
+namespace l3c = sge4_5::compiler::d3d12::candidate;
+namespace l3 = sge4_5::planning;
+namespace verify = sge4_5::planning::verification;
+namespace scenarios = sge4_5::qualification::runtime_scenarios;
 
 struct TestLog final
 {
@@ -47,9 +47,9 @@ struct TestLog final
     }
 };
 
-sge4::base::Digest256 ParseDigest(std::string_view text)
+sge4_5::base::Digest256 ParseDigest(std::string_view text)
 {
-    sge4::base::Digest256 result{};
+    sge4_5::base::Digest256 result{};
     const auto nibble = [](char value) -> std::uint8_t {
         if (value >= '0' && value <= '9') return static_cast<std::uint8_t>(value - '0');
         if (value >= 'a' && value <= 'f') return static_cast<std::uint8_t>(value - 'a' + 10);
@@ -70,33 +70,33 @@ struct Fixture final
     compiler::CompileOutput safePackage;
 };
 
-sge4::base::Result<Fixture, std::string> BuildFixture()
+sge4_5::base::Result<Fixture, std::string> BuildFixture()
 {
     auto built = scenarios::Build(scenarios::Scenario::DynamicExternalPipeline);
-    if (!built) return sge4::base::Result<Fixture, std::string>::Failure(built.Error());
+    if (!built) return sge4_5::base::Result<Fixture, std::string>::Failure(built.Error());
 
     Fixture fixture;
     fixture.input = std::move(built).Value();
     auto validated = compiler::ValidateSourceStage(fixture.input.graph, fixture.input.targetProfile);
-    if (!validated) return sge4::base::Result<Fixture, std::string>::Failure(
+    if (!validated) return sge4_5::base::Result<Fixture, std::string>::Failure(
         validated.Error().stage + ": " + validated.Error().message);
 
     auto obligation = l3::BuildSemanticObligation(fixture.input.graph, validated.Value().analyzed);
-    if (!obligation) return sge4::base::Result<Fixture, std::string>::Failure(obligation.Error());
+    if (!obligation) return sge4_5::base::Result<Fixture, std::string>::Failure(obligation.Error());
     fixture.obligation = std::move(obligation).Value();
     fixture.contract = l3::BuildPlanningContract(fixture.input.targetProfile);
     fixture.safePlan = l3c::BuildCanonicalSafePlan(fixture.obligation, fixture.contract);
 
     auto sealed = verify::VerifyAndSeal(fixture.obligation, fixture.contract, fixture.safePlan);
-    if (!sealed) return sge4::base::Result<Fixture, std::string>::Failure(
+    if (!sealed) return sge4_5::base::Result<Fixture, std::string>::Failure(
         "CanonicalSafePlan was rejected by the independent verifier");
 
     auto package = compiler::LowerVerifiedPlan(
         fixture.input.graph, fixture.input.targetProfile, sealed.Value());
-    if (!package) return sge4::base::Result<Fixture, std::string>::Failure(
+    if (!package) return sge4_5::base::Result<Fixture, std::string>::Failure(
         package.Error().stage + ": " + package.Error().message);
     fixture.safePackage = std::move(package).Value();
-    return sge4::base::Result<Fixture, std::string>::Success(std::move(fixture));
+    return sge4_5::base::Result<Fixture, std::string>::Success(std::move(fixture));
 }
 
 void RequireRejectedOrFrozen(TestLog& log, const Fixture& fixture, std::string_view name,
@@ -135,8 +135,8 @@ void CheckVerifierGate(TestLog& log, const Fixture& fixture)
 {
     constexpr bool rawPlanCanReachLowering = std::is_invocable_v<
         decltype(&compiler::LowerVerifiedPlan),
-        const sge4::semantic::SemanticGraph&,
-        const sge4::target::D3D12TargetProfile&,
+        const sge4_5::semantic::SemanticGraph&,
+        const sge4_5::target::D3D12TargetProfile&,
         const l3::ExecutionPlanIR&>;
     log.Require(!rawPlanCanReachLowering, "raw-plan-lowering-requires-verifier",
         "LowerVerifiedPlan still accepts raw ExecutionPlanIR instead of VerifiedExecutionPlan");
@@ -162,7 +162,7 @@ void CheckBindingAuthority(TestLog& log, const Fixture& fixture)
     RequireRejectedOrFrozen(log, fixture, "binding-root-index-authority", std::move(root));
 
     const auto descriptor = std::find_if(fixture.safePlan.bindings.begin(), fixture.safePlan.bindings.end(),
-        [](const auto& binding) { return binding.descriptorIndex != sge4::base::InvalidIndex; });
+        [](const auto& binding) { return binding.descriptorIndex != sge4_5::base::InvalidIndex; });
     if (descriptor == fixture.safePlan.bindings.end())
     {
         log.Fail("binding-descriptor-index-authority", "qualification fixture has no descriptor-backed BindingPlan");
@@ -190,7 +190,7 @@ void CheckAllocationReferenceAuthority(TestLog& log, const Fixture& fixture)
 {
     const auto resource = std::find_if(fixture.safePlan.resourceInstances.begin(),
         fixture.safePlan.resourceInstances.end(), [](const auto& item) {
-            return item.allocation != sge4::base::InvalidIndex;
+            return item.allocation != sge4_5::base::InvalidIndex;
         });
     if (resource == fixture.safePlan.resourceInstances.end())
     {
@@ -267,10 +267,10 @@ void CheckProfileProvenance(TestLog& log, const Fixture& fixture)
 {
     l3::CompilerPolicy directPolicy;
     directPolicy.kind = l3::CompilerPolicyKind::MinimizeQueueHandoffs;
-    auto direct = sge4::compiler::Compile(fixture.input.graph, fixture.input.targetProfile, directPolicy);
+    auto direct = sge4_5::compiler::Compile(fixture.input.graph, fixture.input.targetProfile, directPolicy);
     l3::CompilerPolicy dedicatedPolicy;
     dedicatedPolicy.kind = l3::CompilerPolicyKind::PreferDedicatedQueues;
-    auto dedicated = sge4::compiler::Compile(fixture.input.graph, fixture.input.targetProfile, dedicatedPolicy);
+    auto dedicated = sge4_5::compiler::Compile(fixture.input.graph, fixture.input.targetProfile, dedicatedPolicy);
     if (!direct || !dedicated)
     {
         const auto* error = !direct ? &direct.Error() : &dedicated.Error();
@@ -284,8 +284,8 @@ void CheckProfileProvenance(TestLog& log, const Fixture& fixture)
     profile.targetProfileDigest = dedicated.Value().planningContract.digest;
     const std::string adapter = "WARP-Level3-Authority";
     const std::string scenario = "DynamicExternalPipeline-Authority";
-    profile.adapterDriverFingerprint = sge4::base::Sha256(std::as_bytes(std::span(adapter)));
-    profile.measurementScenarioDigest = sge4::base::Sha256(std::as_bytes(std::span(scenario)));
+    profile.adapterDriverFingerprint = sge4_5::base::Sha256(std::as_bytes(std::span(adapter)));
+    profile.measurementScenarioDigest = sge4_5::base::Sha256(std::as_bytes(std::span(scenario)));
     profile.sampleCount = 8;
     profile.measuredNanoseconds = 1000;
 
@@ -293,7 +293,7 @@ void CheckProfileProvenance(TestLog& log, const Fixture& fixture)
     l3::CompilerPolicy profilePolicy;
     profilePolicy.kind = l3::CompilerPolicyKind::ProfileGuided;
 
-    auto selected = sge4::compiler::Compile(fixture.input.graph, fixture.input.targetProfile,
+    auto selected = sge4_5::compiler::Compile(fixture.input.graph, fixture.input.targetProfile,
         profilePolicy, &profile, &context);
     log.Require(selected && selected.Value().selectedPlan.identity == profile.planIdentity,
         "profile-valid-reselection", "valid fixed Profile did not deterministically reselect its Plan");
@@ -305,7 +305,7 @@ void CheckProfileProvenance(TestLog& log, const Fixture& fixture)
 
     const auto mustReject = [&](std::string_view name, l3::ProfileRecord candidate,
                                 l3::ProfileSelectionContext candidateContext) {
-        const auto result = sge4::compiler::Compile(fixture.input.graph, fixture.input.targetProfile,
+        const auto result = sge4_5::compiler::Compile(fixture.input.graph, fixture.input.targetProfile,
             profilePolicy, &candidate, &candidateContext);
         log.Require(!result, name, "stale or mismatched Profile provenance was accepted");
     };

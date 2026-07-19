@@ -16,10 +16,10 @@
 
 namespace
 {
-namespace k = sge4::qualification::runtime_scenarios;
-namespace compiler = sge4::compiler::d3d12;
-namespace l3c = sge4::compiler::d3d12::candidate;
-namespace l3 = sge4::planning;
+namespace k = sge4_5::qualification::runtime_scenarios;
+namespace compiler = sge4_5::compiler::d3d12;
+namespace l3c = sge4_5::compiler::d3d12::candidate;
+namespace l3 = sge4_5::planning;
 
 std::span<const std::byte> Bytes(const k::Float4& value) { return std::as_bytes(std::span<const float>(value)); }
 
@@ -37,33 +37,33 @@ bool Near(const k::Float4& left, const k::Float4& right)
     return true;
 }
 
-std::shared_ptr<sge4::runtime::ICompletionToken> ReleaseToken(
-    const sge4::runtime::FrameSubmission& submission, std::uint32_t slot)
+std::shared_ptr<sge4_5::runtime::ICompletionToken> ReleaseToken(
+    const sge4_5::runtime::FrameSubmission& submission, std::uint32_t slot)
 {
     const auto found = std::find_if(submission.releasedExternalResources.begin(),
         submission.releasedExternalResources.end(), [slot](const auto& release) { return release.slot == slot; });
     return found == submission.releasedExternalResources.end() ? nullptr : found->safeAfter;
 }
 
-sge4::base::Result<k::Float4, std::string> Execute(
+sge4_5::base::Result<k::Float4, std::string> Execute(
     const k::Input& input, const l3::verification::VerifiedExecutionPlan& plan, bool recover)
 {
     auto compiled = compiler::LowerVerifiedPlan(input.graph, input.targetProfile, plan);
-    if (!compiled) return sge4::base::Result<k::Float4, std::string>::Failure(
+    if (!compiled) return sge4_5::base::Result<k::Float4, std::string>::Failure(
         compiled.Error().stage + ": " + compiled.Error().message);
-    auto package = sge4::package::PackageReader::Read(std::move(compiled).Value().packageBytes);
-    if (!package) return sge4::base::Result<k::Float4, std::string>::Failure(package.Error().message);
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(package).Value(), executor);
-    if (!loaded) return sge4::base::Result<k::Float4, std::string>::Failure(
+    auto package = sge4_5::package::PackageReader::Read(std::move(compiled).Value().packageBytes);
+    if (!package) return sge4_5::base::Result<k::Float4, std::string>::Failure(package.Error().message);
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(package).Value(), executor);
+    if (!loaded) return sge4_5::base::Result<k::Float4, std::string>::Failure(
         loaded.Error().stage + ": " + loaded.Error().message);
 
     if (recover)
     {
-        auto recovered = sge4::runtime::RecoverDevice(loaded.Value(), executor,
-            sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+        auto recovered = sge4_5::runtime::RecoverDevice(loaded.Value(), executor,
+            sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
         if (!recovered || !recovered.Value().packageObjectsRebuilt || !recovered.Value().externalRebindRequired)
-            return sge4::base::Result<k::Float4, std::string>::Failure("selected Package reconstruction failed");
+            return sge4_5::base::Result<k::Float4, std::string>::Failure("selected Package reconstruction failed");
     }
 
     const k::Float4 externalInput{0.5f, 1.0f, 1.5f, 2.0f};
@@ -74,25 +74,25 @@ sge4::base::Result<k::Float4, std::string> Execute(
     auto outputA = executor.CreateExternalBuffer(loaded.Value().Instance(), 1, Bytes(zero));
     auto outputB = executor.CreateExternalBuffer(loaded.Value().Instance(), 2, Bytes(zero));
     if (!inputBuffer || !outputA || !outputB)
-        return sge4::base::Result<k::Float4, std::string>::Failure("external Buffer creation failed");
-    const sge4::runtime::DynamicDataBinding dynamic[2] = {{0, Bytes(dynamicA)}, {1, Bytes(dynamicB)}};
-    const sge4::runtime::ExternalResourceBinding external[3] = {
+        return sge4_5::base::Result<k::Float4, std::string>::Failure("external Buffer creation failed");
+    const sge4_5::runtime::DynamicDataBinding dynamic[2] = {{0, Bytes(dynamicA)}, {1, Bytes(dynamicB)}};
+    const sge4_5::runtime::ExternalResourceBinding external[3] = {
         {0, inputBuffer.Value().resource, inputBuffer.Value().availableAfter},
         {1, outputA.Value().resource, outputA.Value().availableAfter},
         {2, outputB.Value().resource, outputB.Value().availableAfter}};
-    sge4::runtime::FrameInvocation invocation{0, dynamic, external};
-    auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
-    if (!submitted) return sge4::base::Result<k::Float4, std::string>::Failure(
+    sge4_5::runtime::FrameInvocation invocation{0, dynamic, external};
+    auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
+    if (!submitted) return sge4_5::base::Result<k::Float4, std::string>::Failure(
         submitted.Error().stage + ": " + submitted.Error().message);
     auto readback = executor.ReadExternalBuffer(loaded.Value().Instance(), outputB.Value().resource,
         ReleaseToken(submitted.Value(), 2));
-    if (!readback) return sge4::base::Result<k::Float4, std::string>::Failure(
+    if (!readback) return sge4_5::base::Result<k::Float4, std::string>::Failure(
         readback.Error().stage + ": " + readback.Error().message);
     const auto actual = Decode(readback.Value().bytes);
     const auto expected = k::PipelineExpected(dynamicA, dynamicB, externalInput);
-    if (!Near(actual, expected)) return sge4::base::Result<k::Float4, std::string>::Failure(
+    if (!Near(actual, expected)) return sge4_5::base::Result<k::Float4, std::string>::Failure(
         "GPU observation differs from the Semantic reference");
-    return sge4::base::Result<k::Float4, std::string>::Success(actual);
+    return sge4_5::base::Result<k::Float4, std::string>::Success(actual);
 }
 }
 

@@ -9,7 +9,7 @@
 
 namespace
 {
-namespace sem = sge4::semantic;
+namespace sem = sge4_5::semantic;
 
 const sem::ResourceUse& UseForOperand(
     const sem::SemanticGraph& graph,
@@ -27,10 +27,10 @@ const sem::ResourceUse& UseForOperand(
 
 int main()
 {
-    auto graphResult = sge4::classical::BuildTriangleGraph();
+    auto graphResult = sge4_5::classical::BuildTriangleGraph();
     if (!graphResult) { std::cerr << graphResult.Error() << '\n'; return 1; }
     const auto& graph = graphResult.Value();
-    auto analyzed = sge4::analysis::Analyze(graph);
+    auto analyzed = sge4_5::analysis::Analyze(graph);
     if (!analyzed) { std::cerr << "valid Stage-D operand graph was rejected\n"; return 2; }
 
     if (graph.works.size() != 3 || graph.programs.size() != 2 || analyzed.Value().canonicalWorkOrder.size() != 3) return 3;
@@ -90,45 +90,45 @@ int main()
 
     auto wrongPreparationLifetime = graph;
     wrongPreparationLifetime.resources[prepIt->id.value].lifetime = sem::LifetimeIntent::Persistent;
-    if (sge4::analysis::Analyze(wrongPreparationLifetime)) { std::cerr << "missing Preparation lifetime was accepted\n"; return 11; }
+    if (sge4_5::analysis::Analyze(wrongPreparationLifetime)) { std::cerr << "missing Preparation lifetime was accepted\n"; return 11; }
 
     auto incompatibleAlias = graph;
     incompatibleAlias.resources[prepIt->id.value].buffer.sizeBytes = 32;
-    if (sge4::analysis::Analyze(incompatibleAlias)) { std::cerr << "incompatible alias resources were accepted\n"; return 12; }
+    if (sge4_5::analysis::Analyze(incompatibleAlias)) { std::cerr << "incompatible alias resources were accepted\n"; return 12; }
 
     auto preparationReferenced = graph;
     preparationReferenced.resourceUses[aliasedRead.id.value].resource = prepIt->id;
-    if (sge4::analysis::Analyze(preparationReferenced)) { std::cerr << "Preparation resource referenced by raster was accepted\n"; return 13; }
+    if (sge4_5::analysis::Analyze(preparationReferenced)) { std::cerr << "Preparation resource referenced by raster was accepted\n"; return 13; }
 
     auto wrongTemporalLifetime = graph;
     wrongTemporalLifetime.resources[computeWrite.resource.value].lifetime = sem::LifetimeIntent::FrameLocal;
-    if (sge4::analysis::Analyze(wrongTemporalLifetime)) return 14;
+    if (sge4_5::analysis::Analyze(wrongTemporalLifetime)) return 14;
 
     auto missingBinding = graph;
     missingBinding.works[0].operands.erase(std::remove_if(
         missingBinding.works[0].operands.begin(), missingBinding.works[0].operands.end(), [](const auto& operand) {
             return operand.kind == sem::WorkOperandKind::ProgramParameter && operand.parameter.value == 5;
         }), missingBinding.works[0].operands.end());
-    if (sge4::analysis::Analyze(missingBinding)) { std::cerr << "missing ProgramParameter binding was accepted\n"; return 15; }
+    if (sge4_5::analysis::Analyze(missingBinding)) { std::cerr << "missing ProgramParameter binding was accepted\n"; return 15; }
 
     auto sharedUse = graph;
     sharedUse.works[1].operands.push_back(sharedUse.works[0].operands[1]);
-    if (sge4::analysis::Analyze(sharedUse)) { std::cerr << "ResourceUse shared by multiple Works was accepted\n"; return 16; }
+    if (sge4_5::analysis::Analyze(sharedUse)) { std::cerr << "ResourceUse shared by multiple Works was accepted\n"; return 16; }
 
     auto constantMismatch = graph;
     constantMismatch.programs[rasterProgram->id.value].interface.parameters[0].requiredBytes += 16;
-    if (sge4::analysis::Analyze(constantMismatch)) { std::cerr << "constant-buffer parameter size mismatch was accepted\n"; return 17; }
+    if (sge4_5::analysis::Analyze(constantMismatch)) { std::cerr << "constant-buffer parameter size mismatch was accepted\n"; return 17; }
 
     auto orphanPreparation = graph;
     orphanPreparation.resources[aliasedResource.id.value].aliasPreparation = {};
-    if (sge4::analysis::Analyze(orphanPreparation)) { std::cerr << "orphan Preparation resource was accepted\n"; return 18; }
+    if (sge4_5::analysis::Analyze(orphanPreparation)) { std::cerr << "orphan Preparation resource was accepted\n"; return 18; }
 
     auto reordered = graph;
     std::reverse(reordered.resources.begin(), reordered.resources.end());
     std::reverse(reordered.resourceUses.begin(), reordered.resourceUses.end());
     std::reverse(reordered.programs.begin(), reordered.programs.end());
     std::reverse(reordered.works.begin(), reordered.works.end());
-    auto reorderedAnalysis = sge4::analysis::Analyze(reordered);
+    auto reorderedAnalysis = sge4_5::analysis::Analyze(reordered);
     if (!reorderedAnalysis || reorderedAnalysis.Value().canonicalWorkOrder != analyzed.Value().canonicalWorkOrder ||
         reorderedAnalysis.Value().canonicalResourceOrder != analyzed.Value().canonicalResourceOrder ||
         reorderedAnalysis.Value().canonicalResourceUseOrder != analyzed.Value().canonicalResourceUseOrder)
@@ -157,7 +157,7 @@ int main()
     auto cyclic = graph;
     cyclic.works[computeWork.id.value].dependencies.push_back(rasterWork.id);
     cyclic.works[rasterWork.id.value].dependencies.push_back(computeWork.id);
-    if (sge4::analysis::Analyze(cyclic))
+    if (sge4_5::analysis::Analyze(cyclic))
     {
         std::cerr << "dependency cycle was accepted\n";
         return 22;
@@ -172,7 +172,7 @@ int main()
         return program.kind == sem::ProgramKind::Raster;
     });
     overlappingRasterProgram->interface.vertexInputs[0].componentCount = 4;
-    if (sge4::analysis::Analyze(overlappingVertexLayout))
+    if (sge4_5::analysis::Analyze(overlappingVertexLayout))
     {
         std::cerr << "overlapping vertex layout was accepted\n";
         return 24;
@@ -183,7 +183,7 @@ int main()
     orphan.id = {1000};
     orphan.debugName = "UnusedProgram";
     unusedProgram.programs.push_back(orphan);
-    if (sge4::analysis::Analyze(unusedProgram))
+    if (sge4_5::analysis::Analyze(unusedProgram))
     {
         std::cerr << "unused Program was accepted\n";
         return 25;
@@ -199,7 +199,7 @@ int main()
         missingTemporalPrevious.programs[computeProgram->id.value].interface.parameters.begin() + 1);
     missingTemporalPrevious.programs[computeProgram->id.value].interface.parameters[1].id = {1};
     missingTemporalPrevious.works[computeWork.id.value].operands[1].parameter = {1};
-    if (sge4::analysis::Analyze(missingTemporalPrevious))
+    if (sge4_5::analysis::Analyze(missingTemporalPrevious))
     {
         std::cerr << "Temporal resource without a previous-generation reader was accepted\n";
         return 26;
@@ -210,14 +210,14 @@ int main()
         return program.kind == sem::ProgramKind::Raster;
     });
     invalidRasterProgram->source.computeEntry = "CSMain";
-    if (sge4::analysis::Analyze(invalidSourceEntries))
+    if (sge4_5::analysis::Analyze(invalidSourceEntries))
     {
         std::cerr << "raster Program with a compute entry was accepted\n";
         return 27;
     }
 
     sem::SemanticGraph empty;
-    if (sge4::analysis::Analyze(empty)) return 28;
+    if (sge4_5::analysis::Analyze(empty)) return 28;
     std::cout << "Stage-E static completeness plus generic operand, parameter identity, dependency, lifetime, alias, and resource-contract analysis tests passed.\n";
     return 0;
 }

@@ -169,7 +169,7 @@ tests\run_freeze.bat
 
 実行内容:
 
-- `run_sge4_stage0d.bat` の完全Qualification
+- `run_sge4_5_stage0d.bat` の完全Qualification
 - Debug全テスト
 - Release全テスト
 - Authority gate
@@ -263,7 +263,7 @@ tests\run_planning.bat
 - `06_ExecutionPlanModel`
 - `07_ExecutionPlanVerifier`
 - `08_CandidatePlanner`
-- `12_SGE4Compiler`の選択処理
+- `12_SGE4_5Compiler`の選択処理
 
 ---
 
@@ -501,7 +501,7 @@ tests\run_package.bat Release
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
-  -File .\tests\Invoke-SGE4Tests.ps1 `
+  -File .\tests\Invoke-SGE4_5Tests.ps1 `
   -Suite Planning `
   -Configuration Debug `
   -NoBuild
@@ -607,7 +607,7 @@ build/sge4-stage0d/
 - ProjectReference漏れ
 - 循環依存
 - CandidatePlannerへのPackage依存漏出
-- SGE4Compiler以外からのLowering
+- SGE4_5Compiler以外からのLowering
 - SOURCE_MANIFEST未更新
 
 ### Devで失敗
@@ -690,14 +690,14 @@ Freeze限定でよいか
 すべての`.bat`は次を呼びます。
 
 ```text
-tests/Invoke-SGE4Tests.ps1
+tests/Invoke-SGE4_5Tests.ps1
 ```
 
 直接利用例:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
-  -File .\tests\Invoke-SGE4Tests.ps1 `
+  -File .\tests\Invoke-SGE4_5Tests.ps1 `
   -Suite Runtime `
   -Configuration Debug
 ```

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace sge4::target
+namespace sge4_5::target
 {
 enum class BarrierModel : std::uint32_t { Legacy = 1, Enhanced = 2 };
 enum class ShaderBinaryFormat : std::uint16_t { Dxbc = 1, Dxil = 2 };

@@ -1,6 +1,6 @@
 #include "FrozenExecutablePackage.h"
 
-namespace sge4::package
+namespace sge4_5::package
 {
 const SectionView* FrozenExecutablePackage::FindSection(SectionKind kind) const noexcept
 {

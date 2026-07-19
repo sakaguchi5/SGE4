@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions
 set "ROOT=%~dp0"
 
@@ -15,5 +15,5 @@ for %%C in (Debug Release) do (
   if errorlevel 1 exit /b 1
 )
 
-echo SGE4 VERIFIED PLAN AUTHORITY GATE PASSED
+echo SGE4-5 VERIFIED PLAN AUTHORITY GATE PASSED
 exit /b 0

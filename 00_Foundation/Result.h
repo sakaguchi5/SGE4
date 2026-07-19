@@ -5,7 +5,7 @@
 #include <utility>
 #include <variant>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 template<class T, class E>
 class Result final

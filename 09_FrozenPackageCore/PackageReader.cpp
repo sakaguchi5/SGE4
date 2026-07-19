@@ -9,7 +9,7 @@
 #include <cstring>
 #include <memory>
 
-namespace sge4::package
+namespace sge4_5::package
 {
 namespace
 {
@@ -67,7 +67,6 @@ bool IsKnownSectionKind(SectionKind kind)
     case SectionKind::D3D12RootParameterTable:
     case SectionKind::D3D12ComputeExecutableTable:
     case SectionKind::D3D12ComputeCommandTable:
-    case SectionKind::D3D12CompositionEndpointTable:
     case SectionKind::StringTable:
     case SectionKind::DebugMap:
     case SectionKind::Provenance:
@@ -173,12 +172,6 @@ base::Result<std::vector<SectionDescriptor>, PackageError> ReadDescriptors(
             return base::Result<std::vector<SectionDescriptor>, PackageError>::Failure(Error(PackageErrorCode::UnsupportedContainerVersion, "section contains unsupported or contradictory flags", descriptor.sectionKind));
         if (IsKnownSectionKind(descriptor.sectionKind) && descriptor.schemaVersion != 1)
             return base::Result<std::vector<SectionDescriptor>, PackageError>::Failure(Error(PackageErrorCode::UnsupportedContainerVersion, "known section schema version is unsupported", descriptor.sectionKind));
-        if (descriptor.sectionKind == SectionKind::D3D12CompositionEndpointTable &&
-            (header.targetKind != TargetKindD3D12 || header.targetSchemaVersion < 18))
-            return base::Result<std::vector<SectionDescriptor>, PackageError>::Failure(Error(
-                PackageErrorCode::UnsupportedTargetSchema,
-                "the Schema 18 composition endpoint section cannot appear in an older or non-D3D12 Package",
-                descriptor.sectionKind));
         if (HasFlag(descriptor.flags, SectionFlags::Required) && !IsKnownSectionKind(descriptor.sectionKind))
             return base::Result<std::vector<SectionDescriptor>, PackageError>::Failure(Error(PackageErrorCode::UnknownRequiredSection, "unknown required section", descriptor.sectionKind));
         if (descriptor.fileOffset < tableEnd)

@@ -1,6 +1,6 @@
 #include "ClassicalTriangle.h"
 
-namespace sge4::classical
+namespace sge4_5::classical
 {
 namespace
 {

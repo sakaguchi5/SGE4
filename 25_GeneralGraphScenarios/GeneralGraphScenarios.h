@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::qualification
+namespace sge4_5::qualification
 {
 enum class StageHScenario : std::uint16_t
 {

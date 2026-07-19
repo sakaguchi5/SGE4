@@ -15,7 +15,7 @@ This map records provenance without creating a build dependency.
 | `07_FrozenPackageCore` | `09_FrozenPackageCore` |
 | `08_D3D12PackageSchema` | `10_D3D12PackageSchema` |
 | verified part of `06_D3D12TargetCompiler` | `11_D3D12PackageLowering` |
-| no single equivalent | `12_SGE4Compiler` production facade |
+| no single equivalent | `12_SGE4_5Compiler` production facade |
 | `09_PackageRuntime` | `13_PackageRuntime` |
 | `10_D3D12Executor` | `14_D3D12Backend` |
 | `11_PlatformWin32` | `15_PlatformWin32` |

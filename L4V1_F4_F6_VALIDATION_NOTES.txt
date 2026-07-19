@@ -1,8 +1,0 @@
-Author-side validation completed:
-- F4, F5, and F6 core sources compile as portable C++23 with GCC warnings enabled.
-- All three MSVC test translation units pass portable C++23 syntax checking.
-- A standalone synthetic Contract exercised Planner, independent VerifyAndSeal, Freeze, and Frozen reader round-trip successfully.
-- All vcxproj files parse as XML.
-- The F4-F6 solution has 35 unique projects, unique GUIDs, complete Debug/Release x64 mappings, and a closed ProjectReference graph.
-- PowerShell scripts are UTF-8 with BOM and CRLF; BAT files are UTF-8 without BOM and CRLF.
-- Windows/MSVC v145, D3DCompile, fresh-process, and Debug/Release authority remain the repository runner's final qualification.

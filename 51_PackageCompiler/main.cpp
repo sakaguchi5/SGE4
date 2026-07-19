@@ -5,7 +5,7 @@
 #include "../22_SdfFrontend/SdfFrontend.h"
 #include "../23_PgaFrontend/PgaFrontend.h"
 #include "../20_ExperimentDomain/ExperimentDomain.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <filesystem>
 #include <iostream>
@@ -34,34 +34,34 @@ FrontendSelection ParseSelection(int argc, char** argv)
 
 struct DeterministicCompile final
 {
-    sge4::compiler::d3d12::CompileOutput output;
+    sge4_5::compiler::d3d12::CompileOutput output;
 };
 
-sge4::base::Result<DeterministicCompile, std::string> CompileTwice(
-    const sge4::semantic::SemanticGraph& graph,
-    const sge4::target::D3D12TargetProfile& profile,
+sge4_5::base::Result<DeterministicCompile, std::string> CompileTwice(
+    const sge4_5::semantic::SemanticGraph& graph,
+    const sge4_5::target::D3D12TargetProfile& profile,
     std::string_view frontendName)
 {
-    auto first = sge4::compiler::CompileCanonical(graph, profile);
-    auto second = sge4::compiler::CompileCanonical(graph, profile);
+    auto first = sge4_5::compiler::CompileCanonical(graph, profile);
+    auto second = sge4_5::compiler::CompileCanonical(graph, profile);
     if (!first || !second)
     {
         const auto& error = !first ? first.Error() : second.Error();
-        return sge4::base::Result<DeterministicCompile, std::string>::Failure(
+        return sge4_5::base::Result<DeterministicCompile, std::string>::Failure(
             std::string(frontendName) + " compile failed at " + error.stage + ": " + error.message);
     }
     if (first.Value().packageBytes != second.Value().packageBytes ||
         first.Value().executionDigestHex != second.Value().executionDigestHex)
-        return sge4::base::Result<DeterministicCompile, std::string>::Failure(
+        return sge4_5::base::Result<DeterministicCompile, std::string>::Failure(
             std::string(frontendName) + " determinism failed");
 
-    return sge4::base::Result<DeterministicCompile, std::string>::Success(
+    return sge4_5::base::Result<DeterministicCompile, std::string>::Success(
         {std::move(first.Value())});
 }
 
 bool SamePackage(
-    const sge4::compiler::d3d12::CompileOutput& left,
-    const sge4::compiler::d3d12::CompileOutput& right)
+    const sge4_5::compiler::d3d12::CompileOutput& left,
+    const sge4_5::compiler::d3d12::CompileOutput& right)
 {
     return left.packageBytes == right.packageBytes &&
            left.executionDigestHex == right.executionDigestHex;
@@ -75,13 +75,13 @@ int main(int argc, char** argv)
         : std::filesystem::path("CommonExperiment.sgep");
     const FrontendSelection selection = ParseSelection(argc, argv);
 
-    sge4::target::D3D12TargetProfile profile;
-    sge4::compiler::d3d12::CompileOutput selectedOutput;
+    sge4_5::target::D3D12TargetProfile profile;
+    sge4_5::compiler::d3d12::CompileOutput selectedOutput;
     const char* selectedLabel = "Classical + SDF + PGA equivalence";
 
     if (selection == FrontendSelection::Classical)
     {
-        auto graph = sge4::classical::BuildTriangleGraph();
+        auto graph = sge4_5::classical::BuildTriangleGraph();
         if (!graph) { std::cerr << "Classical frontend failed: " << graph.Error() << '\n'; return 1; }
         auto compiled = CompileTwice(graph.Value(), profile, "Classical");
         if (!compiled) { std::cerr << compiled.Error() << '\n'; return 2; }
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     }
     else if (selection == FrontendSelection::Sdf)
     {
-        auto graph = sge4::sdf::BuildTriangleGraph();
+        auto graph = sge4_5::sdf::BuildTriangleGraph();
         if (!graph) { std::cerr << "SDF frontend failed: " << graph.Error() << '\n'; return 1; }
         auto compiled = CompileTwice(graph.Value(), profile, "SDF");
         if (!compiled) { std::cerr << compiled.Error() << '\n'; return 2; }
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     }
     else if (selection == FrontendSelection::Pga)
     {
-        auto graph = sge4::pga::BuildTriangleGraph();
+        auto graph = sge4_5::pga::BuildTriangleGraph();
         if (!graph) { std::cerr << "PGA frontend failed: " << graph.Error() << '\n'; return 1; }
         auto compiled = CompileTwice(graph.Value(), profile, "PGA");
         if (!compiled) { std::cerr << compiled.Error() << '\n'; return 2; }
@@ -108,25 +108,25 @@ int main(int argc, char** argv)
     }
     else
     {
-        const auto classicalGeometry = sge4::classical::BuildTriangleGeometry();
-        auto sdfGeometry = sge4::sdf::BuildTriangleGeometry();
-        auto pgaGeometry = sge4::pga::BuildTriangleGeometry();
+        const auto classicalGeometry = sge4_5::classical::BuildTriangleGeometry();
+        auto sdfGeometry = sge4_5::sdf::BuildTriangleGeometry();
+        auto pgaGeometry = sge4_5::pga::BuildTriangleGeometry();
         if (!sdfGeometry || !pgaGeometry)
         {
             std::cerr << "Mathematical geometry extraction failed: "
                       << (!sdfGeometry ? sdfGeometry.Error() : pgaGeometry.Error()) << '\n';
             return 1;
         }
-        if (!sge4::experiment::GeometryBitwiseEqual(classicalGeometry, sdfGeometry.Value()) ||
-            !sge4::experiment::GeometryBitwiseEqual(classicalGeometry, pgaGeometry.Value()))
+        if (!sge4_5::experiment::GeometryBitwiseEqual(classicalGeometry, sdfGeometry.Value()) ||
+            !sge4_5::experiment::GeometryBitwiseEqual(classicalGeometry, pgaGeometry.Value()))
         {
             std::cerr << "Classical, SDF, and PGA geometry are not bit-identical.\n";
             return 2;
         }
 
-        auto classicalGraph = sge4::classical::BuildTriangleGraph();
-        auto sdfGraph = sge4::sdf::BuildTriangleGraph();
-        auto pgaGraph = sge4::pga::BuildTriangleGraph();
+        auto classicalGraph = sge4_5::classical::BuildTriangleGraph();
+        auto sdfGraph = sge4_5::sdf::BuildTriangleGraph();
+        auto pgaGraph = sge4_5::pga::BuildTriangleGraph();
         if (!classicalGraph || !sdfGraph || !pgaGraph)
         {
             std::cerr << "Frontend failed: "
@@ -153,13 +153,13 @@ int main(int argc, char** argv)
         selectedOutput = std::move(classicalCompiled.Value().output);
     }
 
-    auto verified = sge4::package::PackageReader::Read(selectedOutput.packageBytes);
+    auto verified = sge4_5::package::PackageReader::Read(selectedOutput.packageBytes);
     if (!verified)
     {
         std::cerr << "Package validation failed: " << verified.Error().message << '\n';
         return 6;
     }
-    auto written = sge4::base::WriteAllBytes(outputPath, selectedOutput.packageBytes);
+    auto written = sge4_5::base::WriteAllBytes(outputPath, selectedOutput.packageBytes);
     if (!written)
     {
         std::cerr << "Write failed: " << written.Error() << '\n';

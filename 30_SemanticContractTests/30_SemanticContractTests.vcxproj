@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{89043E7B-24BD-55AA-9040-5602F4A26912}</ProjectGuid>
+    <ProjectGuid>{B00A71C3-AFD4-5BB7-8B06-498E5C9F4772}</ProjectGuid>
     <RootNamespace>30_SemanticContractTests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -87,27 +87,27 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\02_SemanticModel\02_SemanticModel.vcxproj">
-      <Project>{B85D0D5C-95BF-5BD9-814B-E6514E5F4854}</Project>
+      <Project>{50B92123-BC0C-5BC5-8F4C-6715B4F100DE}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\03_SemanticBuilder\03_SemanticBuilder.vcxproj">
-      <Project>{35E43ED1-2596-5CF1-87CA-5ECD4E862494}</Project>
+      <Project>{A8B7E571-A4D0-5E81-BEE6-CDB66B6FD8E5}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\04_SemanticAnalysis\04_SemanticAnalysis.vcxproj">
-      <Project>{1E31BE06-36FB-5CB2-BA93-874DF5C11E11}</Project>
+      <Project>{04957AC5-899F-5199-9F0A-15A1DD44E715}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\21_ClassicalFrontend\21_ClassicalFrontend.vcxproj">
-      <Project>{2B81B5B9-F8A5-5ADC-8E6D-73EDB15AFCFC}</Project>
+      <Project>{4851AD1A-590B-5178-B465-C3125071DB38}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\20_ExperimentDomain\20_ExperimentDomain.vcxproj">
-      <Project>{4611B9AB-C7DA-54E9-9169-B12EF9AF01B4}</Project>
+      <Project>{238EEF72-36C7-54B2-9AAA-4D5A36EC4704}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

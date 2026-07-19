@@ -20,17 +20,6 @@ function Get-RelativePath([string]$FullName) {
     return Normalize-RelativePath ($FullName.Substring($root.Length).TrimStart('\', '/'))
 }
 
-function Get-Sha256Hex([string]$Path) {
-    $stream = [IO.File]::OpenRead($Path)
-    try {
-        $sha = [Security.Cryptography.SHA256]::Create()
-        try { $digest = $sha.ComputeHash($stream) }
-        finally { $sha.Dispose() }
-    }
-    finally { $stream.Dispose() }
-    return ([BitConverter]::ToString($digest)).Replace('-', '').ToLowerInvariant()
-}
-
 $expected = @{}
 $lineNumber = 0
 foreach ($line in Get-Content -LiteralPath $manifestPath -Encoding UTF8) {
@@ -72,7 +61,9 @@ foreach ($file in $actualFiles) {
     if ($actual.ContainsKey($relative)) {
         throw "Duplicate normalized file path: $relative"
     }
-    $actual[$relative] = Get-Sha256Hex $file.FullName
+    $actual[$relative] = (
+        Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName
+    ).Hash.ToLowerInvariant()
 }
 
 $missing = @($expected.Keys | Where-Object { -not $actual.ContainsKey($_) } | Sort-Object)

@@ -1,6 +1,6 @@
 #include "PackageRuntime.h"
 
-namespace sge4::runtime
+namespace sge4_5::runtime
 {
 base::Result<LoadedPackage, RuntimeError> LoadPackage(
     package::FrozenExecutablePackage package,

@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{BCB1F7AF-18A6-5240-82F3-4FABE3C06574}</ProjectGuid>
+    <ProjectGuid>{79EDC007-EBBA-5459-8CB3-258D269DED3D}</ProjectGuid>
     <RootNamespace>13_PackageRuntime</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -80,11 +80,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\09_FrozenPackageCore\09_FrozenPackageCore.vcxproj">
-      <Project>{BD0B0FE4-8C5A-5A01-99B1-1794D98C856E}</Project>
+      <Project>{F98684BE-8950-50C1-9224-BFC168EBE432}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

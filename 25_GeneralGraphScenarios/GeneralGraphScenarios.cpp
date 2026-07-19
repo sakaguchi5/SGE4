@@ -7,7 +7,7 @@
 #include <span>
 #include <utility>
 
-namespace sge4::qualification
+namespace sge4_5::qualification
 {
 namespace
 {

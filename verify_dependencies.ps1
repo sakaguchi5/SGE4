@@ -93,7 +93,7 @@ function Assert-DirectReferences([string]$targetName, [string[]]$allowedNames) {
 $sourceSide = @(
     '02_SemanticModel','03_SemanticBuilder','04_SemanticAnalysis','05_TargetContract','05A_CompilationInput',
     '06_ExecutionPlanModel','07_ExecutionPlanVerifier','08_CandidatePlanner',
-    '11_D3D12PackageLowering','12_SGE4Compiler',
+    '11_D3D12PackageLowering','12_SGE4_5Compiler',
     '20_ExperimentDomain','21_ClassicalFrontend','22_SdfFrontend','23_PgaFrontend',
     '24_SliceScenarios','25_GeneralGraphScenarios','26_GeneratedGraphCorpus','27_RuntimeScenarios',
     '28_SGE3CompatibilityOracle'
@@ -102,44 +102,23 @@ $runtimeSide = @('13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
 
 Assert-NoForbiddenDependency '09_FrozenPackageCore' ($sourceSide + $runtimeSide)
 Assert-NoForbiddenDependency '10_D3D12PackageSchema' ($sourceSide + $runtimeSide)
-Assert-NoForbiddenDependency '05A_CompilationInput' @('06_ExecutionPlanModel','07_ExecutionPlanVerifier','08_CandidatePlanner','09_FrozenPackageCore','10_D3D12PackageSchema','11_D3D12PackageLowering','12_SGE4Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
-Assert-NoForbiddenDependency '06_ExecutionPlanModel' @('07_ExecutionPlanVerifier','08_CandidatePlanner','11_D3D12PackageLowering','12_SGE4Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
-Assert-NoForbiddenDependency '07_ExecutionPlanVerifier' @('08_CandidatePlanner','11_D3D12PackageLowering','12_SGE4Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
-Assert-NoForbiddenDependency '08_CandidatePlanner' (@('09_FrozenPackageCore','10_D3D12PackageSchema','11_D3D12PackageLowering','12_SGE4Compiler') + $runtimeSide)
+Assert-NoForbiddenDependency '05A_CompilationInput' @('06_ExecutionPlanModel','07_ExecutionPlanVerifier','08_CandidatePlanner','09_FrozenPackageCore','10_D3D12PackageSchema','11_D3D12PackageLowering','12_SGE4_5Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
+Assert-NoForbiddenDependency '06_ExecutionPlanModel' @('07_ExecutionPlanVerifier','08_CandidatePlanner','11_D3D12PackageLowering','12_SGE4_5Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
+Assert-NoForbiddenDependency '07_ExecutionPlanVerifier' @('08_CandidatePlanner','11_D3D12PackageLowering','12_SGE4_5Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
+Assert-NoForbiddenDependency '08_CandidatePlanner' (@('09_FrozenPackageCore','10_D3D12PackageSchema','11_D3D12PackageLowering','12_SGE4_5Compiler') + $runtimeSide)
 Assert-NoForbiddenDependency '11_D3D12PackageLowering' $runtimeSide
-Assert-NoForbiddenDependency '12_SGE4Compiler' $runtimeSide
+Assert-NoForbiddenDependency '12_SGE4_5Compiler' $runtimeSide
 Assert-NoForbiddenDependency '13_PackageRuntime' $sourceSide
 Assert-NoForbiddenDependency '14_D3D12Backend' $sourceSide
 Assert-NoForbiddenDependency '15_PlatformWin32' $sourceSide
 Assert-NoForbiddenDependency '36_D3D12ReadbackTests' $sourceSide
 Assert-NoForbiddenDependency '50_Launcher' $sourceSide
-Assert-NoForbiddenDependency '16_CompositionContract' ($sourceSide + $runtimeSide + @('17_LinkPlanModel','18_LinkPlanVerifier','19_PackageLinker','29_CompositionRuntime'))
-Assert-NoForbiddenDependency '17_LinkPlanModel' ($sourceSide + $runtimeSide + @('18_LinkPlanVerifier','19_PackageLinker','29_CompositionRuntime'))
-Assert-NoForbiddenDependency '18_LinkPlanVerifier' ($sourceSide + $runtimeSide + @('19_PackageLinker','29_CompositionRuntime'))
-Assert-NoForbiddenDependency '19_PackageLinker' ($sourceSide + $runtimeSide + @('29_CompositionRuntime'))
-Assert-NoForbiddenDependency '29_CompositionRuntime' $sourceSide
 
 Assert-DirectReferences '14_D3D12Backend' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema','13_PackageRuntime')
 Assert-DirectReferences '13_PackageRuntime' @('00_Foundation','09_FrozenPackageCore')
 Assert-DirectReferences '05A_CompilationInput' @('00_Foundation','02_SemanticModel','04_SemanticAnalysis','05_TargetContract')
 Assert-DirectReferences '08_CandidatePlanner' @('00_Foundation','02_SemanticModel','04_SemanticAnalysis','05_TargetContract','05A_CompilationInput','06_ExecutionPlanModel','07_ExecutionPlanVerifier')
-Assert-DirectReferences '12_SGE4Compiler' @('00_Foundation','02_SemanticModel','05_TargetContract','07_ExecutionPlanVerifier','08_CandidatePlanner','11_D3D12PackageLowering')
-Assert-DirectReferences '16_CompositionContract' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema')
-Assert-DirectReferences '17_LinkPlanModel' @('00_Foundation','16_CompositionContract')
-Assert-DirectReferences '18_LinkPlanVerifier' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema','16_CompositionContract','17_LinkPlanModel')
-Assert-DirectReferences '19_PackageLinker' @('00_Foundation','09_FrozenPackageCore','16_CompositionContract','17_LinkPlanModel','18_LinkPlanVerifier')
-Assert-DirectReferences '29_CompositionRuntime' @('00_Foundation','09_FrozenPackageCore','10_D3D12PackageSchema','13_PackageRuntime','14_D3D12Backend','16_CompositionContract','17_LinkPlanModel','18_LinkPlanVerifier','19_PackageLinker')
-
-# Level 4 v1 runtime consumes only a verifier-sealed Frozen Composition. It may
-# decode and execute that artifact, but must never propose or recompute LinkPlanIR.
-$compositionRuntimeFiles = Get-ChildItem -Path (Join-Path $root '29_CompositionRuntime') -Recurse -File |
-    Where-Object { $_.Extension -in '.h','.cpp' }
-foreach ($source in $compositionRuntimeFiles) {
-    $text = Get-Content -Raw -LiteralPath $source.FullName
-    if ($text -match 'ProposeLinkPlan|ComputeLinkPlanIdentity|PackageLinker\.h') {
-        throw "CompositionRuntime leaked Link planning authority: $($source.FullName)"
-    }
-}
+Assert-DirectReferences '12_SGE4_5Compiler' @('00_Foundation','02_SemanticModel','05_TargetContract','07_ExecutionPlanVerifier','08_CandidatePlanner','11_D3D12PackageLowering')
 
 $frontendIsolation = @{
     '21_ClassicalFrontend' = @('22_SdfFrontend','23_PgaFrontend')
@@ -187,7 +166,7 @@ foreach ($source in $sourceFiles) {
 }
 
 # Candidate planning must remain Package-free. This is the Stage-0C boundary:
-# only SGE4Compiler may combine candidate planning with Package lowering.
+# only SGE4_5Compiler may combine candidate planning with Package lowering.
 $candidatePlannerFiles = Get-ChildItem -Path (Join-Path $root '08_CandidatePlanner') -Recurse -File |
     Where-Object { $_.Extension -in '.h','.cpp' }
 foreach ($source in $candidatePlannerFiles) {
@@ -197,11 +176,11 @@ foreach ($source in $candidatePlannerFiles) {
     }
 }
 
-# Among production projects, only SGE4Compiler may call the public sealed
+# Among production projects, only SGE4_5Compiler may call the public sealed
 # Package-lowering entry. The lowerer defines it and the SGE3 Oracle is test-only.
 $allowedLoweringUsers = @(
     [IO.Path]::GetFullPath((Join-Path $root '11_D3D12PackageLowering\D3D12PackageLowering.cpp')),
-    [IO.Path]::GetFullPath((Join-Path $root '12_SGE4Compiler\SGE4Compiler.cpp')),
+    [IO.Path]::GetFullPath((Join-Path $root '12_SGE4_5Compiler\SGE4_5Compiler.cpp')),
     [IO.Path]::GetFullPath((Join-Path $root '28_SGE3CompatibilityOracle\SGE3CompatibilityOracle.cpp'))
 )
 foreach ($source in $sourceFiles) {
@@ -211,7 +190,7 @@ foreach ($source in $sourceFiles) {
         $projectName -match '^(0|1|2)[0-9A-Z_]' -and
         (Get-Content -Raw -LiteralPath $source.FullName) -match 'LowerVerifiedPlan' -and
         $allowedLoweringUsers -notcontains $full) {
-        throw "Production Package-lowering orchestration leaked outside SGE4Compiler: $($source.FullName)"
+        throw "Production Package-lowering orchestration leaked outside SGE4_5Compiler: $($source.FullName)"
     }
 }
 
@@ -223,4 +202,4 @@ foreach ($project in $projectFiles) {
     }
 }
 
-Write-Host "SGE4 dependency boundary check passed. Projects: $($projectFiles.Count), references: $((($graph.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)."
+Write-Host "SGE4-5 dependency boundary check passed. Projects: $($projectFiles.Count), references: $((($graph.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)."

@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace sge4::runtime
+namespace sge4_5::runtime
 {
 struct RuntimeError final
 {

@@ -5,7 +5,7 @@
 #include "../22_SdfFrontend/SdfFrontend.h"
 #include "../23_PgaFrontend/PgaFrontend.h"
 #include "../20_ExperimentDomain/ExperimentDomain.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <cmath>
 #include <iostream>
@@ -13,8 +13,8 @@
 namespace
 {
 bool SamePackage(
-    const sge4::compiler::d3d12::CompileOutput& left,
-    const sge4::compiler::d3d12::CompileOutput& right)
+    const sge4_5::compiler::d3d12::CompileOutput& left,
+    const sge4_5::compiler::d3d12::CompileOutput& right)
 {
     return left.packageBytes == right.packageBytes &&
            left.executionDigestHex == right.executionDigestHex;
@@ -23,9 +23,9 @@ bool SamePackage(
 
 int main()
 {
-    const auto classicalGeometry = sge4::classical::BuildTriangleGeometry();
-    auto sdfGeometry = sge4::sdf::BuildTriangleGeometry();
-    auto pgaGeometry = sge4::pga::BuildTriangleGeometry();
+    const auto classicalGeometry = sge4_5::classical::BuildTriangleGeometry();
+    auto sdfGeometry = sge4_5::sdf::BuildTriangleGeometry();
+    auto pgaGeometry = sge4_5::pga::BuildTriangleGeometry();
     if (!sdfGeometry || !pgaGeometry)
     {
         std::cerr << "Mathematical geometry extraction failed: "
@@ -33,17 +33,17 @@ int main()
         return 1;
     }
 
-    if (!sge4::experiment::GeometryBitwiseEqual(classicalGeometry, sdfGeometry.Value()) ||
-        !sge4::experiment::GeometryBitwiseEqual(classicalGeometry, pgaGeometry.Value()))
+    if (!sge4_5::experiment::GeometryBitwiseEqual(classicalGeometry, sdfGeometry.Value()) ||
+        !sge4_5::experiment::GeometryBitwiseEqual(classicalGeometry, pgaGeometry.Value()))
     {
         std::cerr << "Classical, SDF, and PGA frontends did not produce bit-identical geometry\n";
         return 2;
     }
 
-    const auto sdfDescription = sge4::sdf::BuildTriangleDescription();
-    const float inside = sge4::sdf::EvaluateSignedDistance(sdfDescription.nearField, {0.0f, 0.0f});
-    const float boundary = sge4::sdf::EvaluateSignedDistance(sdfDescription.nearField, {0.0f, 0.5f});
-    const float outside = sge4::sdf::EvaluateSignedDistance(sdfDescription.nearField, {0.75f, 0.5f});
+    const auto sdfDescription = sge4_5::sdf::BuildTriangleDescription();
+    const float inside = sge4_5::sdf::EvaluateSignedDistance(sdfDescription.nearField, {0.0f, 0.0f});
+    const float boundary = sge4_5::sdf::EvaluateSignedDistance(sdfDescription.nearField, {0.0f, 0.5f});
+    const float outside = sge4_5::sdf::EvaluateSignedDistance(sdfDescription.nearField, {0.75f, 0.5f});
     if (!(inside < 0.0f) || std::abs(boundary) > 0.000001f || !(outside > 0.0f))
     {
         std::cerr << "SDF sign contract failed: inside=" << inside
@@ -51,32 +51,32 @@ int main()
         return 3;
     }
 
-    const auto pgaDescription = sge4::pga::BuildTriangleDescription();
+    const auto pgaDescription = sge4_5::pga::BuildTriangleDescription();
     const auto& nearLines = pgaDescription.nearLayer.boundaryLines;
-    auto apex = sge4::pga::Meet(nearLines[2], nearLines[1]);
-    auto rightBase = sge4::pga::Meet(nearLines[1], nearLines[0]);
-    auto leftBase = sge4::pga::Meet(nearLines[0], nearLines[2]);
+    auto apex = sge4_5::pga::Meet(nearLines[2], nearLines[1]);
+    auto rightBase = sge4_5::pga::Meet(nearLines[1], nearLines[0]);
+    auto leftBase = sge4_5::pga::Meet(nearLines[0], nearLines[2]);
     if (!apex || !rightBase || !leftBase)
     {
         std::cerr << "PGA finite meet failed\n";
         return 4;
     }
-    if (std::abs(sge4::pga::Incidence(nearLines[1], apex.Value())) > 0.000001f ||
-        !sge4::pga::ProjectivelyEquivalent(sge4::pga::Join(apex.Value(), rightBase.Value()), nearLines[1]) ||
-        !sge4::pga::ProjectivelyEquivalent(sge4::pga::Join(rightBase.Value(), leftBase.Value()), nearLines[0]))
+    if (std::abs(sge4_5::pga::Incidence(nearLines[1], apex.Value())) > 0.000001f ||
+        !sge4_5::pga::ProjectivelyEquivalent(sge4_5::pga::Join(apex.Value(), rightBase.Value()), nearLines[1]) ||
+        !sge4_5::pga::ProjectivelyEquivalent(sge4_5::pga::Join(rightBase.Value(), leftBase.Value()), nearLines[0]))
     {
         std::cerr << "PGA join/meet/incidence contract failed\n";
         return 5;
     }
-    if (sge4::pga::Meet({0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, -1.0f}))
+    if (sge4_5::pga::Meet({0.0f, 1.0f, 0.0f}, {0.0f, 1.0f, -1.0f}))
     {
         std::cerr << "PGA finite lowering accepted an ideal intersection of parallel lines\n";
         return 6;
     }
 
-    auto classicalGraph = sge4::classical::BuildTriangleGraph();
-    auto sdfGraph = sge4::sdf::BuildTriangleGraph();
-    auto pgaGraph = sge4::pga::BuildTriangleGraph();
+    auto classicalGraph = sge4_5::classical::BuildTriangleGraph();
+    auto sdfGraph = sge4_5::sdf::BuildTriangleGraph();
+    auto pgaGraph = sge4_5::pga::BuildTriangleGraph();
     if (!classicalGraph || !sdfGraph || !pgaGraph)
     {
         std::cerr << "Frontend lowering failed: "
@@ -85,13 +85,13 @@ int main()
         return 7;
     }
 
-    sge4::target::D3D12TargetProfile profile;
-    auto classicalFirst = sge4::compiler::CompileCanonical(classicalGraph.Value(), profile);
-    auto classicalSecond = sge4::compiler::CompileCanonical(classicalGraph.Value(), profile);
-    auto sdfFirst = sge4::compiler::CompileCanonical(sdfGraph.Value(), profile);
-    auto sdfSecond = sge4::compiler::CompileCanonical(sdfGraph.Value(), profile);
-    auto pgaFirst = sge4::compiler::CompileCanonical(pgaGraph.Value(), profile);
-    auto pgaSecond = sge4::compiler::CompileCanonical(pgaGraph.Value(), profile);
+    sge4_5::target::D3D12TargetProfile profile;
+    auto classicalFirst = sge4_5::compiler::CompileCanonical(classicalGraph.Value(), profile);
+    auto classicalSecond = sge4_5::compiler::CompileCanonical(classicalGraph.Value(), profile);
+    auto sdfFirst = sge4_5::compiler::CompileCanonical(sdfGraph.Value(), profile);
+    auto sdfSecond = sge4_5::compiler::CompileCanonical(sdfGraph.Value(), profile);
+    auto pgaFirst = sge4_5::compiler::CompileCanonical(pgaGraph.Value(), profile);
+    auto pgaSecond = sge4_5::compiler::CompileCanonical(pgaGraph.Value(), profile);
     if (!classicalFirst || !classicalSecond || !sdfFirst || !sdfSecond || !pgaFirst || !pgaSecond)
     {
         const auto* error = !classicalFirst ? &classicalFirst.Error() :
@@ -118,7 +118,7 @@ int main()
         return 10;
     }
 
-    auto decoded = sge4::package::PackageReader::Read(classicalFirst.Value().packageBytes);
+    auto decoded = sge4_5::package::PackageReader::Read(classicalFirst.Value().packageBytes);
     if (!decoded)
     {
         std::cerr << "Common experiment Package validation failed: " << decoded.Error().message << '\n';

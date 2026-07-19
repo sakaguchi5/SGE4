@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{8F1A7AAE-F969-5DE1-AF02-F47BD5721019}</ProjectGuid>
+    <ProjectGuid>{674EBB02-56BE-5E93-AB10-FBB33F60BA48}</ProjectGuid>
     <RootNamespace>50_Launcher</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -87,27 +87,27 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\09_FrozenPackageCore\09_FrozenPackageCore.vcxproj">
-      <Project>{BD0B0FE4-8C5A-5A01-99B1-1794D98C856E}</Project>
+      <Project>{F98684BE-8950-50C1-9224-BFC168EBE432}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\10_D3D12PackageSchema\10_D3D12PackageSchema.vcxproj">
-      <Project>{56E9406C-8240-5BED-B98F-E06585E75D91}</Project>
+      <Project>{67E7BBE2-3DD2-59EB-8B45-1A3558DA75E6}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\13_PackageRuntime\13_PackageRuntime.vcxproj">
-      <Project>{BCB1F7AF-18A6-5240-82F3-4FABE3C06574}</Project>
+      <Project>{79EDC007-EBBA-5459-8CB3-258D269DED3D}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\14_D3D12Backend\14_D3D12Backend.vcxproj">
-      <Project>{E3328CA6-2287-5DB7-BFBC-0F505B7FBBD0}</Project>
+      <Project>{2082C0A4-CAF3-5197-9E1B-70658DB8A287}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\15_PlatformWin32\15_PlatformWin32.vcxproj">
-      <Project>{EF8D7E7E-D8FE-54F2-9A57-E8B9C76A5593}</Project>
+      <Project>{065EB6D7-0C1F-5376-A924-B84639FB24BE}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

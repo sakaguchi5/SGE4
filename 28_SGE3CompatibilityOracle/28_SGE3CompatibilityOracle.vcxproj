@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{BF765DCD-2802-5EE5-880B-6490855DDEB4}</ProjectGuid>
+    <ProjectGuid>{CD61DDAC-B0A6-5E71-8617-9479AF2D6DCB}</ProjectGuid>
     <RootNamespace>28_SGE3CompatibilityOracle</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -80,31 +80,31 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\02_SemanticModel\02_SemanticModel.vcxproj">
-      <Project>{B85D0D5C-95BF-5BD9-814B-E6514E5F4854}</Project>
+      <Project>{50B92123-BC0C-5BC5-8F4C-6715B4F100DE}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\05_TargetContract\05_TargetContract.vcxproj">
-      <Project>{44226517-5A8B-5C6C-AF75-17B28C1FC74A}</Project>
+      <Project>{07D251E1-77C0-5602-BB95-B93AA3F87CC5}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\11_D3D12PackageLowering\11_D3D12PackageLowering.vcxproj">
-      <Project>{F4BF6409-1F32-5436-9697-B40B7AC1273A}</Project>
+      <Project>{F6ADFCA2-7E22-5A41-8924-C26CD332EF00}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\06_ExecutionPlanModel\06_ExecutionPlanModel.vcxproj">
-      <Project>{C33D1098-67D0-5E8E-A2E6-2EEFB91CB59C}</Project>
+      <Project>{CC9821ED-F54A-577B-96D2-140808B97BA0}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\07_ExecutionPlanVerifier\07_ExecutionPlanVerifier.vcxproj">
-      <Project>{189A956E-7938-52D4-8E97-496D0F4748FE}</Project>
+      <Project>{2294F963-F1EB-57F9-BE49-CFCC3CE5A14B}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\08_CandidatePlanner\08_CandidatePlanner.vcxproj">
-      <Project>{71C9CB73-B15C-5F1D-BBB1-F4C6EB0833A4}</Project>
+      <Project>{C00D749F-9DFA-529D-9794-FEBF5F507FB9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

@@ -93,10 +93,10 @@ std::wstring WidenAscii(std::string_view text)
 
 std::wstring BuildTelemetryText(
     const TelemetrySnapshot& telemetry,
-    const sge4::package::FrozenExecutablePackage& package,
+    const sge4_5::package::FrozenExecutablePackage& package,
     bool forceWarp)
 {
-    const std::string digest = sge4::base::ToHex(package.ExecutionDigest());
+    const std::string digest = sge4_5::base::ToHex(package.ExecutionDigest());
     const std::wstring digestFirst = WidenAscii(std::string_view(digest).substr(0, 32));
     const std::wstring digestSecond = WidenAscii(std::string_view(digest).substr(32, 32));
 
@@ -246,19 +246,19 @@ int wmain(int argc, wchar_t** argv)
         if (option == L"--force-removal") forceRemovalDemo = true;
     }
 
-    auto bytes = sge4::base::ReadAllBytes(packagePath);
+    auto bytes = sge4_5::base::ReadAllBytes(packagePath);
     if (!bytes)
     {
         std::cerr << "Read failed: " << bytes.Error() << '\n';
         return 1;
     }
-    auto package = sge4::package::PackageReader::Read(std::move(bytes).Value());
+    auto package = sge4_5::package::PackageReader::Read(std::move(bytes).Value());
     if (!package)
     {
         std::cerr << "Package rejected: " << package.Error().message << '\n';
         return 2;
     }
-    auto window = sge4::platform::Win32Window::Create(
+    auto window = sge4_5::platform::Win32Window::Create(
         L"Semantic GPU Engine 4 - Proven Frontend Equivalence",
         RenderWidth,
         RenderHeight,
@@ -269,8 +269,8 @@ int wmain(int argc, wchar_t** argv)
         return 3;
     }
 
-    sge4::d3d12::D3D12Backend executor({forceWarp, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(package).Value(), executor, *window.Value());
+    sge4_5::d3d12::D3D12Backend executor({forceWarp, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(package).Value(), executor, *window.Value());
     if (!loaded)
     {
         std::cerr << "Package materialization failed at " << loaded.Error().stage
@@ -289,7 +289,7 @@ int wmain(int argc, wchar_t** argv)
                   << ": " << external.Error().message << '\n';
         return 5;
     }
-    sge4::runtime::ExternalResourceBinding externalBinding{0, external.Value().resource, external.Value().availableAfter};
+    sge4_5::runtime::ExternalResourceBinding externalBinding{0, external.Value().resource, external.Value().availableAfter};
 
     TelemetrySnapshot telemetry;
     window.Value()->SetTelemetryText(BuildTelemetryText(telemetry, loaded.Value().Package(), forceWarp));
@@ -317,9 +317,9 @@ int wmain(int argc, wchar_t** argv)
         if (!recoveryTriggered && frame >= 180)
         {
             const auto recoveryMode = forceRemovalDemo
-                ? sge4::runtime::DeviceRecoveryMode::ForceRemovalForTest
-                : sge4::runtime::DeviceRecoveryMode::ControlledRebuild;
-            auto recovered = sge4::runtime::RecoverDevice(loaded.Value(), executor, recoveryMode);
+                ? sge4_5::runtime::DeviceRecoveryMode::ForceRemovalForTest
+                : sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild;
+            auto recovered = sge4_5::runtime::RecoverDevice(loaded.Value(), executor, recoveryMode);
             if (!recovered)
             {
                 std::cerr << "Device recovery failed at " << recovered.Error().stage
@@ -328,7 +328,7 @@ int wmain(int argc, wchar_t** argv)
                 return 7;
             }
             const auto& report = recovered.Value();
-            if (report.stateAfter == sge4::runtime::DeviceRuntimeState::AwaitingAdapter)
+            if (report.stateAfter == sge4_5::runtime::DeviceRuntimeState::AwaitingAdapter)
             {
                 telemetry.recoveryCount += 1;
                 telemetry.recoveryPreviousEpoch = report.previousDeviceEpoch;
@@ -376,15 +376,15 @@ int wmain(int argc, wchar_t** argv)
         const float angle = elapsed * RotationSpeedRadiansPerSecond;
         const FrameConstants constants = MakeFrameConstants(angle);
         const auto constantBytes = std::as_bytes(std::span<const FrameConstants>(&constants, 1));
-        const sge4::runtime::DynamicDataBinding dynamicBinding{0, constantBytes};
+        const sge4_5::runtime::DynamicDataBinding dynamicBinding{0, constantBytes};
 
         const std::uint64_t submittedFrame = frame++;
-        sge4::runtime::FrameInvocation invocation;
+        sge4_5::runtime::FrameInvocation invocation;
         invocation.frameNumber = submittedFrame;
-        invocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(&dynamicBinding, 1);
-        invocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(&externalBinding, 1);
+        invocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(&dynamicBinding, 1);
+        invocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(&externalBinding, 1);
         telemetry.externalAvailableAfter = externalBinding.availableAfter ? externalBinding.availableAfter->Value() : 0;
-        auto submission = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        auto submission = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submission)
         {
             std::cerr << "Submit failed at " << submission.Error().stage

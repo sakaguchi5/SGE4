@@ -7,7 +7,7 @@
 #include <sstream>
 #include <vector>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 namespace
 {

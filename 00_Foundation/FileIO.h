@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 [[nodiscard]] Result<std::vector<std::byte>, std::string> ReadAllBytes(const std::filesystem::path& path);
 [[nodiscard]] Result<void, std::string> WriteAllBytes(const std::filesystem::path& path, std::span<const std::byte> bytes);

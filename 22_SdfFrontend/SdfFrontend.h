@@ -7,7 +7,7 @@
 #include <array>
 #include <string>
 
-namespace sge4::sdf
+namespace sge4_5::sdf
 {
 struct HalfSpace2D final
 {

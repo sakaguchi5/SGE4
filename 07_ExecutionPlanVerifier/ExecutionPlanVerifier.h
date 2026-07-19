@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace sge4::planning::verification
+namespace sge4_5::planning::verification
 {
 enum class DiagnosticCode : std::uint32_t
 {

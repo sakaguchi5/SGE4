@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 Result<std::vector<std::byte>, std::string> ReadAllBytes(const std::filesystem::path& path)
 {

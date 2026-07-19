@@ -7,7 +7,7 @@
 #include <set>
 #include <utility>
 
-namespace sge4::semantic
+namespace sge4_5::semantic
 {
 namespace
 {

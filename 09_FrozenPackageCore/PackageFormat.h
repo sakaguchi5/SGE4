@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::package
+namespace sge4_5::package
 {
 inline constexpr std::array<std::byte, 8> PackageMagic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'2'},
@@ -53,7 +53,6 @@ enum class SectionKind : std::uint32_t
     D3D12RootParameterTable = 0x0000'100F,
     D3D12ComputeExecutableTable = 0x0000'1010,
     D3D12ComputeCommandTable = 0x0000'1011,
-    D3D12CompositionEndpointTable = 0x0000'1012,
 
     StringTable = 0x0000'7F00,
     DebugMap = 0x0000'7F01,

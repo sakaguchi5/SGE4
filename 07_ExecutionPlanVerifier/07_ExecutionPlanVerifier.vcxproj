@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{189A956E-7938-52D4-8E97-496D0F4748FE}</ProjectGuid>
+    <ProjectGuid>{2294F963-F1EB-57F9-BE49-CFCC3CE5A14B}</ProjectGuid>
     <RootNamespace>07_ExecutionPlanVerifier</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -80,11 +80,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj">
-      <Project>{30960D57-0983-50E3-8847-AA3E9961FA22}</Project>
+      <Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\06_ExecutionPlanModel\06_ExecutionPlanModel.vcxproj">
-      <Project>{C33D1098-67D0-5E8E-A2E6-2EEFB91CB59C}</Project>
+      <Project>{CC9821ED-F54A-577B-96D2-140808B97BA0}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

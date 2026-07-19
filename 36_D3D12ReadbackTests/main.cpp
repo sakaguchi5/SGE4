@@ -26,27 +26,27 @@ constexpr std::array<float, 4> ExternalColor{0.96f, 0.88f, 0.72f, 1.0f};
 
 int RunFreshProcessChild(const std::filesystem::path& packagePath)
 {
-    auto bytes = sge4::base::ReadAllBytes(packagePath);
+    auto bytes = sge4_5::base::ReadAllBytes(packagePath);
     if (!bytes) return 40;
-    auto package = sge4::package::PackageReader::Read(std::move(bytes).Value());
+    auto package = sge4_5::package::PackageReader::Read(std::move(bytes).Value());
     if (!package) return 41;
-    auto window = sge4::platform::Win32Window::Create(L"SGE4 Fresh Process Package", 64, 64);
+    auto window = sge4_5::platform::Win32Window::Create(L"SGE4 Fresh Process Package", 64, 64);
     if (!window) return 42;
 
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(package).Value(), executor, *window.Value());
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(package).Value(), executor, *window.Value());
     if (!loaded) return 43;
     auto external = executor.CreateExternalColorBuffer(loaded.Value().Instance(), ExternalColor);
     if (!external) return 44;
 
     const auto constantBytes = std::as_bytes(std::span<const float>(Identity));
-    const sge4::runtime::DynamicDataBinding dynamicBinding{0, constantBytes};
-    const sge4::runtime::ExternalResourceBinding externalBinding{0, external.Value().resource, external.Value().availableAfter};
-    sge4::runtime::FrameInvocation invocation;
+    const sge4_5::runtime::DynamicDataBinding dynamicBinding{0, constantBytes};
+    const sge4_5::runtime::ExternalResourceBinding externalBinding{0, external.Value().resource, external.Value().availableAfter};
+    sge4_5::runtime::FrameInvocation invocation;
     invocation.frameNumber = 0;
-    invocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(&dynamicBinding, 1);
-    invocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(&externalBinding, 1);
-    auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+    invocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(&dynamicBinding, 1);
+    invocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(&externalBinding, 1);
+    auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
     if (!submitted)
     {
         std::cerr << "Fresh-process Submit failed at " << submitted.Error().stage
@@ -101,15 +101,15 @@ int wmain(int argc, wchar_t** argv)
     if (argc >= 3 && std::wstring_view(argv[2]) == L"--fresh-process-child")
         return RunFreshProcessChild(packagePath);
 
-    auto bytes = sge4::base::ReadAllBytes(packagePath);
+    auto bytes = sge4_5::base::ReadAllBytes(packagePath);
     if (!bytes) { std::cerr << "Read failed: " << bytes.Error() << '\n'; return 1; }
-    auto package = sge4::package::PackageReader::Read(std::move(bytes).Value());
+    auto package = sge4_5::package::PackageReader::Read(std::move(bytes).Value());
     if (!package) { std::cerr << "Package rejected: " << package.Error().message << '\n'; return 2; }
-    auto window = sge4::platform::Win32Window::Create(L"SGE4 WARP Recovery Test", 64, 64);
+    auto window = sge4_5::platform::Win32Window::Create(L"SGE4 WARP Recovery Test", 64, 64);
     if (!window) { std::cerr << "Window creation failed: " << window.Error() << '\n'; return 3; }
 
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(package).Value(), executor, *window.Value());
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(package).Value(), executor, *window.Value());
     if (!loaded)
     {
         std::cerr << "WARP readback failed at " << loaded.Error().stage << ": " << loaded.Error().message << '\n';
@@ -117,7 +117,7 @@ int wmain(int argc, wchar_t** argv)
     }
 
     const auto constantBytes = std::as_bytes(std::span<const float>(Identity));
-    const sge4::runtime::DynamicDataBinding dynamicBinding{0, constantBytes};
+    const sge4_5::runtime::DynamicDataBinding dynamicBinding{0, constantBytes};
     auto external = executor.CreateExternalColorBuffer(loaded.Value().Instance(), ExternalColor);
     if (!external)
     {
@@ -125,15 +125,15 @@ int wmain(int argc, wchar_t** argv)
                   << ": " << external.Error().message << '\n';
         return 5;
     }
-    sge4::runtime::ExternalResourceBinding externalBinding{0, external.Value().resource, external.Value().availableAfter};
+    sge4_5::runtime::ExternalResourceBinding externalBinding{0, external.Value().resource, external.Value().availableAfter};
 
     for (std::uint64_t frameNumber = 0; frameNumber < 2; ++frameNumber)
     {
-        sge4::runtime::FrameInvocation invocation;
+        sge4_5::runtime::FrameInvocation invocation;
         invocation.frameNumber = frameNumber;
-        invocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(&dynamicBinding, 1);
-        invocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(&externalBinding, 1);
-        auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        invocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(&dynamicBinding, 1);
+        invocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(&externalBinding, 1);
+        auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submitted)
         {
             std::cerr << "Frame " << frameNumber << " Submit failed at " << submitted.Error().stage
@@ -149,42 +149,42 @@ int wmain(int argc, wchar_t** argv)
         externalBinding.availableAfter = submitted.Value().releasedExternalResources[0].safeAfter;
     }
 
-    auto falseDetectedLoss = sge4::runtime::RecoverDevice(
-        loaded.Value(), executor, sge4::runtime::DeviceRecoveryMode::RecoverDetectedLoss);
+    auto falseDetectedLoss = sge4_5::runtime::RecoverDevice(
+        loaded.Value(), executor, sge4_5::runtime::DeviceRecoveryMode::RecoverDetectedLoss);
     if (falseDetectedLoss || falseDetectedLoss.Error().stage != "recovery/detected-loss")
         return 7;
 
-    auto controlled = sge4::runtime::RecoverDevice(
-        loaded.Value(), executor, sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    auto controlled = sge4_5::runtime::RecoverDevice(
+        loaded.Value(), executor, sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
     if (!controlled)
     {
         std::cerr << "Controlled reconstruction failed at " << controlled.Error().stage << ": " << controlled.Error().message << '\n';
         return 8;
     }
     const auto& controlledReport = controlled.Value();
-    if (controlledReport.stateBefore != sge4::runtime::DeviceRuntimeState::Active ||
-        controlledReport.stateAfter != sge4::runtime::DeviceRuntimeState::Active ||
+    if (controlledReport.stateBefore != sge4_5::runtime::DeviceRuntimeState::Active ||
+        controlledReport.stateAfter != sge4_5::runtime::DeviceRuntimeState::Active ||
         controlledReport.previousDeviceEpoch != 1 || controlledReport.newDeviceEpoch != 2 ||
         controlledReport.forcedRemoval || !controlledReport.adapterReacquired ||
         !controlledReport.packageObjectsRebuilt || !controlledReport.temporalHistoryReset ||
         !controlledReport.externalRebindRequired || controlledReport.removalReason != 0)
         return 9;
 
-    sge4::runtime::FrameInvocation staleInvocation;
+    sge4_5::runtime::FrameInvocation staleInvocation;
     staleInvocation.frameNumber = 0;
-    staleInvocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(&dynamicBinding, 1);
-    staleInvocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(&externalBinding, 1);
-    auto staleSubmit = sge4::runtime::Submit(loaded.Value(), executor, staleInvocation);
+    staleInvocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(&dynamicBinding, 1);
+    staleInvocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(&externalBinding, 1);
+    auto staleSubmit = sge4_5::runtime::Submit(loaded.Value(), executor, staleInvocation);
     if (staleSubmit || staleSubmit.Error().stage != "invocation") return 10;
 
     auto rebound = executor.CreateExternalColorBuffer(loaded.Value().Instance(), ExternalColor);
     if (!rebound) return 11;
     externalBinding = {0, rebound.Value().resource, rebound.Value().availableAfter};
-    sge4::runtime::FrameInvocation epoch2Invocation;
+    sge4_5::runtime::FrameInvocation epoch2Invocation;
     epoch2Invocation.frameNumber = 0;
-    epoch2Invocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(&dynamicBinding, 1);
-    epoch2Invocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(&externalBinding, 1);
-    auto epoch2Frame = sge4::runtime::Submit(loaded.Value(), executor, epoch2Invocation);
+    epoch2Invocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(&dynamicBinding, 1);
+    epoch2Invocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(&externalBinding, 1);
+    auto epoch2Frame = sge4_5::runtime::Submit(loaded.Value(), executor, epoch2Invocation);
     if (!epoch2Frame)
     {
         std::cerr << "Post-recovery Submit failed at " << epoch2Frame.Error().stage
@@ -199,31 +199,31 @@ int wmain(int argc, wchar_t** argv)
         return 12;
     }
 
-    auto removed = sge4::runtime::RecoverDevice(
-        loaded.Value(), executor, sge4::runtime::DeviceRecoveryMode::ForceRemovalForTest);
+    auto removed = sge4_5::runtime::RecoverDevice(
+        loaded.Value(), executor, sge4_5::runtime::DeviceRecoveryMode::ForceRemovalForTest);
     if (!removed)
     {
         std::cerr << "Forced removal failed at " << removed.Error().stage << ": " << removed.Error().message << '\n';
         return 13;
     }
     const auto& removedReport = removed.Value();
-    if (!removedReport.forcedRemoval || removedReport.stateBefore != sge4::runtime::DeviceRuntimeState::Active ||
-        removedReport.stateAfter != sge4::runtime::DeviceRuntimeState::AwaitingAdapter ||
+    if (!removedReport.forcedRemoval || removedReport.stateBefore != sge4_5::runtime::DeviceRuntimeState::Active ||
+        removedReport.stateAfter != sge4_5::runtime::DeviceRuntimeState::AwaitingAdapter ||
         removedReport.previousDeviceEpoch != 2 || removedReport.newDeviceEpoch != 2 ||
         removedReport.removalReason == 0 || removedReport.adapterReacquired ||
         removedReport.packageObjectsRebuilt || removedReport.temporalHistoryReset ||
         !removedReport.externalRebindRequired)
         return 14;
 
-    auto inactiveSubmit = sge4::runtime::Submit(loaded.Value(), executor, epoch2Invocation);
+    auto inactiveSubmit = sge4_5::runtime::Submit(loaded.Value(), executor, epoch2Invocation);
     if (inactiveSubmit || inactiveSubmit.Error().stage != "submit/device-state") return 15;
     auto inactiveExternal = executor.CreateExternalColorBuffer(loaded.Value().Instance(), ExternalColor);
     if (inactiveExternal || inactiveExternal.Error().stage != "external/device-state") return 16;
 
-    auto retry = sge4::runtime::RecoverDevice(
-        loaded.Value(), executor, sge4::runtime::DeviceRecoveryMode::RetryAdapterReacquisition);
-    if (!retry || retry.Value().stateBefore != sge4::runtime::DeviceRuntimeState::AwaitingAdapter ||
-        retry.Value().stateAfter != sge4::runtime::DeviceRuntimeState::AwaitingAdapter ||
+    auto retry = sge4_5::runtime::RecoverDevice(
+        loaded.Value(), executor, sge4_5::runtime::DeviceRecoveryMode::RetryAdapterReacquisition);
+    if (!retry || retry.Value().stateBefore != sge4_5::runtime::DeviceRuntimeState::AwaitingAdapter ||
+        retry.Value().stateAfter != sge4_5::runtime::DeviceRuntimeState::AwaitingAdapter ||
         retry.Value().adapterReacquired || retry.Value().packageObjectsRebuilt || retry.Value().newDeviceEpoch != 2)
         return 17;
 

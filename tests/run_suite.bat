@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions
 
 set "SUITE=%~1"
@@ -23,7 +23,7 @@ powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass ^
 if errorlevel 1 exit /b 1
 
 powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass ^
-  -File "%~dp0Invoke-SGE4Tests.ps1" ^
+  -File "%~dp0Invoke-SGE4_5Tests.ps1" ^
   -Suite "%SUITE%" ^
   -Configuration "%CONFIG%"
 exit /b %errorlevel%

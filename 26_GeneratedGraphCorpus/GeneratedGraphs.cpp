@@ -9,7 +9,7 @@
 #include <tuple>
 #include <utility>
 
-namespace sge4::qualification::generated
+namespace sge4_5::qualification::generated
 {
 namespace
 {

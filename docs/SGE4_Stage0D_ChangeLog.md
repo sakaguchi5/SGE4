@@ -2,21 +2,21 @@
 
 ## From SGE3
 
-- Created independent `SemanticGpuEngine4.sln` and `sge4` namespace.
+- Created independent `SemanticGpuEngine4-5.sln` and `sge4` namespace.
 - Reissued every Visual Studio Project GUID for the SGE4 solution.
 - Added `05A_CompilationInput` as the shared source-analysis and D3D12 Schema-17 feasibility boundary.
 - Removed the `08_CandidatePlanner -> 11_D3D12PackageLowering` ProjectReference.
 - Replaced `CandidatePlanner::CompileWithPolicy` with two Package-free phases:
   - `PlanCandidates`
   - `SelectCandidate`
-- Moved verified candidate lowering and compile orchestration into `12_SGE4Compiler`.
+- Moved verified candidate lowering and compile orchestration into `12_SGE4_5Compiler`.
 - Added mandatory re-sealing immediately before each `LowerVerifiedPlan` call.
 - Renamed and expanded `28_SGE3CompatibilityOracle` to retain:
   - the historical direct canonical reference path;
   - a separate SGE3-style planning orchestration for Stage-0D comparison.
 - Extended Planning tests to compare SGE4 and SGE3-reference candidate manifests, selected Plan identities, and Package bytes.
-- Extended dependency verification to reject Package responsibilities in CandidatePlanner and production lowering calls outside SGE4Compiler.
-- Added `run_sge4_stage0d.bat` as the authoritative Debug/Release freeze gate.
+- Extended dependency verification to reject Package responsibilities in CandidatePlanner and production lowering calls outside SGE4_5Compiler.
+- Added `run_sge4_5_stage0d.bat` as the authoritative Debug/Release freeze gate.
 
 ## Intentionally unchanged
 

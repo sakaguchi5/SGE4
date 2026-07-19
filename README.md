@@ -1,11 +1,15 @@
-﻿# Semantic GPU Engine 4
+﻿# Semantic GPU Engine 4-5
+
+This independent tree is based directly on `SGE4v1.zip`. Start with `run_sge4_5_foundation.bat`. See `docs/foundation/FOUNDATION_BOOTSTRAP.md`.
+
+# Semantic GPU Engine 4
 
 SGE4 is a new Visual Studio solution that reconstructs the complete proven SGE2 execution path under a stricter project topology.
 
 It is not linked to SGE2 projects, binaries, repositories, or namespaces.
 
 ```text
-SemanticGpuEngine4.sln
+SemanticGpuEngine4-5.sln
 namespace: sge4
 Toolset: Visual Studio 2026 / v145
 Language: /std:c++latest
@@ -29,7 +33,7 @@ SemanticGraph
   -> D3D12Backend
 ```
 
-There is no normal compile entry that lowers a raw `ExecutionPlanIR`. `12_SGE4Compiler` is the production facade. Its CanonicalSafe mode is still a policy, not a separate legacy compiler.
+There is no normal compile entry that lowers a raw `ExecutionPlanIR`. `12_SGE4_5Compiler` is the production facade. Its CanonicalSafe mode is still a policy, not a separate legacy compiler.
 
 The old direct canonical route exists only behind `28_SGE3CompatibilityOracle` so that Planning qualification can prove byte identity against the SGE2 behavior. No production or runtime project may reference that Oracle.
 
@@ -43,7 +47,7 @@ cmd /c .\build.bat Release
 ## Full qualification
 
 ```powershell
-cmd /c .\run_sge4_freeze.bat
+cmd /c .\run_sge4_5_freeze.bat
 ```
 
 This performs:
@@ -80,10 +84,14 @@ The generation-specific manifest identity is separated from the frozen SGE3 sema
 The `tests` directory separates daily development checks from full freeze qualification.
 
 ```bat
-run_sge4_dev.bat
-run_sge4_gate.bat
-run_sge4_regression.bat
-run_sge4_freeze.bat
+run_sge4_5_dev.bat
+run_sge4_5_gate.bat
+run_sge4_5_regression.bat
+run_sge4_5_freeze.bat
 ```
 
 See `tests/README_JA.md` and `tests/OPERATIONS_GUIDE_JA.md` for the full workflow.
+
+## Archive path portability
+
+Repository file and directory names are ASCII-only so Windows ZIP extractors cannot alter entry names. UTF-8 Japanese document contents remain unchanged. The Spiral 1 specification is `docs/spiral1/SGE4-5_Spiral1_Completion_Spec_v0.2.md`.

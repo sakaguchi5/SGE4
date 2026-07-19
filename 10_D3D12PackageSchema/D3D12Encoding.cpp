@@ -16,7 +16,7 @@
 #include <string>
 #include <utility>
 
-namespace sge4::package::d3d12_v13
+namespace sge4_5::package::d3d12_v13
 {
 namespace
 {

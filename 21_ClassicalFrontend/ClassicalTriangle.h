@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace sge4::classical
+namespace sge4_5::classical
 {
 [[nodiscard]] experiment::TriangleGeometry BuildTriangleGeometry() noexcept;
 [[nodiscard]] base::Result<semantic::SemanticGraph, std::string> BuildTriangleGraph();

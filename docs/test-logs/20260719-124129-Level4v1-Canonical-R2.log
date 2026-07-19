@@ -1,0 +1,31 @@
+﻿SGE4-5 Level 4 v1 Canonical R2 qualification
+Started=2026-07-19T12:41:29.4740400+09:00
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
+SGE4-5 dependency boundary check passed. Projects: 57, references: 412.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\Verify-Level4v1R2Boundaries.ps1
+Level 4 v1 Canonical R2 Contract, Plan and independent verifier boundaries passed.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
+SGE4-5 script contract verification passed. Scripts: 46.
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
+SOURCE_MANIFEST verification passed. Files: 265.
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\47_CanonicalCompositionAuthorityTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r2\Canonical_R2_Debug_A.sgec
+R2 Composition Contract and Independent Verification tests passed
+Contract: Leaf-derived Buffer endpoint authority and canonical Resource Flows
+Raw Plan: proposal only; independent verifier re-derived every represented decision
+Artifact bytes: 15560
+Artifact SHA-256: 0cf12604949c8b686699fcd89d9acbfb1620d0803c4934b66de0aec95668ba14
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\47_CanonicalCompositionAuthorityTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r2\Canonical_R2_Debug_B.sgec
+R2 Composition Contract and Independent Verification tests passed
+Contract: Leaf-derived Buffer endpoint authority and canonical Resource Flows
+Raw Plan: proposal only; independent verifier re-derived every represented decision
+Artifact bytes: 15560
+Artifact SHA-256: 0cf12604949c8b686699fcd89d9acbfb1620d0803c4934b66de0aec95668ba14
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Release\47_CanonicalCompositionAuthorityTests.exe" --emit C:\Users\sokyu\Desktop\SGE4\build\tests\level4v1-r2\Canonical_R2_Release.sgec
+R2 Composition Contract and Independent Verification tests passed
+Contract: Leaf-derived Buffer endpoint authority and canonical Resource Flows
+Raw Plan: proposal only; independent verifier re-derived every represented decision
+Artifact bytes: 15560
+Artifact SHA-256: 0cf12604949c8b686699fcd89d9acbfb1620d0803c4934b66de0aec95668ba14
+PASSED
+Artifact bytes: 15560
+Artifact SHA-256: 0CF12604949C8B686699FCD89D9ACBFB1620D0803C4934B66DE0AEC95668BA14

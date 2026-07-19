@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace sge4::compiler::compilation
+namespace sge4_5::compiler::compilation
 {
 namespace
 {

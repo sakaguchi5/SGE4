@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-namespace sge4::package
+namespace sge4_5::package
 {
 struct SectionView;
 [[nodiscard]] base::Digest256 ComputeExecutionDigest(std::span<const PackageSectionInput> sections);

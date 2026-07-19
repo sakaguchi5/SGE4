@@ -5,7 +5,7 @@
 #include "../10_D3D12PackageSchema/D3D12Encoding.h"
 #include "../21_ClassicalFrontend/ClassicalTriangle.h"
 #include "../25_GeneralGraphScenarios/GeneralGraphScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <exception>
@@ -16,8 +16,8 @@
 
 namespace
 {
-namespace sem = sge4::semantic;
-namespace pkg = sge4::package::d3d12_v13;
+namespace sem = sge4_5::semantic;
+namespace pkg = sge4_5::package::d3d12_v13;
 
 bool Contains(std::span<const std::byte> bytes, std::string_view text)
 {
@@ -200,9 +200,9 @@ sem::SemanticGraph PermuteStageHTopLevelTables(sem::SemanticGraph graph)
 
 bool MatchesExecutionOrder(
     std::span<const pkg::OperationView> operations,
-    const std::vector<sge4::qualification::ExpectedExecution>& expected)
+    const std::vector<sge4_5::qualification::ExpectedExecution>& expected)
 {
-    std::vector<sge4::qualification::ExpectedExecution> actual;
+    std::vector<sge4_5::qualification::ExpectedExecution> actual;
     for (const auto& operation : operations)
     {
         sem::WorkKind kind{};
@@ -274,9 +274,9 @@ bool ValidateSignalIdentityContract(std::span<const pkg::OperationView> operatio
     return true;
 }
 
-int ValidateStageHScenario(sge4::qualification::StageHScenario key)
+int ValidateStageHScenario(sge4_5::qualification::StageHScenario key)
 {
-    auto built = sge4::qualification::BuildStageHScenario(key);
+    auto built = sge4_5::qualification::BuildStageHScenario(key);
     if (!built)
     {
         std::cerr << "Stage-H scenario construction failed: " << built.Error() << '\n';
@@ -291,7 +291,7 @@ int ValidateStageHScenario(sge4::qualification::StageHScenario key)
         return 2;
     }
 
-    auto analyzed = sge4::analysis::Analyze(input.graph);
+    auto analyzed = sge4_5::analysis::Analyze(input.graph);
     if (!analyzed)
     {
         std::cerr << input.name << ": Semantic analysis rejected the graph\n";
@@ -303,8 +303,8 @@ int ValidateStageHScenario(sge4::qualification::StageHScenario key)
         return 4;
     }
 
-    auto first = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
-    auto second = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
+    auto first = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
+    auto second = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
     if (!first || !second)
     {
         const auto& error = !first ? first.Error() : second.Error();
@@ -320,7 +320,7 @@ int ValidateStageHScenario(sge4::qualification::StageHScenario key)
     }
 
     auto permutedGraph = PermuteStageHTopLevelTables(input.graph);
-    auto permuted = sge4::compiler::CompileCanonical(permutedGraph, input.targetProfile);
+    auto permuted = sge4_5::compiler::CompileCanonical(permutedGraph, input.targetProfile);
     if (!permuted || permuted.Value().packageBytes != first.Value().packageBytes)
     {
         if (!permuted)
@@ -331,7 +331,7 @@ int ValidateStageHScenario(sge4::qualification::StageHScenario key)
         return 7;
     }
 
-    auto frozen = sge4::package::PackageReader::Read(first.Value().packageBytes);
+    auto frozen = sge4_5::package::PackageReader::Read(first.Value().packageBytes);
     if (!frozen)
     {
         std::cerr << input.name << ": PackageReader failed: " << frozen.Error().message << '\n';
@@ -391,16 +391,16 @@ int ValidateStageHScenario(sge4::qualification::StageHScenario key)
 
 int main()
 {
-    auto graphResult = sge4::classical::BuildTriangleGraph();
+    auto graphResult = sge4_5::classical::BuildTriangleGraph();
     if (!graphResult) return 1;
     const auto& graph = graphResult.Value();
-    sge4::target::D3D12TargetProfile profile;
+    sge4_5::target::D3D12TargetProfile profile;
 
-    auto validatedStage = sge4::compiler::d3d12::ValidateSourceStage(graph, profile);
+    auto validatedStage = sge4_5::compiler::d3d12::ValidateSourceStage(graph, profile);
     if (!validatedStage || validatedStage.Value().source != &graph ||
         validatedStage.Value().analyzed.canonicalWorkOrder.size() != graph.works.size())
         return 2;
-    auto programStage = sge4::compiler::d3d12::CompileProgramStage(validatedStage.Value());
+    auto programStage = sge4_5::compiler::d3d12::CompileProgramStage(validatedStage.Value());
     if (!programStage || programStage.Value().programs.size() != 2)
     {
         if (!programStage) std::cerr << programStage.Error().stage << ": " << programStage.Error().message << '\n';
@@ -419,8 +419,8 @@ int main()
     if (reflectedShaderCount != 3 || reflectedBindingCount != 10 || reflectedVertexInputCount != 3)
         return 4;
 
-    auto first = sge4::compiler::CompileCanonical(graph, profile);
-    auto second = sge4::compiler::CompileCanonical(graph, profile);
+    auto first = sge4_5::compiler::CompileCanonical(graph, profile);
+    auto second = sge4_5::compiler::CompileCanonical(graph, profile);
     if (!first || !second)
     {
         const auto& error = !first ? first.Error() : second.Error();
@@ -437,7 +437,7 @@ int main()
         return 6;
 
     auto sparse = RemapToSparseIds(graph);
-    auto sparsePackage = sge4::compiler::CompileCanonical(sparse, profile);
+    auto sparsePackage = sge4_5::compiler::CompileCanonical(sparse, profile);
     if (!sparsePackage || sparsePackage.Value().packageBytes != first.Value().packageBytes)
     {
         if (!sparsePackage) std::cerr << sparsePackage.Error().stage << ": " << sparsePackage.Error().message << '\n';
@@ -455,7 +455,7 @@ int main()
             return 5;
         }
 
-    auto frozen = sge4::package::PackageReader::Read(first.Value().packageBytes);
+    auto frozen = sge4_5::package::PackageReader::Read(first.Value().packageBytes);
     if (!frozen) { std::cerr << frozen.Error().message << '\n'; return 6; }
     if (frozen.Value().Header().targetSchemaVersion != 17 ||
         frozen.Value().Header().minimumRuntimeVersion != 17)
@@ -499,7 +499,7 @@ int main()
         return 10;
     const auto& aliasAllocation = view.Allocations()[aliased[0]->allocation.value];
     if (aliasAllocation.kind != pkg::AllocationKind::Placed ||
-        aliasAllocation.aliasGroup == sge4::package::InvalidIndex ||
+        aliasAllocation.aliasGroup == sge4_5::package::InvalidIndex ||
         aliasAllocation.alignment != 65536)
         return 11;
 
@@ -560,13 +560,13 @@ int main()
     }
 
     auto extendedGraph = AddIndependentCopy(graph);
-    auto extended = sge4::compiler::CompileCanonical(extendedGraph, profile);
+    auto extended = sge4_5::compiler::CompileCanonical(extendedGraph, profile);
     if (!extended)
     {
         std::cerr << extended.Error().stage << ": " << extended.Error().message << '\n';
         return 21;
     }
-    auto extendedFrozen = sge4::package::PackageReader::Read(extended.Value().packageBytes);
+    auto extendedFrozen = sge4_5::package::PackageReader::Read(extended.Value().packageBytes);
     if (!extendedFrozen) return 22;
     auto extendedViewResult = pkg::D3D12PackageView::Decode(extendedFrozen.Value());
     if (!extendedViewResult) return 23;
@@ -577,13 +577,13 @@ int main()
         return 24;
 
     auto bindingGraph = AddRasterBinding(graph);
-    auto bindingPackage = sge4::compiler::CompileCanonical(bindingGraph, profile);
+    auto bindingPackage = sge4_5::compiler::CompileCanonical(bindingGraph, profile);
     if (!bindingPackage)
     {
         std::cerr << bindingPackage.Error().stage << ": " << bindingPackage.Error().message << '\n';
         return 25;
     }
-    auto bindingFrozen = sge4::package::PackageReader::Read(bindingPackage.Value().packageBytes);
+    auto bindingFrozen = sge4_5::package::PackageReader::Read(bindingPackage.Value().packageBytes);
     if (!bindingFrozen) return 26;
     auto bindingViewResult = pkg::D3D12PackageView::Decode(bindingFrozen.Value());
     if (!bindingViewResult || bindingViewResult.Value().Views().size() != view.Views().size() + 1 ||
@@ -592,9 +592,9 @@ int main()
 
     auto multiQueueProfile = profile;
     multiQueueProfile.computeQueueCount = 1;
-    auto multiQueue = sge4::compiler::CompileCanonical(graph, multiQueueProfile);
+    auto multiQueue = sge4_5::compiler::CompileCanonical(graph, multiQueueProfile);
     if (!multiQueue) return 28;
-    auto multiFrozen = sge4::package::PackageReader::Read(multiQueue.Value().packageBytes);
+    auto multiFrozen = sge4_5::package::PackageReader::Read(multiQueue.Value().packageBytes);
     if (!multiFrozen) return 29;
     auto multiViewResult = pkg::D3D12PackageView::Decode(multiFrozen.Value());
     if (!multiViewResult) return 30;
@@ -612,13 +612,13 @@ int main()
         return 31;
 
     auto crossQueueTemporalGraph = MakeCrossQueueTemporal(graph);
-    auto crossQueueTemporal = sge4::compiler::CompileCanonical(crossQueueTemporalGraph, multiQueueProfile);
+    auto crossQueueTemporal = sge4_5::compiler::CompileCanonical(crossQueueTemporalGraph, multiQueueProfile);
     if (!crossQueueTemporal)
     {
         std::cerr << crossQueueTemporal.Error().stage << ": " << crossQueueTemporal.Error().message << '\n';
         return 40;
     }
-    auto crossFrozen = sge4::package::PackageReader::Read(crossQueueTemporal.Value().packageBytes);
+    auto crossFrozen = sge4_5::package::PackageReader::Read(crossQueueTemporal.Value().packageBytes);
     if (!crossFrozen) return 41;
     auto crossViewResult = pkg::D3D12PackageView::Decode(crossFrozen.Value());
     if (!crossViewResult) return 42;
@@ -647,12 +647,12 @@ int main()
 
     auto invalidQueues = profile;
     invalidQueues.directQueueCount = 2;
-    auto queueCapability = sge4::compiler::d3d12::ValidateLevel2Capability(graph, invalidQueues);
+    auto queueCapability = sge4_5::compiler::d3d12::ValidateLevel2Capability(graph, invalidQueues);
     if (queueCapability || queueCapability.Error().stage != "target-feasibility") return 32;
 
     auto temporalSingleFrame = profile;
     temporalSingleFrame.framesInFlight = 1;
-    if (sge4::compiler::d3d12::ValidateLevel2Capability(graph, temporalSingleFrame)) return 33;
+    if (sge4_5::compiler::d3d12::ValidateLevel2Capability(graph, temporalSingleFrame)) return 33;
 
     auto multiSurfaceGraph = graph;
     auto extraSurface = *std::find_if(multiSurfaceGraph.resources.begin(), multiSurfaceGraph.resources.end(), [](const auto& resource) {
@@ -661,28 +661,28 @@ int main()
     extraSurface.id = {500};
     extraSurface.debugName = "ForbiddenSecondSurface";
     multiSurfaceGraph.resources.push_back(extraSurface);
-    if (sge4::compiler::d3d12::ValidateLevel2Capability(multiSurfaceGraph, profile)) return 34;
+    if (sge4_5::compiler::d3d12::ValidateLevel2Capability(multiSurfaceGraph, profile)) return 34;
 
     auto multiMipGraph = graph;
     auto texture = std::find_if(multiMipGraph.resources.begin(), multiMipGraph.resources.end(), [](const auto& resource) {
         return resource.kind == sem::ResourceKind::Texture2D && resource.update == sem::UpdateIntent::Immutable;
     });
     texture->texture2D.mipLevels = 2;
-    if (sge4::compiler::d3d12::ValidateLevel2Capability(multiMipGraph, profile)) return 35;
+    if (sge4_5::compiler::d3d12::ValidateLevel2Capability(multiMipGraph, profile)) return 35;
 
     auto standalonePresent = graph;
     sem::Work presentWork;
     presentWork.id = {900};
     presentWork.kind = sem::WorkKind::Present;
     standalonePresent.works.push_back(presentWork);
-    if (sge4::compiler::d3d12::ValidateLevel2Capability(standalonePresent, profile)) return 36;
+    if (sge4_5::compiler::d3d12::ValidateLevel2Capability(standalonePresent, profile)) return 36;
 
     auto registerMismatch = graph;
     auto mismatchedRaster = std::find_if(registerMismatch.programs.begin(), registerMismatch.programs.end(), [](const auto& program) {
         return program.kind == sem::ProgramKind::Raster;
     });
     mismatchedRaster->interface.parameters[1].shaderRegister = 7;
-    auto rejectedRegister = sge4::compiler::CompileCanonical(registerMismatch, profile);
+    auto rejectedRegister = sge4_5::compiler::CompileCanonical(registerMismatch, profile);
     if (rejectedRegister || rejectedRegister.Error().stage != "shader-reflection")
     {
         std::cerr << "ProgramInterface/HLSL register mismatch was not rejected by reflection\n";
@@ -694,14 +694,14 @@ int main()
         return program.kind == sem::ProgramKind::Raster;
     });
     mismatchedVertexProgram->interface.vertexInputs[0].componentCount = 2;
-    auto rejectedVertex = sge4::compiler::CompileCanonical(vertexMismatch, profile);
+    auto rejectedVertex = sge4_5::compiler::CompileCanonical(vertexMismatch, profile);
     if (rejectedVertex || rejectedVertex.Error().stage != "shader-reflection")
     {
         std::cerr << "ProgramInterface/HLSL vertex-input mismatch was not rejected by reflection\n";
         return 38;
     }
 
-    for (const auto scenario : sge4::qualification::StageHInputs())
+    for (const auto scenario : sge4_5::qualification::StageHInputs())
         if (const auto result = ValidateStageHScenario(scenario); result != 0)
             return 100 + result;
 

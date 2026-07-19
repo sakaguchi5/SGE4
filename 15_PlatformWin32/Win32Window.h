@@ -12,7 +12,7 @@
 #include <memory>
 #include <string>
 
-namespace sge4::platform
+namespace sge4_5::platform
 {
 class Win32Window final : public runtime::ISurfaceHost
 {

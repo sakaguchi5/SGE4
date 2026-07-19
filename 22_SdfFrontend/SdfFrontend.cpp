@@ -5,7 +5,7 @@
 #include <limits>
 #include <utility>
 
-namespace sge4::sdf
+namespace sge4_5::sdf
 {
 namespace
 {

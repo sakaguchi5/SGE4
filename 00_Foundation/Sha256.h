@@ -5,7 +5,7 @@
 #include <span>
 #include <string>
 
-namespace sge4::base
+namespace sge4_5::base
 {
 using Digest256 = std::array<std::byte, 32>;
 

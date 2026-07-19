@@ -2,13 +2,13 @@
 
 #include <utility>
 
-namespace sge4::platform
+namespace sge4_5::platform
 {
 namespace
 {
-constexpr wchar_t WindowClassName[] = L"SemanticGpuEngine4WindowClass";
-constexpr wchar_t RenderClassName[] = L"SemanticGpuEngine4RenderSurfaceClass";
-constexpr wchar_t TelemetryClassName[] = L"SemanticGpuEngine4TelemetryPanelClass";
+constexpr wchar_t WindowClassName[] = L"SemanticGpuEngine4-5WindowClass";
+constexpr wchar_t RenderClassName[] = L"SemanticGpuEngine4-5RenderSurfaceClass";
+constexpr wchar_t TelemetryClassName[] = L"SemanticGpuEngine4-5TelemetryPanelClass";
 constexpr int TelemetryMargin = 14;
 constexpr int TelemetryTextInset = 12;
 constexpr COLORREF TelemetryBackground = RGB(18, 22, 29);

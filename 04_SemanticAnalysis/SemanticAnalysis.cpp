@@ -10,7 +10,7 @@
 #include <tuple>
 #include <utility>
 
-namespace sge4::analysis
+namespace sge4_5::analysis
 {
 namespace
 {

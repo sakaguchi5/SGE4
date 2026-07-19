@@ -3,7 +3,7 @@
 #include "../09_FrozenPackageCore/PackageReader.h"
 #include "../10_D3D12PackageSchema/D3D12Encoding.h"
 #include "../26_GeneratedGraphCorpus/GeneratedGraphs.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <array>
@@ -20,12 +20,12 @@
 
 namespace
 {
-namespace base = sge4::base;
-namespace sem = sge4::semantic;
-namespace analysis = sge4::analysis;
-namespace compiler = sge4::compiler::d3d12;
-namespace gen = sge4::qualification::generated;
-namespace pkg = sge4::package::d3d12_v13;
+namespace base = sge4_5::base;
+namespace sem = sge4_5::semantic;
+namespace analysis = sge4_5::analysis;
+namespace compiler = sge4_5::compiler::d3d12;
+namespace gen = sge4_5::qualification::generated;
+namespace pkg = sge4_5::package::d3d12_v13;
 
 struct CompiledPackage final
 {
@@ -35,7 +35,7 @@ struct CompiledPackage final
 
 base::Result<CompiledPackage, std::string> CompileOnce(const gen::GeneratedCase& generated)
 {
-    auto compiled = sge4::compiler::CompileCanonical(generated.graph, generated.targetProfile);
+    auto compiled = sge4_5::compiler::CompileCanonical(generated.graph, generated.targetProfile);
     if (!compiled)
         return base::Result<CompiledPackage, std::string>::Failure(
             compiled.Error().stage + ": " + compiled.Error().message);
@@ -259,7 +259,7 @@ bool ValidateCompiledCase(gen::GeneratedCase generated,
         }
     }
 
-    auto frozen = sge4::package::PackageReader::Read(first.Value().bytes);
+    auto frozen = sge4_5::package::PackageReader::Read(first.Value().bytes);
     if (!frozen)
     {
         std::cerr << label << ": PackageReader rejected Compiler output: "
@@ -421,10 +421,10 @@ sem::Work* FindWork(sem::SemanticGraph& graph, sem::WorkId id)
 
 bool ExpectCompileRejection(std::string_view label,
                             const sem::SemanticGraph& graph,
-                            const sge4::target::D3D12TargetProfile& profile,
+                            const sge4_5::target::D3D12TargetProfile& profile,
                             std::string_view stage)
 {
-    auto compiled = sge4::compiler::CompileCanonical(graph, profile);
+    auto compiled = sge4_5::compiler::CompileCanonical(graph, profile);
     if (compiled)
     {
         std::cerr << label << " was accepted\n";

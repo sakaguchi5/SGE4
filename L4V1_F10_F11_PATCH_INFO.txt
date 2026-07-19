@@ -1,6 +1,0 @@
-Base commit: 54b2e54d6da96cb030dfe3ad626885b6c1f826f7
-Scope: L4V1-F10 Composition Recovery + F11 Final Qualification
-Delivery: changes-only ZIP
-Existing implementation files modified: 13A SharedDeviceDomain, 29A StaticDagRuntime, D3D12Backend.cpp via idempotent prepare patch
-New projects: 29B, 46J, 46K
-F12 Final Freeze is intentionally excluded.

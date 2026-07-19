@@ -5,7 +5,7 @@
 #include "../15_PlatformWin32/Win32Window.h"
 #include "../24_SliceScenarios/SliceScenarios.h"
 #include "../25_GeneralGraphScenarios/GeneralGraphScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <array>
@@ -24,8 +24,8 @@
 
 namespace
 {
-namespace lvl = sge4::level1;
-namespace qual = sge4::qualification;
+namespace lvl = sge4_5::level1;
+namespace qual = sge4_5::qualification;
 
 constexpr std::array<float, 16> Identity = {
     1.0f, 0.0f, 0.0f, 0.0f,
@@ -36,7 +36,7 @@ constexpr std::array<float, 16> Identity = {
 constexpr std::array<float, 4> ExternalColor = {0.96f, 0.88f, 0.72f, 1.0f};
 
 bool HasQueueCompletion(
-    const sge4::runtime::FrameSubmission& submission,
+    const sge4_5::runtime::FrameSubmission& submission,
     std::uint32_t queue)
 {
     return std::any_of(submission.queues.begin(), submission.queues.end(),
@@ -47,7 +47,7 @@ bool HasQueueCompletion(
 
 int ValidateSubmission(
     const lvl::ScenarioInput& input,
-    const sge4::runtime::FrameSubmission& submission,
+    const sge4_5::runtime::FrameSubmission& submission,
     std::uint64_t frameNumber,
     std::uint64_t expectedEpoch)
 {
@@ -131,9 +131,9 @@ int ValidateSubmission(
 
 
 
-sge4::semantic::SemanticGraph BuildHeadlessComputeGraph()
+sge4_5::semantic::SemanticGraph BuildHeadlessComputeGraph()
 {
-    namespace sem = sge4::semantic;
+    namespace sem = sge4_5::semantic;
     sem::SemanticGraph graph;
 
     sem::Resource output;
@@ -196,7 +196,7 @@ void CSMain(uint3 dispatchThreadId : SV_DispatchThreadID)
 
 int ExecuteHeadlessCompute()
 {
-    auto profile = sge4::target::D3D12TargetProfile{};
+    auto profile = sge4_5::target::D3D12TargetProfile{};
     profile.computeQueueCount = 1;
     profile.copyQueueCount = 0;
     profile.surfaceImageCount = 0;
@@ -204,14 +204,14 @@ int ExecuteHeadlessCompute()
     profile.dsvDescriptorCount = 0;
     profile.shaderDescriptorCount = 1;
 
-    auto compiled = sge4::compiler::CompileCanonical(BuildHeadlessComputeGraph(), profile);
+    auto compiled = sge4_5::compiler::CompileCanonical(BuildHeadlessComputeGraph(), profile);
     if (!compiled)
     {
         std::cerr << "Stage-G headless compute Compile failed at "
                   << compiled.Error().stage << ": " << compiled.Error().message << '\n';
         return 1;
     }
-    auto package = sge4::package::PackageReader::Read(
+    auto package = sge4_5::package::PackageReader::Read(
         std::move(compiled).Value().packageBytes);
     if (!package)
     {
@@ -221,7 +221,7 @@ int ExecuteHeadlessCompute()
     }
 
     auto frozen = std::move(package).Value();
-    auto view = sge4::package::d3d12_v13::D3D12PackageView::Decode(frozen);
+    auto view = sge4_5::package::d3d12_v13::D3D12PackageView::Decode(frozen);
     if (!view || !view.Value().SurfaceSlots().empty() ||
         view.Value().Profile().surfaceImageCount != 0)
     {
@@ -229,8 +229,8 @@ int ExecuteHeadlessCompute()
         return 3;
     }
 
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(frozen), executor);
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(frozen), executor);
     if (!loaded)
     {
         std::cerr << "Stage-G headless Load failed at " << loaded.Error().stage
@@ -238,11 +238,11 @@ int ExecuteHeadlessCompute()
         return 4;
     }
 
-    sge4::runtime::FrameInvocation invocation;
+    sge4_5::runtime::FrameInvocation invocation;
     for (std::uint64_t frameNumber = 0; frameNumber < 3; ++frameNumber)
     {
         invocation.frameNumber = frameNumber;
-        auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submitted)
         {
             std::cerr << "Stage-G headless frame " << frameNumber
@@ -266,9 +266,9 @@ int ExecuteHeadlessCompute()
         }
     }
 
-    auto rebuilt = sge4::runtime::RecoverDevice(
+    auto rebuilt = sge4_5::runtime::RecoverDevice(
         loaded.Value(), executor,
-        sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+        sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
     if (!rebuilt)
     {
         std::cerr << "Stage-G headless reconstruction failed at "
@@ -284,7 +284,7 @@ int ExecuteHeadlessCompute()
     }
 
     invocation.frameNumber = 0;
-    auto resubmitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+    auto resubmitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
     if (!resubmitted || !HasQueueCompletion(resubmitted.Value(), 1))
     {
         if (!resubmitted)
@@ -308,7 +308,7 @@ int ValidateSurfaceHostRequirement()
                   << input.Error() << '\n';
         return 1;
     }
-    auto compiled = sge4::compiler::CompileCanonical(
+    auto compiled = sge4_5::compiler::CompileCanonical(
         input.Value().graph, input.Value().targetProfile);
     if (!compiled)
     {
@@ -316,7 +316,7 @@ int ValidateSurfaceHostRequirement()
                   << compiled.Error().stage << ": " << compiled.Error().message << '\n';
         return 2;
     }
-    auto package = sge4::package::PackageReader::Read(
+    auto package = sge4_5::package::PackageReader::Read(
         std::move(compiled).Value().packageBytes);
     if (!package)
     {
@@ -325,8 +325,8 @@ int ValidateSurfaceHostRequirement()
         return 3;
     }
 
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(std::move(package).Value(), executor);
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(std::move(package).Value(), executor);
     if (loaded || loaded.Error().stage != "surface")
     {
         std::cerr << "Stage-G Surface Package was not rejected without ISurfaceHost\n";
@@ -340,7 +340,7 @@ int ValidateSurfaceHostRequirement()
 
 int ValidateStageHSubmission(
     const qual::StageHInput& input,
-    const sge4::runtime::FrameSubmission& submission,
+    const sge4_5::runtime::FrameSubmission& submission,
     std::uint64_t frameNumber,
     std::uint64_t expectedEpoch)
 {
@@ -390,7 +390,7 @@ int ValidateStageHSubmission(
 
 int ExecuteStageHScenario(
     qual::StageHScenario key,
-    sge4::runtime::ISurfaceHost& surface)
+    sge4_5::runtime::ISurfaceHost& surface)
 {
     auto built = qual::BuildStageHScenario(key);
     if (!built)
@@ -399,14 +399,14 @@ int ExecuteStageHScenario(
         return 1;
     }
     auto input = std::move(built).Value();
-    auto compiled = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
+    auto compiled = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
     if (!compiled)
     {
         std::cerr << input.name << ": Compile failed at " << compiled.Error().stage
                   << ": " << compiled.Error().message << '\n';
         return 2;
     }
-    auto package = sge4::package::PackageReader::Read(
+    auto package = sge4_5::package::PackageReader::Read(
         std::move(compiled).Value().packageBytes);
     if (!package)
     {
@@ -415,10 +415,10 @@ int ExecuteStageHScenario(
         return 3;
     }
 
-    sge4::d3d12::D3D12Backend executor({true, true});
+    sge4_5::d3d12::D3D12Backend executor({true, true});
     auto loaded = input.expectations.surface
-        ? sge4::runtime::LoadPackage(std::move(package).Value(), executor, surface)
-        : sge4::runtime::LoadPackage(std::move(package).Value(), executor);
+        ? sge4_5::runtime::LoadPackage(std::move(package).Value(), executor, surface)
+        : sge4_5::runtime::LoadPackage(std::move(package).Value(), executor);
     if (!loaded)
     {
         std::cerr << input.name << ": Load failed at " << loaded.Error().stage
@@ -426,11 +426,11 @@ int ExecuteStageHScenario(
         return 4;
     }
 
-    sge4::runtime::FrameInvocation invocation;
+    sge4_5::runtime::FrameInvocation invocation;
     for (std::uint64_t frameNumber = 0; frameNumber < 3; ++frameNumber)
     {
         invocation.frameNumber = frameNumber;
-        auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submitted)
         {
             std::cerr << input.name << ": frame " << frameNumber
@@ -444,9 +444,9 @@ int ExecuteStageHScenario(
             return 10 + validation;
     }
 
-    auto rebuilt = sge4::runtime::RecoverDevice(
+    auto rebuilt = sge4_5::runtime::RecoverDevice(
         loaded.Value(), executor,
-        sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+        sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
     if (!rebuilt)
     {
         std::cerr << input.name << ": Controlled reconstruction failed at "
@@ -455,8 +455,8 @@ int ExecuteStageHScenario(
     }
     const auto& report = rebuilt.Value();
     if (report.previousDeviceEpoch != 1 || report.newDeviceEpoch != 2 ||
-        report.stateBefore != sge4::runtime::DeviceRuntimeState::Active ||
-        report.stateAfter != sge4::runtime::DeviceRuntimeState::Active ||
+        report.stateBefore != sge4_5::runtime::DeviceRuntimeState::Active ||
+        report.stateAfter != sge4_5::runtime::DeviceRuntimeState::Active ||
         !report.adapterReacquired || !report.packageObjectsRebuilt ||
         !report.temporalHistoryReset || report.externalRebindRequired)
     {
@@ -465,7 +465,7 @@ int ExecuteStageHScenario(
     }
 
     invocation.frameNumber = 0;
-    auto resubmitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+    auto resubmitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
     if (!resubmitted)
     {
         std::cerr << input.name << ": post-recovery Submit failed at "
@@ -485,7 +485,7 @@ int ExecuteStageHScenario(
 
 int ExecuteScenario(
     lvl::ScenarioKey key,
-    sge4::runtime::ISurfaceHost& surface)
+    sge4_5::runtime::ISurfaceHost& surface)
 {
     auto inputResult = lvl::BuildScenario(key);
     if (!inputResult)
@@ -495,7 +495,7 @@ int ExecuteScenario(
     }
     auto input = std::move(inputResult).Value();
 
-    auto compiled = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
+    auto compiled = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
     if (!compiled)
     {
         std::cerr << input.name << ": Compile failed at " << compiled.Error().stage
@@ -503,7 +503,7 @@ int ExecuteScenario(
         return 2;
     }
     auto compileOutput = std::move(compiled).Value();
-    auto package = sge4::package::PackageReader::Read(
+    auto package = sge4_5::package::PackageReader::Read(
         std::move(compileOutput.packageBytes));
     if (!package)
     {
@@ -512,8 +512,8 @@ int ExecuteScenario(
         return 3;
     }
 
-    sge4::d3d12::D3D12Backend executor({true, true});
-    auto loaded = sge4::runtime::LoadPackage(
+    sge4_5::d3d12::D3D12Backend executor({true, true});
+    auto loaded = sge4_5::runtime::LoadPackage(
         std::move(package).Value(), executor, surface);
     if (!loaded)
     {
@@ -523,11 +523,11 @@ int ExecuteScenario(
     }
 
     const auto constantBytes = std::as_bytes(std::span<const float>(Identity));
-    std::vector<sge4::runtime::DynamicDataBinding> dynamicBindings;
+    std::vector<sge4_5::runtime::DynamicDataBinding> dynamicBindings;
     if (input.expectations.dynamicData)
         dynamicBindings.push_back({0, constantBytes});
 
-    std::vector<sge4::runtime::ExternalResourceBinding> externalBindings;
+    std::vector<sge4_5::runtime::ExternalResourceBinding> externalBindings;
     if (input.expectations.externalResource)
     {
         auto external = executor.CreateExternalColorBuffer(
@@ -544,11 +544,11 @@ int ExecuteScenario(
 
     for (std::uint64_t frameNumber = 0; frameNumber < 3; ++frameNumber)
     {
-        sge4::runtime::FrameInvocation invocation;
+        sge4_5::runtime::FrameInvocation invocation;
         invocation.frameNumber = frameNumber;
-        invocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(dynamicBindings);
-        invocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(externalBindings);
-        auto submitted = sge4::runtime::Submit(loaded.Value(), executor, invocation);
+        invocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(dynamicBindings);
+        invocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(externalBindings);
+        auto submitted = sge4_5::runtime::Submit(loaded.Value(), executor, invocation);
         if (!submitted)
         {
             std::cerr << input.name << ": frame " << frameNumber
@@ -568,9 +568,9 @@ int ExecuteScenario(
 
     if (input.expectations.recoveryContract)
     {
-        auto controlled = sge4::runtime::RecoverDevice(
+        auto controlled = sge4_5::runtime::RecoverDevice(
             loaded.Value(), executor,
-            sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+            sge4_5::runtime::DeviceRecoveryMode::ControlledRebuild);
         if (!controlled)
         {
             std::cerr << input.name << ": Controlled reconstruction failed at "
@@ -580,8 +580,8 @@ int ExecuteScenario(
         }
         const auto& report = controlled.Value();
         if (report.previousDeviceEpoch != 1 || report.newDeviceEpoch != 2 ||
-            report.stateBefore != sge4::runtime::DeviceRuntimeState::Active ||
-            report.stateAfter != sge4::runtime::DeviceRuntimeState::Active ||
+            report.stateBefore != sge4_5::runtime::DeviceRuntimeState::Active ||
+            report.stateAfter != sge4_5::runtime::DeviceRuntimeState::Active ||
             !report.adapterReacquired || !report.packageObjectsRebuilt ||
             !report.temporalHistoryReset || !report.externalRebindRequired)
         {
@@ -589,11 +589,11 @@ int ExecuteScenario(
             return 31;
         }
 
-        sge4::runtime::FrameInvocation stale;
+        sge4_5::runtime::FrameInvocation stale;
         stale.frameNumber = 0;
-        stale.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(dynamicBindings);
-        stale.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(externalBindings);
-        auto staleSubmit = sge4::runtime::Submit(loaded.Value(), executor, stale);
+        stale.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(dynamicBindings);
+        stale.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(externalBindings);
+        auto staleSubmit = sge4_5::runtime::Submit(loaded.Value(), executor, stale);
         if (staleSubmit || staleSubmit.Error().stage != "invocation")
         {
             std::cerr << input.name << ": stale External binding was not rejected after recovery\n";
@@ -610,11 +610,11 @@ int ExecuteScenario(
         }
         externalBindings[0] =
             {0, rebound.Value().resource, rebound.Value().availableAfter};
-        sge4::runtime::FrameInvocation reboundInvocation;
+        sge4_5::runtime::FrameInvocation reboundInvocation;
         reboundInvocation.frameNumber = 0;
-        reboundInvocation.dynamicData = std::span<const sge4::runtime::DynamicDataBinding>(dynamicBindings);
-        reboundInvocation.externalResources = std::span<const sge4::runtime::ExternalResourceBinding>(externalBindings);
-        auto reboundFrame = sge4::runtime::Submit(
+        reboundInvocation.dynamicData = std::span<const sge4_5::runtime::DynamicDataBinding>(dynamicBindings);
+        reboundInvocation.externalResources = std::span<const sge4_5::runtime::ExternalResourceBinding>(externalBindings);
+        auto reboundFrame = sge4_5::runtime::Submit(
             loaded.Value(), executor, reboundInvocation);
         if (!reboundFrame)
         {
@@ -641,7 +641,7 @@ int main()
     if (const auto surfaceContract = ValidateSurfaceHostRequirement(); surfaceContract != 0)
         return 30 + surfaceContract;
 
-    auto window = sge4::platform::Win32Window::Create(
+    auto window = sge4_5::platform::Win32Window::Create(
         L"SGE4 WARP Qualification", 96, 96);
     if (!window)
     {

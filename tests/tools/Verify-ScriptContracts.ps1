@@ -32,10 +32,10 @@ foreach ($file in $scriptFiles) {
     $relative = Get-RelativePath $file.FullName
     $bytes = [IO.File]::ReadAllBytes($file.FullName)
 
-    $hasUtf8Bom = $bytes.Length -ge 3 -and
+    $hasUtf8Bom = ($bytes.Length -ge 3 -and
         $bytes[0] -eq 0xEF -and
         $bytes[1] -eq 0xBB -and
-        $bytes[2] -eq 0xBF
+        $bytes[2] -eq 0xBF)
 
     if ($file.Extension -eq '.ps1') {
         if (-not $hasUtf8Bom) {
@@ -45,12 +45,11 @@ foreach ($file in $scriptFiles) {
         $text = [Text.Encoding]::UTF8.GetString($bytes, 3, $bytes.Length - 3)
     }
     else {
-        # cmd.exe may expose a UTF-8 BOM as visible CP932 characters before
-        # '@echo off'. Accept historical BOM scripts, but also permit BOM-less
-        # UTF-8/ASCII entry-point BAT/CMD files.
-        $offset = 0
-        if ($hasUtf8Bom) { $offset = 3 }
-        $text = [Text.Encoding]::UTF8.GetString($bytes, $offset, $bytes.Length - $offset)
+        if ($hasUtf8Bom) {
+            Add-Failure "$relative must be UTF-8 without BOM because cmd.exe treats BOM bytes as command text."
+            continue
+        }
+        $text = [Text.Encoding]::UTF8.GetString($bytes)
     }
     if ($text.IndexOf([char]0) -ge 0) {
         Add-Failure "$relative contains a NUL character."
@@ -86,7 +85,10 @@ foreach ($file in $scriptFiles) {
 }
 
 $requiredFiles = @(
-    'tests/Invoke-SGE4Tests.ps1',
+    'tests/Invoke-SGE4_5Tests.ps1',
+    'tests/Run-SGE4_5Foundation.ps1',
+    'tests/tools/Verify-SGE4_5Identity.ps1',
+    'run_sge4_5_foundation.bat',
     'tests/run_suite.bat',
     'tests/tools/Verify-ScriptContracts.ps1',
     'tests/tools/Verify-SourceManifest.ps1',
@@ -100,11 +102,11 @@ foreach ($relative in $requiredFiles) {
 }
 
 if ($failures.Count -gt 0) {
-    Write-Host 'SGE4 script contract verification failed:' -ForegroundColor Red
+    Write-Host 'SGE4-5 script contract verification failed:' -ForegroundColor Red
     foreach ($failure in $failures) {
         Write-Host "  $failure" -ForegroundColor Red
     }
     throw "Script contract verification failed with $($failures.Count) issue(s)."
 }
 
-Write-Host "SGE4 script contract verification passed. Scripts: $($scriptFiles.Count)."
+Write-Host "SGE4-5 script contract verification passed. Scripts: $($scriptFiles.Count)."

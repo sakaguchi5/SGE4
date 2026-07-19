@@ -6,21 +6,21 @@
 #ifdef interface
 #pragma push_macro("interface")
 #undef interface
-#define SGE4_COMPILATION_INPUT_RESTORE_INTERFACE_MACRO
+#define SGE4_5_COMPILATION_INPUT_RESTORE_INTERFACE_MACRO
 #endif
 
 #include "../02_SemanticModel/SemanticModel.h"
 #include "../04_SemanticAnalysis/SemanticAnalysis.h"
 #include "../05_TargetContract/TargetModel.h"
 
-#ifdef SGE4_COMPILATION_INPUT_RESTORE_INTERFACE_MACRO
+#ifdef SGE4_5_COMPILATION_INPUT_RESTORE_INTERFACE_MACRO
 #pragma pop_macro("interface")
-#undef SGE4_COMPILATION_INPUT_RESTORE_INTERFACE_MACRO
+#undef SGE4_5_COMPILATION_INPUT_RESTORE_INTERFACE_MACRO
 #endif
 
 #include <string>
 
-namespace sge4::compiler::compilation
+namespace sge4_5::compiler::compilation
 {
 struct CompilationError final
 {

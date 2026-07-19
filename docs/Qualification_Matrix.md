@@ -19,4 +19,4 @@
 | Fixed 54-Package canonical freeze manifest | `44_CanonicalFreezeTests` |
 | Accepted alternative schedule/queue Plans preserve WARP observations | `45_PlannedRuntimeTests` |
 
-`run_sge4_stage0d.bat` is the authoritative Stage-0D freeze command. It also invokes `verify_dependencies.ps1` and compares fresh-process Debug/Release manifests byte-for-byte.
+`run_sge4_5_stage0d.bat` is the authoritative Stage-0D freeze command. It also invokes `verify_dependencies.ps1` and compares fresh-process Debug/Release manifests byte-for-byte.

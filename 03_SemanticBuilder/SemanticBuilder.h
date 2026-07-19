@@ -6,7 +6,7 @@
 #include <span>
 #include <string>
 
-namespace sge4::semantic
+namespace sge4_5::semantic
 {
 class SemanticBuilder final
 {

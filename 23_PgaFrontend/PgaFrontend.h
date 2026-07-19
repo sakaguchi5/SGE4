@@ -7,7 +7,7 @@
 #include <array>
 #include <string>
 
-namespace sge4::pga
+namespace sge4_5::pga
 {
 // 2D projective geometric algebra coordinates.
 // A finite point is P = x*e20 + y*e01 + w*e12.

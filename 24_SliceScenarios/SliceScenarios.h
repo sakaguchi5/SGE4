@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::level1
+namespace sge4_5::level1
 {
 enum class Slice : std::uint32_t
 {

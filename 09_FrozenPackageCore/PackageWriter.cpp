@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <exception>
 
-namespace sge4::package
+namespace sge4_5::package
 {
 namespace
 {

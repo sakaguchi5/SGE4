@@ -4,7 +4,7 @@
 #include "../10_D3D12PackageSchema/D3D12Encoding.h"
 #include "../25_GeneralGraphScenarios/GeneralGraphScenarios.h"
 #include "../27_RuntimeScenarios/RuntimeScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -22,9 +22,9 @@
 
 namespace
 {
-namespace core = sge4::package;
-namespace pkg = sge4::package::d3d12_v13;
-namespace runtime_cases = sge4::qualification::runtime_scenarios;
+namespace core = sge4_5::package;
+namespace pkg = sge4_5::package::d3d12_v13;
+namespace runtime_cases = sge4_5::qualification::runtime_scenarios;
 
 std::uint16_t ReadU16(std::span<const std::byte> bytes, std::size_t offset)
 {
@@ -134,19 +134,19 @@ std::size_t CountOperations(const core::PackageBuildInput& input, pkg::D3D12Oper
 }
 
 template<class Input>
-sge4::base::Result<core::FrozenExecutablePackage, std::string> Compile(const Input& input)
+sge4_5::base::Result<core::FrozenExecutablePackage, std::string> Compile(const Input& input)
 {
-    auto compiled = sge4::compiler::CompileCanonical(input.graph, input.targetProfile);
+    auto compiled = sge4_5::compiler::CompileCanonical(input.graph, input.targetProfile);
     if (!compiled)
-        return sge4::base::Result<core::FrozenExecutablePackage, std::string>::Failure(
+        return sge4_5::base::Result<core::FrozenExecutablePackage, std::string>::Failure(
             compiled.Error().stage + ": " + compiled.Error().message);
     auto package = core::PackageReader::Read(std::move(compiled).Value().packageBytes);
     if (!package)
-        return sge4::base::Result<core::FrozenExecutablePackage, std::string>::Failure(package.Error().message);
+        return sge4_5::base::Result<core::FrozenExecutablePackage, std::string>::Failure(package.Error().message);
     auto decoded = pkg::D3D12PackageView::Decode(package.Value());
     if (!decoded)
-        return sge4::base::Result<core::FrozenExecutablePackage, std::string>::Failure(decoded.Error().message);
-    return sge4::base::Result<core::FrozenExecutablePackage, std::string>::Success(std::move(package).Value());
+        return sge4_5::base::Result<core::FrozenExecutablePackage, std::string>::Failure(decoded.Error().message);
+    return sge4_5::base::Result<core::FrozenExecutablePackage, std::string>::Success(std::move(package).Value());
 }
 
 struct Harness final
@@ -503,7 +503,7 @@ int main()
 
     auto richInput = runtime_cases::Build(runtime_cases::Scenario::DynamicExternalPipeline);
     auto temporalInput = runtime_cases::Build(runtime_cases::Scenario::CrossQueueTemporal);
-    auto surfaceInput = sge4::qualification::BuildStageHScenario(sge4::qualification::StageHScenario::TwoPassRaster);
+    auto surfaceInput = sge4_5::qualification::BuildStageHScenario(sge4_5::qualification::StageHScenario::TwoPassRaster);
     if (!richInput || !temporalInput || !surfaceInput)
     {
         std::cerr << "Stage-L scenario construction failed\n";

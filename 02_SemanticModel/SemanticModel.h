@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace sge4::semantic
+namespace sge4_5::semantic
 {
 struct ResourceTag;
 struct ResourceUseTag;

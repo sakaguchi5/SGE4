@@ -9,7 +9,7 @@
 #include "../25_GeneralGraphScenarios/GeneralGraphScenarios.h"
 #include "../26_GeneratedGraphCorpus/GeneratedGraphs.h"
 #include "../27_RuntimeScenarios/RuntimeScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -37,16 +37,16 @@
 
 namespace
 {
-namespace base = sge4::base;
-namespace sem = sge4::semantic;
-namespace analysis = sge4::analysis;
-namespace compiler = sge4::compiler::d3d12;
-namespace pkg = sge4::package;
-namespace d3d = sge4::package::d3d12_v13;
-namespace lvl1 = sge4::level1;
-namespace qual = sge4::qualification;
-namespace gen = sge4::qualification::generated;
-namespace runtime_cases = sge4::qualification::runtime_scenarios;
+namespace base = sge4_5::base;
+namespace sem = sge4_5::semantic;
+namespace analysis = sge4_5::analysis;
+namespace compiler = sge4_5::compiler::d3d12;
+namespace pkg = sge4_5::package;
+namespace d3d = sge4_5::package::d3d12_v13;
+namespace lvl1 = sge4_5::level1;
+namespace qual = sge4_5::qualification;
+namespace gen = sge4_5::qualification::generated;
+namespace runtime_cases = sge4_5::qualification::runtime_scenarios;
 
 constexpr std::string_view ManifestIdentity = "SGE4-Canonical-D3D12-v1-FinalFreeze-Corpus1";
 // The semantic corpus digest is a cross-generation compatibility identity.
@@ -62,7 +62,7 @@ struct CorpusCase final
 {
     std::string name;
     sem::SemanticGraph graph;
-    sge4::target::D3D12TargetProfile profile;
+    sge4_5::target::D3D12TargetProfile profile;
 };
 
 void WriteString(base::BinaryWriter& writer, std::string_view value)
@@ -368,7 +368,7 @@ base::Result<std::vector<CorpusCase>, std::string> BuildCorpus()
         result.push_back({"Level1/" + input.name, std::move(input.graph), input.targetProfile});
     }
 
-    sge4::target::D3D12TargetProfile headlessProfile;
+    sge4_5::target::D3D12TargetProfile headlessProfile;
     headlessProfile.computeQueueCount = 1;
     headlessProfile.copyQueueCount = 0;
     headlessProfile.surfaceImageCount = 0;
@@ -476,13 +476,13 @@ base::Result<ManifestBuild, std::string> BuildManifest(bool verifyRepeatedCompil
     {
         auto semantic = SemanticDigest(item);
         if (!semantic) return base::Result<ManifestBuild, std::string>::Failure(semantic.Error());
-        auto first = sge4::compiler::CompileCanonical(item.graph, item.profile);
+        auto first = sge4_5::compiler::CompileCanonical(item.graph, item.profile);
         if (!first)
             return base::Result<ManifestBuild, std::string>::Failure(
                 item.name + " compile failed at " + first.Error().stage + ": " + first.Error().message);
         if (verifyRepeatedCompile)
         {
-            auto second = sge4::compiler::CompileCanonical(item.graph, item.profile);
+            auto second = sge4_5::compiler::CompileCanonical(item.graph, item.profile);
             if (!second)
                 return base::Result<ManifestBuild, std::string>::Failure(
                     item.name + " repeated compile failed at " + second.Error().stage + ": " + second.Error().message);

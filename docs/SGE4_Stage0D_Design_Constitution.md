@@ -23,7 +23,7 @@ CompilationInput
        candidate generation
        independent verification report
        cost calculation
-  -> SGE4Compiler
+  -> SGE4_5Compiler
        fresh VerifyAndSeal capability
        Package lowering
        policy/profile selection finalization
@@ -39,7 +39,7 @@ Canonical behavior remains a Candidate policy with a single allowed candidate. I
 - Planning projects own schedule, queues, synchronization, instances, allocation, aliasing, state, binding, and boundaries.
 - The independent verifier alone mints `VerifiedExecutionPlan`.
 - CandidatePlanner never creates a Package.
-- SGE4Compiler alone combines verified planning with D3D12 Package lowering.
+- SGE4_5Compiler alone combines verified planning with D3D12 Package lowering.
 - Frozen Package owns the complete represented execution decision.
 - Runtime owns invocation validation and device-epoch state.
 - Backend mechanically maps Package artifacts and Operations to D3D12.
@@ -72,7 +72,7 @@ SGE3 reference canonical path
 SGE3-style Level-3 planning orchestration
 ```
 
-Stage 0D compares those results with the new SGE4Compiler orchestration for Package bytes, candidate manifest bytes, and selected Plan identity.
+Stage 0D compares those results with the new SGE4_5Compiler orchestration for Package bytes, candidate manifest bytes, and selected Plan identity.
 
 ## 6. Authority invariant
 
@@ -82,7 +82,7 @@ A field may exist in `ExecutionPlanIR` only when all three are true:
 2. the independent verifier validates it;
 3. Package lowering obeys it or constrains it to the only legal canonical value.
 
-CandidatePlanner verification reports are not capability tokens. SGE4Compiler must re-run `VerifyAndSeal` immediately before lowering.
+CandidatePlanner verification reports are not capability tokens. SGE4_5Compiler must re-run `VerifyAndSeal` immediately before lowering.
 
 ## 7. Stage 0D freeze invariant
 

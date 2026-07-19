@@ -1,7 +1,7 @@
 #include "../04_SemanticAnalysis/SemanticAnalysis.h"
 #include "../11_D3D12PackageLowering/D3D12PackageLowering.h"
 #include "../25_GeneralGraphScenarios/GeneralGraphScenarios.h"
-#include "../12_SGE4Compiler/SGE4Compiler.h"
+#include "../12_SGE4_5Compiler/SGE4_5Compiler.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -14,10 +14,10 @@
 
 namespace
 {
-namespace base = sge4::base;
-namespace sem = sge4::semantic;
-namespace compiler = sge4::compiler::d3d12;
-namespace qual = sge4::qualification;
+namespace base = sge4_5::base;
+namespace sem = sge4_5::semantic;
+namespace compiler = sge4_5::compiler::d3d12;
+namespace qual = sge4_5::qualification;
 
 struct Compiled final
 {
@@ -35,9 +35,9 @@ bool ReplaceOnce(std::string& text, std::string_view before, std::string_view af
 
 base::Result<Compiled, std::string> CompileOnce(
     const sem::SemanticGraph& graph,
-    const sge4::target::D3D12TargetProfile& profile)
+    const sge4_5::target::D3D12TargetProfile& profile)
 {
-    auto result = sge4::compiler::CompileCanonical(graph, profile);
+    auto result = sge4_5::compiler::CompileCanonical(graph, profile);
     if (!result)
         return base::Result<Compiled, std::string>::Failure(
             result.Error().stage + ": " + result.Error().message);
@@ -107,7 +107,7 @@ bool ExpectEquivalent(
     std::string_view law,
     const Compiled& baseline,
     const sem::SemanticGraph& transformed,
-    const sge4::target::D3D12TargetProfile& profile)
+    const sge4_5::target::D3D12TargetProfile& profile)
 {
     auto compiled = CompileOnce(transformed, profile);
     if (!compiled)
@@ -128,7 +128,7 @@ bool ExpectSensitive(
     std::string_view law,
     const Compiled& baseline,
     const sem::SemanticGraph& transformed,
-    const sge4::target::D3D12TargetProfile& profile)
+    const sge4_5::target::D3D12TargetProfile& profile)
 {
     auto compiled = CompileOnce(transformed, profile);
     if (!compiled)
@@ -148,10 +148,10 @@ bool ExpectSensitive(
 bool ExpectRejected(
     std::string_view law,
     const sem::SemanticGraph& graph,
-    const sge4::target::D3D12TargetProfile& profile,
+    const sge4_5::target::D3D12TargetProfile& profile,
     std::string_view expectedStage)
 {
-    auto compiled = sge4::compiler::CompileCanonical(graph, profile);
+    auto compiled = sge4_5::compiler::CompileCanonical(graph, profile);
     if (compiled)
     {
         std::cerr << law << " was accepted\n";
@@ -211,7 +211,7 @@ int RunEquivalentLaws()
                           redundant, zigzag.targetProfile)) return 7;
 
     auto explicitDiamond = diamond.graph;
-    auto analyzed = sge4::analysis::Analyze(explicitDiamond);
+    auto analyzed = sge4_5::analysis::Analyze(explicitDiamond);
     if (!analyzed) return 8;
     const auto mergeId = analyzed.Value().canonicalWorkOrder.back();
     std::vector<sem::WorkId> producers;
