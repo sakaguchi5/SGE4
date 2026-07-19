@@ -776,3 +776,14 @@ CU1最終Gate（Debug A / Debug B / Release byte comparison）:
 ```powershell
 .\run_sge4_5_cu1_semantic_observation.bat
 ```
+
+
+## Spiral 1 Completion Unit 2
+
+```powershell
+.\run_sge4_5_stage06_candidates.bat
+.\run_sge4_5_stage07_representation_authority.bat
+.\run_sge4_5_cu2_representation_authority.bat
+```
+
+CU2最終GateはRaw Candidateの二Lowering、独立Verifierのmutation拒否、opaque seal、およびDebug A／Debug B／Releaseのbyte一致を検証する。

@@ -13,13 +13,10 @@ $requiredProjects = @(
     '60_PgaRigidTransformSemantic','61_Spiral1Contracts','62_Spiral1Corpus','67_Spiral1Observer','70_Spiral1SemanticTests'
 )
 $projects = @(Get-ChildItem -Path $root -Recurse -File -Filter *.vcxproj | Where-Object { $_.FullName -notlike (Join-Path $root 'build\*') })
-if ($projects.Count -ne 62) { throw "CU1 requires exactly 62 projects; found $($projects.Count)." }
+if ($projects.Count -lt 62) { throw "The repository lost a CU1 project; found $($projects.Count)." }
 foreach ($name in $requiredProjects) {
     $path = Join-Path $root "$name\$name.vcxproj"
     if (-not (Test-Path -LiteralPath $path)) { throw "CU1 project is missing: $name" }
-}
-foreach ($name in @('63_D3D12RepresentationCandidate','64_D3D12RepresentationPlanner','65_D3D12RepresentationVerifier','66_Spiral1LeafCompiler','68_Spiral1Scenarios')) {
-    if (Test-Path -LiteralPath (Join-Path $root $name)) { throw "A future project was created early: $name" }
 }
 
 $semanticRoot = Join-Path $root '60_PgaRigidTransformSemantic'
@@ -52,4 +49,4 @@ $evidence = Get-Content -Raw -LiteralPath $evidencePath -Encoding UTF8
 if ($evidence -notmatch 'S1-I01' -or $evidence -notmatch 'S1-I13' -or $evidence -notmatch 'Debug process A') { throw 'CU1 evidence mapping is incomplete.' }
 
 Write-Host 'SGE4-5 Spiral 1 CU1 static verification passed.'
-Write-Host 'Projects: 62; new CU1 projects: 5; scenarios: S00-S15; point record: 96 bytes.'
+Write-Host "CU1 project floor: 62; current projects: $($projects.Count); scenarios: S00-S15; point record: 96 bytes."

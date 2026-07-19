@@ -17,7 +17,7 @@ Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-Exe
 Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $root 'verify_dependencies.ps1'))
 Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-ScriptContracts.ps1'))
 Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-SourceManifest.ps1'))
-Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-Spiral1ResearchContract.ps1'))
+Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-Spiral1ResearchContract.ps1'),'-EnforceStage03ProjectAbsence')
 
 Write-Host '============================================================'
 Write-Host 'SGE4-5 STAGE 03 SPIRAL 1 RESEARCH CONTRACT FREEZE PASSED'

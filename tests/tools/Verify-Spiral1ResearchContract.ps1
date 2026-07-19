@@ -1,4 +1,8 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿param(
+    [switch]$EnforceStage03ProjectAbsence
+)
+
+$ErrorActionPreference = 'Stop'
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [Console]::InputEncoding = $utf8NoBom
@@ -95,12 +99,14 @@ for ($index = 0; $index -lt 16; ++$index) {
     if ($scenarioIds[$index] -ne $expectedIds[$index]) { throw 'Corpus scenario order is not S00-S15.' }
 }
 
-$forbiddenStage03Projects = @(
-    '63_D3D12RepresentationCandidate','64_D3D12RepresentationPlanner',
-    '65_D3D12RepresentationVerifier','66_Spiral1LeafCompiler','68_Spiral1Scenarios'
-)
-foreach ($name in $forbiddenStage03Projects) {
-    if (Test-Path -LiteralPath (Join-Path $root $name)) { throw "Stage03 must not create empty future project: $name" }
+if ($EnforceStage03ProjectAbsence) {
+    $forbiddenStage03Projects = @(
+        '63_D3D12RepresentationCandidate','64_D3D12RepresentationPlanner',
+        '65_D3D12RepresentationVerifier','66_Spiral1LeafCompiler','68_Spiral1Scenarios'
+    )
+    foreach ($name in $forbiddenStage03Projects) {
+        if (Test-Path -LiteralPath (Join-Path $root $name)) { throw "Stage03 must not create future project: $name" }
+    }
 }
 
 Write-Host 'SGE4-5 Spiral 1 Research Contract verification passed.'
