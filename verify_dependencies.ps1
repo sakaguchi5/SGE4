@@ -96,7 +96,8 @@ $sourceSide = @(
     '11_D3D12PackageLowering','12_SGE4_5Compiler',
     '20_ExperimentDomain','21_ClassicalFrontend','22_SdfFrontend','23_PgaFrontend',
     '24_SliceScenarios','25_GeneralGraphScenarios','26_GeneratedGraphCorpus','27_RuntimeScenarios',
-    '28_SGE3CompatibilityOracle'
+    '28_SGE3CompatibilityOracle',
+    '60_PgaRigidTransformSemantic','61_Spiral1Contracts','62_Spiral1Corpus','67_Spiral1Observer'
 )
 $runtimeSide = @('13_PackageRuntime','14_D3D12Backend','15_PlatformWin32')
 
@@ -201,5 +202,24 @@ foreach ($project in $projectFiles) {
         throw "Historical generation name leaked into SGE4 project topology: $name"
     }
 }
+
+
+
+# Spiral 1 Completion Unit 1 boundaries.
+Assert-DirectReferences '60_PgaRigidTransformSemantic' @('00_Foundation')
+Assert-DirectReferences '61_Spiral1Contracts' @('00_Foundation','60_PgaRigidTransformSemantic')
+Assert-DirectReferences '62_Spiral1Corpus' @('00_Foundation','60_PgaRigidTransformSemantic','61_Spiral1Contracts')
+Assert-DirectReferences '67_Spiral1Observer' @('00_Foundation','60_PgaRigidTransformSemantic','61_Spiral1Contracts','62_Spiral1Corpus')
+Assert-DirectReferences '70_Spiral1SemanticTests' @('00_Foundation','60_PgaRigidTransformSemantic','61_Spiral1Contracts','62_Spiral1Corpus','67_Spiral1Observer')
+Assert-NoForbiddenDependency '60_PgaRigidTransformSemantic' @(
+    '01_MathVocabulary','02_SemanticModel','03_SemanticBuilder','04_SemanticAnalysis','05_TargetContract','05A_CompilationInput',
+    '06_ExecutionPlanModel','07_ExecutionPlanVerifier','08_CandidatePlanner','09_FrozenPackageCore','10_D3D12PackageSchema',
+    '11_D3D12PackageLowering','12_SGE4_5Compiler','13_PackageRuntime','14_D3D12Backend','15_PlatformWin32',
+    '16_FrozenCompositionArtifact','17_CompositionContract','18_CompositionPlan','19_CompositionVerifier',
+    '20_CompositionDeviceDomain','21_CompositionSharedResources','22_CompositionRuntime','23_CompositionRecovery',
+    '61_Spiral1Contracts','62_Spiral1Corpus','67_Spiral1Observer')
+Assert-NoForbiddenDependency '61_Spiral1Contracts' @('62_Spiral1Corpus','67_Spiral1Observer','13_PackageRuntime','14_D3D12Backend')
+Assert-NoForbiddenDependency '62_Spiral1Corpus' @('67_Spiral1Observer','13_PackageRuntime','14_D3D12Backend')
+Assert-NoForbiddenDependency '67_Spiral1Observer' @('13_PackageRuntime','14_D3D12Backend')
 
 Write-Host "SGE4-5 dependency boundary check passed. Projects: $($projectFiles.Count), references: $((($graph.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)."

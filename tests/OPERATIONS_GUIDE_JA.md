@@ -755,3 +755,24 @@ Foundation Bootstrap合格後、次を実行する。
 ```
 
 このGateはC++機能を実行せず、F0 code baseline、Research Contract digest、S00-S15、S1-I01からS1-I18、Project境界を検査する。
+
+
+## Spiral 1 Completion Unit 1
+
+Stage 04単独Gate:
+
+```powershell
+.\run_sge4_5_stage04_semantic.bat
+```
+
+Stage 05（Stage 04を含む）Gate:
+
+```powershell
+.\run_sge4_5_stage05_observation.bat
+```
+
+CU1最終Gate（Debug A / Debug B / Release byte comparison）:
+
+```powershell
+.\run_sge4_5_cu1_semantic_observation.bat
+```
