@@ -787,3 +787,15 @@ CU1最終Gate（Debug A / Debug B / Release byte comparison）:
 ```
 
 CU2最終GateはRaw Candidateの二Lowering、独立Verifierのmutation拒否、opaque seal、およびDebug A／Debug B／Releaseのbyte一致を検証する。
+
+
+## Spiral 1 CU3
+
+```powershell
+.\run_sge4_5_stage08_matrix_leaf.bat
+.\run_sge4_5_stage09_direct_pga_leaf.bat
+.\run_sge4_5_cu3_dual_frozen_leaf.bat
+```
+
+CU3はMatrix／Direct PGAのVerified Representation Planを既存ExecutionPlan authorityへ接続し、
+最終Frozen Package内のShader binary digestと定数payloadを再検証したうえで、代表CorpusをWARP実行する。

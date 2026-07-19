@@ -8,7 +8,7 @@ $testsRoot = Split-Path -Parent $toolsRoot
 $root = Split-Path -Parent $testsRoot
 $required=@('63_D3D12RepresentationCandidate','64_D3D12RepresentationPlanner','65_D3D12RepresentationVerifier','71_Spiral1RepresentationPlanningTests','72_Spiral1RepresentationAuthorityTests')
 $projects=@(Get-ChildItem -Path $root -Recurse -File -Filter *.vcxproj | Where-Object {$_.FullName -notlike (Join-Path $root 'build\*')})
-if($projects.Count -ne 67){throw "CU2 requires exactly 67 projects; found $($projects.Count)."}
+if($projects.Count -lt 67){throw "The repository lost a CU2 project; found $($projects.Count)."}
 foreach($n in $required){if(-not(Test-Path -LiteralPath (Join-Path $root "$n\$n.vcxproj"))){throw "Missing CU2 project: $n"}}
 $verifierProject=Get-Content -Raw -LiteralPath (Join-Path $root '65_D3D12RepresentationVerifier\65_D3D12RepresentationVerifier.vcxproj') -Encoding UTF8
 if($verifierProject -match '64_D3D12RepresentationPlanner'){throw 'Independent Verifier references the Planner.'}
@@ -26,4 +26,4 @@ $verifierHeader=Get-Content -Raw -LiteralPath (Join-Path $root '65_D3D12Represen
 if($verifierHeader -notmatch 'friend class IndependentRepresentationVerifierV1' -or $verifierHeader -notmatch 'VerifiedRepresentationPlanV1\('){throw 'Opaque verifier-only plan constructor is absent.'}
 if(-not(Test-Path -LiteralPath (Join-Path $root 'docs\spiral1\CU2_EVIDENCE_LEDGER.md'))){throw 'CU2 evidence ledger is missing.'}
 Write-Host 'SGE4-5 Spiral 1 CU2 dependency and authority boundary verification passed.'
-Write-Host 'Projects: 67; Verifier -> Planner reference: absent; Package/Runtime dependencies: absent.'
+Write-Host "CU2 project floor: 67; current projects: $($projects.Count); Verifier -> Planner reference: absent; Package/Runtime dependencies: absent."

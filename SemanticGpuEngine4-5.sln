@@ -136,6 +136,10 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "71_Spiral1RepresentationPla
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "72_Spiral1RepresentationAuthorityTests", "72_Spiral1RepresentationAuthorityTests\72_Spiral1RepresentationAuthorityTests.vcxproj", "{166759A2-9DF7-54E9-9280-ED42C74BE69F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "66_Spiral1LeafCompiler", "66_Spiral1LeafCompiler\66_Spiral1LeafCompiler.vcxproj", "{FB73E81C-F99A-50FE-8149-5408E3DE83F3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "73_Spiral1LeafPackageTests", "73_Spiral1LeafPackageTests\73_Spiral1LeafPackageTests.vcxproj", "{07F63C76-E466-5DDB-85B8-BC81FDE03762}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -411,6 +415,14 @@ Global
 		{D52FC7FC-0E08-502B-83D7-4725628F270A}.Debug|x64.Build.0 = Debug|x64
 		{D52FC7FC-0E08-502B-83D7-4725628F270A}.Release|x64.ActiveCfg = Release|x64
 		{D52FC7FC-0E08-502B-83D7-4725628F270A}.Release|x64.Build.0 = Release|x64
+		{FB73E81C-F99A-50FE-8149-5408E3DE83F3}.Debug|x64.ActiveCfg = Debug|x64
+		{FB73E81C-F99A-50FE-8149-5408E3DE83F3}.Debug|x64.Build.0 = Debug|x64
+		{FB73E81C-F99A-50FE-8149-5408E3DE83F3}.Release|x64.ActiveCfg = Release|x64
+		{FB73E81C-F99A-50FE-8149-5408E3DE83F3}.Release|x64.Build.0 = Release|x64
+		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Debug|x64.ActiveCfg = Debug|x64
+		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Debug|x64.Build.0 = Debug|x64
+		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Release|x64.ActiveCfg = Release|x64
+		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
