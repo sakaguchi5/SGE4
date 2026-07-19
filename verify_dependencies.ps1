@@ -234,5 +234,11 @@ Assert-NoForbiddenDependency '81_Spiral2Contracts' @('13_PackageRuntime','14_D3D
 Assert-NoForbiddenDependency '82_Spiral2Corpus' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime')
 Assert-NoForbiddenDependency '13_PackageRuntime' @('80_HierarchySemantic','81_Spiral2Contracts','82_Spiral2Corpus')
 Assert-NoForbiddenDependency '14_D3D12Backend' @('80_HierarchySemantic','81_Spiral2Contracts','82_Spiral2Corpus')
+Assert-DirectReferences '83_HierarchyRepresentationCandidate' @('00_Foundation','80_HierarchySemantic','81_Spiral2Contracts')
+Assert-DirectReferences '84_HierarchyRepresentationPlanner' @('83_HierarchyRepresentationCandidate')
+Assert-DirectReferences '85_HierarchyRepresentationVerifier' @('00_Foundation','80_HierarchySemantic','81_Spiral2Contracts','83_HierarchyRepresentationCandidate')
+Assert-NoForbiddenDependency '83_HierarchyRepresentationCandidate' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime')
+Assert-NoForbiddenDependency '84_HierarchyRepresentationPlanner' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime','85_HierarchyRepresentationVerifier')
+Assert-NoForbiddenDependency '85_HierarchyRepresentationVerifier' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime','84_HierarchyRepresentationPlanner')
 
 Write-Host "SGE4-5 dependency boundary check passed. Projects: $($projectFiles.Count), references: $((($graph.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)."
