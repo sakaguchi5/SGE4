@@ -7,6 +7,8 @@ build/
 *.sgep
 *.sgedbg
 
-# Qualification logs are intentional, reviewable Git evidence.
-!docs/test-logs/
-!docs/test-logs/*.log
+# Qualification logs are generated artifacts and are ignored by default.
+# Add only reviewed formal evidence explicitly, for example:
+#   git add -f docs/test-logs/YYYYMMDD-HHMMSS-Suite-Configuration.log
+docs/test-logs/*.log
+!docs/test-logs/README_JA.md

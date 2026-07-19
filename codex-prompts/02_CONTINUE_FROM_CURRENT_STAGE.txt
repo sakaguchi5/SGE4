@@ -1,5 +1,0 @@
-Read `AGENTS.md`, `docs/spiral2-codex/00_OWNER_OVERLAY.md`, the Stage plan, the invariant ledger, and the current repository progress/evidence ledgers.
-
-Determine the first incomplete Spiral 2 Stage from actual code and test evidence, not from claims alone. Resume there. Repair failures, run the required narrow and CU gates, update evidence and SOURCE_MANIFEST, and continue autonomously.
-
-Do not redo qualified work unless regression evidence has been invalidated. Do not stop before the final Owner-only next-capability selection gate.

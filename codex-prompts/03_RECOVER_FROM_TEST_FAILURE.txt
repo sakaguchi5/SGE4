@@ -1,5 +1,0 @@
-Treat the current failure as evidence.
-
-Identify the first root cause, preserve the failing command/output, and determine which contract or invariant owns the error. Reject convenient Runtime/Backend inference and test weakening. Implement the smallest correct fix, add or retain a regression test, run the narrow suite, then the required CU and existing regression gates.
-
-Update the Stage evidence ledger with the failure, root cause, rejected workaround, correction, and command results. Continue to the next Stage after the gate passes.
