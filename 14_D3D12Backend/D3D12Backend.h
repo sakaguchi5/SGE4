@@ -12,12 +12,26 @@
 
 namespace sge4_5::d3d12
 {
+namespace detail { struct TimestampProfileCollector; }
+
 struct ExecutorOptions final
 {
     bool forceWarp = false;
     bool enableDebugLayer = true;
+    bool enableTimestampProfiling = false;
 };
 
+struct TimestampProfileSample final
+{
+    base::Digest256 packageExecutionDigest{};
+    std::uint64_t frameNumber = 0;
+    std::uint64_t instanceOrdinal = 0;
+    std::uint64_t submissionOrdinal = 0;
+    double commandRecordingNanoseconds = 0.0;
+    double gpuNanoseconds = 0.0;
+    std::uint32_t dispatchCount = 0;
+    std::uint32_t barrierCount = 0;
+};
 
 struct ExternalBufferBinding final
 {
@@ -36,7 +50,7 @@ struct ExternalBufferReadback final
 class D3D12Backend final : public runtime::IPackageExecutor
 {
 public:
-    explicit D3D12Backend(ExecutorOptions options = {}) : options_(options) {}
+    explicit D3D12Backend(ExecutorOptions options = {});
 
     [[nodiscard]] base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError> Load(
         std::shared_ptr<const package::FrozenExecutablePackage> package,
@@ -105,7 +119,14 @@ public:
 
     [[nodiscard]] static bool SupportsOperation(package::d3d12_v13::D3D12OperationCode code) noexcept;
 
+    // Optional experiment-only observation. Timestamp queries never affect
+    // Package bytes, execution authority, scheduling, or synchronization.
+    // Call only after the corresponding Package completion tokens have been
+    // waited; returned samples are consumed exactly once.
+    [[nodiscard]] std::vector<TimestampProfileSample> ConsumeTimestampProfileSamples();
+
 private:
     ExecutorOptions options_;
+    std::shared_ptr<detail::TimestampProfileCollector> timestampProfileCollector_;
 };
 }

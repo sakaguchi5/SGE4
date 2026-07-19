@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <climits>
 #include <cstring>
@@ -41,6 +42,31 @@ namespace sge4_5::d3d12
 {
 using Microsoft::WRL::ComPtr;
 namespace pkg = package::d3d12_v13;
+
+namespace detail
+{
+struct TimestampProfileRecord final
+{
+    base::Digest256 packageExecutionDigest{};
+    std::uint64_t frameNumber = 0;
+    std::uint64_t instanceOrdinal = 0;
+    std::uint64_t submissionOrdinal = 0;
+    double commandRecordingNanoseconds = 0.0;
+    std::uint64_t timestampFrequency = 0;
+    std::uint64_t* mappedQueryValues = nullptr;
+    std::uint32_t dispatchCount = 0;
+    std::uint32_t barrierCount = 0;
+    bool ready = false;
+};
+
+struct TimestampProfileCollector final
+{
+    std::mutex mutex;
+    std::vector<std::weak_ptr<TimestampProfileRecord>> records;
+    std::uint64_t nextInstanceOrdinal = 0;
+    std::uint64_t nextSubmissionOrdinal = 0;
+};
+}
 
 namespace
 {
@@ -476,9 +502,24 @@ private:
 
 class Instance final : public runtime::IPackageInstance
 {
+    friend class sge4_5::d3d12::D3D12Backend;
 public:
-    Instance(std::shared_ptr<const package::FrozenExecutablePackage> package, pkg::D3D12PackageView view, runtime::ISurfaceHost* surface, ExecutorOptions options, DeviceDomain* domain = nullptr)
-        : package_(std::move(package)), view_(std::move(view)), surface_(surface), options_(options), domain_(domain) {}
+    Instance(std::shared_ptr<const package::FrozenExecutablePackage> package, pkg::D3D12PackageView view,
+        runtime::ISurfaceHost* surface, ExecutorOptions options,
+        std::shared_ptr<detail::TimestampProfileCollector> profileCollector,
+        DeviceDomain* domain = nullptr)
+        : package_(std::move(package)), view_(std::move(view)), surface_(surface), options_(options),
+          domain_(domain), profileCollector_(std::move(profileCollector))
+    {
+        if (options_.enableTimestampProfiling)
+        {
+            profileRecord_ = std::make_shared<detail::TimestampProfileRecord>();
+            profileRecord_->packageExecutionDigest = package_->ExecutionDigest();
+            std::scoped_lock lock(profileCollector_->mutex);
+            profileRecord_->instanceOrdinal = profileCollector_->nextInstanceOrdinal++;
+            profileCollector_->records.push_back(profileRecord_);
+        }
+    }
 
     ~Instance() override
     {
@@ -505,6 +546,8 @@ public:
         }
         auto baseObjects = CreateBaseObjects();
         if (!baseObjects) return baseObjects;
+        auto timestampObjects = CreateTimestampProfileObjects();
+        if (!timestampObjects) return timestampObjects;
         resourceStates_.resize(view_.Resources().size());
         resources_.resize(view_.Resources().size());
         externalNativeResources_.resize(view_.Resources().size());
@@ -1036,6 +1079,9 @@ public:
         std::fill(temporalWaitedResources_.begin(), temporalWaitedResources_.end(), false);
         frameExternalReleases_.clear();
         std::fill(dynamicApplied_.begin(), dynamicApplied_.end(), false);
+        timestampQueryIssued_ = false;
+        timestampQueryResolved_ = false;
+        if (profileRecord_) profileRecord_->ready = false;
 
         for (const auto& operation : view_.FrameOperations())
         {
@@ -1055,6 +1101,9 @@ public:
         if (std::find(surfacePresented_.begin(), surfacePresented_.end(), false) != surfacePresented_.end())
             return base::Result<runtime::FrameSubmission, runtime::RuntimeError>::Failure(
                 Error("frame", "frame stream did not present every acquired surface slot"));
+        if (options_.enableTimestampProfiling && (!timestampQueryIssued_ || !timestampQueryResolved_))
+            return base::Result<runtime::FrameSubmission, runtime::RuntimeError>::Failure(
+                Error("profile/frame", "profiled Leaf did not resolve its single Compute timestamp pair"));
 
         runtime::FrameSubmission submission;
         submission.deviceEpoch = deviceEpoch_;
@@ -1250,8 +1299,96 @@ private:
         return base::Result<void, runtime::RuntimeError>::Success();
     }
 
+    base::Result<void, runtime::RuntimeError> CreateTimestampProfileObjects()
+    {
+        if (!options_.enableTimestampProfiling)
+            return base::Result<void, runtime::RuntimeError>::Success();
+
+        std::uint32_t dispatchCount = 0;
+        std::uint32_t barrierCount = 0;
+        pkg::QueueId timestampQueue{};
+        for (const auto& operation : view_.FrameOperations())
+        {
+            if (operation.opcode == pkg::D3D12OperationCode::ExecuteCompute)
+            {
+                timestampQueue = operation.queue;
+                ++dispatchCount;
+            }
+            else if (operation.opcode == pkg::D3D12OperationCode::Transition ||
+                     operation.opcode == pkg::D3D12OperationCode::ActivateAlias)
+                ++barrierCount;
+        }
+        if (dispatchCount != 1 || !IsSupportedQueue(timestampQueue))
+            return base::Result<void, runtime::RuntimeError>::Failure(
+                Error("profile/contract", "timestamp profiling requires exactly one Compute dispatch per Leaf Package"));
+
+        D3D12_QUERY_HEAP_DESC queryDescription{};
+        queryDescription.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+        queryDescription.Count = 2;
+        HRESULT hr = device_->CreateQueryHeap(&queryDescription, IID_PPV_ARGS(&timestampQueryHeap_));
+        if (FAILED(hr))
+            return base::Result<void, runtime::RuntimeError>::Failure(
+                HResultError("profile/create-query-heap", hr, device_.Get()));
+
+        D3D12_HEAP_PROPERTIES heap{};
+        heap.Type = D3D12_HEAP_TYPE_READBACK;
+        heap.CreationNodeMask = 1;
+        heap.VisibleNodeMask = 1;
+        D3D12_RESOURCE_DESC description{};
+        description.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        description.Width = sizeof(std::uint64_t) * 2u;
+        description.Height = 1;
+        description.DepthOrArraySize = 1;
+        description.MipLevels = 1;
+        description.Format = DXGI_FORMAT_UNKNOWN;
+        description.SampleDesc.Count = 1;
+        description.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        hr = device_->CreateCommittedResource(
+            &heap, D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr, IID_PPV_ARGS(&timestampReadback_));
+        if (FAILED(hr))
+            return base::Result<void, runtime::RuntimeError>::Failure(
+                HResultError("profile/create-readback", hr, device_.Get()));
+        D3D12_RANGE readRange{0, sizeof(std::uint64_t) * 2u};
+        hr = timestampReadback_->Map(0, &readRange, reinterpret_cast<void**>(&mappedTimestampValues_));
+        if (FAILED(hr))
+            return base::Result<void, runtime::RuntimeError>::Failure(
+                HResultError("profile/map-readback", hr, device_.Get()));
+        std::uint64_t frequency = 0;
+        hr = NativeQueue(timestampQueue)->GetTimestampFrequency(&frequency);
+        if (FAILED(hr) || frequency == 0)
+            return base::Result<void, runtime::RuntimeError>::Failure(
+                HResultError("profile/timestamp-frequency", hr, device_.Get()));
+        timestampQueue_ = timestampQueue;
+        profileRecord_->mappedQueryValues = mappedTimestampValues_;
+        profileRecord_->timestampFrequency = frequency;
+        profileRecord_->dispatchCount = dispatchCount;
+        profileRecord_->barrierCount = barrierCount;
+        return base::Result<void, runtime::RuntimeError>::Success();
+    }
+
+    void CompleteTimestampProfile(std::uint64_t frameNumber, double commandRecordingNanoseconds)
+    {
+        if (!profileRecord_) return;
+        std::scoped_lock lock(profileCollector_->mutex);
+        profileRecord_->frameNumber = frameNumber;
+        profileRecord_->submissionOrdinal = profileCollector_->nextSubmissionOrdinal++;
+        profileRecord_->commandRecordingNanoseconds = commandRecordingNanoseconds;
+        profileRecord_->ready = true;
+    }
+
     void ReleaseDeviceObjectsForRecovery() noexcept
     {
+        if (timestampReadback_ && mappedTimestampValues_)
+            timestampReadback_->Unmap(0, nullptr);
+        mappedTimestampValues_ = nullptr;
+        if (profileRecord_)
+        {
+            profileRecord_->mappedQueryValues = nullptr;
+            profileRecord_->ready = false;
+        }
+        timestampReadback_.Reset();
+        timestampQueryHeap_.Reset();
         externalNativeResources_.clear();
         externalBindings_.clear();
         externalAcquired_.clear();
@@ -1825,7 +1962,21 @@ private:
                 return base::Result<void, runtime::RuntimeError>::Failure(Error("frame/ExecuteCompute", "Package-declared Direct/Compute queue batch is not open"));
             auto payload = pkg::DecodeExecuteCompute(operation.payload);
             if (!payload) return PackageFailure("frame/ExecuteCompute", payload.Error());
-            return ExecuteCompute(payload.Value().command);
+            if (options_.enableTimestampProfiling)
+            {
+                if (timestampQueryIssued_ || operation.queue != timestampQueue_)
+                    return base::Result<void, runtime::RuntimeError>::Failure(
+                        Error("profile/dispatch", "profiled Leaf dispatch does not match its single-dispatch contract"));
+                commandList_->EndQuery(timestampQueryHeap_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
+            }
+            auto executed = ExecuteCompute(payload.Value().command);
+            if (!executed) return executed;
+            if (options_.enableTimestampProfiling)
+            {
+                commandList_->EndQuery(timestampQueryHeap_.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
+                timestampQueryIssued_ = true;
+            }
+            return base::Result<void, runtime::RuntimeError>::Success();
         }
         case pkg::D3D12OperationCode::ExecuteRaster:
         {
@@ -1842,6 +1993,13 @@ private:
                 return base::Result<void, runtime::RuntimeError>::Failure(Error("frame/EndQueueBatch", "payload or Package queue is invalid"));
             if (!commandOpen_ || activeCommandQueue_ != operation.queue.value)
                 return base::Result<void, runtime::RuntimeError>::Failure(Error("frame/EndQueueBatch", "Package-declared queue batch is not open"));
+            if (options_.enableTimestampProfiling && timestampQueryIssued_ &&
+                !timestampQueryResolved_ && operation.queue == timestampQueue_)
+            {
+                commandList_->ResolveQueryData(timestampQueryHeap_.Get(), D3D12_QUERY_TYPE_TIMESTAMP,
+                    0, 2, timestampReadback_.Get(), 0);
+                timestampQueryResolved_ = true;
+            }
             const HRESULT hr = commandList_->Close();
             if (FAILED(hr)) return base::Result<void, runtime::RuntimeError>::Failure(HResultError("frame/close-package-queue-command-list", hr, device_.Get()));
             commandOpen_ = false;
@@ -3144,6 +3302,8 @@ private:
     runtime::ISurfaceHost* surface_ = nullptr;
     ExecutorOptions options_;
     DeviceDomain* domain_ = nullptr;
+    std::shared_ptr<detail::TimestampProfileCollector> profileCollector_;
+    std::shared_ptr<detail::TimestampProfileRecord> profileRecord_;
     std::uint64_t deviceEpoch_ = 1;
     runtime::DeviceRuntimeState runtimeState_ = runtime::DeviceRuntimeState::Active;
     LUID activeAdapterLuid_{};
@@ -3158,6 +3318,12 @@ private:
     ComPtr<ID3D12DescriptorHeap> rtvHeap_;
     ComPtr<ID3D12DescriptorHeap> dsvHeap_;
     ComPtr<ID3D12DescriptorHeap> shaderHeap_;
+    ComPtr<ID3D12QueryHeap> timestampQueryHeap_;
+    ComPtr<ID3D12Resource> timestampReadback_;
+    std::uint64_t* mappedTimestampValues_ = nullptr;
+    pkg::QueueId timestampQueue_{};
+    bool timestampQueryIssued_ = false;
+    bool timestampQueryResolved_ = false;
     std::vector<ComPtr<ID3D12Resource>> backBuffers_;
     std::vector<std::vector<ComPtr<ID3D12Resource>>> resources_;
     std::vector<std::shared_ptr<runtime::IExternalResource>> externalNativeResources_;
@@ -3206,13 +3372,19 @@ private:
 };
 }
 
+D3D12Backend::D3D12Backend(ExecutorOptions options)
+    : options_(options), timestampProfileCollector_(std::make_shared<detail::TimestampProfileCollector>())
+{
+}
+
 base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError> D3D12Backend::Load(
     std::shared_ptr<const package::FrozenExecutablePackage> package,
     runtime::ISurfaceHost* surface)
 {
     auto view = pkg::D3D12PackageView::Decode(*package);
     if (!view) return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(Error("package/decode", view.Error().message));
-    auto instance = std::make_unique<Instance>(std::move(package), std::move(view).Value(), surface, options_);
+    auto instance = std::make_unique<Instance>(std::move(package), std::move(view).Value(), surface,
+        options_, timestampProfileCollector_);
     auto initialized = instance->Initialize();
     if (!initialized) return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(initialized.Error());
     return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Success(std::move(instance));
@@ -3245,7 +3417,7 @@ D3D12Backend::LoadIntoDomain(
         return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(
             Error("domain/package-decode", view.Error().message));
     auto instance = std::make_unique<Instance>(
-        std::move(package), std::move(view).Value(), surface, options_, nativeDomain);
+        std::move(package), std::move(view).Value(), surface, options_, timestampProfileCollector_, nativeDomain);
     auto initialized = instance->Initialize();
     if (!initialized)
         return base::Result<std::unique_ptr<runtime::IPackageInstance>, runtime::RuntimeError>::Failure(
@@ -3587,7 +3759,51 @@ base::Result<runtime::FrameSubmission, runtime::RuntimeError> D3D12Backend::Subm
 {
     auto* d3dInstance = dynamic_cast<Instance*>(&instance);
     if (!d3dInstance) return base::Result<runtime::FrameSubmission, runtime::RuntimeError>::Failure(Error("submit", "package instance belongs to a different executor"));
-    return d3dInstance->Submit(invocation);
+    const auto begin = std::chrono::steady_clock::now();
+    auto submitted = d3dInstance->Submit(invocation);
+    const auto end = std::chrono::steady_clock::now();
+    if (submitted && options_.enableTimestampProfiling)
+    {
+        const double nanoseconds = std::chrono::duration<double, std::nano>(end - begin).count();
+        d3dInstance->CompleteTimestampProfile(invocation.frameNumber, nanoseconds);
+    }
+    return submitted;
+}
+
+std::vector<TimestampProfileSample> D3D12Backend::ConsumeTimestampProfileSamples()
+{
+    std::vector<TimestampProfileSample> result;
+    if (!options_.enableTimestampProfiling) return result;
+    std::scoped_lock lock(timestampProfileCollector_->mutex);
+    auto& records = timestampProfileCollector_->records;
+    records.erase(std::remove_if(records.begin(), records.end(), [](const auto& weak) {
+        return weak.expired();
+    }), records.end());
+    for (const auto& weak : records)
+    {
+        const auto record = weak.lock();
+        if (!record || !record->ready || !record->mappedQueryValues || record->timestampFrequency == 0)
+            continue;
+        const auto begin = record->mappedQueryValues[0];
+        const auto end = record->mappedQueryValues[1];
+        TimestampProfileSample sample;
+        sample.packageExecutionDigest = record->packageExecutionDigest;
+        sample.frameNumber = record->frameNumber;
+        sample.instanceOrdinal = record->instanceOrdinal;
+        sample.submissionOrdinal = record->submissionOrdinal;
+        sample.commandRecordingNanoseconds = record->commandRecordingNanoseconds;
+        sample.gpuNanoseconds = end >= begin
+            ? static_cast<double>(end - begin) * 1.0e9 / static_cast<double>(record->timestampFrequency)
+            : 0.0;
+        sample.dispatchCount = record->dispatchCount;
+        sample.barrierCount = record->barrierCount;
+        result.push_back(sample);
+        record->ready = false;
+    }
+    std::sort(result.begin(), result.end(), [](const auto& left, const auto& right) {
+        return left.submissionOrdinal < right.submissionOrdinal;
+    });
+    return result;
 }
 
 base::Result<runtime::DeviceRecoveryReport, runtime::RuntimeError> D3D12Backend::RecoverDevice(

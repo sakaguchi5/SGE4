@@ -8,7 +8,9 @@
 | CU3 | S2-09-S2-12 | Qualified |
 | CU4 | S2-13-S2-14 | Qualified |
 | CU5 | S2-15-S2-18 | Qualified |
-| CU6 | S2-19-S2-22A | NotStarted |
+| CU6 | S2-19-S2-22A | Qualified |
 | Owner | S2-22B | OwnerDecisionRequired |
 
 `NextCapabilitySelection = DeferredByOwner`
+
+`SelectionStatus = OWNER_DECISION_REQUIRED`
