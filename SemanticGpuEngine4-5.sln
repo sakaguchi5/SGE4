@@ -150,12 +150,24 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "76_Spiral1RecoveryTests", "
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "77_Spiral1FreezeTests", "77_Spiral1FreezeTests\77_Spiral1FreezeTests.vcxproj", "{50A8A8C6-72D9-577A-A93E-07C5666F369F}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "78_Spiral1PerformanceExperiment", "78_Spiral1PerformanceExperiment\78_Spiral1PerformanceExperiment.vcxproj", "{6957EDE8-E7C6-520A-B44B-AFE58ADE7C72}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "79_Spiral1Launcher", "79_Spiral1Launcher\79_Spiral1Launcher.vcxproj", "{64710978-626D-50E8-A32A-1307673D464E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6957EDE8-E7C6-520A-B44B-AFE58ADE7C72}.Debug|x64.ActiveCfg = Debug|x64
+		{6957EDE8-E7C6-520A-B44B-AFE58ADE7C72}.Debug|x64.Build.0 = Debug|x64
+		{6957EDE8-E7C6-520A-B44B-AFE58ADE7C72}.Release|x64.ActiveCfg = Release|x64
+		{6957EDE8-E7C6-520A-B44B-AFE58ADE7C72}.Release|x64.Build.0 = Release|x64
+		{64710978-626D-50E8-A32A-1307673D464E}.Debug|x64.ActiveCfg = Debug|x64
+		{64710978-626D-50E8-A32A-1307673D464E}.Debug|x64.Build.0 = Debug|x64
+		{64710978-626D-50E8-A32A-1307673D464E}.Release|x64.ActiveCfg = Release|x64
+		{64710978-626D-50E8-A32A-1307673D464E}.Release|x64.Build.0 = Release|x64
 		{CDFF1ED7-44D7-5653-ACB7-797113EEB6CE}.Debug|x64.ActiveCfg = Debug|x64
 		{CDFF1ED7-44D7-5653-ACB7-797113EEB6CE}.Debug|x64.Build.0 = Debug|x64
 		{CDFF1ED7-44D7-5653-ACB7-797113EEB6CE}.Release|x64.ActiveCfg = Release|x64

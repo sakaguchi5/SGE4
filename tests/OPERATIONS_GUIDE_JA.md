@@ -824,3 +824,13 @@ Stage 12とCU5全体は次で実行する。
 ```
 
 CU5はCU2-CU4の権威Gateを再実行し、S00-S15 WARP corpusをDebug 2回・Release 1回、controlled recoveryをDebug 2回・Release 1回で検証する。actual RemoveDeviceは独立Debug processでremoved-LUID exclusionとAwaitingAdapter隔離を確認し、その前後に別のfresh processで同一Frozen成果物のrematerialization evidenceを生成してbyte比較する最終Architecture Tierである。通常開発では実行せず、CU1-CU4変更の昇格時とSpiral 1 Architecture Freeze時に使用する。
+
+
+## CU6：実GPU計測とDecision Evidence
+
+```powershell
+.\run_sge4_5_stage13_real_gpu_measurement.bat
+.\run_sge4_5_stage14_decision_evidence.bat
+```
+
+一括実行は`.\run_sge4_5_cu6_measurement_decision_evidence.bat`。既定はwarm-up 200、measurement 2000/algorithm、5 runs、ABBA。回数変更はPowerShell引数で可能だがProfile identityへ記録される。次能力は選択しない。
