@@ -3,7 +3,7 @@
 | CU | Stages | Status |
 |---|---|---|
 | CU0 | S2-00-S2-02 | Qualified |
-| CU1 | S2-03-S2-05 | NotStarted |
+| CU1 | S2-03-S2-05 | Qualified |
 | CU2 | S2-06-S2-08 | NotStarted |
 | CU3 | S2-09-S2-12 | NotStarted |
 | CU4 | S2-13-S2-14 | NotStarted |

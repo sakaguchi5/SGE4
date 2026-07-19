@@ -222,4 +222,17 @@ Assert-NoForbiddenDependency '61_Spiral1Contracts' @('62_Spiral1Corpus','67_Spir
 Assert-NoForbiddenDependency '62_Spiral1Corpus' @('67_Spiral1Observer','13_PackageRuntime','14_D3D12Backend')
 Assert-NoForbiddenDependency '67_Spiral1Observer' @('13_PackageRuntime','14_D3D12Backend')
 
+# Spiral 2 Completion Unit 1 boundaries. Dynamic values terminate at the
+# invocation contract; the canonical hierarchy is static and runtime-agnostic.
+Assert-DirectReferences '80_HierarchySemantic' @('00_Foundation')
+Assert-DirectReferences '81_Spiral2Contracts' @('00_Foundation','80_HierarchySemantic')
+Assert-DirectReferences '82_Spiral2Corpus' @('00_Foundation','80_HierarchySemantic','81_Spiral2Contracts')
+Assert-DirectReferences '90_Spiral2SemanticTests' @('00_Foundation','80_HierarchySemantic','81_Spiral2Contracts','82_Spiral2Corpus')
+Assert-DirectReferences '91_Spiral2DynamicInvocationTests' @('00_Foundation','80_HierarchySemantic','81_Spiral2Contracts','82_Spiral2Corpus')
+Assert-NoForbiddenDependency '80_HierarchySemantic' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime')
+Assert-NoForbiddenDependency '81_Spiral2Contracts' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime')
+Assert-NoForbiddenDependency '82_Spiral2Corpus' @('13_PackageRuntime','14_D3D12Backend','16_FrozenCompositionArtifact','22_CompositionRuntime')
+Assert-NoForbiddenDependency '13_PackageRuntime' @('80_HierarchySemantic','81_Spiral2Contracts','82_Spiral2Corpus')
+Assert-NoForbiddenDependency '14_D3D12Backend' @('80_HierarchySemantic','81_Spiral2Contracts','82_Spiral2Corpus')
+
 Write-Host "SGE4-5 dependency boundary check passed. Projects: $($projectFiles.Count), references: $((($graph.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)."
