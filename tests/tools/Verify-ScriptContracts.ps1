@@ -112,6 +112,8 @@ $requiredFiles = @(
     'tests/Run-Spiral1CU4.ps1',
     'tests/tools/Verify-Spiral1CU4.ps1',
     'run_sge4_5_cu4_frozen_comparison.bat',
+    'run_sge4_5_stage12_architecture_freeze.bat',
+    'run_sge4_5_cu5_architecture_final_freeze.bat',
     'tests/run_suite.bat',
     'tests/tools/Verify-ScriptContracts.ps1',
     'tests/tools/Verify-SourceManifest.ps1',

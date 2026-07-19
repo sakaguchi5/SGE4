@@ -812,3 +812,15 @@ Stage 10、Stage 11、CU4全体は次で実行する。
 ```
 
 CU4はS00-S15の全Frozen ComparisonをWARPでfresh Debug 2回、Release 1回実行するため、通常のDev Tierより重い。失敗時は`build/tests/spiral1-cu4`のevidenceとコンソール上の最初のscenario failureを確認する。
+
+
+# Spiral 1 Completion Unit 5
+
+Stage 12とCU5全体は次で実行する。
+
+```powershell
+.\run_sge4_5_stage12_architecture_freeze.bat
+.\run_sge4_5_cu5_architecture_final_freeze.bat
+```
+
+CU5はCU2-CU4の権威Gateを再実行し、S00-S15 WARP corpusをDebug 2回・Release 1回、controlled recoveryをDebug 2回・Release 1回で検証する。actual RemoveDeviceは独立Debug processでremoved-LUID exclusionとAwaitingAdapter隔離を確認し、その前後に別のfresh processで同一Frozen成果物のrematerialization evidenceを生成してbyte比較する最終Architecture Tierである。通常開発では実行せず、CU1-CU4変更の昇格時とSpiral 1 Architecture Freeze時に使用する。
