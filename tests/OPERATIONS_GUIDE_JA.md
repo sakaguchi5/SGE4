@@ -1,4 +1,4 @@
-﻿# SGE4 階層化テスト運用説明書
+# SGE4 階層化テスト運用説明書
 
 ## 1. 目的
 
@@ -744,3 +744,14 @@ Stage完成
 ```
 
 完全テストを削除せず、必要なタイミングへ移したことがこの運用の核心です。
+
+
+## Stage 03 Research Contract Freeze
+
+Foundation Bootstrap合格後、次を実行する。
+
+```powershell
+.\run_sge4_5_stage03_contract.bat
+```
+
+このGateはC++機能を実行せず、F0 code baseline、Research Contract digest、S00-S15、S1-I01からS1-I18、Project境界を検査する。

@@ -1,0 +1,76 @@
+{
+  "schema": "SGE4-5.Spiral1.ContractManifest.V1",
+  "status": "frozen",
+  "stage": "Stage03",
+  "foundationCommit": "2e79dbf96255f1cac4dbb9fc133662123e78cf4a",
+  "foundationSolution": "SemanticGpuEngine4-5.sln",
+  "foundationSolutionSha256": "bb1ab5255967ed6ec1401128e5c4dfc1b522825a6161d0ab6a1a04d39e7ca826",
+  "foundationProjectCount": 57,
+  "targetAbi": {
+    "d3d12Schema": 17,
+    "runtime": 17
+  },
+  "researchQuestion": "Retain one canonical PGA rigid-transform meaning through candidate generation and verify MatrixExpandedComputeV1 and DirectPgaMotorComputeV1 under one observation contract.",
+  "contracts": [
+    {
+      "path": "docs/spiral1/SGE4-5_Spiral1_Completion_Spec_v0.3.md",
+      "sha256": "c1d514988603cde0f0be102aa1afc32416060403ab035288a17b88f3b36b9a97",
+      "bytes": 39736
+    },
+    {
+      "path": "docs/spiral1/STAGE03_RESEARCH_CONTRACT_FREEZE.md",
+      "sha256": "50bad71e1d446c99090aa642c8ded59fd3fe09a196908d2c0e9d6c92956ef447",
+      "bytes": 3601
+    },
+    {
+      "path": "docs/spiral1/SEMANTIC_CONVENTION_V1.md",
+      "sha256": "9973096648ea75f7b981b1917a58b04337717ab52bdcc3911a3637e4ea9eefd4",
+      "bytes": 3206
+    },
+    {
+      "path": "docs/spiral1/OBSERVATION_CONTRACT_V1.md",
+      "sha256": "a5ab5f9f55acbf4cfa9f1df8632e60be165273f997dd25bbc16e8f1467bc08f1",
+      "bytes": 3424
+    },
+    {
+      "path": "docs/spiral1/CORPUS_V1.md",
+      "sha256": "70bd2da7855111be16d94ea70a6fc05679308afde8f191545041ea698bbacf82",
+      "bytes": 3080
+    },
+    {
+      "path": "docs/spiral1/CORPUS_DEFINITION_V1.json",
+      "sha256": "7a606288a4e93d4dd4a0bd9da5921e27f29b2c48e4f0da8b0c8b1d07b91c29b5",
+      "bytes": 7785
+    },
+    {
+      "path": "docs/spiral1/PROGRAM_TEMPLATE_CONTRACT_V1.md",
+      "sha256": "a0a6f870f61360ab0b94bbb705cc6cd8ec940f37a4885b4cc1f65a45262d9cc9",
+      "bytes": 2799
+    },
+    {
+      "path": "docs/spiral1/AUTHORITY_AND_PROJECT_BOUNDARIES_V1.md",
+      "sha256": "c6377e77add09b56512925868f040ee4cfc7f792ed64c82ff0017e587a7a72ce",
+      "bytes": 3132
+    },
+    {
+      "path": "docs/spiral1/NON_GOALS_V1.md",
+      "sha256": "11d71c0d102734753e083cdeb2467fa95080323aae763740af587fd525cb0651",
+      "bytes": 947
+    },
+    {
+      "path": "docs/spiral1/PROOF_LEDGER_V1.md",
+      "sha256": "3c7a687d682200d640892b64e084714cf21105a39330a77b0bb3e4d976e8c4b2",
+      "bytes": 3344
+    },
+    {
+      "path": "docs/spiral1/STAGE_MAP_V1.md",
+      "sha256": "e43fa35ac1977e1fd7b25201928e6e2810898e7e9a7ced403722996524df5ba3",
+      "bytes": 902
+    },
+    {
+      "path": "docs/spiral1/F0_CODE_BASELINE.sha256",
+      "sha256": "7fc601420348deebb62979f412ecf532236a8d7e8bb5b873a85a97ec24830f05",
+      "bytes": 19135
+    }
+  ]
+}

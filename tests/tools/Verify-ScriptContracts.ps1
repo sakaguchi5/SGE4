@@ -87,8 +87,11 @@ foreach ($file in $scriptFiles) {
 $requiredFiles = @(
     'tests/Invoke-SGE4_5Tests.ps1',
     'tests/Run-SGE4_5Foundation.ps1',
+    'tests/Run-Spiral1ResearchContract.ps1',
     'tests/tools/Verify-SGE4_5Identity.ps1',
+    'tests/tools/Verify-Spiral1ResearchContract.ps1',
     'run_sge4_5_foundation.bat',
+    'run_sge4_5_stage03_contract.bat',
     'tests/run_suite.bat',
     'tests/tools/Verify-ScriptContracts.ps1',
     'tests/tools/Verify-SourceManifest.ps1',

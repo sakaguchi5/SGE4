@@ -1,0 +1,405 @@
+{
+  "schema": "SGE4-5.Spiral1.CorpusDefinition.V1",
+  "status": "frozen",
+  "prng": {
+    "kind": "SplitMix64",
+    "increment": "0x9E3779B97F4A7C15",
+    "mix1": "0xBF58476D1CE4E5B9",
+    "mix2": "0x94D049BB133111EB",
+    "unit24": "(next_u64 >> 40) / 16777216.0"
+  },
+  "constants": {
+    "pi_f64_bits": "0x400921FB54442D18",
+    "half_pi_f64_bits": "0x3FF921FB54442D18",
+    "small_angle_f64_bits": "0x3EB0000000000000",
+    "near_pi_f64_bits": "0x400921F954442D18"
+  },
+  "scenarios": [
+    {
+      "id": "S00",
+      "motor": {
+        "kind": "identity"
+      },
+      "points": {
+        "kind": "literal",
+        "values": [
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "S01",
+      "motor": {
+        "kind": "identity"
+      },
+      "points": {
+        "kind": "grid",
+        "x": {
+          "start": -3.5,
+          "count": 8,
+          "step": 1.0
+        },
+        "y": {
+          "start": -3.5,
+          "count": 8,
+          "step": 1.0
+        },
+        "z": {
+          "start": -7.5,
+          "count": 16,
+          "step": 1.0
+        },
+        "order": "x-y-z"
+      }
+    },
+    {
+      "id": "S02",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "angle_f64_bits": "0x0000000000000000",
+        "translation": [
+          3.25,
+          -2.5,
+          7.75
+        ]
+      },
+      "points": {
+        "kind": "grid-values",
+        "values": [
+          -3,
+          -1,
+          1,
+          3
+        ],
+        "order": "x-y-z"
+      }
+    },
+    {
+      "id": "S03",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "angle_f64_bits": "0x3FF921FB54442D18",
+        "translation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "points": {
+        "kind": "grid-values",
+        "values": [
+          -3,
+          -1,
+          1,
+          3
+        ],
+        "order": "x-y-z"
+      }
+    },
+    {
+      "id": "S04",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          0,
+          1,
+          0
+        ],
+        "angle_f64_bits": "0x3FF921FB54442D18",
+        "translation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "points": {
+        "kind": "grid-values",
+        "values": [
+          -3,
+          -1,
+          1,
+          3
+        ],
+        "order": "x-y-z"
+      }
+    },
+    {
+      "id": "S05",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "angle_f64_bits": "0x3FF921FB54442D18",
+        "translation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "points": {
+        "kind": "grid-values",
+        "values": [
+          -3,
+          -1,
+          1,
+          3
+        ],
+        "order": "x-y-z"
+      }
+    },
+    {
+      "id": "S06",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          1,
+          2,
+          3
+        ],
+        "angle_f64_bits": "0x400921FB54442D18",
+        "translation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "points": {
+        "kind": "grid-values",
+        "values": [
+          -3,
+          -1,
+          1,
+          3
+        ],
+        "order": "x-y-z"
+      }
+    },
+    {
+      "id": "S07",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          2,
+          -1,
+          3
+        ],
+        "angle_f64_bits": "0x3FE6666666666666",
+        "translation": [
+          4.5,
+          -3.25,
+          1.75
+        ]
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 1024,
+        "minimum": -100.0,
+        "maximum": 100.0,
+        "seed": "0x5307000000000001"
+      }
+    },
+    {
+      "id": "S08",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          1,
+          -2,
+          0.5
+        ],
+        "angle_f64_bits": "0x3EB0000000000000",
+        "translation": [
+          0.001,
+          -0.002,
+          0.003
+        ]
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 1024,
+        "minimum": -10.0,
+        "maximum": 10.0,
+        "seed": "0x5308000000000001"
+      }
+    },
+    {
+      "id": "S09",
+      "motor": {
+        "kind": "axis-angle-translation",
+        "axis": [
+          -2,
+          5,
+          1
+        ],
+        "angle_f64_bits": "0x400921F954442D18",
+        "translation": [
+          -7,
+          4,
+          2.5
+        ]
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 1024,
+        "minimum": -100.0,
+        "maximum": 100.0,
+        "seed": "0x5309000000000001"
+      }
+    },
+    {
+      "id": "S10",
+      "motor": {
+        "kind": "compose",
+        "application_order": [
+          "M1",
+          "M2",
+          "M3"
+        ],
+        "motors": {
+          "M1": {
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "angle_f64_bits": "0x3FD8000000000000",
+            "translation": [
+              1,
+              2,
+              3
+            ]
+          },
+          "M2": {
+            "axis": [
+              0,
+              1,
+              1
+            ],
+            "angle_f64_bits": "0xBFF2000000000000",
+            "translation": [
+              -2,
+              0.5,
+              4
+            ]
+          },
+          "M3": {
+            "axis": [
+              2,
+              -1,
+              1
+            ],
+            "angle_f64_bits": "0x3FE4000000000000",
+            "translation": [
+              0,
+              -3,
+              1.25
+            ]
+          }
+        }
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 1024,
+        "minimum": -50.0,
+        "maximum": 50.0,
+        "seed": "0x5310000000000001"
+      }
+    },
+    {
+      "id": "S11",
+      "motor": {
+        "kind": "identity"
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 4096,
+        "minimum": -1000.0,
+        "maximum": -0.125,
+        "seed": "0x5311000000000001"
+      }
+    },
+    {
+      "id": "S12",
+      "motor": {
+        "kind": "reuse",
+        "scenario": "S07"
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 4096,
+        "minimum": -10000.0,
+        "maximum": 10000.0,
+        "seed": "0x5312000000000001"
+      }
+    },
+    {
+      "id": "S13",
+      "motor": {
+        "kind": "reuse",
+        "scenario": "S08"
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 4096,
+        "minimum": -0.000244140625,
+        "maximum": 0.000244140625,
+        "seed": "0x5313000000000001"
+      }
+    },
+    {
+      "id": "S14",
+      "motor": {
+        "kind": "random-axis-angle-translation",
+        "seed": "0x5314000000000001",
+        "angle_min": -3.0,
+        "angle_max": 3.0,
+        "translation_min": -25.0,
+        "translation_max": 25.0
+      },
+      "points": {
+        "kind": "random-box",
+        "count": 4096,
+        "minimum": -250.0,
+        "maximum": 250.0,
+        "seed": "0x5314000000000002"
+      }
+    },
+    {
+      "id": "S15",
+      "motor": {
+        "kind": "random-set",
+        "count": 16,
+        "master_seed": "0x5315000000000001",
+        "angle_min": -3.0,
+        "angle_max": 3.0,
+        "translation_min": -50.0,
+        "translation_max": 50.0
+      },
+      "points": {
+        "kind": "random-blocks",
+        "blocks": 16,
+        "count_per_block": 256,
+        "minimum": -500.0,
+        "maximum": 500.0,
+        "stream": "same master stream after each motor"
+      }
+    }
+  ]
+}
