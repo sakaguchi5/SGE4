@@ -1,0 +1,26 @@
+﻿SGE4-5 tiered test run
+Suite=Architecture
+Configuration=Debug
+Started=2026-07-20T00:19:43.0267731+09:00
+
+========================================================================
+Architectural dependency checks
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
+SGE4-5 dependency boundary check passed. Projects: 86, references: 575.
+
+========================================================================
+Script syntax and encoding checks
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
+SGE4-5 script contract verification passed. Scripts: 88.
+
+========================================================================
+Frozen source inventory check
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
+SOURCE_MANIFEST verification passed. Files: 447.
+
+========================================================================
+SGE4-5 test suite passed: Architecture (Debug)
+========================================================================

@@ -1,0 +1,1917 @@
+﻿SGE4-5 tiered test run
+Suite=Gate
+Configuration=Debug
+Started=2026-07-20T00:20:17.2777888+09:00
+
+========================================================================
+Architectural dependency checks
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\verify_dependencies.ps1
+SGE4-5 dependency boundary check passed. Projects: 86, references: 575.
+
+========================================================================
+Script syntax and encoding checks
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-ScriptContracts.ps1
+SGE4-5 script contract verification passed. Scripts: 88.
+
+========================================================================
+Frozen source inventory check
+========================================================================
+> "powershell.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File C:\Users\sokyu\Desktop\SGE4\tests\tools\Verify-SourceManifest.ps1
+SOURCE_MANIFEST verification passed. Files: 447.
+> "C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe" C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln /m /nologo /t:Build /p:Configuration=Debug /p:Platform=x64
+2026/07/20 0:20:21 にビルドを開始しました。
+
+     1>ノード 1 上のプロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (Build ターゲット)。
+     1>ValidateSolutionConfiguration:
+         ソリューション構成 "Debug|x64" をビルドしています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 5 上に "C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj" (7) をビルドしています (既定のターゲット)。
+     7>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+       InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\01_MathVocabulary\01_MathV.FFB538CB.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\01_MathVocabulary\01_MathV.FFB538CB.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+       ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+       ClCompile:
+         すべての出力が最新のものです。
+       Lib:
+         すべての出力が最新のものです。
+         01_MathVocabulary.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\01_MathVocabulary.lib
+       FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\01_MathVocabulary\01_MathV.FFB538CB.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\01_MathVocabulary\01_MathV.FFB538CB.tlog\01_MathVocabulary.lastbuildstate" のタッチ タスクを実行しています。
+     7>プロジェクト "C:\Users\sokyu\Desktop\SGE4\01_MathVocabulary\01_MathVocabulary.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 7 上に "C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj" (11) をビルドしています (既定のターゲット)。
+    11>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+       InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05_TargetContract\05_Targe.07D251E1.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05_TargetContract\05_Targe.07D251E1.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+       ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+       ClCompile:
+         すべての出力が最新のものです。
+       Lib:
+         すべての出力が最新のものです。
+         05_TargetContract.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\05_TargetContract.lib
+       FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05_TargetContract\05_Targe.07D251E1.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05_TargetContract\05_Targe.07D251E1.tlog\05_TargetContract.lastbuildstate" のタッチ タスクを実行しています。
+    11>プロジェクト "C:\Users\sokyu\Desktop\SGE4\05_TargetContract\05_TargetContract.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 1 上に "C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj" (87) をビルドしています (既定のターゲット)。
+    87>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+       InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\00_Foundation\00_Foundation.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\00_Foundation\00_Foundation.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+       ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+       ClCompile:
+         すべての出力が最新のものです。
+       Lib:
+         すべての出力が最新のものです。
+         00_Foundation.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\00_Foundation.lib
+       FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\00_Foundation\00_Foundation.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\00_Foundation\00_Foundation.tlog\00_Foundation.lastbuildstate" のタッチ タスクを実行しています。
+    87>プロジェクト "C:\Users\sokyu\Desktop\SGE4\00_Foundation\00_Foundation.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 25 上に "C:\Users\sokyu\Desktop\SGE4\60_PgaRigidTransformSemantic\60_PgaRigidTransformSemantic.vcxproj" (50) をビルドしています (既定のターゲット)。
+    50>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 3 上に "C:\Users\sokyu\Desktop\SGE4\02_SemanticModel\02_SemanticModel.vcxproj" (34) をビルドしています (既定のターゲット)。
+    34>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 13 上に "C:\Users\sokyu\Desktop\SGE4\80_HierarchySemantic\80_HierarchySemantic.vcxproj" (80) をビルドしています (既定のターゲット)。
+    80>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 14 上に "C:\Users\sokyu\Desktop\SGE4\09_FrozenPackageCore\09_FrozenPackageCore.vcxproj" (10) をビルドしています (既定のターゲット)。
+    10>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    50>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\60_PgaRigidTransformSemantic\60_PgaRi.55DC9C18.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\60_PgaRigidTransformSemantic\60_PgaRi.55DC9C18.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    34>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\02_SemanticModel\02_SemanticModel.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\02_SemanticModel\02_SemanticModel.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    80>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\80_HierarchySemantic\80_Hiera.80000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\80_HierarchySemantic\80_Hiera.80000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    10>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\09_FrozenPackageCore\09_Froze.F98684BE.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\09_FrozenPackageCore\09_Froze.F98684BE.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    34>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    80>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    50>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    10>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    34>ClCompile:
+         すべての出力が最新のものです。
+    50>ClCompile:
+         すべての出力が最新のものです。
+    10>ClCompile:
+         すべての出力が最新のものです。
+    80>ClCompile:
+         すべての出力が最新のものです。
+    34>Lib:
+         すべての出力が最新のものです。
+         02_SemanticModel.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\02_SemanticModel.lib
+    50>Lib:
+         すべての出力が最新のものです。
+         60_PgaRigidTransformSemantic.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\60_PgaRigidTransformSemantic.lib
+    80>Lib:
+         すべての出力が最新のものです。
+         80_HierarchySemantic.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\80_HierarchySemantic.lib
+    10>Lib:
+         すべての出力が最新のものです。
+         09_FrozenPackageCore.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\09_FrozenPackageCore.lib
+    50>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\60_PgaRigidTransformSemantic\60_PgaRi.55DC9C18.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\60_PgaRigidTransformSemantic\60_PgaRi.55DC9C18.tlog\60_PgaRigidTransformSemantic.lastbuildstate" のタッチ タスクを実行しています。
+    34>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\02_SemanticModel\02_SemanticModel.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\02_SemanticModel\02_SemanticModel.tlog\02_SemanticModel.lastbuildstate" のタッチ タスクを実行しています。
+    34>プロジェクト "C:\Users\sokyu\Desktop\SGE4\02_SemanticModel\02_SemanticModel.vcxproj" (既定のターゲット) のビルドが完了しました。
+    50>プロジェクト "C:\Users\sokyu\Desktop\SGE4\60_PgaRigidTransformSemantic\60_PgaRigidTransformSemantic.vcxproj" (既定のターゲット) のビルドが完了しました。
+    80>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\80_HierarchySemantic\80_Hiera.80000000.tlog\unsuccessfulbuild" を削除しています。
+    10>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\09_FrozenPackageCore\09_Froze.F98684BE.tlog\unsuccessfulbuild" を削除しています。
+    80>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\80_HierarchySemantic\80_Hiera.80000000.tlog\80_HierarchySemantic.lastbuildstate" のタッチ タスクを実行しています。
+    10>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\09_FrozenPackageCore\09_Froze.F98684BE.tlog\09_FrozenPackageCore.lastbuildstate" のタッチ タスクを実行しています。
+    80>プロジェクト "C:\Users\sokyu\Desktop\SGE4\80_HierarchySemantic\80_HierarchySemantic.vcxproj" (既定のターゲット) のビルドが完了しました。
+    10>プロジェクト "C:\Users\sokyu\Desktop\SGE4\09_FrozenPackageCore\09_FrozenPackageCore.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 2 上に "C:\Users\sokyu\Desktop\SGE4\03_SemanticBuilder\03_SemanticBuilder.vcxproj" (4) をビルドしています (既定のターゲット)。
+     4>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 29 上に "C:\Users\sokyu\Desktop\SGE4\26_GeneratedGraphCorpus\26_GeneratedGraphCorpus.vcxproj" (12) をビルドしています (既定のターゲット)。
+    12>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 12 上に "C:\Users\sokyu\Desktop\SGE4\16_FrozenCompositionArtifact\16_FrozenCompositionArtifact.vcxproj" (19) をビルドしています (既定のターゲット)。
+    19>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 9 上に "C:\Users\sokyu\Desktop\SGE4\10_D3D12PackageSchema\10_D3D12PackageSchema.vcxproj" (9) をビルドしています (既定のターゲット)。
+     9>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     4>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\03_SemanticBuilder\03_Seman.A8B7E571.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\03_SemanticBuilder\03_Seman.A8B7E571.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 17 上に "C:\Users\sokyu\Desktop\SGE4\13_PackageRuntime\13_PackageRuntime.vcxproj" (18) をビルドしています (既定のターゲット)。
+    18>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    12>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\26_GeneratedGraphCorpus\26_Gener.B0EBCB4D.tlog\unsuccessfulbuild" を作成しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 24 上に "C:\Users\sokyu\Desktop\SGE4\31_PackageContractTests\31_PackageContractTests.vcxproj" (35) をビルドしています (既定のターゲット)。
+    35>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    12>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\26_GeneratedGraphCorpus\26_Gener.B0EBCB4D.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 4 上に "C:\Users\sokyu\Desktop\SGE4\04_SemanticAnalysis\04_SemanticAnalysis.vcxproj" (13) をビルドしています (既定のターゲット)。
+    13>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    19>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\16_FrozenCompositionArtifact\16_Froze.6C57F580.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\16_FrozenCompositionArtifact\16_Froze.6C57F580.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     9>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\10_D3D12PackageSchema\10_D3D12.67E7BBE2.tlog\unsuccessfulbuild" を作成しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 5 上に "C:\Users\sokyu\Desktop\SGE4\61_Spiral1Contracts\61_Spiral1Contracts.vcxproj" (57) をビルドしています (既定のターゲット)。
+    57>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     9>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\10_D3D12PackageSchema\10_D3D12.67E7BBE2.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    18>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\13_PackageRuntime\13_Packa.79EDC007.tlog\unsuccessfulbuild" を作成しています。
+    35>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\31_PackageContractTests\31_Packa.768DA36E.tlog\unsuccessfulbuild" を作成しています。
+    18>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\13_PackageRuntime\13_Packa.79EDC007.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    35>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\31_PackageContractTests\31_Packa.768DA36E.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    13>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\04_SemanticAnalysis\04_Seman.04957AC5.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\04_SemanticAnalysis\04_Seman.04957AC5.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    57>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\61_Spiral1Contracts\61_Spira.9B046702.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\61_Spiral1Contracts\61_Spira.9B046702.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     4>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    12>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    19>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+     9>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    19>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+     9>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    19>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     9>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    18>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    35>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    18>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    35>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    13>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    12>ClCompile:
+         すべての出力が最新のものです。
+     4>ClCompile:
+         すべての出力が最新のものです。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 5 上に "C:\Users\sokyu\Desktop\SGE4\81_Spiral2Contracts\81_Spiral2Contracts.vcxproj" (65) をビルドしています (既定のターゲット)。
+    65>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    12>Lib:
+         すべての出力が最新のものです。
+    18>ClCompile:
+         すべての出力が最新のものです。
+    12>Lib:
+         26_GeneratedGraphCorpus.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\26_GeneratedGraphCorpus.lib
+     9>ClCompile:
+         すべての出力が最新のものです。
+    35>ClCompile:
+         すべての出力が最新のものです。
+    13>ClCompile:
+         すべての出力が最新のものです。
+     4>Lib:
+         すべての出力が最新のものです。
+         03_SemanticBuilder.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\03_SemanticBuilder.lib
+    18>Lib:
+         すべての出力が最新のものです。
+         13_PackageRuntime.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\13_PackageRuntime.lib
+     9>Lib:
+         すべての出力が最新のものです。
+         10_D3D12PackageSchema.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\10_D3D12PackageSchema.lib
+    13>Lib:
+         すべての出力が最新のものです。
+         04_SemanticAnalysis.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\04_SemanticAnalysis.lib
+    65>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\81_Spiral2Contracts\81_Spira.81000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\81_Spiral2Contracts\81_Spira.81000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    35>Link:
+         すべての出力が最新のものです。
+         31_PackageContractTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\31_PackageContractTests.exe
+    57>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    19>ClCompile:
+         すべての出力が最新のものです。
+    12>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\26_GeneratedGraphCorpus\26_Gener.B0EBCB4D.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\26_GeneratedGraphCorpus\26_Gener.B0EBCB4D.tlog\26_GeneratedGraphCorpus.lastbuildstate" のタッチ タスクを実行しています。
+    12>プロジェクト "C:\Users\sokyu\Desktop\SGE4\26_GeneratedGraphCorpus\26_GeneratedGraphCorpus.vcxproj" (既定のターゲット) のビルドが完了しました。
+    13>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\04_SemanticAnalysis\04_Seman.04957AC5.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\04_SemanticAnalysis\04_Seman.04957AC5.tlog\04_SemanticAnalysis.lastbuildstate" のタッチ タスクを実行しています。
+    13>プロジェクト "C:\Users\sokyu\Desktop\SGE4\04_SemanticAnalysis\04_SemanticAnalysis.vcxproj" (既定のターゲット) のビルドが完了しました。
+     9>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\10_D3D12PackageSchema\10_D3D12.67E7BBE2.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\10_D3D12PackageSchema\10_D3D12.67E7BBE2.tlog\10_D3D12PackageSchema.lastbuildstate" のタッチ タスクを実行しています。
+    35>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\31_PackageContractTests\31_Packa.768DA36E.tlog\unsuccessfulbuild" を削除しています。
+     9>プロジェクト "C:\Users\sokyu\Desktop\SGE4\10_D3D12PackageSchema\10_D3D12PackageSchema.vcxproj" (既定のターゲット) のビルドが完了しました。
+    35>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\31_PackageContractTests\31_Packa.768DA36E.tlog\31_PackageContractTests.lastbuildstate" のタッチ タスクを実行しています。
+    35>プロジェクト "C:\Users\sokyu\Desktop\SGE4\31_PackageContractTests\31_PackageContractTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    19>Lib:
+         すべての出力が最新のものです。
+         16_FrozenCompositionArtifact.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\16_FrozenCompositionArtifact.lib
+    57>ClCompile:
+         すべての出力が最新のものです。
+     4>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\03_SemanticBuilder\03_Seman.A8B7E571.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\03_SemanticBuilder\03_Seman.A8B7E571.tlog\03_SemanticBuilder.lastbuildstate" のタッチ タスクを実行しています。
+     4>プロジェクト "C:\Users\sokyu\Desktop\SGE4\03_SemanticBuilder\03_SemanticBuilder.vcxproj" (既定のターゲット) のビルドが完了しました。
+    18>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\13_PackageRuntime\13_Packa.79EDC007.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\13_PackageRuntime\13_Packa.79EDC007.tlog\13_PackageRuntime.lastbuildstate" のタッチ タスクを実行しています。
+    18>プロジェクト "C:\Users\sokyu\Desktop\SGE4\13_PackageRuntime\13_PackageRuntime.vcxproj" (既定のターゲット) のビルドが完了しました。
+    57>Lib:
+         すべての出力が最新のものです。
+         61_Spiral1Contracts.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\61_Spiral1Contracts.lib
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 6 上に "C:\Users\sokyu\Desktop\SGE4\05A_CompilationInput\05A_CompilationInput.vcxproj" (5) をビルドしています (既定のターゲット)。
+     5>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 15 上に "C:\Users\sokyu\Desktop\SGE4\17_CompositionContract\17_CompositionContract.vcxproj" (21) をビルドしています (既定のターゲット)。
+    21>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     5>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05A_CompilationInput\05A_Comp.112CD2D3.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05A_CompilationInput\05A_Comp.112CD2D3.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    19>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\16_FrozenCompositionArtifact\16_Froze.6C57F580.tlog\unsuccessfulbuild" を削除しています。
+    65>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    19>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\16_FrozenCompositionArtifact\16_Froze.6C57F580.tlog\16_FrozenCompositionArtifact.lastbuildstate" のタッチ タスクを実行しています。
+    65>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 9 上に "C:\Users\sokyu\Desktop\SGE4\27_RuntimeScenarios\27_RuntimeScenarios.vcxproj" (37) をビルドしています (既定のターゲット)。
+    37>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    21>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\17_CompositionContract\17_Compo.A529131D.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\17_CompositionContract\17_Compo.A529131D.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    19>プロジェクト "C:\Users\sokyu\Desktop\SGE4\16_FrozenCompositionArtifact\16_FrozenCompositionArtifact.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 13 上に "C:\Users\sokyu\Desktop\SGE4\06_ExecutionPlanModel\06_ExecutionPlanModel.vcxproj" (24) をビルドしています (既定のターゲット)。
+    24>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 25 上に "C:\Users\sokyu\Desktop\SGE4\25_GeneralGraphScenarios\25_GeneralGraphScenarios.vcxproj" (26) をビルドしています (既定のターゲット)。
+    26>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 20 上に "C:\Users\sokyu\Desktop\SGE4\14_D3D12Backend\14_D3D12Backend.vcxproj" (32) をビルドしています (既定のターゲット)。
+    32>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 18 上に "C:\Users\sokyu\Desktop\SGE4\15_PlatformWin32\15_PlatformWin32.vcxproj" (16) をビルドしています (既定のターゲット)。
+    16>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    37>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\27_RuntimeScenarios\27_Runti.588F01D2.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\27_RuntimeScenarios\27_Runti.588F01D2.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    26>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\25_GeneralGraphScenarios\25_Gener.EDBB926A.tlog\unsuccessfulbuild" を作成しています。
+    24>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\06_ExecutionPlanModel\06_Execu.CC9821ED.tlog\unsuccessfulbuild" を作成しています。
+    26>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\25_GeneralGraphScenarios\25_Gener.EDBB926A.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    24>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\06_ExecutionPlanModel\06_Execu.CC9821ED.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     5>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    65>ClCompile:
+         すべての出力が最新のものです。
+    16>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\15_PlatformWin32\15_PlatformWin32.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\15_PlatformWin32\15_PlatformWin32.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    32>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\14_D3D12Backend\14_D3D12Backend.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\14_D3D12Backend\14_D3D12Backend.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     5>ClCompile:
+         すべての出力が最新のものです。
+    65>Lib:
+         すべての出力が最新のものです。
+         81_Spiral2Contracts.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\81_Spiral2Contracts.lib
+    37>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    21>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    24>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     5>Lib:
+         すべての出力が最新のものです。
+         05A_CompilationInput.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\05A_CompilationInput.lib
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 16 上に "C:\Users\sokyu\Desktop\SGE4\46_CanonicalCompositionArtifactTests\46_CanonicalCompositionArtifactTests.vcxproj" (41) をビルドしています (既定のターゲット)。
+    41>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    26>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    16>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    32>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    16>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    32>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    37>ClCompile:
+         すべての出力が最新のものです。
+    21>ClCompile:
+         すべての出力が最新のものです。
+    24>ClCompile:
+         すべての出力が最新のものです。
+    37>Lib:
+         すべての出力が最新のものです。
+         27_RuntimeScenarios.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\27_RuntimeScenarios.lib
+    41>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\46_CanonicalCompositionArtifactTests\46_Canon.CF3B1DE6.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\46_CanonicalCompositionArtifactTests\46_Canon.CF3B1DE6.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    21>Lib:
+         すべての出力が最新のものです。
+         17_CompositionContract.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\17_CompositionContract.lib
+    26>ClCompile:
+         すべての出力が最新のものです。
+    32>ClCompile:
+         すべての出力が最新のものです。
+    24>Lib:
+         すべての出力が最新のものです。
+         06_ExecutionPlanModel.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\06_ExecutionPlanModel.lib
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 31 上に "C:\Users\sokyu\Desktop\SGE4\20_ExperimentDomain\20_ExperimentDomain.vcxproj" (14) をビルドしています (既定のターゲット)。
+    14>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    32>Lib:
+         すべての出力が最新のものです。
+         14_D3D12Backend.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\14_D3D12Backend.lib
+    16>ClCompile:
+         すべての出力が最新のものです。
+    14>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_ExperimentDomain\20_Exper.238EEF72.tlog\unsuccessfulbuild" を作成しています。
+     5>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05A_CompilationInput\05A_Comp.112CD2D3.tlog\unsuccessfulbuild" を削除しています。
+    14>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_ExperimentDomain\20_Exper.238EEF72.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     5>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\05A_CompilationInput\05A_Comp.112CD2D3.tlog\05A_CompilationInput.lastbuildstate" のタッチ タスクを実行しています。
+     5>プロジェクト "C:\Users\sokyu\Desktop\SGE4\05A_CompilationInput\05A_CompilationInput.vcxproj" (既定のターゲット) のビルドが完了しました。
+    26>Lib:
+         すべての出力が最新のものです。
+         25_GeneralGraphScenarios.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\25_GeneralGraphScenarios.lib
+    41>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    16>Lib:
+         すべての出力が最新のものです。
+         15_PlatformWin32.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\15_PlatformWin32.lib
+    24>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\06_ExecutionPlanModel\06_Execu.CC9821ED.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\06_ExecutionPlanModel\06_Execu.CC9821ED.tlog\06_ExecutionPlanModel.lastbuildstate" のタッチ タスクを実行しています。
+    24>プロジェクト "C:\Users\sokyu\Desktop\SGE4\06_ExecutionPlanModel\06_ExecutionPlanModel.vcxproj" (既定のターゲット) のビルドが完了しました。
+    37>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\27_RuntimeScenarios\27_Runti.588F01D2.tlog\unsuccessfulbuild" を削除しています。
+    14>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    37>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\27_RuntimeScenarios\27_Runti.588F01D2.tlog\27_RuntimeScenarios.lastbuildstate" のタッチ タスクを実行しています。
+    14>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    32>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\14_D3D12Backend\14_D3D12Backend.tlog\unsuccessfulbuild" を削除しています。
+    37>プロジェクト "C:\Users\sokyu\Desktop\SGE4\27_RuntimeScenarios\27_RuntimeScenarios.vcxproj" (既定のターゲット) のビルドが完了しました。
+    32>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\14_D3D12Backend\14_D3D12Backend.tlog\14_D3D12Backend.lastbuildstate" のタッチ タスクを実行しています。
+    32>プロジェクト "C:\Users\sokyu\Desktop\SGE4\14_D3D12Backend\14_D3D12Backend.vcxproj" (既定のターゲット) のビルドが完了しました。
+    41>ClCompile:
+         すべての出力が最新のものです。
+    21>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\17_CompositionContract\17_Compo.A529131D.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\17_CompositionContract\17_Compo.A529131D.tlog\17_CompositionContract.lastbuildstate" のタッチ タスクを実行しています。
+    21>プロジェクト "C:\Users\sokyu\Desktop\SGE4\17_CompositionContract\17_CompositionContract.vcxproj" (既定のターゲット) のビルドが完了しました。
+    26>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\25_GeneralGraphScenarios\25_Gener.EDBB926A.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\25_GeneralGraphScenarios\25_Gener.EDBB926A.tlog\25_GeneralGraphScenarios.lastbuildstate" のタッチ タスクを実行しています。
+    65>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\81_Spiral2Contracts\81_Spira.81000000.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\81_Spiral2Contracts\81_Spira.81000000.tlog\81_Spiral2Contracts.lastbuildstate" のタッチ タスクを実行しています。
+    26>プロジェクト "C:\Users\sokyu\Desktop\SGE4\25_GeneralGraphScenarios\25_GeneralGraphScenarios.vcxproj" (既定のターゲット) のビルドが完了しました。
+    65>プロジェクト "C:\Users\sokyu\Desktop\SGE4\81_Spiral2Contracts\81_Spiral2Contracts.vcxproj" (既定のターゲット) のビルドが完了しました。
+    16>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\15_PlatformWin32\15_PlatformWin32.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\15_PlatformWin32\15_PlatformWin32.tlog\15_PlatformWin32.lastbuildstate" のタッチ タスクを実行しています。
+    16>プロジェクト "C:\Users\sokyu\Desktop\SGE4\15_PlatformWin32\15_PlatformWin32.vcxproj" (既定のターゲット) のビルドが完了しました。
+    41>Link:
+         すべての出力が最新のものです。
+         46_CanonicalCompositionArtifactTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\46_CanonicalCompositionArtifactTests.exe
+    14>ClCompile:
+         すべての出力が最新のものです。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 11 上に "C:\Users\sokyu\Desktop\SGE4\07_ExecutionPlanVerifier\07_ExecutionPlanVerifier.vcxproj" (25) をビルドしています (既定のターゲット)。
+    25>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    14>Lib:
+         すべての出力が最新のものです。
+    57>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\61_Spiral1Contracts\61_Spira.9B046702.tlog\unsuccessfulbuild" を削除しています。
+    14>Lib:
+         20_ExperimentDomain.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\20_ExperimentDomain.lib
+    57>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\61_Spiral1Contracts\61_Spira.9B046702.tlog\61_Spiral1Contracts.lastbuildstate" のタッチ タスクを実行しています。
+    57>プロジェクト "C:\Users\sokyu\Desktop\SGE4\61_Spiral1Contracts\61_Spiral1Contracts.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 14 上に "C:\Users\sokyu\Desktop\SGE4\35_D3D12ConformanceTests\35_D3D12ConformanceTests.vcxproj" (42) をビルドしています (既定のターゲット)。
+    42>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    25>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\07_ExecutionPlanVerifier\07_Execu.2294F963.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\07_ExecutionPlanVerifier\07_Execu.2294F963.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 23 上に "C:\Users\sokyu\Desktop\SGE4\18_CompositionPlan\18_CompositionPlan.vcxproj" (29) をビルドしています (既定のターゲット)。
+    29>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 4 上に "C:\Users\sokyu\Desktop\SGE4\36_D3D12ReadbackTests\36_D3D12ReadbackTests.vcxproj" (45) をビルドしています (既定のターゲット)。
+    45>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    42>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\35_D3D12ConformanceTests\35_D3D12.18D134BE.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\35_D3D12ConformanceTests\35_D3D12.18D134BE.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 21 上に "C:\Users\sokyu\Desktop\SGE4\50_Launcher\50_Launcher.vcxproj" (51) をビルドしています (既定のターゲット)。
+    51>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    29>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\18_CompositionPlan\18_Compo.5316C001.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\18_CompositionPlan\18_Compo.5316C001.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    41>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\46_CanonicalCompositionArtifactTests\46_Canon.CF3B1DE6.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\46_CanonicalCompositionArtifactTests\46_Canon.CF3B1DE6.tlog\46_CanonicalCompositionArtifactTests.lastbuildstate" のタッチ タスクを実行しています。
+    41>プロジェクト "C:\Users\sokyu\Desktop\SGE4\46_CanonicalCompositionArtifactTests\46_CanonicalCompositionArtifactTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    45>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\36_D3D12ReadbackTests\36_D3D12.CA084619.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\36_D3D12ReadbackTests\36_D3D12.CA084619.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 3 上に "C:\Users\sokyu\Desktop\SGE4\63_D3D12RepresentationCandidate\63_D3D12RepresentationCandidate.vcxproj" (73) をビルドしています (既定のターゲット)。
+    73>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 32 上に "C:\Users\sokyu\Desktop\SGE4\83_HierarchyRepresentationCandidate\83_HierarchyRepresentationCandidate.vcxproj" (82) をビルドしています (既定のターゲット)。
+    82>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    51>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\50_Launcher\50_Launcher.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\50_Launcher\50_Launcher.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 11 上に "C:\Users\sokyu\Desktop\SGE4\82_Spiral2Corpus\82_Spiral2Corpus.vcxproj" (69) をビルドしています (既定のターゲット)。
+    69>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    42>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    82>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\83_HierarchyRepresentationCandidate\83_Hiera.83000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\83_HierarchyRepresentationCandidate\83_Hiera.83000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    73>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\63_D3D12RepresentationCandidate\63_D3D12.58ABE945.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\63_D3D12RepresentationCandidate\63_D3D12.58ABE945.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    29>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    69>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\82_Spiral2Corpus\82_Spiral2Corpus.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\82_Spiral2Corpus\82_Spiral2Corpus.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 31 上に "C:\Users\sokyu\Desktop\SGE4\62_Spiral1Corpus\62_Spiral1Corpus.vcxproj" (77) をビルドしています (既定のターゲット)。
+    77>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    42>ClCompile:
+         すべての出力が最新のものです。
+    45>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    51>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    45>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    51>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    45>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    77>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\62_Spiral1Corpus\62_Spiral1Corpus.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\62_Spiral1Corpus\62_Spiral1Corpus.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    29>ClCompile:
+         すべての出力が最新のものです。
+    25>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    42>Link:
+         すべての出力が最新のものです。
+    82>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    42>Link:
+         35_D3D12ConformanceTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\35_D3D12ConformanceTests.exe
+    45>ClCompile:
+         すべての出力が最新のものです。
+    29>Lib:
+         すべての出力が最新のものです。
+    73>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    29>Lib:
+         18_CompositionPlan.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\18_CompositionPlan.lib
+    77>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    25>ClCompile:
+         すべての出力が最新のものです。
+    51>ClCompile:
+         すべての出力が最新のものです。
+    82>ClCompile:
+         すべての出力が最新のものです。
+    25>Lib:
+         すべての出力が最新のものです。
+         07_ExecutionPlanVerifier.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\07_ExecutionPlanVerifier.lib
+    45>Link:
+         すべての出力が最新のものです。
+    77>ClCompile:
+         すべての出力が最新のものです。
+    45>Link:
+         36_D3D12ReadbackTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\36_D3D12ReadbackTests.exe
+    42>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\35_D3D12ConformanceTests\35_D3D12.18D134BE.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\35_D3D12ConformanceTests\35_D3D12.18D134BE.tlog\35_D3D12ConformanceTests.lastbuildstate" のタッチ タスクを実行しています。
+    42>プロジェクト "C:\Users\sokyu\Desktop\SGE4\35_D3D12ConformanceTests\35_D3D12ConformanceTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    77>Lib:
+         すべての出力が最新のものです。
+    82>Lib:
+         すべての出力が最新のものです。
+    77>Lib:
+         62_Spiral1Corpus.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\62_Spiral1Corpus.lib
+    82>Lib:
+         83_HierarchyRepresentationCandidate.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\83_HierarchyRepresentationCandidate.lib
+    29>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\18_CompositionPlan\18_Compo.5316C001.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\18_CompositionPlan\18_Compo.5316C001.tlog\18_CompositionPlan.lastbuildstate" のタッチ タスクを実行しています。
+    51>Link:
+         すべての出力が最新のものです。
+         50_Launcher.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\50_Launcher.exe
+    29>プロジェクト "C:\Users\sokyu\Desktop\SGE4\18_CompositionPlan\18_CompositionPlan.vcxproj" (既定のターゲット) のビルドが完了しました。
+    73>ClCompile:
+         すべての出力が最新のものです。
+    69>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    45>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\36_D3D12ReadbackTests\36_D3D12.CA084619.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\36_D3D12ReadbackTests\36_D3D12.CA084619.tlog\36_D3D12ReadbackTests.lastbuildstate" のタッチ タスクを実行しています。
+    73>Lib:
+         すべての出力が最新のものです。
+         63_D3D12RepresentationCandidate.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\63_D3D12RepresentationCandidate.lib
+    45>プロジェクト "C:\Users\sokyu\Desktop\SGE4\36_D3D12ReadbackTests\36_D3D12ReadbackTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 22 上に "C:\Users\sokyu\Desktop\SGE4\19_CompositionVerifier\19_CompositionVerifier.vcxproj" (6) をビルドしています (既定のターゲット)。
+     6>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    14>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_ExperimentDomain\20_Exper.238EEF72.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_ExperimentDomain\20_Exper.238EEF72.tlog\20_ExperimentDomain.lastbuildstate" のタッチ タスクを実行しています。
+    14>プロジェクト "C:\Users\sokyu\Desktop\SGE4\20_ExperimentDomain\20_ExperimentDomain.vcxproj" (既定のターゲット) のビルドが完了しました。
+     6>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\19_CompositionVerifier\19_Compo.AA35ACAB.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\19_CompositionVerifier\19_Compo.AA35ACAB.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    69>ClCompile:
+         すべての出力が最新のものです。
+    82>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\83_HierarchyRepresentationCandidate\83_Hiera.83000000.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\83_HierarchyRepresentationCandidate\83_Hiera.83000000.tlog\83_HierarchyRepresentationCandidate.lastbuildstate" のタッチ タスクを実行しています。
+    82>プロジェクト "C:\Users\sokyu\Desktop\SGE4\83_HierarchyRepresentationCandidate\83_HierarchyRepresentationCandidate.vcxproj" (既定のターゲット) のビルドが完了しました。
+    51>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\50_Launcher\50_Launcher.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\50_Launcher\50_Launcher.tlog\50_Launcher.lastbuildstate" のタッチ タスクを実行しています。
+    69>Lib:
+         すべての出力が最新のものです。
+    51>プロジェクト "C:\Users\sokyu\Desktop\SGE4\50_Launcher\50_Launcher.vcxproj" (既定のターゲット) のビルドが完了しました。
+    69>Lib:
+         82_Spiral2Corpus.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\82_Spiral2Corpus.lib
+    77>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\62_Spiral1Corpus\62_Spiral1Corpus.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\62_Spiral1Corpus\62_Spiral1Corpus.tlog\62_Spiral1Corpus.lastbuildstate" のタッチ タスクを実行しています。
+    77>プロジェクト "C:\Users\sokyu\Desktop\SGE4\62_Spiral1Corpus\62_Spiral1Corpus.vcxproj" (既定のターゲット) のビルドが完了しました。
+    73>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\63_D3D12RepresentationCandidate\63_D3D12.58ABE945.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\63_D3D12RepresentationCandidate\63_D3D12.58ABE945.tlog\63_D3D12RepresentationCandidate.lastbuildstate" のタッチ タスクを実行しています。
+    73>プロジェクト "C:\Users\sokyu\Desktop\SGE4\63_D3D12RepresentationCandidate\63_D3D12RepresentationCandidate.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 17 上に "C:\Users\sokyu\Desktop\SGE4\84_HierarchyRepresentationPlanner\84_HierarchyRepresentationPlanner.vcxproj" (83) をビルドしています (既定のターゲット)。
+    83>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     6>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 2 上に "C:\Users\sokyu\Desktop\SGE4\85_HierarchyRepresentationVerifier\85_HierarchyRepresentationVerifier.vcxproj" (74) をビルドしています (既定のターゲット)。
+    74>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    83>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\84_HierarchyRepresentationPlanner\84_Hiera.84000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\84_HierarchyRepresentationPlanner\84_Hiera.84000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    69>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\82_Spiral2Corpus\82_Spiral2Corpus.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\82_Spiral2Corpus\82_Spiral2Corpus.tlog\82_Spiral2Corpus.lastbuildstate" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 21 上に "C:\Users\sokyu\Desktop\SGE4\22_SdfFrontend\22_SdfFrontend.vcxproj" (30) をビルドしています (既定のターゲット)。
+    30>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    69>プロジェクト "C:\Users\sokyu\Desktop\SGE4\82_Spiral2Corpus\82_Spiral2Corpus.vcxproj" (既定のターゲット) のビルドが完了しました。
+    74>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\85_HierarchyRepresentationVerifier\85_Hiera.85000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\85_HierarchyRepresentationVerifier\85_Hiera.85000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     6>ClCompile:
+         すべての出力が最新のものです。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 24 上に "C:\Users\sokyu\Desktop\SGE4\64_D3D12RepresentationPlanner\64_D3D12RepresentationPlanner.vcxproj" (79) をビルドしています (既定のターゲット)。
+    79>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 32 上に "C:\Users\sokyu\Desktop\SGE4\23_PgaFrontend\23_PgaFrontend.vcxproj" (55) をビルドしています (既定のターゲット)。
+    55>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 9 上に "C:\Users\sokyu\Desktop\SGE4\65_D3D12RepresentationVerifier\65_D3D12RepresentationVerifier.vcxproj" (66) をビルドしています (既定のターゲット)。
+    66>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 20 上に "C:\Users\sokyu\Desktop\SGE4\67_Spiral1Observer\67_Spiral1Observer.vcxproj" (62) をビルドしています (既定のターゲット)。
+    62>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    30>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_SdfFrontend\22_SdfFrontend.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_SdfFrontend\22_SdfFrontend.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    25>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\07_ExecutionPlanVerifier\07_Execu.2294F963.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\07_ExecutionPlanVerifier\07_Execu.2294F963.tlog\07_ExecutionPlanVerifier.lastbuildstate" のタッチ タスクを実行しています。
+     6>Lib:
+         すべての出力が最新のものです。
+         19_CompositionVerifier.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\19_CompositionVerifier.lib
+    25>プロジェクト "C:\Users\sokyu\Desktop\SGE4\07_ExecutionPlanVerifier\07_ExecutionPlanVerifier.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 27 上に "C:\Users\sokyu\Desktop\SGE4\21_ClassicalFrontend\21_ClassicalFrontend.vcxproj" (31) をビルドしています (既定のターゲット)。
+    31>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    79>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\64_D3D12RepresentationPlanner\64_D3D12.63AA3064.tlog\unsuccessfulbuild" を作成しています。
+    66>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\65_D3D12RepresentationVerifier\65_D3D12.199C7BC4.tlog\unsuccessfulbuild" を作成しています。
+    79>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\64_D3D12RepresentationPlanner\64_D3D12.63AA3064.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    66>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\65_D3D12RepresentationVerifier\65_D3D12.199C7BC4.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    62>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\67_Spiral1Observer\67_Spira.2E5DA1BF.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\67_Spiral1Observer\67_Spira.2E5DA1BF.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    55>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_PgaFrontend\23_PgaFrontend.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_PgaFrontend\23_PgaFrontend.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    31>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_ClassicalFrontend\21_Class.4851AD1A.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_ClassicalFrontend\21_Class.4851AD1A.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 12 上に "C:\Users\sokyu\Desktop\SGE4\91_Spiral2DynamicInvocationTests\91_Spiral2DynamicInvocationTests.vcxproj" (81) をビルドしています (既定のターゲット)。
+    81>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 26 上に "C:\Users\sokyu\Desktop\SGE4\90_Spiral2SemanticTests\90_Spiral2SemanticTests.vcxproj" (84) をビルドしています (既定のターゲット)。
+    84>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    30>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 10 上に "C:\Users\sokyu\Desktop\SGE4\11_D3D12PackageLowering\11_D3D12PackageLowering.vcxproj" (8) をビルドしています (既定のターゲット)。
+     8>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    79>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    66>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    79>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    66>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     6>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\19_CompositionVerifier\19_Compo.AA35ACAB.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\19_CompositionVerifier\19_Compo.AA35ACAB.tlog\19_CompositionVerifier.lastbuildstate" のタッチ タスクを実行しています。
+    62>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+     6>プロジェクト "C:\Users\sokyu\Desktop\SGE4\19_CompositionVerifier\19_CompositionVerifier.vcxproj" (既定のターゲット) のビルドが完了しました。
+    62>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    81>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\91_Spiral2DynamicInvocationTests\91_Spira.91000000.tlog\unsuccessfulbuild" を作成しています。
+    62>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    81>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\91_Spiral2DynamicInvocationTests\91_Spira.91000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 8 上に "C:\Users\sokyu\Desktop\SGE4\08_CandidatePlanner\08_CandidatePlanner.vcxproj" (28) をビルドしています (既定のターゲット)。
+    28>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    55>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     8>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\11_D3D12PackageLowering\11_D3D12.F6ADFCA2.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\11_D3D12PackageLowering\11_D3D12.F6ADFCA2.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    31>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    84>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\90_Spiral2SemanticTests\90_Spira.90000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\90_Spiral2SemanticTests\90_Spira.90000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    66>ClCompile:
+         すべての出力が最新のものです。
+    30>ClCompile:
+         すべての出力が最新のものです。
+    62>ClCompile:
+         すべての出力が最新のものです。
+    28>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\08_CandidatePlanner\08_Candi.C00D749F.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\08_CandidatePlanner\08_Candi.C00D749F.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    55>ClCompile:
+         すべての出力が最新のものです。
+    66>Lib:
+         すべての出力が最新のものです。
+         65_D3D12RepresentationVerifier.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\65_D3D12RepresentationVerifier.lib
+    79>ClCompile:
+         すべての出力が最新のものです。
+    62>Lib:
+         すべての出力が最新のものです。
+         67_Spiral1Observer.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\67_Spiral1Observer.lib
+    30>Lib:
+         すべての出力が最新のものです。
+         22_SdfFrontend.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\22_SdfFrontend.lib
+    55>Lib:
+         すべての出力が最新のものです。
+         23_PgaFrontend.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\23_PgaFrontend.lib
+    31>ClCompile:
+         すべての出力が最新のものです。
+     8>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    31>Lib:
+         すべての出力が最新のものです。
+         21_ClassicalFrontend.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\21_ClassicalFrontend.lib
+    84>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    79>Lib:
+         すべての出力が最新のものです。
+    81>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    28>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    81>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    28>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    79>Lib:
+         64_D3D12RepresentationPlanner.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\64_D3D12RepresentationPlanner.lib
+     8>ClCompile:
+         すべての出力が最新のものです。
+    66>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\65_D3D12RepresentationVerifier\65_D3D12.199C7BC4.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\65_D3D12RepresentationVerifier\65_D3D12.199C7BC4.tlog\65_D3D12RepresentationVerifier.lastbuildstate" のタッチ タスクを実行しています。
+    66>プロジェクト "C:\Users\sokyu\Desktop\SGE4\65_D3D12RepresentationVerifier\65_D3D12RepresentationVerifier.vcxproj" (既定のターゲット) のビルドが完了しました。
+    62>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\67_Spiral1Observer\67_Spira.2E5DA1BF.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\67_Spiral1Observer\67_Spira.2E5DA1BF.tlog\67_Spiral1Observer.lastbuildstate" のタッチ タスクを実行しています。
+    62>プロジェクト "C:\Users\sokyu\Desktop\SGE4\67_Spiral1Observer\67_Spiral1Observer.vcxproj" (既定のターゲット) のビルドが完了しました。
+     8>Lib:
+         すべての出力が最新のものです。
+         11_D3D12PackageLowering.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\11_D3D12PackageLowering.lib
+    74>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    84>ClCompile:
+         すべての出力が最新のものです。
+    83>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    81>ClCompile:
+         すべての出力が最新のものです。
+    83>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    55>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_PgaFrontend\23_PgaFrontend.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_PgaFrontend\23_PgaFrontend.tlog\23_PgaFrontend.lastbuildstate" のタッチ タスクを実行しています。
+    55>プロジェクト "C:\Users\sokyu\Desktop\SGE4\23_PgaFrontend\23_PgaFrontend.vcxproj" (既定のターゲット) のビルドが完了しました。
+    31>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_ClassicalFrontend\21_Class.4851AD1A.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_ClassicalFrontend\21_Class.4851AD1A.tlog\21_ClassicalFrontend.lastbuildstate" のタッチ タスクを実行しています。
+    28>ClCompile:
+         すべての出力が最新のものです。
+    31>プロジェクト "C:\Users\sokyu\Desktop\SGE4\21_ClassicalFrontend\21_ClassicalFrontend.vcxproj" (既定のターゲット) のビルドが完了しました。
+    74>ClCompile:
+         すべての出力が最新のものです。
+    30>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_SdfFrontend\22_SdfFrontend.tlog\unsuccessfulbuild" を削除しています。
+    83>ClCompile:
+         すべての出力が最新のものです。
+    30>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_SdfFrontend\22_SdfFrontend.tlog\22_SdfFrontend.lastbuildstate" のタッチ タスクを実行しています。
+    84>Link:
+         すべての出力が最新のものです。
+         90_Spiral2SemanticTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\90_Spiral2SemanticTests.exe
+    30>プロジェクト "C:\Users\sokyu\Desktop\SGE4\22_SdfFrontend\22_SdfFrontend.vcxproj" (既定のターゲット) のビルドが完了しました。
+    74>Lib:
+         すべての出力が最新のものです。
+         85_HierarchyRepresentationVerifier.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\85_HierarchyRepresentationVerifier.lib
+    79>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\64_D3D12RepresentationPlanner\64_D3D12.63AA3064.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\64_D3D12RepresentationPlanner\64_D3D12.63AA3064.tlog\64_D3D12RepresentationPlanner.lastbuildstate" のタッチ タスクを実行しています。
+    83>Lib:
+         すべての出力が最新のものです。
+         84_HierarchyRepresentationPlanner.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\84_HierarchyRepresentationPlanner.lib
+    79>プロジェクト "C:\Users\sokyu\Desktop\SGE4\64_D3D12RepresentationPlanner\64_D3D12RepresentationPlanner.vcxproj" (既定のターゲット) のビルドが完了しました。
+    28>Lib:
+         すべての出力が最新のものです。
+         08_CandidatePlanner.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\08_CandidatePlanner.lib
+     8>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\11_D3D12PackageLowering\11_D3D12.F6ADFCA2.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\11_D3D12PackageLowering\11_D3D12.F6ADFCA2.tlog\11_D3D12PackageLowering.lastbuildstate" のタッチ タスクを実行しています。
+     8>プロジェクト "C:\Users\sokyu\Desktop\SGE4\11_D3D12PackageLowering\11_D3D12PackageLowering.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 27 上に "C:\Users\sokyu\Desktop\SGE4\70_Spiral1SemanticTests\70_Spiral1SemanticTests.vcxproj" (64) をビルドしています (既定のターゲット)。
+    64>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    81>Link:
+         すべての出力が最新のものです。
+         91_Spiral2DynamicInvocationTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\91_Spiral2DynamicInvocationTests.exe
+    84>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\90_Spiral2SemanticTests\90_Spira.90000000.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\90_Spiral2SemanticTests\90_Spira.90000000.tlog\90_Spiral2SemanticTests.lastbuildstate" のタッチ タスクを実行しています。
+    84>プロジェクト "C:\Users\sokyu\Desktop\SGE4\90_Spiral2SemanticTests\90_Spiral2SemanticTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    64>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\70_Spiral1SemanticTests\70_Spira.D52FC7FC.tlog\unsuccessfulbuild" を作成しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 24 上に "C:\Users\sokyu\Desktop\SGE4\20_CompositionDeviceDomain\20_CompositionDeviceDomain.vcxproj" (2) をビルドしています (既定のターゲット)。
+     2>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    64>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\70_Spiral1SemanticTests\70_Spira.D52FC7FC.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    83>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\84_HierarchyRepresentationPlanner\84_Hiera.84000000.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\84_HierarchyRepresentationPlanner\84_Hiera.84000000.tlog\84_HierarchyRepresentationPlanner.lastbuildstate" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 23 上に "C:\Users\sokyu\Desktop\SGE4\71_Spiral1RepresentationPlanningTests\71_Spiral1RepresentationPlanningTests.vcxproj" (76) をビルドしています (既定のターゲット)。
+    76>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    74>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\85_HierarchyRepresentationVerifier\85_Hiera.85000000.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\85_HierarchyRepresentationVerifier\85_Hiera.85000000.tlog\85_HierarchyRepresentationVerifier.lastbuildstate" のタッチ タスクを実行しています。
+    83>プロジェクト "C:\Users\sokyu\Desktop\SGE4\84_HierarchyRepresentationPlanner\84_HierarchyRepresentationPlanner.vcxproj" (既定のターゲット) のビルドが完了しました。
+    74>プロジェクト "C:\Users\sokyu\Desktop\SGE4\85_HierarchyRepresentationVerifier\85_HierarchyRepresentationVerifier.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 14 上に "C:\Users\sokyu\Desktop\SGE4\72_Spiral1RepresentationAuthorityTests\72_Spiral1RepresentationAuthorityTests.vcxproj" (58) をビルドしています (既定のターゲット)。
+    58>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     2>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_CompositionDeviceDomain\20_Compo.13F3BD48.tlog\unsuccessfulbuild" を作成しています。
+    76>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\71_Spiral1RepresentationPlanningTests\71_Spira.1496CCF5.tlog\unsuccessfulbuild" を作成しています。
+     2>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_CompositionDeviceDomain\20_Compo.13F3BD48.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    76>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\71_Spiral1RepresentationPlanningTests\71_Spira.1496CCF5.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    58>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\72_Spiral1RepresentationAuthorityTests\72_Spira.166759A2.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\72_Spiral1RepresentationAuthorityTests\72_Spira.166759A2.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    81>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\91_Spiral2DynamicInvocationTests\91_Spira.91000000.tlog\unsuccessfulbuild" を削除しています。
+    28>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\08_CandidatePlanner\08_Candi.C00D749F.tlog\unsuccessfulbuild" を削除しています。
+    81>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\91_Spiral2DynamicInvocationTests\91_Spira.91000000.tlog\91_Spiral2DynamicInvocationTests.lastbuildstate" のタッチ タスクを実行しています。
+    28>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\08_CandidatePlanner\08_Candi.C00D749F.tlog\08_CandidatePlanner.lastbuildstate" のタッチ タスクを実行しています。
+    81>プロジェクト "C:\Users\sokyu\Desktop\SGE4\91_Spiral2DynamicInvocationTests\91_Spiral2DynamicInvocationTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    28>プロジェクト "C:\Users\sokyu\Desktop\SGE4\08_CandidatePlanner\08_CandidatePlanner.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 28 上に "C:\Users\sokyu\Desktop\SGE4\93_Spiral2AuthorityMutationTests\93_Spiral2AuthorityMutationTests.vcxproj" (86) をビルドしています (既定のターゲット)。
+    86>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+       InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\93_Spiral2AuthorityMutationTests\93_Spira.93000000.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\93_Spiral2AuthorityMutationTests\93_Spira.93000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 2 上に "C:\Users\sokyu\Desktop\SGE4\30_SemanticContractTests\30_SemanticContractTests.vcxproj" (23) をビルドしています (既定のターゲット)。
+    23>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 19 上に "C:\Users\sokyu\Desktop\SGE4\24_SliceScenarios\24_SliceScenarios.vcxproj" (60) をビルドしています (既定のターゲット)。
+    60>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    64>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     2>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 14 上に "C:\Users\sokyu\Desktop\SGE4\92_Spiral2CandidateGraphTests\92_Spiral2CandidateGraphTests.vcxproj" (85) をビルドしています (既定のターゲット)。
+    85>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    23>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\30_SemanticContractTests\30_Seman.B00A71C3.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\30_SemanticContractTests\30_Seman.B00A71C3.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 16 上に "C:\Users\sokyu\Desktop\SGE4\12_SGE4_5Compiler\12_SGE4_5Compiler.vcxproj" (15) をビルドしています (既定のターゲット)。
+    15>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    60>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\24_SliceScenarios\24_Slice.6CE731FF.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\24_SliceScenarios\24_Slice.6CE731FF.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 10 上に "C:\Users\sokyu\Desktop\SGE4\28_SGE3CompatibilityOracle\28_SGE3CompatibilityOracle.vcxproj" (22) をビルドしています (既定のターゲット)。
+    22>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    76>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    85>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\92_Spiral2CandidateGraphTests\92_Spira.92000000.tlog\unsuccessfulbuild" を作成しています。
+    76>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    85>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\92_Spiral2CandidateGraphTests\92_Spira.92000000.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    64>ClCompile:
+         すべての出力が最新のものです。
+     2>ClCompile:
+         すべての出力が最新のものです。
+    22>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\28_SGE3CompatibilityOracle\28_SGE3C.CD61DDAC.tlog\unsuccessfulbuild" を作成しています。
+    15>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\12_SGE4_5Compiler\12_SGE4_.74C98EAC.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\12_SGE4_5Compiler\12_SGE4_.74C98EAC.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    22>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\28_SGE3CompatibilityOracle\28_SGE3C.CD61DDAC.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     2>Lib:
+         すべての出力が最新のものです。
+         20_CompositionDeviceDomain.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\20_CompositionDeviceDomain.lib
+    76>ClCompile:
+         すべての出力が最新のものです。
+    58>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    64>Link:
+         すべての出力が最新のものです。
+    86>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    64>Link:
+         70_Spiral1SemanticTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\70_Spiral1SemanticTests.exe
+    58>ClCompile:
+         すべての出力が最新のものです。
+    22>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+     2>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_CompositionDeviceDomain\20_Compo.13F3BD48.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\20_CompositionDeviceDomain\20_Compo.13F3BD48.tlog\20_CompositionDeviceDomain.lastbuildstate" のタッチ タスクを実行しています。
+     2>プロジェクト "C:\Users\sokyu\Desktop\SGE4\20_CompositionDeviceDomain\20_CompositionDeviceDomain.vcxproj" (既定のターゲット) のビルドが完了しました。
+    76>Link:
+         すべての出力が最新のものです。
+    15>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    76>Link:
+         71_Spiral1RepresentationPlanningTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\71_Spiral1RepresentationPlanningTests.exe
+    60>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    23>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    60>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    23>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    64>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\70_Spiral1SemanticTests\70_Spira.D52FC7FC.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\70_Spiral1SemanticTests\70_Spira.D52FC7FC.tlog\70_Spiral1SemanticTests.lastbuildstate" のタッチ タスクを実行しています。
+    86>ClCompile:
+         すべての出力が最新のものです。
+    58>Link:
+         すべての出力が最新のものです。
+    64>プロジェクト "C:\Users\sokyu\Desktop\SGE4\70_Spiral1SemanticTests\70_Spiral1SemanticTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    58>Link:
+         72_Spiral1RepresentationAuthorityTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\72_Spiral1RepresentationAuthorityTests.exe
+    22>ClCompile:
+         すべての出力が最新のものです。
+    23>ClCompile:
+         すべての出力が最新のものです。
+    60>ClCompile:
+         すべての出力が最新のものです。
+    22>Lib:
+         すべての出力が最新のものです。
+         28_SGE3CompatibilityOracle.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\28_SGE3CompatibilityOracle.lib
+    76>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\71_Spiral1RepresentationPlanningTests\71_Spira.1496CCF5.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\71_Spiral1RepresentationPlanningTests\71_Spira.1496CCF5.tlog\71_Spiral1RepresentationPlanningTests.lastbuildstate" のタッチ タスクを実行しています。
+    76>プロジェクト "C:\Users\sokyu\Desktop\SGE4\71_Spiral1RepresentationPlanningTests\71_Spiral1RepresentationPlanningTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    60>Lib:
+         すべての出力が最新のものです。
+         24_SliceScenarios.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\24_SliceScenarios.lib
+    85>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    23>Link:
+         すべての出力が最新のものです。
+    86>Link:
+         すべての出力が最新のものです。
+    15>ClCompile:
+         すべての出力が最新のものです。
+    23>Link:
+         30_SemanticContractTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\30_SemanticContractTests.exe
+    86>Link:
+         93_Spiral2AuthorityMutationTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\93_Spiral2AuthorityMutationTests.exe
+    15>Lib:
+         すべての出力が最新のものです。
+         12_SGE4_5Compiler.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\12_SGE4_5Compiler.lib
+    85>ClCompile:
+         すべての出力が最新のものです。
+    22>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\28_SGE3CompatibilityOracle\28_SGE3C.CD61DDAC.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\28_SGE3CompatibilityOracle\28_SGE3C.CD61DDAC.tlog\28_SGE3CompatibilityOracle.lastbuildstate" のタッチ タスクを実行しています。
+    22>プロジェクト "C:\Users\sokyu\Desktop\SGE4\28_SGE3CompatibilityOracle\28_SGE3CompatibilityOracle.vcxproj" (既定のターゲット) のビルドが完了しました。
+    23>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\30_SemanticContractTests\30_Seman.B00A71C3.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\30_SemanticContractTests\30_Seman.B00A71C3.tlog\30_SemanticContractTests.lastbuildstate" のタッチ タスクを実行しています。
+    86>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\93_Spiral2AuthorityMutationTests\93_Spira.93000000.tlog\unsuccessfulbuild" を削除しています。
+    60>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\24_SliceScenarios\24_Slice.6CE731FF.tlog\unsuccessfulbuild" を削除しています。
+    86>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\93_Spiral2AuthorityMutationTests\93_Spira.93000000.tlog\93_Spiral2AuthorityMutationTests.lastbuildstate" のタッチ タスクを実行しています。
+    60>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\24_SliceScenarios\24_Slice.6CE731FF.tlog\24_SliceScenarios.lastbuildstate" のタッチ タスクを実行しています。
+    85>Link:
+         すべての出力が最新のものです。
+    86>プロジェクト "C:\Users\sokyu\Desktop\SGE4\93_Spiral2AuthorityMutationTests\93_Spiral2AuthorityMutationTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    23>プロジェクト "C:\Users\sokyu\Desktop\SGE4\30_SemanticContractTests\30_SemanticContractTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    85>Link:
+         92_Spiral2CandidateGraphTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\92_Spiral2CandidateGraphTests.exe
+    60>プロジェクト "C:\Users\sokyu\Desktop\SGE4\24_SliceScenarios\24_SliceScenarios.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 28 上に "C:\Users\sokyu\Desktop\SGE4\21_CompositionSharedResources\21_CompositionSharedResources.vcxproj" (27) をビルドしています (既定のターゲット)。
+    27>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    15>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\12_SGE4_5Compiler\12_SGE4_.74C98EAC.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\12_SGE4_5Compiler\12_SGE4_.74C98EAC.tlog\12_SGE4_5Compiler.lastbuildstate" のタッチ タスクを実行しています。
+    15>プロジェクト "C:\Users\sokyu\Desktop\SGE4\12_SGE4_5Compiler\12_SGE4_5Compiler.vcxproj" (既定のターゲット) のビルドが完了しました。
+    27>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_CompositionSharedResources\21_Compo.D4D1200E.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_CompositionSharedResources\21_Compo.D4D1200E.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    85>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\92_Spiral2CandidateGraphTests\92_Spira.92000000.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\92_Spiral2CandidateGraphTests\92_Spira.92000000.tlog\92_Spiral2CandidateGraphTests.lastbuildstate" のタッチ タスクを実行しています。
+    85>プロジェクト "C:\Users\sokyu\Desktop\SGE4\92_Spiral2CandidateGraphTests\92_Spiral2CandidateGraphTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 18 上に "C:\Users\sokyu\Desktop\SGE4\51_PackageCompiler\51_PackageCompiler.vcxproj" (53) をビルドしています (既定のターゲット)。
+    53>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 6 上に "C:\Users\sokyu\Desktop\SGE4\32_CompilerPipelineTests\32_CompilerPipelineTests.vcxproj" (33) をビルドしています (既定のターゲット)。
+    33>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 22 上に "C:\Users\sokyu\Desktop\SGE4\34_AuthorityTests\34_AuthorityTests.vcxproj" (39) をビルドしています (既定のターゲット)。
+    39>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 13 上に "C:\Users\sokyu\Desktop\SGE4\44_CanonicalFreezeTests\44_CanonicalFreezeTests.vcxproj" (56) をビルドしています (既定のターゲット)。
+    56>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 31 上に "C:\Users\sokyu\Desktop\SGE4\38_AdversarialBoundaryTests\38_AdversarialBoundaryTests.vcxproj" (36) をビルドしています (既定のターゲット)。
+    36>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 15 上に "C:\Users\sokyu\Desktop\SGE4\43_GeneratedGraphTests\43_GeneratedGraphTests.vcxproj" (61) をビルドしています (既定のターゲット)。
+    61>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 29 上に "C:\Users\sokyu\Desktop\SGE4\37_RuntimeSemanticTests\37_RuntimeSemanticTests.vcxproj" (48) をビルドしています (既定のターゲット)。
+    48>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 10 上に "C:\Users\sokyu\Desktop\SGE4\41_SliceExecutionTests\41_SliceExecutionTests.vcxproj" (47) をビルドしています (既定のターゲット)。
+    47>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 12 上に "C:\Users\sokyu\Desktop\SGE4\39_FrontendEquivalenceTests\39_FrontendEquivalenceTests.vcxproj" (46) をビルドしています (既定のターゲット)。
+    46>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 2 上に "C:\Users\sokyu\Desktop\SGE4\47_CanonicalCompositionAuthorityTests\47_CanonicalCompositionAuthorityTests.vcxproj" (49) をビルドしています (既定のターゲット)。
+    49>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    58>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\72_Spiral1RepresentationAuthorityTests\72_Spira.166759A2.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\72_Spiral1RepresentationAuthorityTests\72_Spira.166759A2.tlog\72_Spiral1RepresentationAuthorityTests.lastbuildstate" のタッチ タスクを実行しています。
+    33>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\32_CompilerPipelineTests\32_Compi.68B1E383.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\32_CompilerPipelineTests\32_Compi.68B1E383.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 17 上に "C:\Users\sokyu\Desktop\SGE4\40_SliceScenarioTests\40_SliceScenarioTests.vcxproj" (40) をビルドしています (既定のターゲット)。
+    40>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    58>プロジェクト "C:\Users\sokyu\Desktop\SGE4\72_Spiral1RepresentationAuthorityTests\72_Spiral1RepresentationAuthorityTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    39>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\34_AuthorityTests\34_Autho.1F21609A.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\34_AuthorityTests\34_Autho.1F21609A.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 16 上に "C:\Users\sokyu\Desktop\SGE4\66_Spiral1LeafCompiler\66_Spiral1LeafCompiler.vcxproj" (63) をビルドしています (既定のターゲット)。
+    63>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    36>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\38_AdversarialBoundaryTests\38_Adver.B185CEF9.tlog\unsuccessfulbuild" を作成しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 26 上に "C:\Users\sokyu\Desktop\SGE4\42_MetamorphicTests\42_MetamorphicTests.vcxproj" (44) をビルドしています (既定のターゲット)。
+    44>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    36>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\38_AdversarialBoundaryTests\38_Adver.B185CEF9.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 11 上に "C:\Users\sokyu\Desktop\SGE4\45_PlannedRuntimeTests\45_PlannedRuntimeTests.vcxproj" (52) をビルドしています (既定のターゲット)。
+    52>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    61>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\43_GeneratedGraphTests\43_Gener.7EAE2D41.tlog\unsuccessfulbuild" を作成しています。
+    47>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\41_SliceExecutionTests\41_Slice.EB1D860B.tlog\unsuccessfulbuild" を作成しています。
+    46>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\39_FrontendEquivalenceTests\39_Front.F94F0B46.tlog\unsuccessfulbuild" を作成しています。
+    61>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\43_GeneratedGraphTests\43_Gener.7EAE2D41.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    49>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\47_CanonicalCompositionAuthorityTests\47_Canon.3FA0F416.tlog\unsuccessfulbuild" を作成しています。
+    47>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\41_SliceExecutionTests\41_Slice.EB1D860B.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    46>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\39_FrontendEquivalenceTests\39_Front.F94F0B46.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    49>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\47_CanonicalCompositionAuthorityTests\47_Canon.3FA0F416.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    53>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\51_PackageCompiler\51_Packa.91E50F86.tlog\unsuccessfulbuild" を作成しています。
+    40>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\40_SliceScenarioTests\40_Slice.E91EC5EA.tlog\unsuccessfulbuild" を作成しています。
+    53>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\51_PackageCompiler\51_Packa.91E50F86.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    48>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\37_RuntimeSemanticTests\37_Runti.980CACDA.tlog\unsuccessfulbuild" を作成しています。
+    40>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\40_SliceScenarioTests\40_Slice.E91EC5EA.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    48>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\37_RuntimeSemanticTests\37_Runti.980CACDA.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    56>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\44_CanonicalFreezeTests\44_Canon.A97E98EB.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\44_CanonicalFreezeTests\44_Canon.A97E98EB.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    63>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\66_Spiral1LeafCompiler\66_Spira.FB73E81C.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\66_Spiral1LeafCompiler\66_Spira.FB73E81C.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    44>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\42_MetamorphicTests\42_Metam.0BA55D0F.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\42_MetamorphicTests\42_Metam.0BA55D0F.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    52>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\45_PlannedRuntimeTests\45_Plann.E386E5F1.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\45_PlannedRuntimeTests\45_Plann.E386E5F1.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    27>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    49>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 30 上に "C:\Users\sokyu\Desktop\SGE4\33_PlanningTests\33_PlanningTests.vcxproj" (20) をビルドしています (既定のターゲット)。
+    20>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    49>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    27>ClCompile:
+         すべての出力が最新のものです。
+       Lib:
+         すべての出力が最新のものです。
+    56>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    27>Lib:
+         21_CompositionSharedResources.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\21_CompositionSharedResources.lib
+    63>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    20>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\33_PlanningTests\33_PlanningTests.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\33_PlanningTests\33_PlanningTests.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    49>ClCompile:
+         すべての出力が最新のものです。
+    47>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    33>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    47>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    61>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    53>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    39>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    33>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    47>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    39>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    53>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    61>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    39>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    53>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    36>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    61>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    40>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    46>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    52>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+    46>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    40>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    46>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    40>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    52>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+    36>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    52>ComputeStdModulesCompileInputs:
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    44>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    56>ClCompile:
+         すべての出力が最新のものです。
+    48>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    33>ClCompile:
+         すべての出力が最新のものです。
+    63>ClCompile:
+         すべての出力が最新のものです。
+    53>ClCompile:
+         すべての出力が最新のものです。
+    47>ClCompile:
+         すべての出力が最新のものです。
+    61>ClCompile:
+         すべての出力が最新のものです。
+    36>ClCompile:
+         すべての出力が最新のものです。
+    52>ClCompile:
+         すべての出力が最新のものです。
+    39>ClCompile:
+         すべての出力が最新のものです。
+    40>ClCompile:
+         すべての出力が最新のものです。
+    46>ClCompile:
+         すべての出力が最新のものです。
+    44>ClCompile:
+         すべての出力が最新のものです。
+    63>Lib:
+         すべての出力が最新のものです。
+         66_Spiral1LeafCompiler.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\66_Spiral1LeafCompiler.lib
+    48>ClCompile:
+         すべての出力が最新のものです。
+    36>Link:
+         すべての出力が最新のものです。
+    33>Link:
+         すべての出力が最新のものです。
+    36>Link:
+         38_AdversarialBoundaryTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\38_AdversarialBoundaryTests.exe
+    61>Link:
+         すべての出力が最新のものです。
+    27>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_CompositionSharedResources\21_Compo.D4D1200E.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\21_CompositionSharedResources\21_Compo.D4D1200E.tlog\21_CompositionSharedResources.lastbuildstate" のタッチ タスクを実行しています。
+    33>Link:
+         32_CompilerPipelineTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\32_CompilerPipelineTests.exe
+    49>Link:
+         すべての出力が最新のものです。
+    61>Link:
+         43_GeneratedGraphTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\43_GeneratedGraphTests.exe
+    27>プロジェクト "C:\Users\sokyu\Desktop\SGE4\21_CompositionSharedResources\21_CompositionSharedResources.vcxproj" (既定のターゲット) のビルドが完了しました。
+    56>Link:
+         すべての出力が最新のものです。
+    47>Link:
+         すべての出力が最新のものです。
+    49>Link:
+         47_CanonicalCompositionAuthorityTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\47_CanonicalCompositionAuthorityTests.exe
+    53>Link:
+         すべての出力が最新のものです。
+    52>Link:
+         すべての出力が最新のものです。
+    47>Link:
+         41_SliceExecutionTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\41_SliceExecutionTests.exe
+    53>Link:
+         51_PackageCompiler.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\51_PackageCompiler.exe
+    52>Link:
+         45_PlannedRuntimeTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\45_PlannedRuntimeTests.exe
+    56>Link:
+         44_CanonicalFreezeTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\44_CanonicalFreezeTests.exe
+    63>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\66_Spiral1LeafCompiler\66_Spira.FB73E81C.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\66_Spiral1LeafCompiler\66_Spira.FB73E81C.tlog\66_Spiral1LeafCompiler.lastbuildstate" のタッチ タスクを実行しています。
+    46>Link:
+         すべての出力が最新のものです。
+    63>プロジェクト "C:\Users\sokyu\Desktop\SGE4\66_Spiral1LeafCompiler\66_Spiral1LeafCompiler.vcxproj" (既定のターゲット) のビルドが完了しました。
+    44>Link:
+         すべての出力が最新のものです。
+    48>Link:
+         すべての出力が最新のものです。
+    46>Link:
+         39_FrontendEquivalenceTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\39_FrontendEquivalenceTests.exe
+    40>Link:
+         すべての出力が最新のものです。
+    44>Link:
+         42_MetamorphicTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\42_MetamorphicTests.exe
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 30 上に "C:\Users\sokyu\Desktop\SGE4\22_CompositionRuntime\22_CompositionRuntime.vcxproj" (3) をビルドしています (既定のターゲット)。
+     3>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    40>Link:
+         40_SliceScenarioTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\40_SliceScenarioTests.exe
+    48>Link:
+         37_RuntimeSemanticTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\37_RuntimeSemanticTests.exe
+    39>Link:
+         すべての出力が最新のものです。
+         34_AuthorityTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\34_AuthorityTests.exe
+    36>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\38_AdversarialBoundaryTests\38_Adver.B185CEF9.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\38_AdversarialBoundaryTests\38_Adver.B185CEF9.tlog\38_AdversarialBoundaryTests.lastbuildstate" のタッチ タスクを実行しています。
+    36>プロジェクト "C:\Users\sokyu\Desktop\SGE4\38_AdversarialBoundaryTests\38_AdversarialBoundaryTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+     3>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_CompositionRuntime\22_Compo.7191079C.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_CompositionRuntime\22_Compo.7191079C.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    49>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\47_CanonicalCompositionAuthorityTests\47_Canon.3FA0F416.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\47_CanonicalCompositionAuthorityTests\47_Canon.3FA0F416.tlog\47_CanonicalCompositionAuthorityTests.lastbuildstate" のタッチ タスクを実行しています。
+    53>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\51_PackageCompiler\51_Packa.91E50F86.tlog\unsuccessfulbuild" を削除しています。
+    49>プロジェクト "C:\Users\sokyu\Desktop\SGE4\47_CanonicalCompositionAuthorityTests\47_CanonicalCompositionAuthorityTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    53>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\51_PackageCompiler\51_Packa.91E50F86.tlog\51_PackageCompiler.lastbuildstate" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 4 上に "C:\Users\sokyu\Desktop\SGE4\78_Spiral1PerformanceExperiment\78_Spiral1PerformanceExperiment.vcxproj" (67) をビルドしています (既定のターゲット)。
+    67>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    53>プロジェクト "C:\Users\sokyu\Desktop\SGE4\51_PackageCompiler\51_PackageCompiler.vcxproj" (既定のターゲット) のビルドが完了しました。
+    47>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\41_SliceExecutionTests\41_Slice.EB1D860B.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\41_SliceExecutionTests\41_Slice.EB1D860B.tlog\41_SliceExecutionTests.lastbuildstate" のタッチ タスクを実行しています。
+    48>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\37_RuntimeSemanticTests\37_Runti.980CACDA.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\37_RuntimeSemanticTests\37_Runti.980CACDA.tlog\37_RuntimeSemanticTests.lastbuildstate" のタッチ タスクを実行しています。
+    47>プロジェクト "C:\Users\sokyu\Desktop\SGE4\41_SliceExecutionTests\41_SliceExecutionTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    48>プロジェクト "C:\Users\sokyu\Desktop\SGE4\37_RuntimeSemanticTests\37_RuntimeSemanticTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    33>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\32_CompilerPipelineTests\32_Compi.68B1E383.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\32_CompilerPipelineTests\32_Compi.68B1E383.tlog\32_CompilerPipelineTests.lastbuildstate" のタッチ タスクを実行しています。
+    33>プロジェクト "C:\Users\sokyu\Desktop\SGE4\32_CompilerPipelineTests\32_CompilerPipelineTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    20>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    46>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\39_FrontendEquivalenceTests\39_Front.F94F0B46.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\39_FrontendEquivalenceTests\39_Front.F94F0B46.tlog\39_FrontendEquivalenceTests.lastbuildstate" のタッチ タスクを実行しています。
+    46>プロジェクト "C:\Users\sokyu\Desktop\SGE4\39_FrontendEquivalenceTests\39_FrontendEquivalenceTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    52>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\45_PlannedRuntimeTests\45_Plann.E386E5F1.tlog\unsuccessfulbuild" を削除しています。
+    44>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\42_MetamorphicTests\42_Metam.0BA55D0F.tlog\unsuccessfulbuild" を削除しています。
+    52>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\45_PlannedRuntimeTests\45_Plann.E386E5F1.tlog\45_PlannedRuntimeTests.lastbuildstate" のタッチ タスクを実行しています。
+    44>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\42_MetamorphicTests\42_Metam.0BA55D0F.tlog\42_MetamorphicTests.lastbuildstate" のタッチ タスクを実行しています。
+    67>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\78_Spiral1PerformanceExperiment\78_Spira.6957EDE8.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\78_Spiral1PerformanceExperiment\78_Spira.6957EDE8.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    52>プロジェクト "C:\Users\sokyu\Desktop\SGE4\45_PlannedRuntimeTests\45_PlannedRuntimeTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    44>プロジェクト "C:\Users\sokyu\Desktop\SGE4\42_MetamorphicTests\42_MetamorphicTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    56>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\44_CanonicalFreezeTests\44_Canon.A97E98EB.tlog\unsuccessfulbuild" を削除しています。
+    61>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\43_GeneratedGraphTests\43_Gener.7EAE2D41.tlog\unsuccessfulbuild" を削除しています。
+    56>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\44_CanonicalFreezeTests\44_Canon.A97E98EB.tlog\44_CanonicalFreezeTests.lastbuildstate" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 6 上に "C:\Users\sokyu\Desktop\SGE4\73_Spiral1LeafPackageTests\73_Spiral1LeafPackageTests.vcxproj" (71) をビルドしています (既定のターゲット)。
+    71>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    61>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\43_GeneratedGraphTests\43_Gener.7EAE2D41.tlog\43_GeneratedGraphTests.lastbuildstate" のタッチ タスクを実行しています。
+    56>プロジェクト "C:\Users\sokyu\Desktop\SGE4\44_CanonicalFreezeTests\44_CanonicalFreezeTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    61>プロジェクト "C:\Users\sokyu\Desktop\SGE4\43_GeneratedGraphTests\43_GeneratedGraphTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    20>ClCompile:
+         すべての出力が最新のものです。
+    71>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\73_Spiral1LeafPackageTests\73_Spira.07F63C76.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\73_Spiral1LeafPackageTests\73_Spira.07F63C76.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    39>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\34_AuthorityTests\34_Autho.1F21609A.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\34_AuthorityTests\34_Autho.1F21609A.tlog\34_AuthorityTests.lastbuildstate" のタッチ タスクを実行しています。
+    39>プロジェクト "C:\Users\sokyu\Desktop\SGE4\34_AuthorityTests\34_AuthorityTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    40>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\40_SliceScenarioTests\40_Slice.E91EC5EA.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\40_SliceScenarioTests\40_Slice.E91EC5EA.tlog\40_SliceScenarioTests.lastbuildstate" のタッチ タスクを実行しています。
+    40>プロジェクト "C:\Users\sokyu\Desktop\SGE4\40_SliceScenarioTests\40_SliceScenarioTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    20>Link:
+         すべての出力が最新のものです。
+         33_PlanningTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\33_PlanningTests.exe
+    67>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    71>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    67>ClCompile:
+         すべての出力が最新のものです。
+    71>ClCompile:
+         すべての出力が最新のものです。
+    67>Lib:
+         すべての出力が最新のものです。
+         78_Spiral1PerformanceExperiment.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\78_Spiral1PerformanceExperiment.lib
+     3>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    71>Link:
+         すべての出力が最新のものです。
+         73_Spiral1LeafPackageTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\73_Spiral1LeafPackageTests.exe
+     3>ClCompile:
+         すべての出力が最新のものです。
+       Lib:
+         すべての出力が最新のものです。
+         22_CompositionRuntime.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\22_CompositionRuntime.lib
+    67>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\78_Spiral1PerformanceExperiment\78_Spira.6957EDE8.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\78_Spiral1PerformanceExperiment\78_Spira.6957EDE8.tlog\78_Spiral1PerformanceExperiment.lastbuildstate" のタッチ タスクを実行しています。
+    67>プロジェクト "C:\Users\sokyu\Desktop\SGE4\78_Spiral1PerformanceExperiment\78_Spiral1PerformanceExperiment.vcxproj" (既定のターゲット) のビルドが完了しました。
+    71>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\73_Spiral1LeafPackageTests\73_Spira.07F63C76.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\73_Spiral1LeafPackageTests\73_Spira.07F63C76.tlog\73_Spiral1LeafPackageTests.lastbuildstate" のタッチ タスクを実行しています。
+    71>プロジェクト "C:\Users\sokyu\Desktop\SGE4\73_Spiral1LeafPackageTests\73_Spiral1LeafPackageTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    20>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\33_PlanningTests\33_PlanningTests.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\33_PlanningTests\33_PlanningTests.tlog\33_PlanningTests.lastbuildstate" のタッチ タスクを実行しています。
+    20>プロジェクト "C:\Users\sokyu\Desktop\SGE4\33_PlanningTests\33_PlanningTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+     3>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_CompositionRuntime\22_Compo.7191079C.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\22_CompositionRuntime\22_Compo.7191079C.tlog\22_CompositionRuntime.lastbuildstate" のタッチ タスクを実行しています。
+     3>プロジェクト "C:\Users\sokyu\Desktop\SGE4\22_CompositionRuntime\22_CompositionRuntime.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 30 上に "C:\Users\sokyu\Desktop\SGE4\79_Spiral1Launcher\79_Spiral1Launcher.vcxproj" (68) をビルドしています (既定のターゲット)。
+    68>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 26 上に "C:\Users\sokyu\Desktop\SGE4\23_CompositionRecovery\23_CompositionRecovery.vcxproj" (17) をビルドしています (既定のターゲット)。
+    17>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 25 上に "C:\Users\sokyu\Desktop\SGE4\68_Spiral1Scenarios\68_Spiral1Scenarios.vcxproj" (78) をビルドしています (既定のターゲット)。
+    78>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 8 上に "C:\Users\sokyu\Desktop\SGE4\48_CanonicalCompositionRuntimeTests\48_CanonicalCompositionRuntimeTests.vcxproj" (38) をビルドしています (既定のターゲット)。
+    38>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    17>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_CompositionRecovery\23_Compo.BF0A3D6B.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_CompositionRecovery\23_Compo.BF0A3D6B.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    68>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\79_Spiral1Launcher\79_Spira.64710978.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\79_Spiral1Launcher\79_Spira.64710978.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    78>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\68_Spiral1Scenarios\68_Spira.A2777EDF.tlog\unsuccessfulbuild" を作成しています。
+    38>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\48_CanonicalCompositionRuntimeTests\48_Canon.A37DDF36.tlog\unsuccessfulbuild" を作成しています。
+    78>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\68_Spiral1Scenarios\68_Spira.A2777EDF.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    38>InitializeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\48_CanonicalCompositionRuntimeTests\48_Canon.A37DDF36.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    68>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    17>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    68>ClCompile:
+         すべての出力が最新のものです。
+    38>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    78>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    17>ClCompile:
+         すべての出力が最新のものです。
+    68>Link:
+         すべての出力が最新のものです。
+         79_Spiral1Launcher.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\79_Spiral1Launcher.exe
+    17>Lib:
+         すべての出力が最新のものです。
+         23_CompositionRecovery.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\23_CompositionRecovery.lib
+    78>ClCompile:
+         すべての出力が最新のものです。
+    38>ClCompile:
+         すべての出力が最新のものです。
+    78>Lib:
+         すべての出力が最新のものです。
+         68_Spiral1Scenarios.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\68_Spiral1Scenarios.lib
+    68>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\79_Spiral1Launcher\79_Spira.64710978.tlog\unsuccessfulbuild" を削除しています。
+    17>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_CompositionRecovery\23_Compo.BF0A3D6B.tlog\unsuccessfulbuild" を削除しています。
+    68>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\79_Spiral1Launcher\79_Spira.64710978.tlog\79_Spiral1Launcher.lastbuildstate" のタッチ タスクを実行しています。
+    17>FinalizeBuildStatus:
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\23_CompositionRecovery\23_Compo.BF0A3D6B.tlog\23_CompositionRecovery.lastbuildstate" のタッチ タスクを実行しています。
+    68>プロジェクト "C:\Users\sokyu\Desktop\SGE4\79_Spiral1Launcher\79_Spiral1Launcher.vcxproj" (既定のターゲット) のビルドが完了しました。
+    17>プロジェクト "C:\Users\sokyu\Desktop\SGE4\23_CompositionRecovery\23_CompositionRecovery.vcxproj" (既定のターゲット) のビルドが完了しました。
+    38>Link:
+         すべての出力が最新のものです。
+         48_CanonicalCompositionRuntimeTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\48_CanonicalCompositionRuntimeTests.exe
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 28 上に "C:\Users\sokyu\Desktop\SGE4\49_CanonicalCompositionRecoveryTests\49_CanonicalCompositionRecoveryTests.vcxproj" (43) をビルドしています (既定のターゲット)。
+    43>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    78>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\68_Spiral1Scenarios\68_Spira.A2777EDF.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\68_Spiral1Scenarios\68_Spira.A2777EDF.tlog\68_Spiral1Scenarios.lastbuildstate" のタッチ タスクを実行しています。
+    78>プロジェクト "C:\Users\sokyu\Desktop\SGE4\68_Spiral1Scenarios\68_Spiral1Scenarios.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 30 上に "C:\Users\sokyu\Desktop\SGE4\49A_CanonicalLevel4v1FreezeTests\49A_CanonicalLevel4v1FreezeTests.vcxproj" (54) をビルドしています (既定のターゲット)。
+    54>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    43>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49_CanonicalCompositionRecoveryTests\49_Canon.ACCAB7B4.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49_CanonicalCompositionRecoveryTests\49_Canon.ACCAB7B4.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    54>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49A_CanonicalLevel4v1FreezeTests\49A_Cano.D2BFEFB8.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49A_CanonicalLevel4v1FreezeTests\49A_Cano.D2BFEFB8.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 10 上に "C:\Users\sokyu\Desktop\SGE4\77_Spiral1FreezeTests\77_Spiral1FreezeTests.vcxproj" (72) をビルドしています (既定のターゲット)。
+    72>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 21 上に "C:\Users\sokyu\Desktop\SGE4\75_Spiral1WarpObservationTests\75_Spiral1WarpObservationTests.vcxproj" (75) をビルドしています (既定のターゲット)。
+    75>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    38>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\48_CanonicalCompositionRuntimeTests\48_Canon.A37DDF36.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\48_CanonicalCompositionRuntimeTests\48_Canon.A37DDF36.tlog\48_CanonicalCompositionRuntimeTests.lastbuildstate" のタッチ タスクを実行しています。
+    38>プロジェクト "C:\Users\sokyu\Desktop\SGE4\48_CanonicalCompositionRuntimeTests\48_CanonicalCompositionRuntimeTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 26 上に "C:\Users\sokyu\Desktop\SGE4\74_Spiral1CompositionTests\74_Spiral1CompositionTests.vcxproj" (59) をビルドしています (既定のターゲット)。
+    59>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+    72>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\77_Spiral1FreezeTests\77_Spira.50A8A8C6.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\77_Spiral1FreezeTests\77_Spira.50A8A8C6.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    75>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\75_Spiral1WarpObservationTests\75_Spira.40EA33AE.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\75_Spiral1WarpObservationTests\75_Spira.40EA33AE.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    59>InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\74_Spiral1CompositionTests\74_Spira.80F7AD33.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\74_Spiral1CompositionTests\74_Spira.80F7AD33.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (1) は、ノード 8 上に "C:\Users\sokyu\Desktop\SGE4\76_Spiral1RecoveryTests\76_Spiral1RecoveryTests.vcxproj" (70) をビルドしています (既定のターゲット)。
+    70>PrepareForBuild:
+         構造化出力が有効になっています。コンパイラ診断の書式設定にはエラー階層が反映されます。詳細については、https://aka.ms/cpp/structured-output を参照してください。
+       InitializeBuildStatus:
+         "AlwaysCreate" が指定されたため "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\76_Spiral1RecoveryTests\76_Spira.CDFF1ED7.tlog\unsuccessfulbuild" を作成しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\76_Spiral1RecoveryTests\76_Spira.CDFF1ED7.tlog\unsuccessfulbuild" のタッチ タスクを実行しています。
+    72>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    75>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    59>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    54>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    72>ClCompile:
+         すべての出力が最新のものです。
+    75>ClCompile:
+         すべての出力が最新のものです。
+    70>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    59>ClCompile:
+         すべての出力が最新のものです。
+    54>ClCompile:
+         すべての出力が最新のものです。
+    43>ComputeStdModulesCompileInputs:
+         ライブラリ 'microsoft/STL' のデータを提供するライブラリ マニフェスト ファイル 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\modules.json' を読み取っています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.ixx' を追加しています。
+         このプロジェクトでビルドするライブラリ 'microsoft/STL' からモジュール ソース 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\modules\std.compat.ixx' を追加しています。
+    70>ClCompile:
+         すべての出力が最新のものです。
+    72>Link:
+         すべての出力が最新のものです。
+         77_Spiral1FreezeTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\77_Spiral1FreezeTests.exe
+    75>Link:
+         すべての出力が最新のものです。
+    59>Link:
+         すべての出力が最新のものです。
+    75>Link:
+         75_Spiral1WarpObservationTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\75_Spiral1WarpObservationTests.exe
+    59>Link:
+         74_Spiral1CompositionTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\74_Spiral1CompositionTests.exe
+    43>ClCompile:
+         すべての出力が最新のものです。
+    54>Link:
+         すべての出力が最新のものです。
+         49A_CanonicalLevel4v1FreezeTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\49A_CanonicalLevel4v1FreezeTests.exe
+    70>Link:
+         すべての出力が最新のものです。
+         76_Spiral1RecoveryTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\76_Spiral1RecoveryTests.exe
+    75>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\75_Spiral1WarpObservationTests\75_Spira.40EA33AE.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\75_Spiral1WarpObservationTests\75_Spira.40EA33AE.tlog\75_Spiral1WarpObservationTests.lastbuildstate" のタッチ タスクを実行しています。
+    72>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\77_Spiral1FreezeTests\77_Spira.50A8A8C6.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\77_Spiral1FreezeTests\77_Spira.50A8A8C6.tlog\77_Spiral1FreezeTests.lastbuildstate" のタッチ タスクを実行しています。
+    75>プロジェクト "C:\Users\sokyu\Desktop\SGE4\75_Spiral1WarpObservationTests\75_Spiral1WarpObservationTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    59>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\74_Spiral1CompositionTests\74_Spira.80F7AD33.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\74_Spiral1CompositionTests\74_Spira.80F7AD33.tlog\74_Spiral1CompositionTests.lastbuildstate" のタッチ タスクを実行しています。
+    72>プロジェクト "C:\Users\sokyu\Desktop\SGE4\77_Spiral1FreezeTests\77_Spiral1FreezeTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    59>プロジェクト "C:\Users\sokyu\Desktop\SGE4\74_Spiral1CompositionTests\74_Spiral1CompositionTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    43>Link:
+         すべての出力が最新のものです。
+         49_CanonicalCompositionRecoveryTests.vcxproj -> C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\49_CanonicalCompositionRecoveryTests.exe
+    54>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49A_CanonicalLevel4v1FreezeTests\49A_Cano.D2BFEFB8.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49A_CanonicalLevel4v1FreezeTests\49A_Cano.D2BFEFB8.tlog\49A_CanonicalLevel4v1FreezeTests.lastbuildstate" のタッチ タスクを実行しています。
+    70>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\76_Spiral1RecoveryTests\76_Spira.CDFF1ED7.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\76_Spiral1RecoveryTests\76_Spira.CDFF1ED7.tlog\76_Spiral1RecoveryTests.lastbuildstate" のタッチ タスクを実行しています。
+    54>プロジェクト "C:\Users\sokyu\Desktop\SGE4\49A_CanonicalLevel4v1FreezeTests\49A_CanonicalLevel4v1FreezeTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    70>プロジェクト "C:\Users\sokyu\Desktop\SGE4\76_Spiral1RecoveryTests\76_Spiral1RecoveryTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+    43>FinalizeBuildStatus:
+         ファイル "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49_CanonicalCompositionRecoveryTests\49_Canon.ACCAB7B4.tlog\unsuccessfulbuild" を削除しています。
+         "C:\Users\sokyu\Desktop\SGE4\build\obj\x64\Debug\49_CanonicalCompositionRecoveryTests\49_Canon.ACCAB7B4.tlog\49_CanonicalCompositionRecoveryTests.lastbuildstate" のタッチ タスクを実行しています。
+    43>プロジェクト "C:\Users\sokyu\Desktop\SGE4\49_CanonicalCompositionRecoveryTests\49_CanonicalCompositionRecoveryTests.vcxproj" (既定のターゲット) のビルドが完了しました。
+     1>プロジェクト "C:\Users\sokyu\Desktop\SGE4\SemanticGpuEngine4-5.sln" (Build ターゲット) のビルドが完了しました。
+
+ビルドに成功しました。
+    0 個の警告
+    0 エラー
+
+経過時間 00:00:04.85
+
+========================================================================
+Running 30_SemanticContractTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\30_SemanticContractTests.exe"
+Stage-E static completeness plus generic operand, parameter identity, dependency, lifetime, alias, and resource-contract analysis tests passed.
+
+========================================================================
+Running 31_PackageContractTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\31_PackageContractTests.exe"
+Package contract tests passed.
+
+========================================================================
+Running 32_CompilerPipelineTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\32_CompilerPipelineTests.exe"
+Stage-H non-historical Graph compilation, Stage-F explicit signal identity, Stage-E typed pipeline, reflection, and generic Package lowering tests passed.
+
+========================================================================
+Running 33_PlanningTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\33_PlanningTests.exe"
+SGE4 obligation, Plan IR, independent verifier, candidates, policy, and profile tests passed.
+CanonicalSafe reproduced SGE3 oracle Package bytes for the fixed 54-Package corpus.
+
+========================================================================
+Running 34_AuthorityTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\34_AuthorityTests.exe"
+[PASS] raw-plan-lowering-requires-verifier
+[PASS] verifier-seal-rejects-corrupt-identity
+[PASS] binding-root-index-authority
+[PASS] binding-descriptor-index-authority
+[PASS] signal-point-authority
+[PASS] resource-allocation-reference-authority
+[PASS] invalid-state-negative-control
+[PASS] allocation-field-positive-control
+[PASS] queue-field-positive-control
+[PASS] profile-valid-reselection
+[PASS] profile-creates-distinct-package
+[PASS] profile-rejects-contract-digest
+[PASS] profile-rejects-plan-identity
+[PASS] profile-rejects-package-digest
+[PASS] profile-rejects-adapter-fingerprint
+[PASS] profile-rejects-scenario-digest
+[PASS] profile-rejects-insufficient-samples
+
+Authority tests passed: 17, failed: 0
+SGE4 VERIFIED PLAN AUTHORITY TESTS PASSED
+The verified ExecutionPlanIR is authoritative for all currently represented decisions.
+
+========================================================================
+Running 35_D3D12ConformanceTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\35_D3D12ConformanceTests.exe"
+D3D12 slice-13 operation and recovery-interface conformance tests passed.
+
+========================================================================
+Running 38_AdversarialBoundaryTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\38_AdversarialBoundaryTests.exe"
+Stage-L adversarial boundary / backend conformance...
+  operation registry: 26 opcode/version contracts are unique and match every baseline Package.
+  core reader: 9 corrupt container mutations rejected before Package decode.
+  core writer: 4 invalid construction contracts rejected before serialization.
+  D3D12 schema: 40 re-digested reference/operation mutations rejected before D3D12 materialization.
+Stage-L adversarial boundary and backend conformance passed.
+
+========================================================================
+Running 39_FrontendEquivalenceTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\39_FrontendEquivalenceTests.exe"
+PGA join, meet, incidence, finite normalization, and ideal-point rejection passed.
+Classical explicit-mesh, SDF half-space, and PGA line-algebra frontends converged to bit-identical geometry, Semantic execution, and Frozen Package bytes.
+Experiment equivalence test passed.
+
+========================================================================
+Running 40_SliceScenarioTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\40_SliceScenarioTests.exe"
+  passed: Slice 1 Fixed Triangle [Neutral]
+  passed: Slice 2 Dynamic constant slot / FrameInvocation [Neutral]
+  passed: Slice 3 Buffer initial upload + Readback [Neutral]
+  passed: Slice 4 Texture2D + Texture Readback [Neutral]
+  passed: Slice 5 Depth attachment [Neutral]
+  passed: Slice 6 Compute Work [Neutral]
+  passed: Slice 7 Copy Work / Copy queue [Neutral]
+  passed: Slice 8 Multiple queues / handoff [Neutral]
+  passed: Slice 9 FrameLocal resource [Neutral]
+  passed: Slice 10 Temporal resource [Neutral]
+  passed: Slice 11 Aliasing [Neutral]
+  passed: Slice 12 External resource Acquire / Release [Neutral]
+  passed: Slice 13 Device loss and reconstruction [Neutral]
+  passed: Slice 14 Classical / SDF common experiment [Classical]
+  passed: Slice 14 Classical / SDF common experiment [SDF]
+  passed: Slice 15 PGA direct frontend [Classical]
+  passed: Slice 15 PGA direct frontend [SDF]
+  passed: Slice 15 PGA direct frontend [PGA]
+Slice 1-15 Stage-A reconstruction passed: 18 inputs used one general Compiler path.
+
+========================================================================
+Running 42_MetamorphicTests
+========================================================================
+> "C:\Users\sokyu\Desktop\SGE4\build\bin\x64\Debug\42_MetamorphicTests.exe"
+Stage-I equivalent-representation laws...
+  equivalent: top-level storage permutation
+  equivalent: WorkOperand / ProgramParameter vector permutation
+  equivalent: diagnostic-name mutation
+  equivalent: transitively redundant explicit dependency
+  equivalent: derived hazards restated as explicit dependencies
+  equivalent: explicit dependency vector permutation
+  equivalent: Raster vertex-input / operand permutation
+Stage-I semantic-sensitivity laws...
+  sensitive:  Compute dispatch dimensions
+  sensitive:  Copy byte count
+  sensitive:  Shader binary semantics
+  sensitive:  ProgramParameter shader register
+  sensitive:  Resource shape
+  sensitive:  Queue profile / fallback assignment
+  sensitive:  Raster vertex count
+Stage-I rejection-boundary laws...
+  rejected:   dependency cycle at semantic-analysis
+  rejected:   duplicate ProgramParameter binding at semantic-analysis
+  rejected:   unknown ProgramParameter identity at semantic-analysis
+  rejected:   duplicate ProgramParameter declaration identity at semantic-analysis
+  rejected:   Copy range overflow at semantic-analysis
+  rejected:   unsupported queue topology at target-feasibility
+Stage-I canonicalization and metamorphic laws passed.
+
+========================================================================
+SGE4-5 test suite passed: Gate (Debug)
+========================================================================
