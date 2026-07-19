@@ -12,6 +12,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $testsRoot 'tools\Sha256.ps1')
 
 function Invoke-Checked([string]$FilePath, [string[]]$Arguments = @()) {
     & $FilePath @Arguments
@@ -73,7 +74,7 @@ Invoke-Checked $debugExe @($emit,$b)
 Invoke-Checked $releaseExe @($emit,$r)
 if (-not (Test-BytesEqual $a $b)) { throw 'Fresh Debug Frozen Leaf evidence differs.' }
 if (-not (Test-BytesEqual $a $r)) { throw 'Debug and Release Frozen Leaf evidence differs.' }
-$digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $a).Hash
+$digest = Get-SGE4FileSha256 $a
 
 Write-Host '============================================================'
 if ($Mode -eq 'Stage08') {

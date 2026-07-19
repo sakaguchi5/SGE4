@@ -11,6 +11,7 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $OutputEncoding = $utf8NoBom
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $testsRoot 'tools\Sha256.ps1')
 
 function Invoke-Checked([string]$FilePath, [string[]]$Arguments = @()) {
     & $FilePath @Arguments
@@ -117,11 +118,11 @@ Invoke-Checked (Join-Path $debug '77_Spiral1FreezeTests.exe') @('--emit',$freeze
 Invoke-Checked (Join-Path $release '77_Spiral1FreezeTests.exe') @('--emit',$freezeR)
 Assert-Triplet 'architecture final freeze' $freezeA $freezeB $freezeR
 
-$architectureDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $archA).Hash
-$warpDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $warpA).Hash
-$recoveryDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $recoveryA).Hash
-$freshRematerializationDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $freshBefore).Hash
-$freezeDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $freezeA).Hash
+$architectureDigest = Get-SGE4FileSha256 $archA
+$warpDigest = Get-SGE4FileSha256 $warpA
+$recoveryDigest = Get-SGE4FileSha256 $recoveryA
+$freshRematerializationDigest = Get-SGE4FileSha256 $freshBefore
+$freezeDigest = Get-SGE4FileSha256 $freezeA
 
 Write-Host '============================================================'
 if ($Mode -eq 'Stage12') {

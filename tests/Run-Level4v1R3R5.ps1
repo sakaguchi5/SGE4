@@ -11,6 +11,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $testsRoot 'tools\Sha256.ps1')
 $solution = Join-Path $root 'SemanticGpuEngine4-5.sln'
 $outputRoot = Join-Path $root 'build/tests/level4v1-r3-r5'
 $logRoot = Join-Path $root 'docs/test-logs'
@@ -93,7 +94,7 @@ function Run-R5 {
     Invoke-Native 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'Run-Level4v1R1.ps1'),'-NoBuild','-SkipFoundationFreeze')
     Invoke-Native (Join-Path $testsRoot 'run_architecture.bat')
     if (-not $SkipFoundationFreeze) { Invoke-Native (Join-Path $testsRoot 'run_freeze.bat') }
-    $digest=(Get-FileHash -Algorithm SHA256 -LiteralPath $a).Hash.ToUpperInvariant()
+    $digest=(Get-SGE4FileSha256 $a).ToUpperInvariant()
     Write-Host ''
     Write-Host '============================================================'
     Write-Host 'SGE4 LEVEL 4 V1 CANONICAL FREEZE PASSED'

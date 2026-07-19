@@ -12,6 +12,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $testsRoot 'tools\Sha256.ps1')
 $solution = Join-Path $root 'SemanticGpuEngine4-5.sln'
 $outputRoot = Join-Path $root 'build/tests/level4v1-r1'
 $logRoot = Join-Path $root 'docs/test-logs'
@@ -89,7 +90,7 @@ try {
     }
 
     $fileInfo = Get-Item -LiteralPath $debugA
-    $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $debugA).Hash.ToUpperInvariant()
+    $digest = (Get-SGE4FileSha256 $debugA).ToUpperInvariant()
     Write-Host ''
     Write-Host '============================================================'
     Write-Host 'SGE4 LEVEL 4 V1 CANONICAL R1 FROZEN COMPOSITION BOUNDARY PASSED'

@@ -12,6 +12,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $testsRoot 'tools\Sha256.ps1')
 
 function Invoke-Checked([string]$FilePath, [string[]]$Arguments = @()) {
     & $FilePath @Arguments
@@ -80,7 +81,7 @@ if ($Mode -eq 'Stage10' -or $Mode -eq 'CU4') {
     Invoke-Checked $releaseExe @('--emit',$r)
     if (-not (Test-BytesEqual $a $b)) { throw 'Fresh Debug Frozen Comparison architecture evidence differs.' }
     if (-not (Test-BytesEqual $a $r)) { throw 'Debug and Release Frozen Comparison architecture evidence differs.' }
-    $architectureDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $a).Hash
+    $architectureDigest = Get-SGE4FileSha256 $a
 }
 if ($Mode -eq 'Stage11' -or $Mode -eq 'CU4') {
     $debugExe = Join-Path $root 'build\bin\x64\Debug\75_Spiral1WarpObservationTests.exe'
@@ -93,7 +94,7 @@ if ($Mode -eq 'Stage11' -or $Mode -eq 'CU4') {
     Invoke-Checked $releaseExe @('--emit',$r)
     if (-not (Test-BytesEqual $a $b)) { throw 'Fresh Debug WARP corpus evidence differs.' }
     if (-not (Test-BytesEqual $a $r)) { throw 'Debug and Release WARP corpus evidence differs.' }
-    $warpDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $a).Hash
+    $warpDigest = Get-SGE4FileSha256 $a
 }
 
 Write-Host '============================================================'

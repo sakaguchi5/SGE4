@@ -8,6 +8,7 @@ $OutputEncoding = $utf8NoBom
 $testsRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $root = Split-Path -Parent $testsRoot
 $manifestPath = Join-Path $root 'SOURCE_MANIFEST.sha256'
+. (Join-Path $PSScriptRoot 'Sha256.ps1')
 
 function Normalize-RelativePath([string]$Path) {
     return $Path.Replace('\', '/')
@@ -40,9 +41,7 @@ foreach ($file in Get-ChildItem -Path $root -Recurse -File) {
         throw "Duplicate normalized file path: $relative"
     }
 
-    $digests[$relative] = (
-        Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName
-    ).Hash.ToLowerInvariant()
+    $digests[$relative] = (Get-SGE4FileSha256 $file.FullName).ToLowerInvariant()
 }
 
 $relativePaths = [string[]]@($digests.Keys)

@@ -10,6 +10,7 @@ $OutputEncoding = $utf8NoBom
 
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $testsRoot 'tools\Sha256.ps1')
 $solution = Join-Path $root 'SemanticGpuEngine4-5.sln'
 $logRoot = Join-Path $root 'docs/test-logs'
 New-Item -ItemType Directory -Force -Path $logRoot | Out-Null
@@ -62,8 +63,8 @@ try {
 
     $evidence = Join-Path $root 'build/tests/level4v1-r3-r5/Canonical_R5_Debug_A.txt'
     if (-not (Test-Path -LiteralPath $evidence)) { throw "R5 evidence was not produced: $evidence" }
-    $evidenceDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $evidence).Hash.ToUpperInvariant()
-    $solutionDigest = (Get-FileHash -Algorithm SHA256 -LiteralPath $solution).Hash.ToUpperInvariant()
+    $evidenceDigest = (Get-SGE4FileSha256 $evidence).ToUpperInvariant()
+    $solutionDigest = (Get-SGE4FileSha256 $solution).ToUpperInvariant()
     $projectCount = ([regex]::Matches((Get-Content -Raw -LiteralPath $solution -Encoding UTF8), '(?m)^Project\(')).Count
 
     Write-Host ''

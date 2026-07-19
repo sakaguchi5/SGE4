@@ -20,6 +20,8 @@ function Get-RelativePath([string]$FullName) {
     return Normalize-RelativePath ($FullName.Substring($root.Length).TrimStart('\', '/'))
 }
 
+. (Join-Path $PSScriptRoot 'Sha256.ps1')
+
 $expected = @{}
 $lineNumber = 0
 foreach ($line in Get-Content -LiteralPath $manifestPath -Encoding UTF8) {
@@ -61,9 +63,7 @@ foreach ($file in $actualFiles) {
     if ($actual.ContainsKey($relative)) {
         throw "Duplicate normalized file path: $relative"
     }
-    $actual[$relative] = (
-        Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName
-    ).Hash.ToLowerInvariant()
+    $actual[$relative] = (Get-SGE4FileSha256 $file.FullName).ToLowerInvariant()
 }
 
 $missing = @($expected.Keys | Where-Object { -not $actual.ContainsKey($_) } | Sort-Object)

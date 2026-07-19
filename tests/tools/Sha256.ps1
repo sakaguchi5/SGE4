@@ -1,0 +1,11 @@
+﻿function Get-SGE4FileSha256([string]$Path) {
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($Path)
+    try {
+        return ([BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace('-', '')
+    }
+    finally {
+        $stream.Dispose()
+        $algorithm.Dispose()
+    }
+}

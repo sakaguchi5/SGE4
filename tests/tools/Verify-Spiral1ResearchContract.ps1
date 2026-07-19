@@ -12,12 +12,13 @@ $OutputEncoding = $utf8NoBom
 $toolsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $testsRoot = Split-Path -Parent $toolsRoot
 $root = Split-Path -Parent $testsRoot
+. (Join-Path $PSScriptRoot 'Sha256.ps1')
 $spiralRoot = Join-Path $root 'docs\spiral1'
 $manifestPath = Join-Path $spiralRoot 'CONTRACT_MANIFEST_V1.json'
 $codeBaselinePath = Join-Path $spiralRoot 'F0_CODE_BASELINE.sha256'
 
 function Get-Sha256([string]$Path) {
-    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+    return (Get-SGE4FileSha256 $Path).ToLowerInvariant()
 }
 
 if (-not (Test-Path -LiteralPath $manifestPath)) { throw 'Spiral 1 contract manifest is missing.' }
