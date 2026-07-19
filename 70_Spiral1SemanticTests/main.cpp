@@ -75,12 +75,12 @@ int RunStage04()
     if (sem::ValidatePoint(invalidRange)) return 15;
 
     const auto corpusIdentity = base::Sha256(std::as_bytes(std::span("stage04", 7)));
-    auto apply = sem::BuildApplyPgaMotorSemanticV1(identity, 64, corpusIdentity, con::ObservationContractIdentityV1());
+    auto apply = sem::BuildApplyPgaMotorSemanticV1(identity, 64, corpusIdentity, con::ObservationContractIdentityV2());
     if (!apply) return 16;
     const auto semanticBytesA = sem::SerializeApplyPgaMotorSemanticV1(apply.Value());
     const auto semanticBytesB = sem::SerializeApplyPgaMotorSemanticV1(apply.Value());
     if (semanticBytesA != semanticBytesB || sem::ApplyPgaMotorSemanticIdentityV1(apply.Value()) != base::Sha256(semanticBytesA)) return 17;
-    if (sem::BuildApplyPgaMotorSemanticV1(identity,0,corpusIdentity,con::ObservationContractIdentityV1())) return 18;
+    if (sem::BuildApplyPgaMotorSemanticV1(identity,0,corpusIdentity,con::ObservationContractIdentityV2())) return 18;
     if (sem::BuildApplyPgaMotorSemanticV1(identity,64,corpusIdentity,{})) return 19;
 
     std::cout << "Stage 04 PGA canonical semantic tests passed.\n";
@@ -131,6 +131,8 @@ int RunStage05()
     auto observationBundleB = obs::BuildObservationFoundationBundleV1(corpusB.Value());
     if (!observationBundleA || !observationBundleB || observationBundleA.Value() != observationBundleB.Value()) return 45;
     if (con::SerializeObservationContractV1(con::CanonicalObservationContractV1()).empty() || con::ObservationContractIdentityV1() == base::Digest256{}) return 46;
+    if (con::SerializeObservationContractV2(con::CanonicalObservationContractV2()).empty() || con::ObservationContractIdentityV2() == base::Digest256{}) return 47;
+    if (con::ObservationContractIdentityV1() == con::ObservationContractIdentityV2()) return 48;
 
     std::cout << "Stage 05 corpus, CPU reference, comparison record, and deterministic observer tests passed.\n";
     return 0;
@@ -154,7 +156,7 @@ std::vector<std::byte> BuildStage04Bundle()
     {
         const auto motorBytes = motors[i].Serialize();
         writer.WriteBytes(motorBytes);
-        auto apply = sem::BuildApplyPgaMotorSemanticV1(motors[i],64+i,corpusId,con::ObservationContractIdentityV1());
+        auto apply = sem::BuildApplyPgaMotorSemanticV1(motors[i],64+i,corpusId,con::ObservationContractIdentityV2());
         const auto semanticBytes = sem::SerializeApplyPgaMotorSemanticV1(apply.Value());
         writer.WriteU32(static_cast<std::uint32_t>(semanticBytes.size()));
         writer.WriteBytes(semanticBytes);

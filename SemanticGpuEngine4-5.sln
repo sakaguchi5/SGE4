@@ -140,12 +140,30 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "66_Spiral1LeafCompiler", "6
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "73_Spiral1LeafPackageTests", "73_Spiral1LeafPackageTests\73_Spiral1LeafPackageTests.vcxproj", "{07F63C76-E466-5DDB-85B8-BC81FDE03762}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "68_Spiral1Scenarios", "68_Spiral1Scenarios\68_Spiral1Scenarios.vcxproj", "{A2777EDF-A33A-5FE6-9E04-FB6E9B0B22B5}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "74_Spiral1CompositionTests", "74_Spiral1CompositionTests\74_Spiral1CompositionTests.vcxproj", "{80F7AD33-734F-567C-B263-ACC6DF098F4F}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "75_Spiral1WarpObservationTests", "75_Spiral1WarpObservationTests\75_Spiral1WarpObservationTests.vcxproj", "{40EA33AE-9CFB-5857-A49D-06C9B0A6811C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A2777EDF-A33A-5FE6-9E04-FB6E9B0B22B5}.Debug|x64.ActiveCfg = Debug|x64
+		{A2777EDF-A33A-5FE6-9E04-FB6E9B0B22B5}.Debug|x64.Build.0 = Debug|x64
+		{A2777EDF-A33A-5FE6-9E04-FB6E9B0B22B5}.Release|x64.ActiveCfg = Release|x64
+		{A2777EDF-A33A-5FE6-9E04-FB6E9B0B22B5}.Release|x64.Build.0 = Release|x64
+		{80F7AD33-734F-567C-B263-ACC6DF098F4F}.Debug|x64.ActiveCfg = Debug|x64
+		{80F7AD33-734F-567C-B263-ACC6DF098F4F}.Debug|x64.Build.0 = Debug|x64
+		{80F7AD33-734F-567C-B263-ACC6DF098F4F}.Release|x64.ActiveCfg = Release|x64
+		{80F7AD33-734F-567C-B263-ACC6DF098F4F}.Release|x64.Build.0 = Release|x64
+		{40EA33AE-9CFB-5857-A49D-06C9B0A6811C}.Debug|x64.ActiveCfg = Debug|x64
+		{40EA33AE-9CFB-5857-A49D-06C9B0A6811C}.Debug|x64.Build.0 = Debug|x64
+		{40EA33AE-9CFB-5857-A49D-06C9B0A6811C}.Release|x64.ActiveCfg = Release|x64
+		{40EA33AE-9CFB-5857-A49D-06C9B0A6811C}.Release|x64.Build.0 = Release|x64
 		{58ABE945-096F-573B-98E3-56BC5BF449DE}.Debug|x64.ActiveCfg = Debug|x64
 		{58ABE945-096F-573B-98E3-56BC5BF449DE}.Debug|x64.Build.0 = Debug|x64
 		{58ABE945-096F-573B-98E3-56BC5BF449DE}.Release|x64.ActiveCfg = Release|x64

@@ -35,6 +35,25 @@ struct ObservationContractV1 final
 [[nodiscard]] std::vector<std::byte> SerializeObservationContractV1(const ObservationContractV1& value);
 [[nodiscard]] base::Digest256 ObservationContractIdentityV1();
 
+inline constexpr std::uint32_t ObservationContractSchemaVersionV2 = 2;
+inline constexpr std::uint32_t ToleranceScaleAlgorithmVersionV2 = 2;
+
+struct ObservationContractV2 final
+{
+    std::uint32_t schemaVersion = ObservationContractSchemaVersionV2;
+    std::uint32_t referenceAlgorithmVersion = ReferenceAlgorithmVersionV1;
+    std::uint32_t recordVersion = ComparisonRecordVersionV1;
+    std::uint32_t recordBytes = ComparisonRecordBytesV1;
+    float absoluteTolerance = AbsoluteToleranceV1;
+    float relativeTolerance = RelativeToleranceV1;
+    float pairAbsoluteTolerance = PairAbsoluteToleranceV1;
+    std::uint32_t toleranceScaleAlgorithmVersion = ToleranceScaleAlgorithmVersionV2;
+};
+
+[[nodiscard]] ObservationContractV2 CanonicalObservationContractV2();
+[[nodiscard]] std::vector<std::byte> SerializeObservationContractV2(const ObservationContractV2& value);
+[[nodiscard]] base::Digest256 ObservationContractIdentityV2();
+
 struct PointComparisonRecordV1 final
 {
     std::uint32_t pointIndex = 0;
@@ -54,6 +73,20 @@ static_assert(sizeof(PointComparisonRecordV1) == ComparisonRecordBytesV1);
 [[nodiscard]] bool WithinReferenceTolerance(float actual, float reference) noexcept;
 [[nodiscard]] bool WithinPairTolerance(float matrixValue, float pgaValue) noexcept;
 [[nodiscard]] PointComparisonRecordV1 BuildComparisonRecordV1(
+    std::uint32_t pointIndex,
+    const semantic::Float4Point& reference,
+    const semantic::Float4Point& matrixOutput,
+    const semantic::Float4Point& pgaOutput);
+
+[[nodiscard]] float ReferencePointScaleV2(const semantic::Float4Point& reference) noexcept;
+[[nodiscard]] float PairPointScaleV2(
+    const semantic::Float4Point& matrixOutput,
+    const semantic::Float4Point& pgaOutput) noexcept;
+[[nodiscard]] bool WithinReferenceToleranceV2(
+    float actual, float reference, float referencePointScale) noexcept;
+[[nodiscard]] bool WithinPairToleranceV2(
+    float matrixValue, float pgaValue, float pairPointScale) noexcept;
+[[nodiscard]] PointComparisonRecordV1 BuildComparisonRecordV2(
     std::uint32_t pointIndex,
     const semantic::Float4Point& reference,
     const semantic::Float4Point& matrixOutput,

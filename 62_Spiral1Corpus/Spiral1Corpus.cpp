@@ -330,7 +330,7 @@ std::vector<std::byte> SerializeCorpusFoundationBundleV1(const QualificationCorp
     constexpr std::string_view magic = "SGE4-5.CU1.CorpusFoundation.V1";
     WriteString(writer, magic);
     writer.WriteBytes(corpusValue.contractIdentity);
-    writer.WriteBytes(contracts::ObservationContractIdentityV1());
+    writer.WriteBytes(contracts::ObservationContractIdentityV2());
     writer.WriteU32(16);
     writer.WriteU32(static_cast<std::uint32_t>(corpusValue.cases.size()));
     for (const auto& value : corpusValue.cases)
@@ -353,7 +353,7 @@ std::vector<std::byte> SerializeCorpusFoundationBundleV1(const QualificationCorp
             value.motor,
             static_cast<std::uint32_t>(value.inputPoints.size()),
             value.caseIdentity,
-            contracts::ObservationContractIdentityV1());
+            contracts::ObservationContractIdentityV2());
         if (!semanticValue) throw std::runtime_error(semanticValue.Error());
         const auto semanticBytes = semantic::SerializeApplyPgaMotorSemanticV1(semanticValue.Value());
         writer.WriteU32(static_cast<std::uint32_t>(semanticBytes.size()));

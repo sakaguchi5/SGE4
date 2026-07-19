@@ -18,7 +18,7 @@ namespace base=sge4_5::base; namespace sem=sge4_5::spiral1::semantic; namespace 
 namespace cor=sge4_5::spiral1::corpus; namespace rep=sge4_5::spiral1::representation;
 base::Digest256 D(std::string_view s){return base::Sha256(std::as_bytes(std::span(s.data(),s.size())));} 
 rep::RepresentationTargetProfileV1 Profile(){return rep::BuildRepresentationTargetProfileV1(D("CU2.CompilerFixture.V1"),D("CU2.MatrixBinaryFixture.V1"),D("CU2.DirectBinaryFixture.V1")).Value();}
-sem::ApplyPgaMotorSemanticV1 Semantic(const cor::QualificationCaseV1& c){return sem::BuildApplyPgaMotorSemanticV1(c.motor,static_cast<std::uint32_t>(c.inputPoints.size()),c.caseIdentity,con::ObservationContractIdentityV1()).Value();}
+sem::ApplyPgaMotorSemanticV1 Semantic(const cor::QualificationCaseV1& c){return sem::BuildApplyPgaMotorSemanticV1(c.motor,static_cast<std::uint32_t>(c.inputPoints.size()),c.caseIdentity,con::ObservationContractIdentityV2()).Value();}
 float F(std::span<const std::byte> b,std::size_t o){std::uint32_t x=std::to_integer<std::uint8_t>(b[o])|(std::to_integer<std::uint8_t>(b[o+1])<<8)|(std::to_integer<std::uint8_t>(b[o+2])<<16)|(std::to_integer<std::uint8_t>(b[o+3])<<24);return std::bit_cast<float>(x);} 
 int Run(){
  auto corpus=cor::BuildQualificationCorpusV1(); if(!corpus){std::cerr<<corpus.Error()<<'\n';return 1;} auto profile=Profile();
@@ -37,6 +37,13 @@ int Run(){
  if(!rep::ValidateRawRepresentationCandidateStructureV1(m)||!rep::ValidateRawRepresentationCandidateStructureV1(p))return 10;
  if(rep::SerializeRawRepresentationCandidateV1(m)!=rep::SerializeRawRepresentationCandidateV1(m))return 11;
  auto badProfile=rep::BuildRepresentationTargetProfileV1({},D("a"),D("b")); if(badProfile)return 12;
+ const sem::Float4Point conditionedReference{-7322.333f,-6.774168f,3933.261f,1.0f};
+ const sem::Float4Point conditionedMatrix{-7322.333f,-6.7744140625f,3933.26123046875f,1.0f};
+ const sem::Float4Point conditionedPga{-7322.333f,-6.7744140625f,3933.261f,1.0f};
+ const auto legacyRecord=con::BuildComparisonRecordV1(28,conditionedReference,conditionedMatrix,conditionedPga);
+ const auto conditionedRecord=con::BuildComparisonRecordV2(28,conditionedReference,conditionedMatrix,conditionedPga);
+ if(legacyRecord.mismatchFlags==0)return 15;
+ if(conditionedRecord.mismatchFlags!=0)return 16;
  std::cout<<"Stage 06 representation candidate generation tests passed.\n"; return 0;
 }
 std::vector<std::byte> Bundle(){auto corpus=cor::BuildQualificationCorpusV1().Value();auto profile=Profile();base::BinaryWriter w;w.WriteBytes(rep::SerializeRepresentationTargetProfileV1(profile));for(const auto& c:corpus.cases){auto s=Semantic(c);auto all=rep::PlanAllRepresentationCandidatesV1(s,profile).Value();for(const auto& x:all){auto b=rep::SerializeRawRepresentationCandidateV1(x);w.WriteU32(static_cast<std::uint32_t>(b.size()));w.WriteBytes(b);}}return std::move(w).Take();}

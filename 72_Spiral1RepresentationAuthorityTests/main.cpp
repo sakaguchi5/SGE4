@@ -17,7 +17,7 @@ namespace
 namespace base=sge4_5::base; namespace sem=sge4_5::spiral1::semantic; namespace con=sge4_5::spiral1::contracts; namespace cor=sge4_5::spiral1::corpus; namespace rep=sge4_5::spiral1::representation;
 base::Digest256 D(std::string_view s){return base::Sha256(std::as_bytes(std::span(s.data(),s.size())));} 
 rep::RepresentationTargetProfileV1 Profile(std::string_view suffix="A"){return rep::BuildRepresentationTargetProfileV1(D(std::string("Compiler-")+std::string(suffix)),D(std::string("Matrix-")+std::string(suffix)),D(std::string("Direct-")+std::string(suffix))).Value();}
-sem::ApplyPgaMotorSemanticV1 Semantic(const cor::QualificationCaseV1& c){return sem::BuildApplyPgaMotorSemanticV1(c.motor,static_cast<std::uint32_t>(c.inputPoints.size()),c.caseIdentity,con::ObservationContractIdentityV1()).Value();}
+sem::ApplyPgaMotorSemanticV1 Semantic(const cor::QualificationCaseV1& c){return sem::BuildApplyPgaMotorSemanticV1(c.motor,static_cast<std::uint32_t>(c.inputPoints.size()),c.caseIdentity,con::ObservationContractIdentityV2()).Value();}
 void ResealRaw(rep::RawRepresentationCandidateV1& c){c.constantPayloadDigest=base::Sha256(c.constantPayload);c.candidateIdentity=rep::ComputeRawRepresentationCandidateIdentityV1(c);} 
 bool Reject(const sem::ApplyPgaMotorSemanticV1&s,const rep::RepresentationTargetProfileV1&p,const rep::RawRepresentationCandidateV1&c){return !rep::IndependentRepresentationVerifierV1::Verify(s,p,c);} 
 int Run(){

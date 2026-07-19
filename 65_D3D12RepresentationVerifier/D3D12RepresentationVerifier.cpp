@@ -102,7 +102,7 @@ base::Result<VerifiedRepresentationPlanV1, RepresentationVerificationErrorV1> In
     if (candidate.inputSchemaIdentity!=semantic::Float4PointSchemaIdentityV1() || candidate.outputSchemaIdentity!=semantic::Float4PointOutputSchemaIdentityV1() ||
         candidate.inputStrideBytes!=semantic::Float4PointStrideBytesV1 || candidate.outputStrideBytes!=semantic::Float4PointStrideBytesV1)
         return base::Result<VerifiedRepresentationPlanV1,RepresentationVerificationErrorV1>::Failure(Error(RepresentationVerificationErrorCodeV1::SchemaMismatch,"input/output schema mismatch"));
-    if (candidate.observationContractIdentity!=semanticValue.observationContractIdentity || candidate.observationContractIdentity!=contracts::ObservationContractIdentityV1())
+    if (candidate.observationContractIdentity!=semanticValue.observationContractIdentity || candidate.observationContractIdentity!=contracts::ObservationContractIdentityV2())
         return base::Result<VerifiedRepresentationPlanV1,RepresentationVerificationErrorV1>::Failure(Error(RepresentationVerificationErrorCodeV1::ObservationContractMismatch,"observation contract mismatch"));
     if (candidate.pointCount!=semanticValue.pointCount)
         return base::Result<VerifiedRepresentationPlanV1,RepresentationVerificationErrorV1>::Failure(Error(RepresentationVerificationErrorCodeV1::PointCountMismatch,"point count mismatch"));

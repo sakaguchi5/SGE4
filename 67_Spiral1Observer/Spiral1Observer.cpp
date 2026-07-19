@@ -63,7 +63,7 @@ base::Result<ObservationResultV1, std::string> ObserveCaseV1(
         const auto& reference = qualificationCase.referencePoints[index];
         const auto& matrix = matrixOutput[index];
         const auto& pga = pgaOutput[index];
-        auto record = contracts::BuildComparisonRecordV1(index, reference, matrix, pga);
+        auto record = contracts::BuildComparisonRecordV2(index, reference, matrix, pga);
         if ((record.finiteFlags & 0x7u) != 0x7u) ++result.report.nonFiniteCount;
         if (record.mismatchFlags != 0)
         {
@@ -104,7 +104,7 @@ base::Result<std::vector<std::byte>, std::string> BuildObservationFoundationBund
 {
     base::BinaryWriter writer;
     WriteString(writer, "SGE4-5.CU1.SemanticObservationFoundation.V1");
-    const auto observationBytes = contracts::SerializeObservationContractV1(contracts::CanonicalObservationContractV1());
+    const auto observationBytes = contracts::SerializeObservationContractV2(contracts::CanonicalObservationContractV2());
     writer.WriteU32(static_cast<std::uint32_t>(observationBytes.size()));
     writer.WriteBytes(observationBytes);
     const auto corpusBytes = corpus::SerializeCorpusFoundationBundleV1(corpusValue);

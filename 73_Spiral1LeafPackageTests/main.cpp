@@ -92,7 +92,7 @@ sem::ApplyPgaMotorSemanticV1 BuildSemantic(const corpus::QualificationCaseV1& va
 {
     auto semanticValue = sem::BuildApplyPgaMotorSemanticV1(
         value.motor, static_cast<std::uint32_t>(value.inputPoints.size()),
-        value.caseIdentity, contracts::ObservationContractIdentityV1());
+        value.caseIdentity, contracts::ObservationContractIdentityV2());
     if (!semanticValue) throw std::runtime_error(semanticValue.Error());
     return std::move(semanticValue).Value();
 }

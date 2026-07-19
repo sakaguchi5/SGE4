@@ -64,6 +64,35 @@ base::Digest256 ObservationContractIdentityV1()
     return base::Sha256(bytes);
 }
 
+
+ObservationContractV2 CanonicalObservationContractV2() { return {}; }
+
+std::vector<std::byte> SerializeObservationContractV2(const ObservationContractV2& value)
+{
+    base::BinaryWriter writer;
+    constexpr std::string_view schema = "SGE4-5.Spiral1.ObservationContract.V2";
+    writer.WriteU32(static_cast<std::uint32_t>(schema.size()));
+    writer.WriteBytes(std::as_bytes(std::span(schema.data(), schema.size())));
+    writer.WriteU32(value.schemaVersion);
+    writer.WriteU32(value.referenceAlgorithmVersion);
+    writer.WriteU32(value.recordVersion);
+    writer.WriteU32(value.recordBytes);
+    WriteF32(writer, value.absoluteTolerance);
+    WriteF32(writer, value.relativeTolerance);
+    WriteF32(writer, value.pairAbsoluteTolerance);
+    writer.WriteU32(value.toleranceScaleAlgorithmVersion);
+    writer.WriteU32(0); // finite flag layout version
+    writer.WriteU32(0); // mismatch flag layout version
+    writer.WriteU32(1); // point-index ascending aggregation
+    return std::move(writer).Take();
+}
+
+base::Digest256 ObservationContractIdentityV2()
+{
+    const auto bytes = SerializeObservationContractV2(CanonicalObservationContractV2());
+    return base::Sha256(bytes);
+}
+
 std::uint32_t UlpDistance(float a, float b) noexcept
 {
     if (a == 0.0f && b == 0.0f) return 0;
@@ -76,18 +105,20 @@ std::uint32_t UlpDistance(float a, float b) noexcept
 bool WithinReferenceTolerance(float actual, float reference) noexcept
 {
     if (!std::isfinite(actual) || !std::isfinite(reference)) return false;
-    const double difference = std::abs(static_cast<double>(actual) - static_cast<double>(reference));
-    const double limit = static_cast<double>(AbsoluteToleranceV1) +
-        static_cast<double>(RelativeToleranceV1) * std::max(std::abs(static_cast<double>(reference)), 1.0);
+    const float difference = std::abs(actual - reference);
+    const float magnitude = std::max(std::abs(reference), 1.0f);
+    const float scaledTolerance = RelativeToleranceV1 * magnitude;
+    const float limit = AbsoluteToleranceV1 + scaledTolerance;
     return difference <= limit;
 }
 
 bool WithinPairTolerance(float matrixValue, float pgaValue) noexcept
 {
     if (!std::isfinite(matrixValue) || !std::isfinite(pgaValue)) return false;
-    const double difference = std::abs(static_cast<double>(matrixValue) - static_cast<double>(pgaValue));
-    const double magnitude = std::max({std::abs(static_cast<double>(matrixValue)), std::abs(static_cast<double>(pgaValue)), 1.0});
-    const double limit = static_cast<double>(PairAbsoluteToleranceV1) + static_cast<double>(RelativeToleranceV1) * magnitude;
+    const float difference = std::abs(matrixValue - pgaValue);
+    const float magnitude = std::max({std::abs(matrixValue), std::abs(pgaValue), 1.0f});
+    const float scaledTolerance = RelativeToleranceV1 * magnitude;
+    const float limit = PairAbsoluteToleranceV1 + scaledTolerance;
     return difference <= limit;
 }
 
@@ -120,15 +151,99 @@ PointComparisonRecordV1 BuildComparisonRecordV1(
     const std::array<float, 3> p{pgaOutput.x, pgaOutput.y, pgaOutput.z};
     for (std::size_t component = 0; component < 3; ++component)
     {
-        record.matrixAbsError[component] = static_cast<float>(std::abs(static_cast<double>(m[component]) - static_cast<double>(r[component])));
-        record.pgaAbsError[component] = static_cast<float>(std::abs(static_cast<double>(p[component]) - static_cast<double>(r[component])));
-        record.pairAbsError[component] = static_cast<float>(std::abs(static_cast<double>(m[component]) - static_cast<double>(p[component])));
+        const float matrixDifference = m[component] - r[component];
+        const float pgaDifference = p[component] - r[component];
+        const float pairDifference = m[component] - p[component];
+        record.matrixAbsError[component] = std::abs(matrixDifference);
+        record.pgaAbsError[component] = std::abs(pgaDifference);
+        record.pairAbsError[component] = std::abs(pairDifference);
         record.matrixUlp[component] = UlpDistance(m[component], r[component]);
         record.pgaUlp[component] = UlpDistance(p[component], r[component]);
         record.pairUlp[component] = UlpDistance(m[component], p[component]);
         if (!WithinReferenceTolerance(m[component], r[component])) record.mismatchFlags |= 1u << (8u + static_cast<std::uint32_t>(component));
         if (!WithinReferenceTolerance(p[component], r[component])) record.mismatchFlags |= 1u << (12u + static_cast<std::uint32_t>(component));
         if (!WithinPairTolerance(m[component], p[component])) record.mismatchFlags |= 1u << (16u + static_cast<std::uint32_t>(component));
+    }
+    return record;
+}
+
+float ReferencePointScaleV2(const semantic::Float4Point& reference) noexcept
+{
+    return std::max({std::abs(reference.x), std::abs(reference.y), std::abs(reference.z), 1.0f});
+}
+
+float PairPointScaleV2(
+    const semantic::Float4Point& matrixOutput,
+    const semantic::Float4Point& pgaOutput) noexcept
+{
+    return std::max({
+        std::abs(matrixOutput.x), std::abs(matrixOutput.y), std::abs(matrixOutput.z),
+        std::abs(pgaOutput.x), std::abs(pgaOutput.y), std::abs(pgaOutput.z), 1.0f});
+}
+
+bool WithinReferenceToleranceV2(
+    float actual, float reference, float referencePointScale) noexcept
+{
+    if (!std::isfinite(actual) || !std::isfinite(reference) || !std::isfinite(referencePointScale)) return false;
+    const float difference = std::abs(actual - reference);
+    const float scaledTolerance = RelativeToleranceV1 * std::max(referencePointScale, 1.0f);
+    const float limit = AbsoluteToleranceV1 + scaledTolerance;
+    return difference <= limit;
+}
+
+bool WithinPairToleranceV2(
+    float matrixValue, float pgaValue, float pairPointScale) noexcept
+{
+    if (!std::isfinite(matrixValue) || !std::isfinite(pgaValue) || !std::isfinite(pairPointScale)) return false;
+    const float difference = std::abs(matrixValue - pgaValue);
+    const float scaledTolerance = RelativeToleranceV1 * std::max(pairPointScale, 1.0f);
+    const float limit = PairAbsoluteToleranceV1 + scaledTolerance;
+    return difference <= limit;
+}
+
+PointComparisonRecordV1 BuildComparisonRecordV2(
+    std::uint32_t pointIndex,
+    const semantic::Float4Point& reference,
+    const semantic::Float4Point& matrixOutput,
+    const semantic::Float4Point& pgaOutput)
+{
+    PointComparisonRecordV1 record{};
+    record.pointIndex = pointIndex;
+    const bool referenceFinite = IsFinitePoint(reference);
+    const bool matrixFinite = IsFinitePoint(matrixOutput);
+    const bool pgaFinite = IsFinitePoint(pgaOutput);
+    const bool matrixW = IsExactW(matrixOutput);
+    const bool pgaW = IsExactW(pgaOutput);
+    if (referenceFinite) record.finiteFlags |= 1u << 0;
+    if (matrixFinite) record.finiteFlags |= 1u << 1;
+    if (pgaFinite) record.finiteFlags |= 1u << 2;
+    if (matrixW) record.finiteFlags |= 1u << 3;
+    if (pgaW) record.finiteFlags |= 1u << 4;
+    if (!referenceFinite) record.mismatchFlags |= 1u << 0;
+    if (!matrixFinite) record.mismatchFlags |= 1u << 1;
+    if (!pgaFinite) record.mismatchFlags |= 1u << 2;
+    if (!matrixW) record.mismatchFlags |= 1u << 3;
+    if (!pgaW) record.mismatchFlags |= 1u << 4;
+
+    const float referenceScale = ReferencePointScaleV2(reference);
+    const float pairScale = PairPointScaleV2(matrixOutput, pgaOutput);
+    const std::array<float, 3> r{reference.x, reference.y, reference.z};
+    const std::array<float, 3> m{matrixOutput.x, matrixOutput.y, matrixOutput.z};
+    const std::array<float, 3> p{pgaOutput.x, pgaOutput.y, pgaOutput.z};
+    for (std::size_t component = 0; component < 3; ++component)
+    {
+        const float matrixDifference = m[component] - r[component];
+        const float pgaDifference = p[component] - r[component];
+        const float pairDifference = m[component] - p[component];
+        record.matrixAbsError[component] = std::abs(matrixDifference);
+        record.pgaAbsError[component] = std::abs(pgaDifference);
+        record.pairAbsError[component] = std::abs(pairDifference);
+        record.matrixUlp[component] = UlpDistance(m[component], r[component]);
+        record.pgaUlp[component] = UlpDistance(p[component], r[component]);
+        record.pairUlp[component] = UlpDistance(m[component], p[component]);
+        if (!WithinReferenceToleranceV2(m[component], r[component], referenceScale)) record.mismatchFlags |= 1u << (8u + static_cast<std::uint32_t>(component));
+        if (!WithinReferenceToleranceV2(p[component], r[component], referenceScale)) record.mismatchFlags |= 1u << (12u + static_cast<std::uint32_t>(component));
+        if (!WithinPairToleranceV2(m[component], p[component], pairScale)) record.mismatchFlags |= 1u << (16u + static_cast<std::uint32_t>(component));
     }
     return record;
 }

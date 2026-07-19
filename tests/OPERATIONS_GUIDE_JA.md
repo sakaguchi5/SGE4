@@ -799,3 +799,16 @@ CU2最終GateはRaw Candidateの二Lowering、独立Verifierのmutation拒否、
 
 CU3はMatrix／Direct PGAのVerified Representation Planを既存ExecutionPlan authorityへ接続し、
 最終Frozen Package内のShader binary digestと定数payloadを再検証したうえで、代表CorpusをWARP実行する。
+
+
+# Spiral 1 Completion Unit 4
+
+Stage 10、Stage 11、CU4全体は次で実行する。
+
+```powershell
+.\run_sge4_5_stage10_four_leaf_composition.bat
+.\run_sge4_5_stage11_warp_corpus.bat
+.\run_sge4_5_cu4_frozen_comparison.bat
+```
+
+CU4はS00-S15の全Frozen ComparisonをWARPでfresh Debug 2回、Release 1回実行するため、通常のDev Tierより重い。失敗時は`build/tests/spiral1-cu4`のevidenceとコンソール上の最初のscenario failureを確認する。
