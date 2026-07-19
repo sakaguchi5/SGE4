@@ -84,7 +84,7 @@ function Build-Projects([string[]]$ProjectNames) {
         $projectPath = Get-ProjectPath $name
         Invoke-Native $msbuild @(
             $projectPath,
-            '/m', '/nologo', '/t:Build',
+            '/m', '/nr:false', '/nologo', '/t:Build',
             "/p:Configuration=$Configuration",
             '/p:Platform=x64',
             "/p:SolutionDir=$solutionDir"
@@ -101,7 +101,7 @@ function Build-Solution {
     $msbuild = Get-MSBuild
     Invoke-Native $msbuild @(
         (Join-Path $root 'SemanticGpuEngine4-5.sln'),
-        '/m', '/nologo', '/t:Build',
+        '/m', '/nr:false', '/nologo', '/t:Build',
         "/p:Configuration=$Configuration",
         '/p:Platform=x64'
     )

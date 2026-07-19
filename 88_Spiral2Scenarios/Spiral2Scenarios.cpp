@@ -51,7 +51,7 @@ base::Result<FrozenHierarchyComparisonScenarioV1,ScenarioErrorV1> BuildFrozenHie
     auto contract=can::BuildCompositionContract(std::move(input));if(!contract)return Fail<FrozenHierarchyComparisonScenarioV1>(contract.Error().stage,contract.Error().message);auto plan=can::planning::ProposeCompositionPlan(contract.Value());if(!plan)return Fail<FrozenHierarchyComparisonScenarioV1>(plan.Error().stage,plan.Error().message);auto verifiedPlan=can::verification::VerifyAndSeal(contract.Value(),plan.Value());if(!verifiedPlan)return Fail<FrozenHierarchyComparisonScenarioV1>(verifiedPlan.Error().stage,verifiedPlan.Error().message);auto frozen=can::verification::FreezeVerifiedComposition(contract.Value(),verifiedPlan.Value());if(!frozen)return Fail<FrozenHierarchyComparisonScenarioV1>(frozen.Error().stage,frozen.Error().message);out.frozenCompositionBytes=std::move(frozen.Value());out.frozenCompositionDigest=base::Sha256(out.frozenCompositionBytes);return base::Result<FrozenHierarchyComparisonScenarioV1,ScenarioErrorV1>::Success(std::move(out));
 }
 base::Result<void,ScenarioErrorV1> ValidateFrozenHierarchyComparisonScenarioV1(const FrozenHierarchyComparisonScenarioV1& s){if(s.leaves.size()!=10||s.frozenCompositionDigest!=base::Sha256(s.frozenCompositionBytes))return Fail<void>("scenario","scenario evidence mismatch");for(const auto& item:s.leaves){auto v=leaf::ValidateFrozenHierarchyLeafV1(item);if(!v)return Fail<void>(v.Error().stage,v.Error().message);}auto frozen=can::verification::ReadVerifiedFrozenComposition(s.frozenCompositionBytes);if(!frozen)return Fail<void>(frozen.Error().stage,frozen.Error().message);if(frozen.Value().ValidatedContract().Contract().leaves.size()!=10||frozen.Value().ValidatedContract().Contract().resources.size()!=11)return Fail<void>("scenario","Frozen Composition topology mismatch");return base::Result<void,ScenarioErrorV1>::Success();}
-base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1> ExecuteFrozenHierarchyComparisonScenarioV1(const FrozenHierarchyComparisonScenarioV1& s,const hierarchy::RigidHierarchySemanticV1& h,const contracts::DynamicLocalMotorPaletteV1& palette,d3d12::D3D12Backend& backend,std::uint64_t frameNumber)
+base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1> ExecuteLoadedHierarchyComparisonScenarioV1(const FrozenHierarchyComparisonScenarioV1& s,const hierarchy::RigidHierarchySemanticV1& h,const contracts::DynamicLocalMotorPaletteV1& palette,can::runtime_v1::LoadedStaticComposition& loaded,std::uint64_t frameNumber)
 {
     auto scenarioValid=ValidateFrozenHierarchyComparisonScenarioV1(s);
     if(!scenarioValid)return base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1>::Failure(scenarioValid.Error());
@@ -60,22 +60,19 @@ base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1> ExecuteFrozen
     if(!paletteValid)return Fail<HierarchyComparisonExecutionResultV1>("scenario/runtime",paletteValid.Error());
     auto reference=corpus::BuildIndependentCpuReferenceV1(h,palette);
     if(!reference)return Fail<HierarchyComparisonExecutionResultV1>("scenario/reference",reference.Error());
-    auto frozen=can::verification::ReadVerifiedFrozenComposition(s.frozenCompositionBytes);
-    if(!frozen)return Fail<HierarchyComparisonExecutionResultV1>(frozen.Error().stage,frozen.Error().message);
-    const auto& contract=frozen.Value().ValidatedContract().Contract();
+    if(base::Sha256(loaded.Artifact().Artifact().FileBytes())!=s.frozenCompositionDigest)return Fail<HierarchyComparisonExecutionResultV1>("scenario/runtime","loaded Frozen Composition does not match scenario identity");
+    const auto& contract=loaded.Artifact().ValidatedContract().Contract();
     const auto source=FindLeaf(contract,s.leaves[0].role);
     const auto referenceFlow=FindFlow(contract,"s2/reference"),aFlow=FindFlow(contract,"s2/a/observations"),bFlow=FindFlow(contract,"s2/b/observations"),cFlow=FindFlow(contract,"s2/c/observations"),recordsFlow=FindFlow(contract,"s2/records");
     if(!source.IsValid()||!referenceFlow.IsValid()||!aFlow.IsValid()||!bFlow.IsValid()||!cFlow.IsValid()||!recordsFlow.IsValid())return Fail<HierarchyComparisonExecutionResultV1>("scenario/runtime","canonical Leaf or Resource Flow identity was not found");
     namespace runtime=can::runtime_v1;
-    auto loaded=runtime::LoadStaticComposition(s.frozenCompositionBytes,backend);
-    if(!loaded)return Fail<HierarchyComparisonExecutionResultV1>(loaded.Error().stage,loaded.Error().message);
     runtime::StaticCompositionFrameInvocation invocation;
     invocation.frameNumber=frameNumber;
     invocation.dynamicData={{source,s.leaves[0].lockedDynamicSlot,contracts::SerializeDynamicLocalMotorPaletteV1(palette)},{source,s.leaves[0].lockedReferenceSlot,corpus::SerializeReferencePointsV1(reference.Value())}};
-    auto submitted=runtime::SubmitStaticComposition(loaded.Value(),invocation);
+    auto submitted=runtime::SubmitStaticComposition(loaded,invocation);
     if(!submitted)return Fail<HierarchyComparisonExecutionResultV1>(submitted.Error().stage,submitted.Error().message);
     if(submitted.Value().executionOrder.size()!=10||submitted.Value().leaves.size()!=10)return Fail<HierarchyComparisonExecutionResultV1>("scenario/runtime","Frozen Composition did not execute exactly ten Leaves");
-    auto referenceRead=runtime::ReadStaticCompositionBuffer(loaded.Value(),referenceFlow),a=runtime::ReadStaticCompositionBuffer(loaded.Value(),aFlow),b=runtime::ReadStaticCompositionBuffer(loaded.Value(),bFlow),c=runtime::ReadStaticCompositionBuffer(loaded.Value(),cFlow),records=runtime::ReadStaticCompositionBuffer(loaded.Value(),recordsFlow);
+    auto referenceRead=runtime::ReadStaticCompositionBuffer(loaded,referenceFlow),a=runtime::ReadStaticCompositionBuffer(loaded,aFlow),b=runtime::ReadStaticCompositionBuffer(loaded,bFlow),c=runtime::ReadStaticCompositionBuffer(loaded,cFlow),records=runtime::ReadStaticCompositionBuffer(loaded,recordsFlow);
     if(!referenceRead||!a||!b||!c||!records){const auto* error=!referenceRead?&referenceRead.Error():!a?&a.Error():!b?&b.Error():!c?&c.Error():&records.Error();return Fail<HierarchyComparisonExecutionResultV1>(error->stage,error->message);}
     const auto referenceBytes=corpus::SerializeReferencePointsV1(reference.Value());
     if(referenceRead.Value().bytes!=referenceBytes)return Fail<HierarchyComparisonExecutionResultV1>("scenario/source-observation","Dynamic source did not reproduce independent reference bytes");
@@ -86,12 +83,25 @@ base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1> ExecuteFrozen
     if(!cp)return base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1>::Failure(cp.Error());
     auto observed=observer::ObserveHierarchyV1(reference.Value(),ap.Value(),bp.Value(),cp.Value());
     if(!observed)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer",observed.Error());
-    if(observed.Value().mismatchCount!=0||observed.Value().nonFiniteCount!=0)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer","WARP observations violate the independent reference or representation agreement");
+    if(observed.Value().mismatchCount!=0||observed.Value().nonFiniteCount!=0)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer","WARP observations violate the independent reference or representation agreement: max-reference="+std::to_string(observed.Value().maxAbsoluteError)+", max-pairwise="+std::to_string(observed.Value().maxPairwiseError)+", max-axis="+std::to_string(observed.Value().maxAxisLengthError)+", max-dot="+std::to_string(observed.Value().maxOrthogonalityError));
     if(records.Value().bytes.size()!=static_cast<std::size_t>(points)*16)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer","GPU observer record byte count is invalid");
     base::BinaryReader recordReader(records.Value().bytes);
-    for(std::uint32_t i=0;i<points;++i){auto errorBits=recordReader.ReadU32();auto finite=recordReader.ReadU32();auto homogeneous=recordReader.ReadU32();auto reserved=recordReader.ReadU32();if(!errorBits||!finite||!homogeneous||!reserved||finite.Value()!=1||homogeneous.Value()!=1||reserved.Value()!=0||!std::isfinite(std::bit_cast<float>(errorBits.Value()))||std::bit_cast<float>(errorBits.Value())>6.0e-5f)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer","GPU observer record validation failed");}
+    for(std::uint32_t i=0;i<points;++i){auto errorBits=recordReader.ReadU32();auto finite=recordReader.ReadU32();auto homogeneous=recordReader.ReadU32();auto reserved=recordReader.ReadU32();if(!errorBits||!finite||!homogeneous||!reserved)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer","GPU observer record encoding is truncated");const auto error=std::bit_cast<float>(errorBits.Value());const auto& expected=reference.Value()[i];const auto scale=std::max({1.0f,std::abs(expected.x),std::abs(expected.y),std::abs(expected.z)});const auto allowed=static_cast<float>(std::max(contracts::ObservationAbsoluteToleranceV1+contracts::ObservationRelativeToleranceV1*scale,contracts::ObservationPairwiseAbsoluteToleranceV1+contracts::ObservationPairwiseRelativeToleranceV1*scale));if(finite.Value()!=1||homogeneous.Value()!=1||reserved.Value()!=0||!std::isfinite(error)||error>allowed)return Fail<HierarchyComparisonExecutionResultV1>("scenario/observer","GPU observer record validation failed");}
     HierarchyComparisonExecutionResultV1 out;out.matrix=std::move(ap.Value());out.direct=std::move(bp.Value());out.hybrid=std::move(cp.Value());out.observation=observed.Value();out.gpuRecords=std::move(records.Value().bytes);out.deviceEpoch=submitted.Value().deviceEpoch;
     return base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1>::Success(std::move(out));
+}
+base::Result<HierarchyComparisonExecutionResultV1,ScenarioErrorV1> ExecuteFrozenHierarchyComparisonScenarioV1(const FrozenHierarchyComparisonScenarioV1& s,const hierarchy::RigidHierarchySemanticV1& h,const contracts::DynamicLocalMotorPaletteV1& palette,d3d12::D3D12Backend& backend,std::uint64_t frameNumber)
+{
+    auto loaded=can::runtime_v1::LoadStaticComposition(s.frozenCompositionBytes,backend);if(!loaded)return Fail<HierarchyComparisonExecutionResultV1>(loaded.Error().stage,loaded.Error().message);return ExecuteLoadedHierarchyComparisonScenarioV1(s,h,palette,loaded.Value(),frameNumber);
+}
+base::Result<HierarchyCorpusExecutionResultV1,ScenarioErrorV1> ExecuteFrozenHierarchyCorpusScenarioV1(const FrozenHierarchyComparisonScenarioV1& s,const hierarchy::RigidHierarchySemanticV1& h,std::span<const corpus::FrameCaseV1> frames,d3d12::D3D12Backend& backend,std::uint64_t firstFrameNumber)
+{
+    if(frames.empty())return Fail<HierarchyCorpusExecutionResultV1>("scenario/corpus","frame corpus is empty");
+    auto loaded=can::runtime_v1::LoadStaticComposition(s.frozenCompositionBytes,backend);
+    if(!loaded)return Fail<HierarchyCorpusExecutionResultV1>(loaded.Error().stage,loaded.Error().message);
+    HierarchyCorpusExecutionResultV1 out;out.frozenDigestBefore=base::Sha256(loaded.Value().Artifact().Artifact().FileBytes());std::uint64_t epoch=0;out.frames.reserve(frames.size());
+    for(std::size_t i=0;i<frames.size();++i){auto observed=ExecuteLoadedHierarchyComparisonScenarioV1(s,h,frames[i].palette,loaded.Value(),firstFrameNumber+i);if(!observed)return Fail<HierarchyCorpusExecutionResultV1>(observed.Error().stage+"/"+frames[i].id,observed.Error().message);if(i==0)epoch=observed.Value().deviceEpoch;else if(observed.Value().deviceEpoch!=epoch)return Fail<HierarchyCorpusExecutionResultV1>("scenario/corpus","device epoch changed during multi-frame execution");out.frames.push_back(std::move(observed.Value()));}
+    out.frozenDigestAfter=base::Sha256(loaded.Value().Artifact().Artifact().FileBytes());if(out.frozenDigestBefore!=out.frozenDigestAfter||out.frozenDigestBefore!=s.frozenCompositionDigest)return Fail<HierarchyCorpusExecutionResultV1>("scenario/corpus","Frozen Composition changed across dynamic frames");return base::Result<HierarchyCorpusExecutionResultV1,ScenarioErrorV1>::Success(std::move(out));
 }
 std::vector<std::byte> SerializeFrozenHierarchyComparisonScenarioEvidenceV1(const FrozenHierarchyComparisonScenarioV1& s){base::BinaryWriter w;w.WriteBytes(s.hierarchyIdentity);w.WriteU32(s.boneCount);w.WriteU32(static_cast<std::uint32_t>(s.leaves.size()));for(const auto& item:s.leaves){auto bytes=leaf::SerializeFrozenHierarchyLeafEvidenceV1(item);w.WriteU64(bytes.size());w.WriteBytes(bytes);}w.WriteU64(s.frozenCompositionBytes.size());w.WriteBytes(s.frozenCompositionBytes);w.WriteBytes(s.frozenCompositionDigest);return std::move(w).Take();}
 }

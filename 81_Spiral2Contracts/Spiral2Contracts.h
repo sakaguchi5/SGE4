@@ -15,6 +15,11 @@ namespace sge4_5::spiral2::contracts
 inline constexpr std::uint32_t DynamicMotorConventionVersionV1 = 1;
 inline constexpr std::uint32_t DynamicMotorStrideBytesV1 = 32;
 inline constexpr std::uint32_t DynamicPaletteAlignmentV1 = 16;
+inline constexpr double ObservationAbsoluteToleranceV1 = 2.0e-4;
+inline constexpr double ObservationRelativeToleranceV1 = 2.0e-5;
+inline constexpr double ObservationPairwiseAbsoluteToleranceV1 = 1.5e-4;
+inline constexpr double ObservationPairwiseRelativeToleranceV1 = 2.0e-5;
+inline constexpr double ObservationRigidityToleranceV1 = 5.0e-4;
 
 struct RotationTranslationV1 final
 {

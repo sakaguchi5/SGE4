@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration><ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+  <PropertyGroup Label="Globals"><VCProjectVersion>18.0</VCProjectVersion><Keyword>Win32Proj</Keyword><ProjectGuid>{96000000-0000-5000-8000-000000000096}</ProjectGuid><RootNamespace>96_Spiral2WarpObservationTests</RootNamespace><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>true</UseDebugLibraries><PlatformToolset>v145</PlatformToolset></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>v145</PlatformToolset></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
+  <PropertyGroup><OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\</OutDir><IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir></PropertyGroup>
+  <ItemDefinitionGroup><ClCompile><WarningLevel>Level4</WarningLevel><ConformanceMode>true</ConformanceMode><LanguageStandard>stdcpplatest</LanguageStandard><AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions></ClCompile><Link><SubSystem>Console</SubSystem><AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies></Link></ItemDefinitionGroup>
+  <ItemGroup><ClCompile Include="main.cpp"/></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\00_Foundation\00_Foundation.vcxproj"><Project>{AD1B0DF9-0AC1-5BAF-81AE-95D205FE63B9}</Project></ProjectReference>
+    <ProjectReference Include="..\14_D3D12Backend\14_D3D12Backend.vcxproj"><Project>{2082C0A4-CAF3-5197-9E1B-70658DB8A287}</Project></ProjectReference>
+    <ProjectReference Include="..\82_Spiral2Corpus\82_Spiral2Corpus.vcxproj"><Project>{82000000-0000-5000-8000-000000000082}</Project></ProjectReference>
+    <ProjectReference Include="..\88_Spiral2Scenarios\88_Spiral2Scenarios.vcxproj"><Project>{88000000-0000-5000-8000-000000000088}</Project></ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
+</Project>

@@ -17,7 +17,7 @@ namespace
 base::Digest256 LocalMotorSchemaIdentityV1() { return Literal("SGE4-5.Spiral2.LocalMotorPalette.V1|binary32|qr-wxyz|qd-wxyz|stride=32"); }
 base::Digest256 GlobalTransformMeaningIdentityV1() { return Literal("SGE4-5.Spiral2.GlobalRigidTransform.V1|global[parent]*local[bone]"); }
 base::Digest256 ProbeSchemaIdentityV1() { return Literal("SGE4-5.Spiral2.Probes.V1|P0-origin|P1-X|P2-Y|P3-Z|P4-asymmetric"); }
-base::Digest256 ObservationContractIdentityV1() { return Literal("SGE4-5.Spiral2.HierarchyObservation.V1|bone-major|probe-major|float4"); }
+base::Digest256 ObservationContractIdentityV1() { return Literal("SGE4-5.Spiral2.HierarchyObservation.V1|bone-major|probe-major|float4|abs=2e-4|rel=2e-5|pair-abs=1.5e-4|pair-rel=2e-5|rigid=5e-4"); }
 
 base::Result<RigidHierarchySemanticV1, std::string> BuildRigidHierarchySemanticV1(
     std::span<const std::int32_t> parents)
