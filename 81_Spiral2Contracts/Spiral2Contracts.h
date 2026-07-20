@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../00_Foundation/Base.h"
 #include "../80_HierarchySemantic/HierarchySemantic.h"
@@ -20,6 +20,14 @@ inline constexpr double ObservationRelativeToleranceV1 = 2.0e-5;
 inline constexpr double ObservationPairwiseAbsoluteToleranceV1 = 1.5e-4;
 inline constexpr double ObservationPairwiseRelativeToleranceV1 = 2.0e-5;
 inline constexpr double ObservationRigidityToleranceV1 = 5.0e-4;
+
+// V2 closes the componentwise scale semantics required by the Observation Contract.
+// V1 is retained as an immutable historical contract.
+inline constexpr double ObservationAbsoluteToleranceV2 = 2.5e-4;
+inline constexpr double ObservationRelativeToleranceV2 = 2.0e-5;
+inline constexpr double ObservationPairwiseAbsoluteToleranceV2 = 2.5e-4;
+inline constexpr double ObservationPairwiseRelativeToleranceV2 = 2.0e-5;
+inline constexpr double ObservationRigidityToleranceV2 = 5.0e-4;
 
 struct RotationTranslationV1 final
 {

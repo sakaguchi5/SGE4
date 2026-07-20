@@ -1,4 +1,4 @@
-#include "D3D12PackageLowering.h"
+﻿#include "D3D12PackageLowering.h"
 
 #include "../00_Foundation/BinaryIO.h"
 #include "../00_Foundation/Sha256.h"
@@ -1769,4 +1769,68 @@ base::Result<CompileOutput, CompileError> LowerVerifiedPlan(
         frozen.Value().completedStages = {"source-validation", "program-compilation", "verified-plan-lowering", "package-freeze"};
     return frozen;
 }
+
+base::Result<FrozenComputePackageEvidenceV1, CompileError>
+InspectFrozenComputePackageEvidenceV1(std::span<const std::byte> packageBytes)
+{
+    auto packageResult = package::PackageReader::Read(packageBytes);
+    if (!packageResult)
+        return Failure<FrozenComputePackageEvidenceV1>("package-evidence-read", packageResult.Error().message);
+
+    auto viewResult = pkg::D3D12PackageView::Decode(packageResult.Value());
+    if (!viewResult)
+        return Failure<FrozenComputePackageEvidenceV1>("package-evidence-schema", viewResult.Error().message);
+
+    const auto& package = packageResult.Value();
+    const auto& view = viewResult.Value();
+    std::uint32_t executeCount = 0;
+    pkg::ComputeCommandId commandId;
+    for (const auto& operation : view.FrameOperations())
+    {
+        if (operation.opcode != pkg::D3D12OperationCode::ExecuteCompute)
+            continue;
+        auto decoded = pkg::DecodeExecuteCompute(operation.payload);
+        if (!decoded)
+            return Failure<FrozenComputePackageEvidenceV1>("package-evidence-operation", decoded.Error().message);
+        commandId = decoded.Value().command;
+        ++executeCount;
+    }
+
+    if (executeCount != 1 || !commandId.IsValid() || commandId.value >= view.ComputeCommands().size())
+        return Failure<FrozenComputePackageEvidenceV1>(
+            "package-evidence-operation", "compute Leaf Package must contain exactly one valid ExecuteCompute operation");
+    if (view.Programs().size() != 1 || view.BindingLayouts().size() != 1 ||
+        view.Shaders().size() != 1 || view.ComputeExecutables().size() != 1)
+        return Failure<FrozenComputePackageEvidenceV1>(
+            "package-evidence-program", "compute Leaf Package must contain exactly one Program, BindingLayout, Shader and ComputeExecutable");
+
+    const auto& command = view.ComputeCommands()[commandId.value];
+    if (!command.executable.IsValid() || command.executable.value >= view.ComputeExecutables().size())
+        return Failure<FrozenComputePackageEvidenceV1>("package-evidence-program", "compute command executable is invalid");
+    const auto& executable = view.ComputeExecutables()[command.executable.value];
+    if (!executable.program.IsValid() || executable.program.value >= view.Programs().size())
+        return Failure<FrozenComputePackageEvidenceV1>("package-evidence-program", "compute executable Program is invalid");
+    const auto& program = view.Programs()[executable.program.value];
+    if (!program.bindingLayout.IsValid() || program.bindingLayout.value >= view.BindingLayouts().size() ||
+        !program.computeShader.IsValid() || program.computeShader.value >= view.Shaders().size())
+        return Failure<FrozenComputePackageEvidenceV1>("package-evidence-program", "compute Program references are invalid");
+
+    FrozenComputePackageEvidenceV1 evidence;
+    evidence.executionDigest = package.ExecutionDigest();
+    evidence.fileDigest = package.Header().fileDigest;
+    evidence.programInterfaceDigest = program.interfaceDigest;
+    evidence.bindingLayoutDigest = view.BindingLayouts()[program.bindingLayout.value].layoutDigest;
+    evidence.shaderBytecodeDigest = view.Shaders()[program.computeShader.value].bytecodeDigest;
+    evidence.dispatchX = command.threadGroupCountX;
+    evidence.dispatchY = command.threadGroupCountY;
+    evidence.dispatchZ = command.threadGroupCountZ;
+    evidence.dynamicSlots.reserve(view.DynamicSlots().size());
+    for (const auto& slot : view.DynamicSlots())
+        evidence.dynamicSlots.push_back({slot.requiredBytes, slot.requiredAlignment, slot.flags});
+    evidence.externalSlots.reserve(view.ExternalSlots().size());
+    for (const auto& slot : view.ExternalSlots())
+        evidence.externalSlots.push_back({slot.minimumBytes});
+    return base::Result<FrozenComputePackageEvidenceV1, CompileError>::Success(std::move(evidence));
+}
+
 }

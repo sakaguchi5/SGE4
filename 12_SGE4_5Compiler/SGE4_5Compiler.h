@@ -1,6 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include "../00_Foundation/Result.h"
+
+#include <span>
 #include "../02_SemanticModel/SemanticModel.h"
 #include "../05_TargetContract/TargetModel.h"
 #include "../08_CandidatePlanner/CandidatePlanner.h"
@@ -33,4 +35,11 @@ struct PlanningOutput final
 [[nodiscard]] base::Result<PackageOutput, Error> CompileCanonical(
     const semantic::SemanticGraph& graph,
     const target::D3D12TargetProfile& targetProfile);
+
+using FrozenComputePackageEvidenceV1 = d3d12::FrozenComputePackageEvidenceV1;
+
+// Compiler facade for schema-owned Frozen Package evidence inspection.
+// Clients do not gain a direct dependency on D3D12PackageSchema.
+[[nodiscard]] base::Result<FrozenComputePackageEvidenceV1, Error>
+InspectCanonicalComputePackageEvidenceV1(std::span<const std::byte> packageBytes);
 }

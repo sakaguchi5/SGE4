@@ -10,7 +10,7 @@
 
 namespace sge4_5::spiral2::performance
 {
-inline constexpr std::uint32_t MeasurementEvidenceSchemaVersionV1 = 1;
+inline constexpr std::uint32_t MeasurementEvidenceSchemaVersionV1 = 2;
 inline constexpr std::uint32_t CanonicalWarmupCyclesPerOrderV1 = 2;
 inline constexpr std::uint32_t CanonicalMeasurementCyclesPerOrderV1 = 8;
 inline constexpr std::uint32_t CanonicalRunCountV1 = 2;
@@ -40,16 +40,19 @@ struct AdapterProfileV1 final
     base::Digest256 fingerprint{};
 };
 
+// One-time, candidate-specific costs and exact frozen resource facts.
 struct CandidatePreparationV1 final
 {
     candidate::CandidateKindV1 kind{};
     std::uint64_t generationNanoseconds = 0;
     std::uint64_t verifierNanoseconds = 0;
     std::uint64_t freezeNanoseconds = 0;
+    std::uint64_t materializationNanoseconds = 0;
     std::uint64_t packageBytes = 0;
-    std::uint64_t dynamicUploadBytes = 0;
+    std::uint64_t dynamicInvocationBytes = 0;
     std::uint64_t logicalIntermediateBytes = 0;
-    std::uint32_t dispatchCount = 0;
+    std::uint32_t plannedDispatchCount = 0;
+    std::uint32_t packageDispatchCount = 0;
     base::Digest256 verifiedCertificate{};
 };
 
@@ -63,10 +66,12 @@ struct LeafTimingSampleV1 final
     std::uint32_t barrierCount = 0;
 };
 
+// Per-invocation values are candidate-specific. No composition-wide A+B+C value is stored.
 struct CandidateTimingSampleV1 final
 {
     candidate::CandidateKindV1 kind{};
     std::uint32_t orderPosition = 0;
+    double endToEndNanoseconds = 0.0;
     double commandRecordingNanoseconds = 0.0;
     double gpuTotalNanoseconds = 0.0;
     double numericMaxAbsoluteError = 0.0;
@@ -79,8 +84,6 @@ struct MeasurementSampleV1 final
     std::uint32_t run = 0;
     std::uint32_t cycle = 0;
     std::string candidateOrder;
-    std::uint64_t compositionMaterializationNanoseconds = 0;
-    double compositionEndToEndNanoseconds = 0.0;
     std::vector<LeafTimingSampleV1> leaves;
     std::vector<CandidateTimingSampleV1> candidates;
 };

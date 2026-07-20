@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../00_Foundation/Base.h"
 
@@ -31,6 +31,7 @@ struct RigidHierarchySemanticV1 final
 [[nodiscard]] base::Digest256 GlobalTransformMeaningIdentityV1();
 [[nodiscard]] base::Digest256 ProbeSchemaIdentityV1();
 [[nodiscard]] base::Digest256 ObservationContractIdentityV1();
+[[nodiscard]] base::Digest256 ObservationContractIdentityV2();
 [[nodiscard]] base::Result<RigidHierarchySemanticV1, std::string> BuildRigidHierarchySemanticV1(
     std::span<const std::int32_t> parentIndices);
 [[nodiscard]] base::Result<void, std::string> ValidateRigidHierarchySemanticV1(

@@ -1,4 +1,4 @@
-#include "SGE4_5Compiler.h"
+﻿#include "SGE4_5Compiler.h"
 
 #include "../07_ExecutionPlanVerifier/ExecutionPlanVerifier.h"
 
@@ -84,4 +84,11 @@ base::Result<PackageOutput, Error> CompileCanonical(
     return base::Result<PackageOutput, Error>::Success(
         std::move(compiled.Value().selectedPackage));
 }
+
+base::Result<FrozenComputePackageEvidenceV1, Error>
+InspectCanonicalComputePackageEvidenceV1(std::span<const std::byte> packageBytes)
+{
+    return d3d12::InspectFrozenComputePackageEvidenceV1(packageBytes);
+}
+
 }

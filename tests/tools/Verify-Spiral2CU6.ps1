@@ -37,7 +37,7 @@ foreach ($token in @('HardwareEvidence = Qualified','MeasurementSamples = 576','
 }
 
 if ($RequireClosure) {
-    foreach ($relative in @('docs/spiral2/STAGE21_DECISION_EVIDENCE.md','docs/spiral2/STAGE22A_EVIDENCE_CLOSURE.md','build/tests/spiral2/measurement/SPIRAL2_DECISION_EVIDENCE_REPORT.md','build/tests/spiral2/measurement/spiral2_measurement_evidence_v1.bin')) {
+    foreach ($relative in @('docs/spiral2/STAGE21_DECISION_EVIDENCE.md','docs/spiral2/STAGE22A_EVIDENCE_CLOSURE.md','build/tests/spiral2/measurement/SPIRAL2_DECISION_EVIDENCE_REPORT.md','build/tests/spiral2/measurement/spiral2_measurement_evidence_v2.bin')) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $relative))) { throw "Missing CU6 closure evidence: $relative" }
     }
     $closure = (Get-Content -Raw -LiteralPath (Join-Path $root 'docs/spiral2/STAGE22A_EVIDENCE_CLOSURE.md') -Encoding UTF8) +

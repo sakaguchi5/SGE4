@@ -6,23 +6,8 @@
 namespace c=sge4_5::spiral2::candidate;namespace p=sge4_5::spiral2::planner;namespace v=sge4_5::spiral2::verification;namespace r=sge4_5::spiral2::corpus;
 int main()
 {
-    auto corpus=r::BuildTopologyCorpusV1();if(!corpus)return 1;const auto& h=corpus.Value()[4].hierarchy;
-    auto source=p::PlanCandidateGraphV1(h,c::CandidateKindV1::HybridHierarchy);if(!source||!v::VerifyCandidateGraphV1(h,source.Value()))return 2;
-    std::uint32_t rejected=0;auto reject=[&](c::RawCandidateGraphV1 value){if(v::VerifyCandidateGraphV1(h,value))return false;++rejected;return true;};
-    auto m=source.Value();m.hierarchySemanticIdentity[0]^=std::byte{1};if(!reject(m))return 3;
-    m=source.Value();m.dynamicInvocationSchemaIdentity[0]^=std::byte{1};if(!reject(m))return 4;
-    m=source.Value();m.observationContractIdentity[0]^=std::byte{1};if(!reject(m))return 5;
-    m=source.Value();++m.boneCount;if(!reject(m))return 6;
-    m=source.Value();m.kind=c::CandidateKindV1::DirectPgaHierarchy;if(!reject(m))return 7;
-    m=source.Value();std::swap(m.nodes[1],m.nodes[2]);if(!reject(m))return 8;
-    m=source.Value();m.nodes[1].operation=c::OperationKindV1::MatrixHierarchy;if(!reject(m))return 9;
-    m=source.Value();++m.nodes[1].inputStride;if(!reject(m))return 10;
-    m=source.Value();++m.nodes[1].outputStride;if(!reject(m))return 11;
-    m=source.Value();m.nodes[1].programIdentity[0]^=std::byte{1};if(!reject(m))return 12;
-    m=source.Value();m.edges[0].destination=2;if(!reject(m))return 13;
-    m=source.Value();m.proposedLoweringPosition=c::MatrixLoweringPositionV1::BeforeHierarchy;if(!reject(m))return 14;
-    m=source.Value();++m.proposedHierarchyDepthCount;if(!reject(m))return 15;
-    m=source.Value();++m.proposedDispatchCount;if(!reject(m))return 16;
-    m=source.Value();m.nodes.pop_back();if(!reject(m))return 17;
-    std::cout<<"Spiral 2 independent verifier mutation suite passed: "<<rejected<<" authority mutations rejected.\n";return rejected==15?0:18;
+    auto corpus=r::BuildTopologyCorpusV1();if(!corpus)return 1;const auto& h=corpus.Value()[4].hierarchy;auto source=p::PlanCandidateGraphV1(h,c::CandidateKindV1::HybridHierarchy);if(!source||!v::VerifyCandidateGraphV1(h,source.Value()))return 2;std::uint32_t rejected=0;auto reject=[&](c::RawCandidateGraphV1 value){if(v::VerifyCandidateGraphV1(h,value))return false;++rejected;return true;};
+    auto m=source.Value();m.hierarchySemanticIdentity[0]^=std::byte{1};if(!reject(m))return 3;m=source.Value();m.dynamicInvocationSchemaIdentity[0]^=std::byte{1};if(!reject(m))return 4;m=source.Value();m.observationContractIdentity[0]^=std::byte{1};if(!reject(m))return 5;m=source.Value();++m.boneCount;if(!reject(m))return 6;m=source.Value();m.kind=c::CandidateKindV1::DirectPgaHierarchy;if(!reject(m))return 7;m=source.Value();std::swap(m.nodes[1],m.nodes[2]);if(!reject(m))return 8;m=source.Value();m.nodes[1].operation=c::OperationKindV1::MatrixHierarchy;if(!reject(m))return 9;
+    m=source.Value();++m.nodes[1].primaryInputStride;if(!reject(m))return 10;m=source.Value();++m.nodes[1].primaryInputElementCount;if(!reject(m))return 11;m=source.Value();++m.nodes[1].primaryOutputStride;if(!reject(m))return 12;m=source.Value();++m.nodes[1].primaryOutputElementCount;if(!reject(m))return 13;m=source.Value();++m.nodes[0].secondaryInputStride;if(!reject(m))return 14;m=source.Value();++m.nodes[0].secondaryInputElementCount;if(!reject(m))return 15;m=source.Value();++m.nodes[1].dispatchX;if(!reject(m))return 16;m=source.Value();m.nodes[1].programIdentity[0]^=std::byte{1};if(!reject(m))return 17;m=source.Value();m.edges[0].destination=2;if(!reject(m))return 18;m=source.Value();m.proposedLoweringPosition=c::MatrixLoweringPositionV1::BeforeHierarchy;if(!reject(m))return 19;m=source.Value();m.proposedHierarchyExecutionModel=static_cast<c::HierarchyExecutionModelV1>(99);if(!reject(m))return 20;m=source.Value();++m.hierarchyDepthCount;if(!reject(m))return 21;m=source.Value();++m.proposedCandidateLeafDispatchCount;if(!reject(m))return 22;m=source.Value();m.nodes.pop_back();if(!reject(m))return 23;
+    std::cout<<"Spiral 2 independent verifier mutation suite passed: "<<rejected<<" exact execution mutations rejected.\n";return rejected==21?0:24;
 }

@@ -1,9 +1,12 @@
-#include "../00_Foundation/Base.h"
+﻿#include "../00_Foundation/Base.h"
 #include "../14_D3D12Backend/D3D12Backend.h"
 #include "../82_Spiral2Corpus/Spiral2Corpus.h"
 #include "../88_Spiral2Scenarios/Spiral2Scenarios.h"
 #include <algorithm>
+#include <array>
 #include <filesystem>
+#include <cmath>
+#include <limits>
 #include <iostream>
 
 namespace b=sge4_5::base;
@@ -30,17 +33,17 @@ int main(int argc,char**argv)
     auto topologies=c::BuildTopologyCorpusV1();if(!topologies){std::cerr<<topologies.Error()<<'\n';return 1;}
     if(argc==3&&std::string(argv[1])=="--emit"){try{auto evidence=BuildFrozenEvidence(topologies.Value());auto wrote=b::WriteAllBytes(std::filesystem::path(argv[2]),evidence);if(!wrote)return 2;std::cout<<b::ToHex(b::Sha256(evidence))<<'\n';return 0;}catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 3;}}
     const bool reorderOnly=argc==2&&std::string(argv[1])=="--reorder";std::size_t begin=0,end=topologies.Value().size();if(argc==3&&std::string(argv[1])=="--warp-index"){begin=std::stoul(argv[2]);if(begin>=end)return 15;end=begin+1;}else if(reorderOnly){end=0;}else if(argc!=1)return 16;
-    std::uint32_t cases=0;double maxAbsolute=0,maxPairwise=0,maxRigidity=0;
+    std::uint32_t cases=0;double maxAbsolute=0,maxRelative=0,maxPairwise=0,maxPairwiseRelative=0,maxRigidity=0,maxTranslation=0,minimumDeterminant=std::numeric_limits<double>::infinity();std::uint64_t maxUlp=0,maxPairwiseUlp=0;
     for(std::size_t topologyIndex=begin;topologyIndex<end;++topologyIndex){const auto& topology=topologies.Value()[topologyIndex];
         auto scenario=s::BuildFrozenHierarchyComparisonScenarioV1(topology.hierarchy);if(!scenario){std::cerr<<scenario.Error().stage<<": "<<scenario.Error().message<<'\n';return 4;}
         auto frames=c::BuildFrameCorpusV1(topology.hierarchy);if(!frames)return 5;
         sge4_5::d3d12::D3D12Backend backend({true,true});auto executed=s::ExecuteFrozenHierarchyCorpusScenarioV1(scenario.Value(),topology.hierarchy,frames.Value(),backend);if(!executed){std::cerr<<topology.id<<' '<<executed.Error().stage<<": "<<executed.Error().message<<'\n';return 6;}
         if(executed.Value().frames.size()!=12||executed.Value().frozenDigestBefore!=executed.Value().frozenDigestAfter)return 7;
-        for(const auto& frame:executed.Value().frames){if(frame.observation.mismatchCount||frame.observation.nonFiniteCount||!frame.observation.orientationPreserved)return 8;maxAbsolute=std::max(maxAbsolute,frame.observation.maxAbsoluteError);maxPairwise=std::max(maxPairwise,frame.observation.maxPairwiseError);maxRigidity=std::max({maxRigidity,frame.observation.maxAxisLengthError,frame.observation.maxOrthogonalityError});++cases;}
+        for(const auto& frame:executed.Value().frames){const auto& observation=frame.observation;if(observation.mismatchCount||observation.nonFiniteCount||!observation.orientationPreserved||observation.firstMismatchIndex!=std::numeric_limits<std::uint64_t>::max()||!(observation.minimumDeterminant>0))return 8;const std::array metrics{observation.matrixReference,observation.directReference,observation.hybridReference,observation.matrixDirect,observation.matrixHybrid,observation.directHybrid};for(const auto& metric:metrics)if(!std::isfinite(metric.maxAbsoluteError)||!std::isfinite(metric.maxRelativeError)||!std::isfinite(metric.rmsEuclideanError))return 17;maxAbsolute=std::max(maxAbsolute,observation.maxAbsoluteError);maxRelative=std::max(maxRelative,observation.maxRelativeError);maxUlp=std::max(maxUlp,observation.maxUlpDistance);maxPairwise=std::max(maxPairwise,observation.maxPairwiseError);maxPairwiseRelative=std::max(maxPairwiseRelative,observation.maxPairwiseRelativeError);maxPairwiseUlp=std::max(maxPairwiseUlp,observation.maxPairwiseUlpDistance);maxRigidity=std::max({maxRigidity,observation.maxAxisLengthError,observation.maxOrthogonalityError});maxTranslation=std::max(maxTranslation,observation.maxTranslationError);minimumDeterminant=std::min(minimumDeterminant,observation.minimumDeterminant);++cases;}
         if(OutputBytes(executed.Value().frames[0])==OutputBytes(executed.Value().frames[4]))return 9;
         std::cout<<"[WARP] "<<topology.id<<" passed 12 consecutive frames.\n"<<std::flush;
     }
     if(argc==1||reorderOnly){const auto& reorderTopology=topologies.Value()[3];auto reorderScenario=s::BuildFrozenHierarchyComparisonScenarioV1(reorderTopology.hierarchy);auto reorderFrames=c::BuildFrameCorpusV1(reorderTopology.hierarchy);if(!reorderScenario||!reorderFrames)return 10;std::reverse(reorderFrames.Value().begin(),reorderFrames.Value().end());sge4_5::d3d12::D3D12Backend reorderBackend({true,true});auto reversed=s::ExecuteFrozenHierarchyCorpusScenarioV1(reorderScenario.Value(),reorderTopology.hierarchy,reorderFrames.Value(),reorderBackend,100);if(!reversed)return 11;std::reverse(reorderFrames.Value().begin(),reorderFrames.Value().end());sge4_5::d3d12::D3D12Backend normalBackend({true,true});auto normal=s::ExecuteFrozenHierarchyCorpusScenarioV1(reorderScenario.Value(),reorderTopology.hierarchy,reorderFrames.Value(),normalBackend,1000);if(!normal)return 12;for(std::size_t i=0;i<12;++i)if(OutputBytes(normal.Value().frames[i])!=OutputBytes(reversed.Value().frames[11-i]))return 13;std::cout<<"[WARP] frame-order permutation passed.\n";}
-    std::cout<<"Spiral 2 WARP corpus passed: "<<cases<<" H/F cases, max-reference="<<maxAbsolute<<", max-pairwise="<<maxPairwise<<", max-rigidity="<<maxRigidity<<".\n";
+    std::cout<<"Spiral 2 WARP corpus passed: "<<cases<<" H/F cases, max-reference="<<maxAbsolute<<", max-relative="<<maxRelative<<", max-ulp="<<maxUlp<<", max-pairwise="<<maxPairwise<<", max-pairwise-relative="<<maxPairwiseRelative<<", max-pairwise-ulp="<<maxPairwiseUlp<<", max-translation="<<maxTranslation<<", max-rigidity="<<maxRigidity<<", min-determinant="<<(std::isfinite(minimumDeterminant)?minimumDeterminant:0)<<".\n";
     const auto expected=reorderOnly?0u:static_cast<std::uint32_t>((end-begin)*12);return cases==expected?0:14;
 }

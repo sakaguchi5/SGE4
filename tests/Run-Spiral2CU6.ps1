@@ -28,7 +28,7 @@ if ($Mode -in @('Measurement','All')) {
     Invoke-Checked $launcher @('--measure','--output',$output,'--clock-policy','uncontrolled')
 }
 if ($Mode -in @('Report','All')) {
-    Invoke-Checked $launcher @('--evidence','--report','--input',(Join-Path $output 'spiral2_measurement_evidence_v1.bin'),'--output',$output)
+    Invoke-Checked $launcher @('--evidence','--report','--input',(Join-Path $output 'spiral2_measurement_evidence_v2.bin'),'--output',$output)
 }
 if ($Mode -eq 'Report') {
     Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'tools\Verify-Spiral2CU6.ps1'),'-RequireClosure')

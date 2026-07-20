@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 
-#include "../00_Foundation/Result.h"
+#include "../00_Foundation/Base.h"
 #include "../05A_CompilationInput/CompilationInput.h"
 
 // Windows SDK headers define `interface` as a preprocessor macro.
@@ -24,6 +24,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -87,6 +88,37 @@ struct CompileOutput final
     std::string executionDigestHex;
     std::vector<std::string> completedStages;
 };
+
+// Schema-owned evidence extracted from an already frozen compute Package.
+// Higher compiler layers may use this without depending on D3D12PackageSchema.
+struct FrozenDynamicSlotEvidenceV1 final
+{
+    std::uint64_t requiredBytes = 0;
+    std::uint32_t requiredAlignment = 0;
+    std::uint32_t flags = 0;
+};
+
+struct FrozenExternalSlotEvidenceV1 final
+{
+    std::uint64_t minimumBytes = 0;
+};
+
+struct FrozenComputePackageEvidenceV1 final
+{
+    base::Digest256 executionDigest{};
+    base::Digest256 fileDigest{};
+    base::Digest256 programInterfaceDigest{};
+    base::Digest256 bindingLayoutDigest{};
+    base::Digest256 shaderBytecodeDigest{};
+    std::uint32_t dispatchX = 0;
+    std::uint32_t dispatchY = 0;
+    std::uint32_t dispatchZ = 0;
+    std::vector<FrozenDynamicSlotEvidenceV1> dynamicSlots;
+    std::vector<FrozenExternalSlotEvidenceV1> externalSlots;
+};
+
+[[nodiscard]] base::Result<FrozenComputePackageEvidenceV1, CompileError>
+InspectFrozenComputePackageEvidenceV1(std::span<const std::byte> packageBytes);
 
 [[nodiscard]] base::Result<void, CompileError> ValidateLevel2Capability(
     const semantic::SemanticGraph& graph,
