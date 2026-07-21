@@ -35,3 +35,7 @@ run_sge4_5_spiral3_cu2_candidate_authority.bat
 ```
 
 CU3-CU6 are not included in this delivery.
+
+## CU3
+
+Verified-only A/B/C reuse Leaf lowering and Schema 17 Package binding implemented.

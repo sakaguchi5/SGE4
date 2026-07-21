@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.0.0
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -211,6 +211,10 @@ EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "111_Spiral3CandidateGraphTests", "111_Spiral3CandidateGraphTests\111_Spiral3CandidateGraphTests.vcxproj", "{0000006F-0000-5000-8000-00000000006F}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "112_Spiral3AuthorityMutationTests", "112_Spiral3AuthorityMutationTests\112_Spiral3AuthorityMutationTests.vcxproj", "{00000070-0000-5000-8000-000000000070}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "106_Spiral3LeafCompiler", "106_Spiral3LeafCompiler\106_Spiral3LeafCompiler.vcxproj", "{0000006A-0000-5000-8000-00000000006A}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "113_Spiral3LeafPackageTests", "113_Spiral3LeafPackageTests\113_Spiral3LeafPackageTests.vcxproj", "{00000071-0000-5000-8000-000000000071}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -639,6 +643,14 @@ Global
 		{00000070-0000-5000-8000-000000000070}.Debug|x64.Build.0 = Debug|x64
 		{00000070-0000-5000-8000-000000000070}.Release|x64.ActiveCfg = Release|x64
 		{00000070-0000-5000-8000-000000000070}.Release|x64.Build.0 = Release|x64
+		{0000006A-0000-5000-8000-00000000006A}.Debug|x64.ActiveCfg = Debug|x64
+		{0000006A-0000-5000-8000-00000000006A}.Debug|x64.Build.0 = Debug|x64
+		{0000006A-0000-5000-8000-00000000006A}.Release|x64.ActiveCfg = Release|x64
+		{0000006A-0000-5000-8000-00000000006A}.Release|x64.Build.0 = Release|x64
+		{00000071-0000-5000-8000-000000000071}.Debug|x64.ActiveCfg = Debug|x64
+		{00000071-0000-5000-8000-000000000071}.Debug|x64.Build.0 = Debug|x64
+		{00000071-0000-5000-8000-000000000071}.Release|x64.ActiveCfg = Release|x64
+		{00000071-0000-5000-8000-000000000071}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
