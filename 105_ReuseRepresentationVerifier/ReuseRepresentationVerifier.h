@@ -1,0 +1,12 @@
+﻿#pragma once
+#include "../103_ReuseRepresentationCandidate/ReuseRepresentationCandidate.h"
+namespace sge4_5::spiral3::verification
+{
+struct VerifiedReuseOperationV1 final{std::uint32_t ordinal=0;candidate::OperationKindV1 operation{};std::uint32_t primaryInputStride=0,primaryInputElementCount=0,primaryOutputStride=0,primaryOutputElementCount=0;std::uint32_t secondaryInputStride=0,secondaryInputElementCount=0,secondaryOutputStride=0,secondaryOutputElementCount=0;std::uint32_t dispatchX=0,dispatchY=1,dispatchZ=1;base::Digest256 programIdentity{},operationIdentity{};};
+struct VerifiedReuseExecutionPlanV1 final{base::Digest256 reuseSemanticIdentity{},hierarchySemanticIdentity{},dynamicInvocationSchemaIdentity{},localPointCorpusIdentity{},observationContractIdentity{};candidate::CandidateKindV1 kind{};candidate::MatrixLoweringPositionV1 loweringPosition{};candidate::HierarchyExecutionModelV1 hierarchyExecutionModel{};std::uint32_t boneCount=0,reuseCount=0,pointCount=0,hierarchyDepthCount=0,commonSourceDispatchCount=0,candidateLeafDispatchCount=0;std::vector<VerifiedReuseOperationV1> operations;std::vector<candidate::CandidateEdgeV1> edges;base::Digest256 planIdentity{};};
+class VerifiedReuseRepresentationV1 final{public:[[nodiscard]]const VerifiedReuseExecutionPlanV1&Plan()const noexcept{return plan_;}[[nodiscard]]const base::Digest256&CertificateIdentity()const noexcept{return certificate_;}private:VerifiedReuseRepresentationV1(VerifiedReuseExecutionPlanV1 p,base::Digest256 c):plan_(std::move(p)),certificate_(c){}VerifiedReuseExecutionPlanV1 plan_;base::Digest256 certificate_{};friend base::Result<VerifiedReuseRepresentationV1,std::string> VerifyCandidateGraphV1(const spiral2::hierarchy::RigidHierarchySemanticV1&,const semantic::ReuseSweepSemanticV1&,const candidate::RawCandidateGraphV1&);};
+[[nodiscard]] base::Result<VerifiedReuseRepresentationV1,std::string> VerifyCandidateGraphV1(const spiral2::hierarchy::RigidHierarchySemanticV1& hierarchy,const semantic::ReuseSweepSemanticV1& semantic,const candidate::RawCandidateGraphV1& proposal);
+[[nodiscard]] std::vector<std::byte> SerializeVerifiedReuseOperationV1(const VerifiedReuseOperationV1& value);
+[[nodiscard]] std::vector<std::byte> SerializeVerifiedReuseExecutionPlanV1(const VerifiedReuseExecutionPlanV1& value);
+[[nodiscard]] std::vector<std::byte> SerializeVerifiedReuseRepresentationV1(const VerifiedReuseRepresentationV1& value);
+}

@@ -2,26 +2,36 @@
 
 Baseline: `398891936bf498fed532b26c06884bbfbf66f3a8`.
 
-## Included
+## Qualified by the owner
 
-- CU0 research contract, manifest, non-goals, project boundaries and proof ledger.
-- CU1 fixed eight-bone hierarchy, six-R Semantic/corpus/reference.
-- Explicit `BoneCountV1`, `ReuseCountV1`, and `PointCountV1` boundary types.
-- CU0/CU1 Windows runners and static verification scripts.
+- CU0 research contract and baseline gate.
+- CU1 fixed eight-bone hierarchy, R1/R4/R16/R64/R256/R512 Semantic/corpus/reference and explicit count boundary types.
+- CU1 corpus SHA-256: `3E5D7B36908CDD64B6DC39ECB57DE53453C393C05687AB45E2A9F3931AE38FFD`.
+
+## Included in this delivery
+
+- CU2 Candidate, Planner and Planner-independent Verifier projects.
+- A/B/C graph generation for all six reuse workloads.
+- Private verifier-issued `VerifiedReuseRepresentationV1` authority boundary.
+- Compile-time Raw/Verified construction and conversion checks.
+- 24 identity, workload, execution-model, node, dispatch, Program and edge mutation gates.
+- Debug A/B/Release deterministic Evidence runner.
 
 ## Portable qualification
 
-The CU1 C++23 test was compiled and executed in the generation environment. R1/R4/R16/R64/R256/R512 passed, repeated evidence bytes matched, and the evidence SHA-256 was:
+The CU2 C++23 tests were compiled and executed in the generation environment:
 
 ```text
-3E5D7B36908CDD64B6DC39ECB57DE53453C393C05687AB45E2A9F3931AE38FFD
+18 verified reuse/candidate plans
+24 invalid proposals rejected
+Verified plan SHA-256:
+EC1080429217FC82871AC47B7F4D4FE1DF84DC2401143BF9E1FE3018C7BF2156
 ```
 
-## Awaiting Windows qualification
+## Next Windows qualification
 
 ```bat
-run_sge4_5_spiral3_cu0_contract_baseline.bat
-run_sge4_5_spiral3_cu1_reuse_semantic.bat
+run_sge4_5_spiral3_cu2_candidate_authority.bat
 ```
 
-CU2-CU6 are not included in this delivery.
+CU3-CU6 are not included in this delivery.

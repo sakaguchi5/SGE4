@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.0.0
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -200,7 +200,17 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "101_Spiral3Contracts", "101
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "102_Spiral3Corpus", "102_Spiral3Corpus\102_Spiral3Corpus.vcxproj", "{00000066-0000-5000-8000-000000000066}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "103_ReuseRepresentationCandidate", "103_ReuseRepresentationCandidate\103_ReuseRepresentationCandidate.vcxproj", "{00000067-0000-5000-8000-000000000067}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "104_ReuseRepresentationPlanner", "104_ReuseRepresentationPlanner\104_ReuseRepresentationPlanner.vcxproj", "{00000068-0000-5000-8000-000000000068}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "105_ReuseRepresentationVerifier", "105_ReuseRepresentationVerifier\105_ReuseRepresentationVerifier.vcxproj", "{00000069-0000-5000-8000-000000000069}"
+EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "110_Spiral3SemanticTests", "110_Spiral3SemanticTests\110_Spiral3SemanticTests.vcxproj", "{0000006E-0000-5000-8000-00000000006E}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "111_Spiral3CandidateGraphTests", "111_Spiral3CandidateGraphTests\111_Spiral3CandidateGraphTests.vcxproj", "{0000006F-0000-5000-8000-00000000006F}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "112_Spiral3AuthorityMutationTests", "112_Spiral3AuthorityMutationTests\112_Spiral3AuthorityMutationTests.vcxproj", "{00000070-0000-5000-8000-000000000070}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -605,10 +615,30 @@ Global
 		{00000066-0000-5000-8000-000000000066}.Debug|x64.Build.0 = Debug|x64
 		{00000066-0000-5000-8000-000000000066}.Release|x64.ActiveCfg = Release|x64
 		{00000066-0000-5000-8000-000000000066}.Release|x64.Build.0 = Release|x64
+		{00000067-0000-5000-8000-000000000067}.Debug|x64.ActiveCfg = Debug|x64
+		{00000067-0000-5000-8000-000000000067}.Debug|x64.Build.0 = Debug|x64
+		{00000067-0000-5000-8000-000000000067}.Release|x64.ActiveCfg = Release|x64
+		{00000067-0000-5000-8000-000000000067}.Release|x64.Build.0 = Release|x64
+		{00000068-0000-5000-8000-000000000068}.Debug|x64.ActiveCfg = Debug|x64
+		{00000068-0000-5000-8000-000000000068}.Debug|x64.Build.0 = Debug|x64
+		{00000068-0000-5000-8000-000000000068}.Release|x64.ActiveCfg = Release|x64
+		{00000068-0000-5000-8000-000000000068}.Release|x64.Build.0 = Release|x64
+		{00000069-0000-5000-8000-000000000069}.Debug|x64.ActiveCfg = Debug|x64
+		{00000069-0000-5000-8000-000000000069}.Debug|x64.Build.0 = Debug|x64
+		{00000069-0000-5000-8000-000000000069}.Release|x64.ActiveCfg = Release|x64
+		{00000069-0000-5000-8000-000000000069}.Release|x64.Build.0 = Release|x64
 		{0000006E-0000-5000-8000-00000000006E}.Debug|x64.ActiveCfg = Debug|x64
 		{0000006E-0000-5000-8000-00000000006E}.Debug|x64.Build.0 = Debug|x64
 		{0000006E-0000-5000-8000-00000000006E}.Release|x64.ActiveCfg = Release|x64
 		{0000006E-0000-5000-8000-00000000006E}.Release|x64.Build.0 = Release|x64
+		{0000006F-0000-5000-8000-00000000006F}.Debug|x64.ActiveCfg = Debug|x64
+		{0000006F-0000-5000-8000-00000000006F}.Debug|x64.Build.0 = Debug|x64
+		{0000006F-0000-5000-8000-00000000006F}.Release|x64.ActiveCfg = Release|x64
+		{0000006F-0000-5000-8000-00000000006F}.Release|x64.Build.0 = Release|x64
+		{00000070-0000-5000-8000-000000000070}.Debug|x64.ActiveCfg = Debug|x64
+		{00000070-0000-5000-8000-000000000070}.Debug|x64.Build.0 = Debug|x64
+		{00000070-0000-5000-8000-000000000070}.Release|x64.ActiveCfg = Release|x64
+		{00000070-0000-5000-8000-000000000070}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
