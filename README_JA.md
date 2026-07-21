@@ -102,3 +102,23 @@ tests/OPERATIONS_GUIDE_JA.md
 ## ファイル名の互換性
 
 ZIP展開時の文字コード差を避けるため、リポジトリ内のファイル名とフォルダ名はASCIIに限定しています。日本語の本文はUTF-8のまま保持されます。Spiral 1完成仕様は `docs/spiral1/SGE4-5_Spiral1_Completion_Spec_v0.2.md` です。
+
+## Spiral 2 final state
+
+Spiral 2は、Verified PlanからFrozen Packageまでの権威、Observation Contract
+V2、WARP、Debug／Release決定性、Recovery、および候補別Measurement
+Evidence V2を再資格済みです。次能力の選択はOwnerへ留保されています。
+
+```text
+ImplementationStatus = ExperimentComplete
+ArchitectureReviewStatus = FindingsClosed
+NextCapabilitySelection = DeferredByOwner
+SelectionStatus = OWNER_DECISION_REQUIRED
+```
+
+再現コマンド:
+
+```bat
+run_sge4_5_spiral2_final_qualification.bat
+```
+

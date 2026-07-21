@@ -26,8 +26,9 @@ Stages: S2-15, S2-16, S2-17, S2-18
 - Dynamic invocation objects are value payloads, not epoch handles; submitting
   their bytes after recovery is an explicit new bind. No binding is retained or
   replayed implicitly.
-- The observation tolerance identity change is justified in
-  `OBSERVATION_TOLERANCE_IMPLEMENTATION_V1.md`; no expected digest was rewritten.
+- The historical V1 tolerance identity remains preserved. Final qualification
+  uses componentwise `OBSERVATION_CONTRACT_V2.md`, with its fixed constants and
+  signed-zero rule justified in `OBSERVATION_TOLERANCE_IMPLEMENTATION_V2.md`.
 - Regression and Gate passed. Two later formal foundation Freeze attempts
   preserved transient `DXGI_ERROR_DEVICE_REMOVED` evidence after long WARP
   runs. The cause was 31 orphaned MSBuild worker nodes left by node reuse; the
@@ -40,4 +41,5 @@ SelfAudit = Passed
 IndependentSoftwareVerifier = Required
 NextCapabilitySelection = DeferredByOwner
 SelectionStatus = OWNER_DECISION_REQUIRED
+FinalQualificationStatus = Passed
 ```

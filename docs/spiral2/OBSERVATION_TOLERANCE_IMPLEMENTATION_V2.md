@@ -1,6 +1,6 @@
 # Observation tolerance implementation v2
 
-Review Closure introduced the Observation Contract that the Spiral 2 specification
+Final qualification introduced the Observation Contract that the Spiral 2 specification
 already required: absolute error, relative error, and ULP distance are evaluated
 **component by component** for A-reference, B-reference, C-reference, A-B, A-C,
 and B-C. Signed zero is canonicalized only for ULP distance.

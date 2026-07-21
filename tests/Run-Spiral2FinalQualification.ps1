@@ -1,4 +1,4 @@
-param([switch]$IncludeRealGpu)
+﻿param([switch]$IncludeRealGpu)
 $ErrorActionPreference = 'Stop'
 $testsRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $testsRoot
@@ -14,7 +14,8 @@ function Equal-Files([string]$left,[string]$right) {
     return $true
 }
 
-Invoke-Checked powershell.exe @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-Spiral2ReviewClosure.ps1'))
+Invoke-Checked powershell.exe @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-Spiral2FinalAuthority.ps1'))
+Invoke-Checked powershell.exe @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'tools\Verify-Spiral2CU6.ps1'))
 Invoke-Checked powershell.exe @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'Run-Spiral2CU2.ps1'))
 Invoke-Checked powershell.exe @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'Run-Spiral2CU3.ps1'))
 Invoke-Checked powershell.exe @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $testsRoot 'Run-Spiral2CU5.ps1'))
@@ -25,7 +26,7 @@ if(-not$msbuild){throw 'MSBuild missing'}
 foreach($configuration in @('Debug','Release')) {
     Invoke-Checked $msbuild @((Join-Path $root '99_Spiral2Launcher\99_Spiral2Launcher.vcxproj'),'/m','/nr:false','/nologo','/t:Build',"/p:Configuration=$configuration",'/p:Platform=x64',"/p:SolutionDir=$($root.TrimEnd('\')+'\')",'/v:minimal')
 }
-$output=Join-Path $root 'build\tests\spiral2-review-closure'
+$output=Join-Path $root 'build\tests\spiral2-final-qualification'
 New-Item -ItemType Directory -Force -Path $output|Out-Null
 $debugOutput=Join-Path $output 'debug'
 $releaseOutput=Join-Path $output 'release'
@@ -44,7 +45,7 @@ if($IncludeRealGpu) {
 }
 
 Write-Host '============================================================'
-Write-Host 'SGE4-5 SPIRAL 2 REVIEW CLOSURE VERIFICATION PASSED'
+Write-Host 'SGE4-5 SPIRAL 2 FINAL QUALIFICATION PASSED'
 Write-Host 'Items 1-5: Debug/Release authority, Package, WARP and recovery suites passed.'
 Write-Host 'Item 6: candidate-specific Measurement Evidence V2 format passed.'
 if($IncludeRealGpu){Write-Host 'Item 6 hardware measurement and report also passed.'}

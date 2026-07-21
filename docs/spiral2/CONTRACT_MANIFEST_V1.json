@@ -3,18 +3,71 @@
   "status": "frozen",
   "completionUnit": "CU0",
   "baselineCommit": "afaed65d9400f3f80a7f5a9094edd9029082f95d",
-  "targetAbi": { "d3d12Schema": 17, "runtime": 17 },
+  "targetAbi": {
+    "d3d12Schema": 17,
+    "runtime": 17
+  },
   "ownerSelection": "FixedDynamicMotorPaletteAndHierarchy",
   "ownerOnlyGate": "S2-22B",
   "contracts": [
-    { "path": "docs/spiral2/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL1.md", "bytes": 635, "sha256": "08cc0d9d5a85b7ad80d9d109cc3d236dff0150491bb244e1a4a3ea230b7aeecf" },
-    { "path": "docs/spiral2/SGE4-5_Spiral2_Completion_Spec_v0.1.md", "bytes": 3316, "sha256": "db4f077e1bc06172044bfa73886c89dcaa3ec74016766a33a86cd9d02a4b09b8" },
-    { "path": "docs/spiral2/NON_GOALS_V1.md", "bytes": 569, "sha256": "d23219a68af16e966a5282032d15cc236396553f46378e6dd5668985c9ca7ef2" },
-    { "path": "docs/spiral2/OBSERVATION_CONTRACT_V1.md", "bytes": 870, "sha256": "e30092fcdd5a71cc1cf1891d965553955dd981391fe556598586466395b688a3" },
-    { "path": "docs/spiral2/CORPUS_V1.md", "bytes": 903, "sha256": "c6a4f3e760b955584b6d47ab31af445a6546d2e6fc014f277f19f0863101bae4" },
-    { "path": "docs/spiral2/PROJECT_BOUNDARIES_V1.md", "bytes": 778, "sha256": "6f9cfb73a7377db00701a58057e66b08cfcc71934db70ed2490054a3ba053583" },
-    { "path": "docs/spiral2/STAGE_MAP_V1.md", "bytes": 777, "sha256": "c95b785184f5b945f0efec833fe0b26ec40d4685908635b45b6d05f2f8c69f8c" },
-    { "path": "docs/spiral2/PROOF_LEDGER_V1.md", "bytes": 1804, "sha256": "2df66ca7bf91893b085b36dabc919387fe2d4be95381ea483ec9e4472f124f7d" },
-    { "path": "docs/spiral2/FOUNDATION_BASELINE_V1.md", "bytes": 994, "sha256": "e2f4aadbe555bac6aa0d1d04ddeb140b0b0681f9241ba900fe6750b40c7fca0e" }
+    {
+      "path": "docs/spiral2/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL1.md",
+      "bytes": 635,
+      "sha256": "08cc0d9d5a85b7ad80d9d109cc3d236dff0150491bb244e1a4a3ea230b7aeecf"
+    },
+    {
+      "path": "docs/spiral2/SGE4-5_Spiral2_Completion_Spec_v0.1.md",
+      "bytes": 3316,
+      "sha256": "db4f077e1bc06172044bfa73886c89dcaa3ec74016766a33a86cd9d02a4b09b8"
+    },
+    {
+      "path": "docs/spiral2/NON_GOALS_V1.md",
+      "bytes": 569,
+      "sha256": "d23219a68af16e966a5282032d15cc236396553f46378e6dd5668985c9ca7ef2"
+    },
+    {
+      "path": "docs/spiral2/OBSERVATION_CONTRACT_V1.md",
+      "bytes": 870,
+      "sha256": "e30092fcdd5a71cc1cf1891d965553955dd981391fe556598586466395b688a3"
+    },
+    {
+      "path": "docs/spiral2/OBSERVATION_CONTRACT_V2.md",
+      "bytes": 1214,
+      "sha256": "7beed4f063c6e79284ab1f05d15d68627ba6e1c63dee504ca9db3f9f6d1f9175"
+    },
+    {
+      "path": "docs/spiral2/OBSERVATION_TOLERANCE_IMPLEMENTATION_V2.md",
+      "bytes": 1879,
+      "sha256": "9118dbf880e6a4c31b2271e7e77691ba1df084634950bdbb55cd92cb8e33589b"
+    },
+    {
+      "path": "docs/spiral2/CORPUS_V1.md",
+      "bytes": 903,
+      "sha256": "c6a4f3e760b955584b6d47ab31af445a6546d2e6fc014f277f19f0863101bae4"
+    },
+    {
+      "path": "docs/spiral2/PROJECT_BOUNDARIES_V1.md",
+      "bytes": 778,
+      "sha256": "6f9cfb73a7377db00701a58057e66b08cfcc71934db70ed2490054a3ba053583"
+    },
+    {
+      "path": "docs/spiral2/STAGE_MAP_V1.md",
+      "bytes": 777,
+      "sha256": "c95b785184f5b945f0efec833fe0b26ec40d4685908635b45b6d05f2f8c69f8c"
+    },
+    {
+      "path": "docs/spiral2/PROOF_LEDGER_V1.md",
+      "bytes": 2204,
+      "sha256": "617f9bf43e9b99154f0212974bfd47dae525751cc42a2d9b3af18054a4fdb083"
+    },
+    {
+      "path": "docs/spiral2/FOUNDATION_BASELINE_V1.md",
+      "bytes": 994,
+      "sha256": "e2f4aadbe555bac6aa0d1d04ddeb140b0b0681f9241ba900fe6750b40c7fca0e"
+    }
+  ],
+  "amendments": [
+    "ObservationContractV2",
+    "FinalProofStatus"
   ]
 }

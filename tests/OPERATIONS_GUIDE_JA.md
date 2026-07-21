@@ -834,3 +834,27 @@ CU5はCU2-CU4の権威Gateを再実行し、S00-S15 WARP corpusをDebug 2回・R
 ```
 
 一括実行は`.\run_sge4_5_cu6_measurement_decision_evidence.bat`。既定はwarm-up 200、measurement 2000/algorithm、5 runs、ABBA。回数変更はPowerShell引数で可能だがProfile identityへ記録される。次能力は選択しない。
+
+---
+
+## Spiral 2 final qualification
+
+Spiral 2の次能力を選択する前の正式な閉鎖確認には、次を使用する。
+
+```bat
+run_sge4_5_spiral2_final_qualification.bat
+```
+
+このコマンドは、Verified PlanからFrozen Packageまでの権威、Package内の
+Operation／Program／Binding／dispatch、Observation Contract V2、WARP、
+Debug／Release決定性、Recovery、およびMeasurement Evidence V2形式を確認する。
+
+実GPU計測も再実行する場合だけ、次を使用する。
+
+```bat
+run_sge4_5_spiral2_final_qualification.bat -IncludeRealGpu
+```
+
+実GPU計測を含めない実行で表示される`110 ns / 120 ns / 130 ns`は、
+Evidence形式の自己試験値であり性能結果ではない。正式な実測ランキングは
+Stage 20およびStage 21文書を参照する。

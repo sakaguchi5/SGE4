@@ -13,7 +13,7 @@ function Invoke-Checked([string]$FilePath,[string[]]$Arguments=@()) {
     if($LASTEXITCODE -ne 0){throw "Command failed with exit code $LASTEXITCODE`: $FilePath"}
 }
 
-foreach($verifier in @('Verify-Spiral2ResearchContract.ps1','Verify-Spiral2CU1.ps1','Verify-Spiral2CU2.ps1','Verify-Spiral2CU3.ps1','Verify-Spiral2CU4.ps1','Verify-Spiral2CU5.ps1','Verify-Spiral2CU6.ps1')) {
+foreach($verifier in @('Verify-Spiral2ResearchContract.ps1','Verify-Spiral2CU1.ps1','Verify-Spiral2CU2.ps1','Verify-Spiral2CU3.ps1','Verify-Spiral2CU4.ps1','Verify-Spiral2CU5.ps1','Verify-Spiral2CU6.ps1','Verify-Spiral2FinalAuthority.ps1')) {
     Invoke-Checked 'powershell.exe' @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot "tools\$verifier"))
 }
 

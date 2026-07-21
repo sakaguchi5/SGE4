@@ -1,46 +1,40 @@
-# Spiral 2 Stage 22A Prototype Evidence Pause
+# Spiral 2 Stage 22A Final Evidence Closure
 
-The Owner paused Spiral 2 implementation at S2-22A after preserving the current
-prototype evidence. The existing Architecture, WARP, determinism, recovery, and
-hardware-measurement artifacts remain useful experimental records, but a later
-architecture review identified open findings. They are not treated as final
-closure of S2-I01 through S2-I23.
+Spiral 2 final qualification passed after all architecture-review findings were
+closed. S2-I01 through S2-I23 are qualified by executable authority, Package,
+WARP, determinism, recovery, and hardware-measurement evidence.
 
-S2-I24 remains preserved: no next-capability type, project, capability bit,
-reserved operation, or Level 4 extension was created.
+S2-I24 is also preserved: no next-capability type, project, capability bit,
+reserved operation, or Level 4 extension was created before Owner selection.
 
-Preserved evidence commands:
+Canonical qualification commands:
 
 ```powershell
-cmd /c .\run_sge4_5_spiral2_freeze.bat
-cmd /c .\tests\run_freeze.bat
-powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass `
-  -File .\tests\Run-Spiral2CU6.ps1 -Mode Measurement
+cmd /c .\run_sge4_5_spiral2_final_qualification.bat
+cmd /c .\run_sge4_5_spiral2_final_qualification.bat -IncludeRealGpu
 ```
 
-The measured representation ranking is historical prototype evidence only:
+Final measured ranking on the qualified adapter:
 
 ```text
 1 B.DirectPgaHierarchy 49152 ns
 2 A.MatrixHierarchy    140288 ns
-3 C.HybridHierarchy    143360 ns
+3 C.HybridHierarchy    144384 ns
 RecommendationAuthority = NonAuthoritative
 ```
 
-The architecture review findings must be resolved before this ranking is used as
-final Decision Evidence. In particular, verified-graph-to-Package authority,
-hierarchy dispatch structure, Observation coverage, and candidate-specific
-measurement fields remain open.
+The first `110 ns / 120 ns / 130 ns` ranking printed by the CU6 self-test is
+format-test data only and is not hardware evidence.
 
 Current state:
 
 ```text
-ImplementationStatus = PrototypePaused
-PrototypeEvidenceStatus = Preserved
-ArchitectureReviewStatus = FindingsOpen
+ImplementationStatus = ExperimentComplete
+ArchitectureReviewStatus = FindingsClosed
+FinalQualificationStatus = Passed
+HardwareEvidenceStatus = Qualified
 NextCapabilitySelection = DeferredByOwner
 SelectionStatus = OWNER_DECISION_REQUIRED
 ```
 
-The broad `SPIRAL 2 EXPERIMENT COMPLETE` and Hierarchical Representation
-Authority completion banners are not asserted at this paused prototype state.
+Spiral 2 is closed. S2-22B remains an Owner-only decision gate.

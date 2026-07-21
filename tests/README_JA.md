@@ -57,3 +57,14 @@ docs/test-logs/YYYYMMDD-HHMMSS-Suite-Configuration.log
 このログはQualificationの証拠としてGitへコミットします。`build`成果物とは分離され、SOURCE_MANIFESTのソース固定対象から生成`.log`だけが除外されます。
 
 今回のRunner全体見直し内容は `SCRIPT_REVIEW_JA.md` に記録しています。
+
+## Spiral 2の最終確認
+
+次能力を選ぶ前のSpiral 2正式Qualificationは、リポジトリ直下から次を実行します。
+
+```bat
+run_sge4_5_spiral2_final_qualification.bat
+```
+
+実GPU測定を再取得する場合だけ`-IncludeRealGpu`を付けます。
+

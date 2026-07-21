@@ -96,7 +96,7 @@ foreach ($token in @('compositionMaterializationNanoseconds','compositionEndToEn
 }
 
 Write-Host '============================================================'
-Write-Host 'SGE4-5 SPIRAL 2 REVIEW CLOSURE STATIC AUDIT PASSED'
+Write-Host 'SGE4-5 SPIRAL 2 FINAL AUTHORITY STATIC AUDIT PASSED'
 Write-Host '1: Verified operation IR -> exact Leaf lowering'
 Write-Host '2: Package operation/program/binding/dispatch rebound'
 Write-Host '3: Single-dispatch canonical-order serial hierarchy model'
