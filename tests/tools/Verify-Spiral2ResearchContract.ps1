@@ -20,12 +20,12 @@ if ($manifest.completionUnit -ne 'CU0') { throw 'Contract manifest is not CU0.' 
 if ($manifest.baselineCommit -ne 'afaed65d9400f3f80a7f5a9094edd9029082f95d') { throw 'Baseline commit mismatch.' }
 if ($manifest.ownerSelection -ne 'FixedDynamicMotorPaletteAndHierarchy') { throw 'Owner selection mismatch.' }
 if ($manifest.ownerOnlyGate -ne 'S2-22B') { throw 'Owner-only gate mismatch.' }
-if (@($manifest.amendments) -notcontains 'ObservationContractV2' -or @($manifest.amendments) -notcontains 'FinalProofStatus') { throw 'Final contract amendments are missing.' }
+if (@($manifest.amendments) -notcontains 'ObservationContractV2' -or @($manifest.amendments) -notcontains 'FinalProofStatus' -or @($manifest.amendments) -notcontains 'CompletionSpecV0.2') { throw 'Final contract amendments are missing.' }
 if ([int]$manifest.targetAbi.d3d12Schema -ne 17 -or [int]$manifest.targetAbi.runtime -ne 17) { throw 'Target ABI mismatch.' }
 
 $expected = @(
     'docs/spiral2/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL1.md',
-    'docs/spiral2/SGE4-5_Spiral2_Completion_Spec_v0.1.md',
+    'docs/spiral2/SGE4-5_Spiral2_Completion_Spec_v0.2.md',
     'docs/spiral2/NON_GOALS_V1.md',
     'docs/spiral2/OBSERVATION_CONTRACT_V1.md',
     'docs/spiral2/OBSERVATION_CONTRACT_V2.md',

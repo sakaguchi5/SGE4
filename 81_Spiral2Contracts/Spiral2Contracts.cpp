@@ -9,7 +9,6 @@ namespace sge4_5::spiral2::contracts
 namespace
 {
 constexpr double MinimumNormSquared = 0x1p-40;
-constexpr double SignEpsilon = 0x1p-52;
 constexpr double FloatUnitTolerance = 3.0e-6;
 constexpr double FloatDualTolerance = 3.0e-5;
 
@@ -28,6 +27,24 @@ constexpr double FloatDualTolerance = 3.0e-5;
 
 [[nodiscard]] float CanonicalZero(float value) noexcept { return value == 0.0f ? 0.0f : value; }
 
+template<class T>
+[[nodiscard]] int CanonicalQuaternionSignV1(const std::array<T, 4>& quaternion) noexcept
+{
+    for (const auto value : quaternion)
+    {
+        if (std::abs(static_cast<double>(value)) > DynamicMotorCanonicalSignEpsilonV1)
+            return value < static_cast<T>(0) ? -1 : 1;
+    }
+    return 0;
+}
+
+template<class T>
+void CanonicalizeQuaternionSignV1(std::array<T, 4>& quaternion) noexcept
+{
+    if (CanonicalQuaternionSignV1(quaternion) < 0)
+        for (auto& value : quaternion) value = -value;
+}
+
 [[nodiscard]] base::Result<DynamicMotorRecordV1, std::string> BuildRecord(const RotationTranslationV1& input)
 {
     const std::array<double, 7> all{input.qw,input.qx,input.qy,input.qz,input.tx,input.ty,input.tz};
@@ -39,9 +56,7 @@ constexpr double FloatDualTolerance = 3.0e-5;
         return base::Result<DynamicMotorRecordV1, std::string>::Failure("rotation quaternion has zero length");
     const double inverse = 1.0 / std::sqrt(norm2);
     for (auto& value : qr) value *= inverse;
-    bool flip = false;
-    for (const auto value : qr) if (std::abs(value) > SignEpsilon) { flip = value < 0.0; break; }
-    if (flip) for (auto& value : qr) value = -value;
+    CanonicalizeQuaternionSignV1(qr);
     const auto qd64 = Multiply({0.0,input.tx,input.ty,input.tz}, qr);
     DynamicMotorRecordV1 result;
     for (std::size_t i=0;i<4;++i)
@@ -69,10 +84,9 @@ constexpr double FloatDualTolerance = 3.0e-5;
         return base::Result<void, std::string>::Failure("rotation is outside the binary32 unit tolerance");
     if (std::abs(dot) > FloatDualTolerance)
         return base::Result<void, std::string>::Failure("dual quaternion orthogonality is invalid");
-    for (const auto value : record.qr)
-        if (std::abs(value) > 1.0e-12f) return value > 0.0f
-            ? base::Result<void, std::string>::Success()
-            : base::Result<void, std::string>::Failure("rotation sign is not canonical");
+    const auto sign = CanonicalQuaternionSignV1(record.qr);
+    if (sign > 0) return base::Result<void, std::string>::Success();
+    if (sign < 0) return base::Result<void, std::string>::Failure("rotation sign is not canonical");
     return base::Result<void, std::string>::Failure("rotation quaternion has zero length");
 }
 }

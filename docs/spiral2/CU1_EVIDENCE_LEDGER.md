@@ -3,11 +3,14 @@
 Stages: S2-03, S2-04, S2-05
 
 - Canonical hierarchy: single root, bounded parent table, cycle rejection,
-  deterministic depth layers and `(depth,bone-index)` canonical order
+  root connectivity, arbitrary stable bone numbering, and deterministic
+  `(depth,bone-index)` canonical order derived independently of numeric parent order
 - Frozen hierarchy fields: bone count, topology, semantic identities and derived
   tables; no dynamic Motor values or backend representation concepts
 - Dynamic invocation: binary32 `qr.wxyz + qd.wxyz`, 32 bytes per bone, exact slot
-  size, canonical sign/zero, unit and dual-orthogonality validation
+  size; Builder normalization for finite non-zero input rotations; strict unit,
+  dual-orthogonality, canonical-zero, and shared `2^-52` sign validation at the
+  serialized Palette boundary
 - Authority: changing palette values preserves invocation/Frozen contract bytes;
   changing bone count or topology changes the schema/semantic identity
 - Corpus: H00-H08 and F00-F11, 108 fixed combinations and five probes per bone

@@ -49,11 +49,22 @@ int main(int argc,char** argv)
     if(k::BuildDynamicLocalMotorPaletteV1(1,invalid)) return 13;
     invalid[0]={-1.0,0,0,0,1,2,3};
     auto canonical=k::BuildDynamicLocalMotorPaletteV1(1,invalid); if(!canonical||canonical.Value().motors[0].qr[0]!=1.0f) return 14;
+    invalid[0]={2.0,0,0,0,0,0,0};
+    auto normalized=k::BuildDynamicLocalMotorPaletteV1(1,invalid);
+    if(!normalized||normalized.Value().motors[0].qr[0]!=1.0f||
+       !k::ValidateDynamicLocalMotorPaletteV1(normalized.Value(),1)) return 15;
+    auto nonUnit=normalized.Value();
+    nonUnit.motors[0].qr={2.0f,0.0f,0.0f,0.0f};
+    if(k::ValidateDynamicLocalMotorPaletteV1(nonUnit,1)) return 16;
+    invalid[0]={-1.0e-13,1.0,0,0,0,0,0};
+    auto signBoundary=k::BuildDynamicLocalMotorPaletteV1(1,invalid);
+    if(!signBoundary||!k::ValidateDynamicLocalMotorPaletteV1(signBoundary.Value(),1)||
+       signBoundary.Value().motors[0].qr[0]<=0.0f) return 17;
     auto corrupt=k::SerializeDynamicLocalMotorPaletteV1(canonical.Value());
     corrupt[3]^=std::byte{0x80};
-    if(k::DeserializeDynamicLocalMotorPaletteV1(1,corrupt)) return 15;
-    auto bundle=c::BuildCorpusFoundationBundleV1(); if(!bundle) return 16;
-    if(argc==3&&std::string(argv[1])=="--emit") { auto result=b::WriteAllBytes(std::filesystem::path(argv[2]),bundle.Value());if(!result)return 17;std::cout<<b::ToHex(b::Sha256(bundle.Value()))<<'\n';return 0; }
+    if(k::DeserializeDynamicLocalMotorPaletteV1(1,corrupt)) return 18;
+    auto bundle=c::BuildCorpusFoundationBundleV1(); if(!bundle) return 19;
+    if(argc==3&&std::string(argv[1])=="--emit") { auto result=b::WriteAllBytes(std::filesystem::path(argv[2]),bundle.Value());if(!result)return 20;std::cout<<b::ToHex(b::Sha256(bundle.Value()))<<'\n';return 0; }
     std::cout<<"Spiral 2 dynamic invocation and independent CPU reference passed: "<<combinations<<" H/F combinations.\n";
-    return combinations==108?0:18;
+    return combinations==108?0:21;
 }

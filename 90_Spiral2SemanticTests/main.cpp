@@ -26,19 +26,24 @@ int main(int argc,char** argv)
     const std::array<std::int32_t,2> range{-1,2}, self{-1,1}, roots{-1,-1}, cycle{1,0};
     if(h::BuildRigidHierarchySemanticV1(range)||h::BuildRigidHierarchySemanticV1(self)||
        h::BuildRigidHierarchySemanticV1(roots)||h::BuildRigidHierarchySemanticV1(cycle)) return 5;
+    const std::array<std::int32_t,2> parentAfterChild{1,-1};
+    auto reordered=h::BuildRigidHierarchySemanticV1(parentAfterChild);
+    if(!reordered||reordered.Value().rootBone!=1u||
+       reordered.Value().canonicalBoneOrder!=std::vector<std::uint32_t>{1u,0u}||
+       !h::ValidateRigidHierarchySemanticV1(reordered.Value())) return 6;
     auto changed=corpus.Value()[4].hierarchy;
     std::swap(changed.canonicalBoneOrder[1],changed.canonicalBoneOrder[2]);
-    if(h::ValidateRigidHierarchySemanticV1(changed)) return 6;
-    changed=corpus.Value()[4].hierarchy; ++changed.depthOffsets[1];
     if(h::ValidateRigidHierarchySemanticV1(changed)) return 7;
-    changed=corpus.Value()[4].hierarchy; changed.observationContractIdentity={};
+    changed=corpus.Value()[4].hierarchy; ++changed.depthOffsets[1];
     if(h::ValidateRigidHierarchySemanticV1(changed)) return 8;
-    if(h::RigidHierarchySemanticIdentityV1(corpus.Value()[2].hierarchy)==h::RigidHierarchySemanticIdentityV1(corpus.Value()[3].hierarchy)) return 9;
+    changed=corpus.Value()[4].hierarchy; changed.observationContractIdentity={};
+    if(h::ValidateRigidHierarchySemanticV1(changed)) return 9;
+    if(h::RigidHierarchySemanticIdentityV1(corpus.Value()[2].hierarchy)==h::RigidHierarchySemanticIdentityV1(corpus.Value()[3].hierarchy)) return 10;
     if(argc==3&&std::string(argv[1])=="--emit")
     {
         b::BinaryWriter writer;
         for(const auto& item:corpus.Value()){const auto bytes=h::SerializeRigidHierarchySemanticV1(item.hierarchy);writer.WriteU32(static_cast<std::uint32_t>(bytes.size()));writer.WriteBytes(bytes);}
-        auto bytes=std::move(writer).Take(); auto result=b::WriteAllBytes(std::filesystem::path(argv[2]),bytes); if(!result)return 10;
+        auto bytes=std::move(writer).Take(); auto result=b::WriteAllBytes(std::filesystem::path(argv[2]),bytes); if(!result)return 11;
         std::cout<<b::ToHex(b::Sha256(bytes))<<'\n'; return 0;
     }
     std::cout<<"Spiral 2 canonical hierarchy semantic tests passed: H00-H08 and negative authority gates.\n";
