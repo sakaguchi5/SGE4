@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.0.0
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -193,6 +193,14 @@ EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "98_Spiral2FreezeTests", "98_Spiral2FreezeTests\98_Spiral2FreezeTests.vcxproj", "{98000000-0000-5000-8000-000000000098}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "99_Spiral2Launcher", "99_Spiral2Launcher\99_Spiral2Launcher.vcxproj", "{99000000-0000-5000-8000-000000000099}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "100_ReuseSweepSemantic", "100_ReuseSweepSemantic\100_ReuseSweepSemantic.vcxproj", "{00000064-0000-5000-8000-000000000064}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "101_Spiral3Contracts", "101_Spiral3Contracts\101_Spiral3Contracts.vcxproj", "{00000065-0000-5000-8000-000000000065}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "102_Spiral3Corpus", "102_Spiral3Corpus\102_Spiral3Corpus.vcxproj", "{00000066-0000-5000-8000-000000000066}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "110_Spiral3SemanticTests", "110_Spiral3SemanticTests\110_Spiral3SemanticTests.vcxproj", "{0000006E-0000-5000-8000-00000000006E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -585,6 +593,22 @@ Global
 		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Debug|x64.Build.0 = Debug|x64
 		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Release|x64.ActiveCfg = Release|x64
 		{07F63C76-E466-5DDB-85B8-BC81FDE03762}.Release|x64.Build.0 = Release|x64
+		{00000064-0000-5000-8000-000000000064}.Debug|x64.ActiveCfg = Debug|x64
+		{00000064-0000-5000-8000-000000000064}.Debug|x64.Build.0 = Debug|x64
+		{00000064-0000-5000-8000-000000000064}.Release|x64.ActiveCfg = Release|x64
+		{00000064-0000-5000-8000-000000000064}.Release|x64.Build.0 = Release|x64
+		{00000065-0000-5000-8000-000000000065}.Debug|x64.ActiveCfg = Debug|x64
+		{00000065-0000-5000-8000-000000000065}.Debug|x64.Build.0 = Debug|x64
+		{00000065-0000-5000-8000-000000000065}.Release|x64.ActiveCfg = Release|x64
+		{00000065-0000-5000-8000-000000000065}.Release|x64.Build.0 = Release|x64
+		{00000066-0000-5000-8000-000000000066}.Debug|x64.ActiveCfg = Debug|x64
+		{00000066-0000-5000-8000-000000000066}.Debug|x64.Build.0 = Debug|x64
+		{00000066-0000-5000-8000-000000000066}.Release|x64.ActiveCfg = Release|x64
+		{00000066-0000-5000-8000-000000000066}.Release|x64.Build.0 = Release|x64
+		{0000006E-0000-5000-8000-00000000006E}.Debug|x64.ActiveCfg = Debug|x64
+		{0000006E-0000-5000-8000-00000000006E}.Debug|x64.Build.0 = Debug|x64
+		{0000006E-0000-5000-8000-00000000006E}.Release|x64.ActiveCfg = Release|x64
+		{0000006E-0000-5000-8000-00000000006E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

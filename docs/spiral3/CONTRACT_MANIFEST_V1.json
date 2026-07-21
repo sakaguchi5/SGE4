@@ -1,0 +1,42 @@
+{
+  "schema": "SGE4-5.Spiral3.ContractManifest.V1",
+  "completionUnit": "CU0",
+  "baselineCommit": "398891936bf498fed532b26c06884bbfbf66f3a8",
+  "ownerSelection": "FixedCountReuseSweepAndMaterializationBoundary",
+  "ownerOnlyGate": "NextCapabilitySelection",
+  "targetAbi": {
+    "d3d12Schema": 17,
+    "runtime": 17
+  },
+  "reuseCounts": [
+    1,
+    4,
+    16,
+    64,
+    256,
+    512
+  ],
+  "boneCount": 8,
+  "frameCases": 12,
+  "candidateKinds": [
+    "MatrixHierarchyConsumer",
+    "DirectPgaHierarchyConsumer",
+    "HybridHierarchyConsumer"
+  ],
+  "level4Policy": "UnchangedLevel4V1Only",
+  "authoritativeSpec": "docs/spiral3/SGE4-5_Spiral3_Completion_Spec_v0.1.md",
+  "amendments": [],
+  "typeSafety": {
+    "workloadDimensions": [
+      "BoneCountV1",
+      "ReuseCountV1",
+      "PointCountV1"
+    ],
+    "rawToVerified": "CompileTimeUnavailable",
+    "sealReplayRejectedAcross": [
+      "ReuseSemantic",
+      "PointCorpus",
+      "Hierarchy"
+    ]
+  }
+}
