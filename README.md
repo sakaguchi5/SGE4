@@ -95,3 +95,14 @@ See `tests/README_JA.md` and `tests/OPERATIONS_GUIDE_JA.md` for the full workflo
 ## Archive path portability
 
 Repository file and directory names are ASCII-only so Windows ZIP extractors cannot alter entry names. UTF-8 Japanese document contents remain unchanged. The Spiral 1 specification is `docs/spiral1/SGE4-5_Spiral1_Completion_Spec_v0.2.md`.
+
+
+## Spiral 3 CU5
+
+After CU4 has passed, run:
+
+```bat
+run_sge4_5_spiral3_cu5_warp_determinism_recovery.bat
+```
+
+CU5 qualifies 72 WARP reuse/frame executions, deterministic observation evidence, whole-composition recovery and stale-epoch rejection without changing D3D12 Schema 17 or Runtime 17.

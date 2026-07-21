@@ -220,6 +220,14 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "107_Spiral3Scenarios", "107
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "114_Spiral3CompositionTests", "114_Spiral3CompositionTests\114_Spiral3CompositionTests.vcxproj", "{00000072-0000-5000-8000-000000000072}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "108_Spiral3Execution", "108_Spiral3Execution\108_Spiral3Execution.vcxproj", "{0000006C-0000-5000-8000-00000000006C}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "115_Spiral3WarpObservationTests", "115_Spiral3WarpObservationTests\115_Spiral3WarpObservationTests.vcxproj", "{00000073-0000-5000-8000-000000000073}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "116_Spiral3RecoveryTests", "116_Spiral3RecoveryTests\116_Spiral3RecoveryTests.vcxproj", "{00000074-0000-5000-8000-000000000074}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "117_Spiral3FreezeTests", "117_Spiral3FreezeTests\117_Spiral3FreezeTests.vcxproj", "{00000075-0000-5000-8000-000000000075}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -663,6 +671,22 @@ Global
 		{00000072-0000-5000-8000-000000000072}.Debug|x64.Build.0 = Debug|x64
 		{00000072-0000-5000-8000-000000000072}.Release|x64.ActiveCfg = Release|x64
 		{00000072-0000-5000-8000-000000000072}.Release|x64.Build.0 = Release|x64
+		{0000006C-0000-5000-8000-00000000006C}.Debug|x64.ActiveCfg = Debug|x64
+		{0000006C-0000-5000-8000-00000000006C}.Debug|x64.Build.0 = Debug|x64
+		{0000006C-0000-5000-8000-00000000006C}.Release|x64.ActiveCfg = Release|x64
+		{0000006C-0000-5000-8000-00000000006C}.Release|x64.Build.0 = Release|x64
+		{00000073-0000-5000-8000-000000000073}.Debug|x64.ActiveCfg = Debug|x64
+		{00000073-0000-5000-8000-000000000073}.Debug|x64.Build.0 = Debug|x64
+		{00000073-0000-5000-8000-000000000073}.Release|x64.ActiveCfg = Release|x64
+		{00000073-0000-5000-8000-000000000073}.Release|x64.Build.0 = Release|x64
+		{00000074-0000-5000-8000-000000000074}.Debug|x64.ActiveCfg = Debug|x64
+		{00000074-0000-5000-8000-000000000074}.Debug|x64.Build.0 = Debug|x64
+		{00000074-0000-5000-8000-000000000074}.Release|x64.ActiveCfg = Release|x64
+		{00000074-0000-5000-8000-000000000074}.Release|x64.Build.0 = Release|x64
+		{00000075-0000-5000-8000-000000000075}.Debug|x64.ActiveCfg = Debug|x64
+		{00000075-0000-5000-8000-000000000075}.Debug|x64.Build.0 = Debug|x64
+		{00000075-0000-5000-8000-000000000075}.Release|x64.ActiveCfg = Release|x64
+		{00000075-0000-5000-8000-000000000075}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

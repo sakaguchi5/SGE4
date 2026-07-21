@@ -1,6 +1,7 @@
 ﻿# Spiral 3 progress
 
-Baseline: `398891936bf498fed532b26c06884bbfbf66f3a8`.
+Original baseline: `398891936bf498fed532b26c06884bbfbf66f3a8`.
+CU5 delivery baseline: `e5161687c87cd2d3ab4d19d4fd6d520f35c0ef2d`.
 
 ## Qualified by the owner
 
@@ -8,21 +9,24 @@ Baseline: `398891936bf498fed532b26c06884bbfbf66f3a8`.
 - CU1 fixed eight-bone hierarchy and R1/R4/R16/R64/R256/R512 Semantic/corpus.
 - CU2 18 independently verified A/B/C candidate plans; 24 invalid proposals rejected.
 - CU3 18 verified candidate groups lowered into 60 Schema 17 Frozen Leaves; 80 binding mutations rejected.
-- CU3 Leaf evidence SHA-256: `0D30F7A0CE27E42E4122188EA93A6D8192E4F5E0E50BFBBD8E3EB32BA658DA31`.
+- CU4 six eleven-Leaf/twelve-Flow comparison Compositions; 54 mutations rejected.
+- CU4 Composition evidence SHA-256: `E914816BDC4979F5F5AC5564E65FF01082BE1E67CAE8482E4EF0D316360AA4DF`.
 
 ## Included in this delivery
 
-- CU4 canonical scenario construction for all six fixed reuse counts.
-- Eleven Leaves and twelve single-writer Buffer Flows per experiment.
-- Exact Motor/Point fan-out, A/B/C intermediates, Observer fan-in and records output.
-- Frozen schedule/allocation/state/signal/wait validation.
-- 54 aggregate, topology, role, duplicate-writer, missing-consumer and cross-R mutation gates.
-- Debug A/B/Release deterministic Composition evidence runner.
+- CU5 Runtime-only execution support, leaving CU4 architecture Runtime/Backend-free.
+- 72 WARP executions: six reuse counts by twelve dynamic Motor palettes.
+- Independent CPU reference, A/B/C pairwise checks, rigidity/orientation checks where R supplies basis probes.
+- CPU reconstruction of GPU absolute/relative/ULP Observation records.
+- Frozen-byte invariance across palette changes and frame-order permutation.
+- Debug/Release/fresh-process evidence comparisons.
+- Controlled whole-composition recovery, stale-epoch rejection and explicit rebind requirement.
+- Actual RemoveDevice quarantine and fresh-process rematerialization equivalence.
 
 ## Next Windows qualification
 
 ```bat
-run_sge4_5_spiral3_cu4_composition_sufficiency.bat
+run_sge4_5_spiral3_cu5_warp_determinism_recovery.bat
 ```
 
-CU5-CU6 are not included in this delivery.
+CU6 real-GPU measurement and decision evidence are not included in this delivery.
