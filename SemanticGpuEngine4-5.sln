@@ -216,6 +216,10 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "106_Spiral3LeafCompiler", "
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "113_Spiral3LeafPackageTests", "113_Spiral3LeafPackageTests\113_Spiral3LeafPackageTests.vcxproj", "{00000071-0000-5000-8000-000000000071}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "107_Spiral3Scenarios", "107_Spiral3Scenarios\107_Spiral3Scenarios.vcxproj", "{0000006B-0000-5000-8000-00000000006B}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "114_Spiral3CompositionTests", "114_Spiral3CompositionTests\114_Spiral3CompositionTests.vcxproj", "{00000072-0000-5000-8000-000000000072}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -651,6 +655,14 @@ Global
 		{00000071-0000-5000-8000-000000000071}.Debug|x64.Build.0 = Debug|x64
 		{00000071-0000-5000-8000-000000000071}.Release|x64.ActiveCfg = Release|x64
 		{00000071-0000-5000-8000-000000000071}.Release|x64.Build.0 = Release|x64
+		{0000006B-0000-5000-8000-00000000006B}.Debug|x64.ActiveCfg = Debug|x64
+		{0000006B-0000-5000-8000-00000000006B}.Debug|x64.Build.0 = Debug|x64
+		{0000006B-0000-5000-8000-00000000006B}.Release|x64.ActiveCfg = Release|x64
+		{0000006B-0000-5000-8000-00000000006B}.Release|x64.Build.0 = Release|x64
+		{00000072-0000-5000-8000-000000000072}.Debug|x64.ActiveCfg = Debug|x64
+		{00000072-0000-5000-8000-000000000072}.Debug|x64.Build.0 = Debug|x64
+		{00000072-0000-5000-8000-000000000072}.Release|x64.ActiveCfg = Release|x64
+		{00000072-0000-5000-8000-000000000072}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
