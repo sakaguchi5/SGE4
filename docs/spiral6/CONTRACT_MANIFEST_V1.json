@@ -1,0 +1,142 @@
+{
+  "schema": "SGE4-5.Spiral6.ContractManifest.V1",
+  "completionUnit": "CU1",
+  "baselineCommit": "46554ab55e532c438c9c4214ff1df3e7cd68638e",
+  "ownerSelection": "ExactSparseWorkSetVerifiedLowering",
+  "title": "Exact Sparse Work-Set Flow and Verified Sparse Lowering",
+  "japaneseTitle": "正確な疎Work集合Flowと疎実行表現の検証済みLowering",
+  "ownerOnlyGate": "NextCapabilitySelection",
+  "selectionRecord": "docs/spiral6/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL5.md",
+  "targetAbiBaseline": {
+    "d3d12Schema": 17,
+    "runtime": 17,
+    "spiral4IndirectExtension": "VersionedSidecarIndirectExtensionV1",
+    "spiral5TemporalExtension": "VersionedSidecarTemporalExtensionV1"
+  },
+  "cu1AbiMutation": "None",
+  "abiExtensionPolicy": "VersionedSparseExtensionOnlyAfterBaselineInsufficiencyProof",
+  "baselineInventory": {
+    "spiral4ActivePrefixCount": true,
+    "spiral4VerifiedIndirectDispatch": true,
+    "spiral5VerifiedTemporalHistory": true,
+    "fixedCapacityOutputBuffer": true,
+    "arbitrarySparseWorkSetContract": false,
+    "sparseMembershipArtifact": false,
+    "compactIndexListArtifact": false,
+    "activeBlockListArtifact": false,
+    "generalSparseWriteSetAuthority": false,
+    "runtimeSparsePolicyDecision": "Forbidden"
+  },
+  "fixedMeaning": {
+    "semantic": "ExactSparsePointTransformWorkSetV1",
+    "representationPath": "DirectPgaThroughConsumerV1",
+    "boneCount": 8,
+    "globalMotorPaletteGeneration": 0,
+    "workUniverseCount": 4096,
+    "outputCapacity": 4096,
+    "threadsPerGroup": 64,
+    "timelineLength": 1,
+    "historyDepth": 0,
+    "semanticGraphShape": "Fixed",
+    "resourceCapacity": "Fixed",
+    "outputOrder": "UniverseIndexOrder",
+    "inactiveOutputSentinel": "Float4Zero",
+    "activeOutputHomogeneousW": 1
+  },
+  "sparseSet": {
+    "type": "ExactSparseWorkSetV1",
+    "universeFirstIndex": 0,
+    "universeLastIndex": 4095,
+    "cardinalitySymbol": "K",
+    "minimumCardinality": 0,
+    "maximumCardinality": 4096,
+    "semanticOrder": "SetUnordered",
+    "canonicalEncoding": "StrictlyIncreasingUniqueU32Indices",
+    "duplicateIndexPolicy": "Rejected",
+    "outOfRangeIndexPolicy": "Rejected",
+    "setAuthority": "ExternalVerifiedInput",
+    "runtimeMayChooseMembership": false,
+    "runtimeMayChooseCardinality": false,
+    "runtimeMayChoosePattern": false
+  },
+  "candidateKinds": [
+    "DenseMembershipMaskPredicate",
+    "CompactIndexListDispatch",
+    "ActiveBlockListLocalMask"
+  ],
+  "candidateExecutionRules": {
+    "DenseMembershipMaskPredicate": "DispatchAll4096ThreadsTestDerived4096BitMaskWriteOnlyMembers",
+    "CompactIndexListDispatch": "DispatchCeilKOver64ThreadsReadDerivedSortedIndexListWriteOriginalIndices",
+    "ActiveBlockListLocalMask": "DispatchOne64ThreadGroupPerDerivedActiveBlockTestDerivedLocal64BitMask"
+  },
+  "derivedRepresentations": {
+    "DenseMembershipMaskPredicate": {
+      "membershipMaskBytes": 512,
+      "dispatchGroupsX": 64
+    },
+    "CompactIndexListDispatch": {
+      "indexStrideBytes": 4,
+      "fixedCapacityBytes": 16384,
+      "dispatchRule": "CeilKOver64ZeroWhenKZero"
+    },
+    "ActiveBlockListLocalMask": {
+      "blockSize": 64,
+      "maximumBlockCount": 64,
+      "record": "BlockIdU32ReservedU32LocalMaskU64",
+      "recordStrideBytes": 16,
+      "fixedCapacityBytes": 1024,
+      "dispatchRule": "OneGroupPerActiveBlockZeroWhenNoActiveBlocks"
+    }
+  },
+  "patternKinds": [
+    "PrefixControl",
+    "UniformStride",
+    "BlockClusteredPermutation",
+    "HashScatterPermutation"
+  ],
+  "patternRules": {
+    "PrefixControl": "Indices0ThroughKMinus1",
+    "UniformStride": "FloorJTimes4096DivKForJ0ThroughKMinus1",
+    "BlockClusteredPermutation": "Fill64ElementBlocksInBlockOrder17JPlus5Mod64ThenPartialNextBlock",
+    "HashScatterPermutation": "FirstKOfPermutation4051JPlus17Mod4096ThenCanonicalSort"
+  },
+  "qualificationActiveCounts": [
+    0, 1, 2, 31, 32, 63, 64, 65, 127, 128, 129,
+    255, 256, 257, 511, 512, 1024, 2048, 3072, 4095, 4096
+  ],
+  "measurementActiveCounts": [
+    1, 8, 32, 64, 128, 256, 512, 1024, 2048, 3072, 4096
+  ],
+  "outputPolicy": {
+    "initialization": "AllRecordsCanonicalInactiveSentinel",
+    "activeWriteSet": "ExactlySparseSetS",
+    "inactiveWritePolicy": "Forbidden",
+    "inactiveFinalBytes": "ByteIdenticalCanonicalInactiveSentinel",
+    "pairwiseCandidateOutput": "ByteIdentical"
+  },
+  "temporalPolicy": "FrozenSingleInvocationNoHistoryReuseDimension",
+  "level4Policy": "MinimalVersionedSparseWorkSetExtensionOnlyIfRequired",
+  "level5Policy": "SparseRepresentationGranularityIsAVerifiedLoweringChoice",
+  "runtimePolicyAuthorization": "None",
+  "authoritativeSpec": "docs/spiral6/SGE4-5_Spiral6_Completion_Spec_v0.1.md",
+  "amendments": [],
+  "typeSafety": {
+    "sparseDimensions": [
+      "WorkUniverseIndexV1",
+      "SparseCardinalityV1",
+      "SparseSetIdentityV1",
+      "ActiveBlockIndexV1",
+      "LocalMembershipMask64V1"
+    ],
+    "rawToVerified": "CompileTimeUnavailable",
+    "sealReplayRejectedAcross": [
+      "SparseSemantic",
+      "SparseSetIdentity",
+      "CandidateKind",
+      "DerivedRepresentationRole",
+      "TargetProfile",
+      "OutputResourceIdentity",
+      "DeviceEpoch"
+    ]
+  }
+}
