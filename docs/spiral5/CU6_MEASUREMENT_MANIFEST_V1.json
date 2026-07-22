@@ -1,0 +1,84 @@
+{
+  "schema": "SGE4-5.Spiral5.CU6MeasurementManifest.V1",
+  "completionUnit": "CU6",
+  "baselineCommit": "a3d9a19a1a3033b723df918e70f5af6a24d884a0",
+  "title": "Real GPU Temporal Measurement and Decision Evidence",
+  "predecessor": {
+    "architectureEvidenceSha256": "EB4937B1181E3377FD5367D02F218C682AA1F402A5C4099D8B5F452C103D84A1",
+    "controlledRecoveryEvidenceSha256": "6DFBA1F98F1338BE96E7985C7532A20A1B4144B81408BEA0FFD8C03ADCA4DB17",
+    "freshRematerializationEvidenceSha256": "6B0D6F9A617D257268C84AFF523FBA6D4F9A727A0EA130B956E7DB992123300B"
+  },
+  "candidateCount": 3,
+  "candidates": [
+    { "index": 0, "id": "A", "name": "EveryInvocationRecompute", "historyPosition": "None" },
+    { "index": 1, "id": "B", "name": "GlobalMotorHistoryReuse", "historyPosition": "GlobalMotor" },
+    { "index": 2, "id": "C", "name": "FinalOutputHistoryReuse", "historyPosition": "FinalOutput" }
+  ],
+  "updateIntervalCount": 7,
+  "updateIntervals": [1, 2, 4, 8, 16, 32, 64],
+  "timelineLength": 128,
+  "workCount": 4096,
+  "balancedOrderCount": 6,
+  "orderDesign": "AllSixPermutationsOfABC",
+  "orderBalance": "EachCandidateAppearsTwiceAtEveryOrderPosition",
+  "canonicalMeasurementConfig": {
+    "warmupTimelinesPerOrder": 1,
+    "measurementTimelinesPerOrder": 2,
+    "runCount": 2,
+    "samplesPerCandidateAndUpdateInterval": 24,
+    "totalMeasuredTimelineSamples": 504,
+    "totalMeasuredCandidateInvocations": 64512,
+    "clockPolicy": "uncontrolled",
+    "adapterIndex": 0
+  },
+  "primaryMetric": "GpuCandidateTimelineNanoseconds",
+  "primaryMetricComponents": [
+    "GpuArgumentGenerationNanoseconds",
+    "GpuHierarchyExecutionNanoseconds",
+    "GpuConsumerExecutionNanoseconds",
+    "GpuRetainedCompletionNanoseconds"
+  ],
+  "updateHoldDecomposition": [
+    "GpuUpdatePathNanoseconds",
+    "GpuHoldPathNanoseconds",
+    "MedianGpuUpdateInvocationNanoseconds",
+    "MedianGpuHoldInvocationNanoseconds"
+  ],
+  "separateEvidenceComponents": [
+    "TemporalInputPreparationNanoseconds",
+    "CommandRecordingNanoseconds",
+    "SubmitAndWaitNanoseconds",
+    "NumericObservationNanoseconds",
+    "CpuEndToEndNanoseconds",
+    "GpuObservationCopyNanoseconds",
+    "GpuTotalNanoseconds"
+  ],
+  "noisePolicy": {
+    "absoluteFloorNanoseconds": 100.0,
+    "relativeFloor": 0.02,
+    "equivalenceRule": "abs(a-b) <= max(100ns, 2% of faster median)"
+  },
+  "hardwareAdapterPolicy": "DXGI high-performance non-software D3D12 adapter by eligible-adapter index",
+  "timestampPolicy": "D3D12 compute-queue timestamp queries per invocation phase",
+  "evidenceArtifacts": [
+    "spiral5_measurement_evidence_v1.bin",
+    "spiral5_measurement_samples_v1.csv",
+    "spiral5_measurement_summary_v1.json",
+    "SPIRAL5_DECISION_EVIDENCE_REPORT.md"
+  ],
+  "decisionOutputs": [
+    "PerUWinnerSet",
+    "RecomputeVersusGlobalMotorTransitionClassification",
+    "GlobalMotorVersusFinalOutputTransitionClassification",
+    "PerUHistoryMaterializationPosition",
+    "OverallObservedWinnerSet",
+    "StableUnstableMultipleTransitionOrNoiseEquivalentRegions"
+  ],
+  "runtimePolicyAuthorization": "None",
+  "nextCapabilitySelection": "DeferredByOwner",
+  "selectionStatus": "OWNER_DECISION_REQUIRED",
+  "experimentCompleteOnPass": true,
+  "spiralClosedOnPass": false,
+  "performanceSuperiorityIsCompletionGate": false,
+  "crossoverExistenceIsCompletionGate": false
+}
