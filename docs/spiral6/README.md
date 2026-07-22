@@ -21,13 +21,19 @@ The Semantic set, output order and inactive sentinel are fixed. Only sparse repr
 Current path:
 
 ```text
-CU1 research contract
-CU2 Compact Index architecture
-CU3 independent Sparse authority
+CU1 research contract                         PASSED
+CU2 Compact Index architecture                PASSED
+CU3 independent Sparse authority              PASSED
+CU4 Sparse Candidate family                   supplied
+CU5 Architecture qualification                next
+CU6 real-GPU measurement and Decision Report
 ```
 
-CU3 runner:
+CU4 preparation and runner:
 
 ```text
-run_sge4_5_spiral6_cu3_independent_authority.bat
+run_sge4_5_spiral6_cu4_prepare.bat
+run_sge4_5_spiral6_cu4_candidate_family.bat
 ```
+
+CU4 requires all twelve exact Sparse cases to produce byte-identical 65536-byte outputs across Dense Mask, Compact Index List and Active Block Local Mask. Runtime Sparse policy remains unauthorized.

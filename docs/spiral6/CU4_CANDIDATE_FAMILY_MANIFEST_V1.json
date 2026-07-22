@@ -1,0 +1,64 @@
+{
+  "schema": "SGE4-5.Spiral6.CU4CandidateFamilyManifest.V1",
+  "completionUnit": "CU4",
+  "ownerBaselineCommit": "46554ab55e532c438c9c4214ff1df3e7cd68638e",
+  "cu1AcceptedCommit": "b74f820ba2c4504ab44aa1b954da4b0cfafff3d2",
+  "cu2AcceptedCommit": "1b46e8090b2684e82022aff3f9a0f4e383d6e1fe",
+  "cu3AcceptedCommit": "a35c51dae045cbada55b31d98f832bd310d20ce2",
+  "cu3AuthorityEvidenceSha256": "C04FCA6674BDA7EA2FBBB9BEE3208757A960EA7B606BE266EA737023573D398C",
+  "candidateKinds": [
+    "DenseMembershipMaskPredicate",
+    "CompactIndexListDispatch",
+    "ActiveBlockListLocalMask"
+  ],
+  "representations": {
+    "DenseMembershipMaskPredicate": {
+      "fixedCapacityBytes": 512,
+      "payloadStrideBytes": 4,
+      "dispatchRule": "Fixed64Groups",
+      "zeroActiveDispatchGroups": 64
+    },
+    "CompactIndexListDispatch": {
+      "fixedCapacityBytes": 16384,
+      "payloadStrideBytes": 4,
+      "dispatchRule": "CeilKOver64",
+      "zeroActiveDispatchGroups": 0,
+      "cu2ArtifactIdentityRequired": true
+    },
+    "ActiveBlockListLocalMask": {
+      "fixedCapacityBytes": 1024,
+      "payloadStrideBytes": 16,
+      "maximumActiveBlocks": 64,
+      "dispatchRule": "OneGroupPerActiveBlock",
+      "zeroActiveDispatchGroups": 0
+    }
+  },
+  "caseCount": 12,
+  "candidateExecutionsPerBuild": 36,
+  "candidateExecutionsAcrossDebugRelease": 72,
+  "pairwiseFullOutputByteIdentityRequired": true,
+  "outputBytesPerCandidate": 65536,
+  "inactiveSentinel": "Float4ZeroByteIdentical",
+  "exactWriteSet": "ExactlyVerifiedSparseSet",
+  "rawMutationAttackCount": 40,
+  "replayGates": [
+    "CrossSet",
+    "WrongRepresentationResource",
+    "CrossRepresentationRole",
+    "WrongResourceLayout",
+    "CrossDeviceEpoch"
+  ],
+  "dependencyBoundaries": {
+    "verifierDependsOnPlanner": false,
+    "executionConsumesOpaqueVerifiedCandidate": true,
+    "executionConsumesRawCandidate": false,
+    "executionDependsOnPlanner": false
+  },
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None",
+  "runtimeSparsePolicyDecision": "None",
+  "architectureCompleteDeclaration": "DeferredToCU5",
+  "realGpuMeasurement": "DeferredToCU6"
+}
