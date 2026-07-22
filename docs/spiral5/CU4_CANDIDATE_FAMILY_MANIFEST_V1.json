@@ -1,0 +1,37 @@
+{
+  "schema": "SGE4-5.Spiral5.CU4CandidateFamilyManifest.V1",
+  "completionUnit": "CU4",
+  "ownerBaselineCommit": "f29d6597ec370d963c7b7dfbbc9af9590e8bd58f",
+  "predecessor": {
+    "cu3AuthorityEvidenceSha256": "9C05F1EB8F73DD45577F0F97C92EC76E0DB60B2A6A0BA487CB998FC2359E84DE"
+  },
+  "semantic": "LastUpdateWinsPiecewiseConstant",
+  "timelineLength": 128,
+  "workCount": 4096,
+  "candidateKinds": [
+    "EveryInvocationRecompute",
+    "GlobalMotorHistoryReuse",
+    "FinalOutputHistoryReuse"
+  ],
+  "historyMaterializationPositions": [
+    "None",
+    "AfterHierarchyGlobalMotor",
+    "AfterConsumerFinalOutput"
+  ],
+  "architectureSchedules": ["P1", "P4", "P64", "Irregular"],
+  "candidateInvocationCountPerBuild": 1536,
+  "mutationProposalCount": 38,
+  "pairwiseOutputEquivalence": "RequiredAtEveryInvocation",
+  "runtimeTemporalPolicyDecision": "None",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "cu5Deferred": [
+    "AllNineSchedules",
+    "FreshProcessDebugReleaseDeterminism",
+    "ControlledRecovery",
+    "ActualDeviceRemoval",
+    "StaleHistoryRejection",
+    "ExplicitReseed"
+  ]
+}

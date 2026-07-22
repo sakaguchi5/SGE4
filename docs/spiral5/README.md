@@ -1,39 +1,14 @@
-# Spiral 5 — Temporal State Flow
+# SGE4-5 Spiral 5
 
-Spiral 5 studies exact temporal history reuse for one fixed rigid-transform workload. The V1 meaning is piecewise constant: an external verified schedule states Update and Hold invocations, and Candidate Lowerings differ only in where exact derived history is retained.
+Spiral 5 studies exact Temporal State Flow and the verified location of retained state.
 
-## Current completion unit
+Current path:
 
-```text
-CU3 — Independent Temporal Authority
-```
+1. CU1 research contract
+2. CU2 Global Motor History architecture
+3. CU3 independent authority
+4. CU4 A/B/C Candidate family
+5. CU5 architecture qualification and Recovery
+6. CU6 real-GPU measurement and Owner-only Decision Evidence
 
-CU3 adds:
-
-```text
-Raw Temporal Candidate
--> Planner proposal
--> Planner-independent Verifier
--> opaque Verified Temporal Plan
--> actual CU2 artifact and History Resource binding
--> device-epoch-bound verified WARP execution
-```
-
-## Apply CU3
-
-```powershell
-.\run_sge4_5_spiral5_cu3_prepare.bat
-.\run_sge4_5_spiral5_cu3_independent_authority.bat
-```
-
-The prepare step registers four projects and regenerates the Source Manifest. The authority runner builds fresh Debug and Release processes, rejects the mutation and replay matrix, executes verified P4 on WARP, and requires byte-identical authority evidence.
-
-## Candidate sequence
-
-```text
-CU2: B.GlobalMotorHistoryReuse architecture
-CU3: independent B authority
-CU4: A/B/C Candidate family
-CU5: all schedules, determinism, Recovery
-CU6: real-GPU measurement and Decision Report
-```
+V1 uses exact piecewise-constant state. Interpolation remains outside the experiment.

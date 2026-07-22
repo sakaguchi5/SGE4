@@ -1007,4 +1007,431 @@ SerializeFrozenVerifiedGlobalMotorHistoryExecutionV1(
     return std::move(writer).Take();
 }
 
+namespace
+{
+base::Digest256 BuildFamilyBindingIdentity(
+    const family_verification::VerifiedTemporalCandidateV1& verified,
+    const TemporalCandidateResourceBindingInputV1& binding)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.FrozenVerifiedTemporalCandidateBinding.V1"));
+    writer.WriteBytes(verified.Plan().planIdentity);
+    writer.WriteBytes(verified.CertificateIdentity());
+    writer.WriteU64(binding.deviceEpoch);
+    writer.WriteBytes(binding.actualHistoryResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(binding.historyRole));
+    writer.WriteU32(binding.historyDepth);
+    writer.WriteU32(binding.historyBytes);
+    return base::Sha256(writer.Bytes());
+}
+
+#if defined(_WIN32)
+TemporalCandidateObservationV1 ExecuteFamilyCandidate(
+    GpuContext& gpu,
+    //const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const FrozenVerifiedTemporalCandidateV1& frozen)
+{
+    namespace fc = family_candidate;
+    const auto& operation = frozen.Verified().Plan().operation;
+    const std::uint32_t maxGeneration = schedule.invocations.back().sourceGeneration;
+
+    std::vector<semantic::PgaMotorRecordV1> allLocalMotors;
+    allLocalMotors.reserve(static_cast<std::size_t>(maxGeneration + 1u) * semantic::BoneCountV1);
+    for (std::uint32_t generation = 0; generation <= maxGeneration; ++generation)
+    {
+        const auto motors = semantic::BuildCanonicalLocalMotorGenerationV1(generation);
+        allLocalMotors.insert(allLocalMotors.end(), motors.begin(), motors.end());
+    }
+    const auto localBytes = std::as_bytes(std::span(allLocalMotors));
+    const auto points = semantic::BuildCanonicalPointCorpusV1();
+    const auto pointBytes = std::as_bytes(std::span(points));
+
+    constexpr std::uint64_t argumentBytes = 12;
+    constexpr std::uint64_t globalBytes = semantic::BoneCountV1 * sizeof(semantic::PgaMotorRecordV1);
+    constexpr std::uint64_t outputBytes = semantic::WorkCountV1 * sizeof(semantic::PointRecordV1);
+
+    auto localUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD, localBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
+    auto pointUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD, pointBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
+    UploadBytes(localUpload.Get(), localBytes);
+    UploadBytes(pointUpload.Get(), pointBytes);
+
+    ComPtr<ID3D12Resource> hierarchyArguments;
+    ComPtr<ID3D12Resource> hierarchyArgumentReadback;
+    ComPtr<ID3D12Resource> consumerArguments;
+    ComPtr<ID3D12Resource> consumerArgumentReadback;
+    if (operation.issuancePolicy != fc::TemporalIssuancePolicyV1::DirectEveryInvocation)
+    {
+        hierarchyArguments = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, argumentBytes,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        hierarchyArgumentReadback = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, argumentBytes,
+            D3D12_RESOURCE_STATE_COPY_DEST);
+    }
+    if (operation.issuancePolicy == fc::TemporalIssuancePolicyV1::UpdateIndirectHierarchyAndConsumer)
+    {
+        consumerArguments = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, argumentBytes,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        consumerArgumentReadback = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, argumentBytes,
+            D3D12_RESOURCE_STATE_COPY_DEST);
+    }
+
+    auto global = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, globalBytes,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    auto output = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, outputBytes,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    auto globalReadback = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, globalBytes,
+        D3D12_RESOURCE_STATE_COPY_DEST);
+    auto outputReadback = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, outputBytes,
+        D3D12_RESOURCE_STATE_COPY_DEST);
+
+    TemporalCandidateObservationV1 result;
+    result.kind = operation.kind;
+    result.verifiedBindingIdentity = frozen.BindingIdentity();
+    result.invocations.reserve(schedule.invocations.size());
+
+    D3D12_RESOURCE_STATES globalState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+    base::Digest256 previousRetainedDigest{};
+    base::Digest256 latestUpdateOutputDigest{};
+    bool retainedValid = false;
+    const std::uint64_t fenceBase = gpu.fenceValue;
+    std::map<std::uint32_t, std::array<semantic::PgaMotorRecordV1, semantic::BoneCountV1>> cpuGlobalCache;
+    std::map<std::uint32_t, std::vector<semantic::PointRecordV1>> cpuOutputCache;
+
+    for (const auto& invocation : schedule.invocations)
+    {
+        const bool update = invocation.event == semantic::UpdateEventV1::Update;
+        const std::uint32_t hierarchyDispatch = update
+            ? operation.hierarchyUpdateDispatchX : operation.hierarchyHoldDispatchX;
+        const std::uint32_t consumerDispatch = update
+            ? operation.consumerUpdateDispatchX : operation.consumerHoldDispatchX;
+
+        gpu.Begin();
+        if (globalState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+        {
+            const auto barrier = Transition(global.Get(), globalState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            gpu.commandList->ResourceBarrier(1, &barrier);
+            globalState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        }
+
+        if (hierarchyArguments)
+        {
+            gpu.commandList->SetPipelineState(gpu.argumentPipeline.Get());
+            gpu.commandList->SetComputeRootSignature(gpu.argumentRoot.Get());
+            gpu.commandList->SetComputeRoot32BitConstant(0, hierarchyDispatch, 0);
+            gpu.commandList->SetComputeRootUnorderedAccessView(1, hierarchyArguments->GetGPUVirtualAddress());
+            gpu.commandList->Dispatch(1, 1, 1);
+            auto uav = UavBarrier(hierarchyArguments.Get()); gpu.commandList->ResourceBarrier(1, &uav);
+            auto toIndirect = Transition(hierarchyArguments.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+            gpu.commandList->ResourceBarrier(1, &toIndirect);
+        }
+        if (consumerArguments)
+        {
+            gpu.commandList->SetPipelineState(gpu.argumentPipeline.Get());
+            gpu.commandList->SetComputeRootSignature(gpu.argumentRoot.Get());
+            gpu.commandList->SetComputeRoot32BitConstant(0, consumerDispatch, 0);
+            gpu.commandList->SetComputeRootUnorderedAccessView(1, consumerArguments->GetGPUVirtualAddress());
+            gpu.commandList->Dispatch(1, 1, 1);
+            auto uav = UavBarrier(consumerArguments.Get()); gpu.commandList->ResourceBarrier(1, &uav);
+            auto toIndirect = Transition(consumerArguments.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT);
+            gpu.commandList->ResourceBarrier(1, &toIndirect);
+        }
+
+        gpu.commandList->SetPipelineState(gpu.hierarchyPipeline.Get());
+        gpu.commandList->SetComputeRootSignature(gpu.hierarchyRoot.Get());
+        gpu.commandList->SetComputeRoot32BitConstant(0, invocation.sourceGeneration, 0);
+        gpu.commandList->SetComputeRootShaderResourceView(1, localUpload->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootUnorderedAccessView(2, global->GetGPUVirtualAddress());
+        if (hierarchyArguments)
+            gpu.commandList->ExecuteIndirect(gpu.dispatchSignature.Get(), 1, hierarchyArguments.Get(), 0, nullptr, 0);
+        else
+            gpu.commandList->Dispatch(hierarchyDispatch, 1, 1);
+        auto globalUav = UavBarrier(global.Get()); gpu.commandList->ResourceBarrier(1, &globalUav);
+        auto globalToRead = Transition(global.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        gpu.commandList->ResourceBarrier(1, &globalToRead); globalState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+
+        gpu.commandList->SetPipelineState(gpu.consumerPipeline.Get());
+        gpu.commandList->SetComputeRootSignature(gpu.consumerRoot.Get());
+        gpu.commandList->SetComputeRootShaderResourceView(0, global->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootShaderResourceView(1, pointUpload->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootUnorderedAccessView(2, output->GetGPUVirtualAddress());
+        if (consumerArguments)
+            gpu.commandList->ExecuteIndirect(gpu.dispatchSignature.Get(), 1, consumerArguments.Get(), 0, nullptr, 0);
+        else
+            gpu.commandList->Dispatch(consumerDispatch, 1, 1);
+        auto outputUav = UavBarrier(output.Get()); gpu.commandList->ResourceBarrier(1, &outputUav);
+
+        auto outputToCopy = Transition(output.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        gpu.commandList->ResourceBarrier(1, &outputToCopy);
+        gpu.commandList->CopyBufferRegion(outputReadback.Get(), 0, output.Get(), 0, outputBytes);
+        auto outputBack = Transition(output.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        gpu.commandList->ResourceBarrier(1, &outputBack);
+
+        auto globalToCopy = Transition(global.Get(), globalState, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        gpu.commandList->ResourceBarrier(1, &globalToCopy);
+        gpu.commandList->CopyBufferRegion(globalReadback.Get(), 0, global.Get(), 0, globalBytes);
+        auto globalBack = Transition(global.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        gpu.commandList->ResourceBarrier(1, &globalBack); globalState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+
+        if (hierarchyArguments)
+        {
+            auto toCopy=Transition(hierarchyArguments.Get(),D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,D3D12_RESOURCE_STATE_COPY_SOURCE);
+            gpu.commandList->ResourceBarrier(1,&toCopy);
+            gpu.commandList->CopyBufferRegion(hierarchyArgumentReadback.Get(),0,hierarchyArguments.Get(),0,argumentBytes);
+            auto back=Transition(hierarchyArguments.Get(),D3D12_RESOURCE_STATE_COPY_SOURCE,D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            gpu.commandList->ResourceBarrier(1,&back);
+        }
+        if (consumerArguments)
+        {
+            auto toCopy=Transition(consumerArguments.Get(),D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,D3D12_RESOURCE_STATE_COPY_SOURCE);
+            gpu.commandList->ResourceBarrier(1,&toCopy);
+            gpu.commandList->CopyBufferRegion(consumerArgumentReadback.Get(),0,consumerArguments.Get(),0,argumentBytes);
+            auto back=Transition(consumerArguments.Get(),D3D12_RESOURCE_STATE_COPY_SOURCE,D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+            gpu.commandList->ResourceBarrier(1,&back);
+        }
+
+        const auto fence = gpu.SubmitAndWait();
+        const auto globalObserved = ReadbackBytes(globalReadback.Get(), globalBytes);
+        const auto outputObserved = ReadbackBytes(outputReadback.Get(), outputBytes);
+        std::uint32_t observedHierarchy = hierarchyDispatch;
+        std::uint32_t observedConsumer = consumerDispatch;
+        if (hierarchyArguments)
+        {
+            const auto bytes=ReadbackBytes(hierarchyArgumentReadback.Get(),argumentBytes);
+            std::memcpy(&observedHierarchy,bytes.data(),sizeof(observedHierarchy));
+        }
+        if (consumerArguments)
+        {
+            const auto bytes=ReadbackBytes(consumerArgumentReadback.Get(),argumentBytes);
+            std::memcpy(&observedConsumer,bytes.data(),sizeof(observedConsumer));
+        }
+        if(observedHierarchy!=hierarchyDispatch || observedConsumer!=consumerDispatch)
+            throw std::runtime_error("Temporal Candidate GPU Dispatch arguments differ from Verified Plan.");
+
+        if(!cpuGlobalCache.contains(invocation.sourceGeneration))
+        {
+            const auto local=semantic::BuildCanonicalLocalMotorGenerationV1(invocation.sourceGeneration);
+            cpuGlobalCache.emplace(invocation.sourceGeneration,semantic::ComposeCanonicalGlobalMotorsCpuV1(local));
+            cpuOutputCache.emplace(invocation.sourceGeneration,
+                semantic::ApplyGlobalMotorsCpuV1(cpuGlobalCache.at(invocation.sourceGeneration),points));
+        }
+        const auto& expectedGlobal=cpuGlobalCache.at(invocation.sourceGeneration);
+        const auto& expectedOutput=cpuOutputCache.at(invocation.sourceGeneration);
+
+        std::array<semantic::PgaMotorRecordV1,semantic::BoneCountV1> actualGlobal{};
+        std::memcpy(actualGlobal.data(),globalObserved.data(),globalObserved.size());
+        for(std::uint32_t bone=0;bone<semantic::BoneCountV1;++bone)
+        {
+            const float* a=reinterpret_cast<const float*>(&actualGlobal[bone]);
+            const float* e=reinterpret_cast<const float*>(&expectedGlobal[bone]);
+            for(std::size_t c=0;c<8;++c)
+                if(!std::isfinite(a[c]) || std::abs(a[c]-e[c])>1.0e-6f)
+                    throw std::runtime_error("Temporal Candidate Global Motor differs from CPU reference.");
+        }
+
+        TemporalFamilyInvocationObservationV1 observation;
+        observation.invocationIndex=invocation.invocationIndex; observation.event=invocation.event;
+        observation.sourceGeneration=invocation.sourceGeneration;
+        observation.expectedHierarchyDispatchX=hierarchyDispatch; observation.observedHierarchyDispatchX=observedHierarchy;
+        observation.expectedConsumerDispatchX=consumerDispatch; observation.observedConsumerDispatchX=observedConsumer;
+        observation.retainedCompletionOrdinal=static_cast<std::uint64_t>(invocation.invocationIndex)+1u;
+        observation.nativeFenceValue=fence;
+        observation.outputDigest=base::Sha256(outputObserved);
+        if(operation.historyRole==fc::TemporalFamilyHistoryRoleV1::GlobalMotorHistory)
+            observation.retainedHistoryDigest=base::Sha256(globalObserved);
+        else if(operation.historyRole==fc::TemporalFamilyHistoryRoleV1::FinalOutputHistory)
+            observation.retainedHistoryDigest=observation.outputDigest;
+        else
+            observation.retainedHistoryDigest={};
+        observation.retainedHistoryByteStable=update || operation.historyRole==fc::TemporalFamilyHistoryRoleV1::None ||
+            (retainedValid && observation.retainedHistoryDigest==previousRetainedDigest);
+
+        std::vector<semantic::PointRecordV1> actualOutput(semantic::WorkCountV1);
+        std::memcpy(actualOutput.data(),outputObserved.data(),outputObserved.size());
+        for(std::uint32_t index=0;index<semantic::WorkCountV1;++index)
+        {
+            const auto& a=actualOutput[index]; const auto& e=expectedOutput[index];
+            const std::array<float,4> av{a.x,a.y,a.z,a.w}, ev{e.x,e.y,e.z,e.w};
+            float localMax=0.0f; bool finite=true;
+            for(std::size_t c=0;c<4;++c){finite=finite&&std::isfinite(av[c]);localMax=std::max(localMax,std::abs(av[c]-ev[c]));}
+            observation.maxAbsoluteError=std::max(observation.maxAbsoluteError,localMax);
+            if(!finite)++observation.nonFiniteCount;
+            if(!std::isfinite(a.w)||std::abs(a.w-1.0f)>1.0e-6f)++observation.homogeneousCoordinateMismatchCount;
+            if(!finite||localMax>1.0e-5f)++observation.mismatchCount;
+        }
+        observation.outputMatchesReference=observation.mismatchCount==0&&observation.nonFiniteCount==0&&observation.homogeneousCoordinateMismatchCount==0;
+        if(update)latestUpdateOutputDigest=observation.outputDigest;
+        observation.outputMatchesLatestUpdate=observation.outputDigest==latestUpdateOutputDigest;
+        if(!observation.retainedHistoryByteStable||!observation.outputMatchesReference||!observation.outputMatchesLatestUpdate||
+           observation.nativeFenceValue!=fenceBase+observation.retainedCompletionOrdinal)
+            throw std::runtime_error("Temporal Candidate observation violates the Verified family contract.");
+        previousRetainedDigest=observation.retainedHistoryDigest; retainedValid=true;
+        result.invocations.push_back(observation);
+    }
+
+    base::BinaryWriter identity;
+    identity.WriteBytes(VerifiedLiteralIdentity("SGE4-5.Spiral5.ActualTemporalCandidateExecution.V1"));
+    identity.WriteBytes(result.verifiedBindingIdentity);
+    identity.WriteU32(static_cast<std::uint32_t>(result.kind));
+    for(const auto& invocation:result.invocations)identity.WriteBytes(invocation.outputDigest);
+    result.actualExecutionIdentity=base::Sha256(identity.Bytes());
+    return result;
+}
+#endif
+}
+
+FrozenVerifiedTemporalCandidateV1::FrozenVerifiedTemporalCandidateV1(
+    family_verification::VerifiedTemporalCandidateV1 verified,
+    TemporalCandidateResourceBindingInputV1 resourceBinding,
+    base::Digest256 bindingIdentity)
+    : verified_(std::move(verified)), resourceBinding_(resourceBinding), bindingIdentity_(bindingIdentity) {}
+
+TemporalCandidateResourceBindingInputV1 BuildCanonicalTemporalCandidateResourceBindingInputV1(
+    const family_verification::VerifiedTemporalCandidateV1& verified,
+    std::uint64_t deviceEpoch)
+{
+    TemporalCandidateResourceBindingInputV1 binding;
+    binding.deviceEpoch=deviceEpoch;
+    binding.actualHistoryResourceIdentity=verified.Plan().operation.historyResourceIdentity;
+    binding.historyRole=verified.Plan().operation.historyRole;
+    binding.historyDepth=verified.Plan().operation.historyDepth;
+    binding.historyBytes=verified.Plan().operation.historyBytes;
+    return binding;
+}
+
+base::Result<void,std::string> ValidateFrozenVerifiedTemporalCandidateV1(
+    const FrozenVerifiedTemporalCandidateV1& frozen,
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    std::uint64_t expectedDeviceEpoch)
+{
+    auto verified=family_verification::ValidateVerifiedTemporalCandidateContextV1(
+        frozen.Verified(),semanticValue,schedule,context);
+    if(!verified)return verified;
+    const auto& operation=frozen.Verified().Plan().operation;
+    const auto& binding=frozen.ResourceBinding();
+    if(expectedDeviceEpoch==0||binding.deviceEpoch!=expectedDeviceEpoch)
+        return base::Result<void,std::string>::Failure("Temporal Candidate binding belongs to another device epoch.");
+    if(binding.actualHistoryResourceIdentity!=operation.historyResourceIdentity||binding.historyRole!=operation.historyRole||
+       binding.historyDepth!=operation.historyDepth||binding.historyBytes!=operation.historyBytes)
+        return base::Result<void,std::string>::Failure("Temporal Candidate History Resource binding mismatch.");
+    if(frozen.BindingIdentity()!=BuildFamilyBindingIdentity(frozen.Verified(),binding))
+        return base::Result<void,std::string>::Failure("Temporal Candidate frozen binding identity mismatch.");
+    return base::Result<void,std::string>::Success();
+}
+
+base::Result<FrozenVerifiedTemporalCandidateV1,std::string> FreezeVerifiedTemporalCandidateV1(
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    const family_verification::VerifiedTemporalCandidateV1& verified,
+    TemporalCandidateResourceBindingInputV1 binding)
+{
+    auto valid=family_verification::ValidateVerifiedTemporalCandidateContextV1(verified,semanticValue,schedule,context);
+    if(!valid)return base::Result<FrozenVerifiedTemporalCandidateV1,std::string>::Failure(valid.Error());
+    FrozenVerifiedTemporalCandidateV1 frozen(verified,binding,BuildFamilyBindingIdentity(verified,binding));
+    auto frozenValid=ValidateFrozenVerifiedTemporalCandidateV1(frozen,semanticValue,schedule,context,binding.deviceEpoch);
+    if(!frozenValid)return base::Result<FrozenVerifiedTemporalCandidateV1,std::string>::Failure(frozenValid.Error());
+    return base::Result<FrozenVerifiedTemporalCandidateV1,std::string>::Success(std::move(frozen));
+}
+
+base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>
+RunVerifiedTemporalCandidateFamilyOnWarpV1(
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    std::span<const FrozenVerifiedTemporalCandidateV1> candidates,
+    std::uint64_t expectedDeviceEpoch)
+{
+#if defined(_WIN32)
+    try
+    {
+        if(candidates.size()!=3)return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
+            Error("family/input","Temporal Candidate family must contain exactly three candidates."));
+        constexpr std::array<family_candidate::TemporalCandidateKindV1,3> expectedKinds{
+            family_candidate::TemporalCandidateKindV1::EveryInvocationRecompute,
+            family_candidate::TemporalCandidateKindV1::GlobalMotorHistoryReuse,
+            family_candidate::TemporalCandidateKindV1::FinalOutputHistoryReuse};
+        for(std::size_t index=0;index<candidates.size();++index)
+        {
+            const auto& candidate=candidates[index];
+            auto valid=ValidateFrozenVerifiedTemporalCandidateV1(candidate,semanticValue,schedule,context,expectedDeviceEpoch);
+            if(!valid)return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(Error("family/authority",valid.Error()));
+            if(candidate.Verified().Plan().operation.kind!=expectedKinds[index])
+                return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
+                    Error("family/order","Temporal Candidate family order or uniqueness differs from A/B/C."));
+        }
+        GpuContext gpu;
+        TemporalCandidateFamilyArchitectureResultV1 result;
+        result.adapterDescription=gpu.adapterDescription; result.scheduleId=schedule.id;
+        result.semanticIdentity=semantic::TemporalStateSemanticIdentityV1(semanticValue);
+        result.scheduleIdentity=semantic::UpdateScheduleIdentityV1(schedule);
+        result.argumentProducerShaderDigest=BlobDigest(gpu.argumentShader.Get());
+        result.hierarchyShaderDigest=BlobDigest(gpu.hierarchyShader.Get());
+        result.consumerShaderDigest=BlobDigest(gpu.consumerShader.Get());
+        for(const auto& candidate:candidates)result.candidates.push_back(ExecuteFamilyCandidate(gpu,schedule,candidate));
+        for(std::size_t invocation=0;invocation<schedule.invocations.size();++invocation)
+        {
+            const auto digest=result.candidates.front().invocations[invocation].outputDigest;
+            for(std::size_t candidate=1;candidate<result.candidates.size();++candidate)
+                if(result.candidates[candidate].invocations[invocation].outputDigest!=digest)
+                    return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
+                        Error("family/pairwise","Temporal Candidate outputs differ at one Invocation."));
+        }
+        result.pairwiseOutputEquivalent=true;
+        return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Success(std::move(result));
+    }
+    catch(const std::exception& error)
+    {
+        return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(Error("family/d3d12",error.what()));
+    }
+#else
+    (void)semanticValue;(void)schedule;(void)context;(void)candidates;(void)expectedDeviceEpoch;
+    return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
+        Error("family/platform","Spiral 5 CU4 D3D12 execution requires Windows."));
+#endif
+}
+
+std::vector<std::byte> SerializeFrozenVerifiedTemporalCandidateV1(const FrozenVerifiedTemporalCandidateV1& value)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity("SGE4-5.Spiral5.FrozenVerifiedTemporalCandidate.V1"));
+    const auto verified=family_verification::SerializeVerifiedTemporalCandidateV1(value.Verified());
+    writer.WriteU32(static_cast<std::uint32_t>(verified.size()));writer.WriteBytes(verified);
+    writer.WriteU64(value.ResourceBinding().deviceEpoch);writer.WriteBytes(value.ResourceBinding().actualHistoryResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(value.ResourceBinding().historyRole));
+    writer.WriteU32(value.ResourceBinding().historyDepth);writer.WriteU32(value.ResourceBinding().historyBytes);
+    writer.WriteBytes(value.BindingIdentity());
+    return std::move(writer).Take();
+}
+
+std::vector<std::byte> SerializeTemporalCandidateFamilyArchitectureEvidenceV1(
+    const TemporalCandidateFamilyArchitectureResultV1& value)
+{
+    base::BinaryWriter writer;
+    writer.WriteU32(0x34463553u);writer.WriteU32(1);WriteString(writer,value.adapterDescription);WriteString(writer,value.scheduleId);
+    WriteDigest(writer,value.semanticIdentity);WriteDigest(writer,value.scheduleIdentity);WriteDigest(writer,value.argumentProducerShaderDigest);
+    WriteDigest(writer,value.hierarchyShaderDigest);WriteDigest(writer,value.consumerShaderDigest);
+    writer.WriteU32(value.pairwiseOutputEquivalent?1u:0u);writer.WriteU32(static_cast<std::uint32_t>(value.candidates.size()));
+    for(const auto& candidate:value.candidates)
+    {
+        writer.WriteU32(static_cast<std::uint32_t>(candidate.kind));WriteDigest(writer,candidate.verifiedBindingIdentity);
+        WriteDigest(writer,candidate.actualExecutionIdentity);writer.WriteU32(static_cast<std::uint32_t>(candidate.invocations.size()));
+        for(const auto& invocation:candidate.invocations)
+        {
+            writer.WriteU32(invocation.invocationIndex);writer.WriteU32(static_cast<std::uint32_t>(invocation.event));
+            writer.WriteU32(invocation.sourceGeneration);writer.WriteU32(invocation.expectedHierarchyDispatchX);
+            writer.WriteU32(invocation.observedHierarchyDispatchX);writer.WriteU32(invocation.expectedConsumerDispatchX);
+            writer.WriteU32(invocation.observedConsumerDispatchX);writer.WriteU64(invocation.retainedCompletionOrdinal);
+            writer.WriteU64(invocation.nativeFenceValue);writer.WriteU32(invocation.retainedHistoryByteStable?1u:0u);
+            writer.WriteU32(invocation.outputMatchesReference?1u:0u);writer.WriteU32(invocation.outputMatchesLatestUpdate?1u:0u);
+            writer.WriteU32(invocation.mismatchCount);writer.WriteU32(invocation.nonFiniteCount);
+            writer.WriteU32(invocation.homogeneousCoordinateMismatchCount);WriteFloat(writer,invocation.maxAbsoluteError);
+            WriteDigest(writer,invocation.retainedHistoryDigest);WriteDigest(writer,invocation.outputDigest);
+        }
+    }
+    return std::move(writer).Take();
+}
+
 }
