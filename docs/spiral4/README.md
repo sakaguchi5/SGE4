@@ -62,3 +62,33 @@ CU3 is the independent authority stage. CU2’s canonical parser is not a substi
 
 `-Mode Auto` selects Snapshot when no CU2 manifest exists and Regression after
 CU2 has been installed.
+
+
+## CU3 — independent authority
+
+CU3 adds:
+
+```text
+123_ActiveWorkLoweringCandidate
+124_ActiveWorkLoweringPlanner
+125_ActiveWorkLoweringVerifier
+126_Spiral4VerifiedExecution
+141_Spiral4AuthorityMutationTests
+```
+
+Apply and prepare:
+
+```powershell
+.\run_sge4_5_spiral4_cu3_prepare.bat
+```
+
+This registers the five projects and regenerates `SOURCE_MANIFEST.sha256`.
+
+Then run:
+
+```powershell
+.\run_sge4_5_spiral4_cu3_independent_authority.bat
+```
+
+CU3 does not authorize Fixed Maximum or Batched execution. Those become
+additional verified Candidate families in CU4.

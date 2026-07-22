@@ -1,4 +1,4 @@
-#ifndef NOMINMAX
+﻿#ifndef NOMINMAX
 #define NOMINMAX
 #endif
 
@@ -557,6 +557,17 @@ RunSingleIndirectArchitectureOnWarpV1(
             "cs_5_1",
             "Indirect Consumer");
 
+        const auto producerShaderBytecodeDigest = base::Sha256(
+            std::span<const std::byte>(
+                static_cast<const std::byte*>(
+                    producerShader->GetBufferPointer()),
+                producerShader->GetBufferSize()));
+        const auto consumerShaderBytecodeDigest = base::Sha256(
+            std::span<const std::byte>(
+                static_cast<const std::byte*>(
+                    consumerShader->GetBufferPointer()),
+                consumerShader->GetBufferSize()));
+
         auto producerPipeline = CreateComputePipeline(
             device.Get(),
             producerRoot.Get(),
@@ -750,6 +761,10 @@ RunSingleIndirectArchitectureOnWarpV1(
         UINT64 fenceValue = 0;
         SingleIndirectArchitectureResultV1 result;
         result.adapterDescription = Utf8FromWide(adapterDesc.Description);
+        result.producerShaderBytecodeDigest =
+            producerShaderBytecodeDigest;
+        result.consumerShaderBytecodeDigest =
+            consumerShaderBytecodeDigest;
 
         for (const std::uint32_t active : activeCounts)
         {

@@ -34,6 +34,8 @@ struct IndirectExecutionCaseResultV1 final
 struct SingleIndirectArchitectureResultV1 final
 {
     std::string adapterDescription;
+    base::Digest256 producerShaderBytecodeDigest{};
+    base::Digest256 consumerShaderBytecodeDigest{};
     std::vector<IndirectExecutionCaseResultV1> cases;
 };
 

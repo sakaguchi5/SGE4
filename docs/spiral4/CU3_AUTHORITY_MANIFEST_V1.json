@@ -1,0 +1,60 @@
+{
+  "schema": "SGE4-5.Spiral4.CU3AuthorityManifest.V1",
+  "completionUnit": "CU3",
+  "baselineCommit": "ca29f228687691769355afe33f390adf04c1ed24",
+  "cu2ArtifactIdentity": "917e611d7913c2fdd59845be3cdd6f00a0456cbabee84dab3c30234ec5aec741",
+  "authorityPath": [
+    "ActiveWorkSemanticV1",
+    "RawActiveWorkLoweringCandidateV1",
+    "ActiveWorkLoweringPlanner",
+    "PlannerIndependentActiveWorkLoweringVerifier",
+    "VerifiedActiveWorkLoweringV1",
+    "FrozenVerifiedSingleIndirectExecutionV1",
+    "MechanicalExecuteIndirectExecutor"
+  ],
+  "rawExecutionAuthority": "None",
+  "verifierPlannerDependency": "Forbidden",
+  "verifiedType": {
+    "aggregate": false,
+    "defaultConstructible": false,
+    "rawConvertible": false,
+    "constructor": "PrivateVerifierOnly"
+  },
+  "verifiedContext": [
+    "SemanticIdentity",
+    "TargetProfileIdentity",
+    "ActiveCountContractIdentity",
+    "ObservationContractIdentity",
+    "CommandSignatureContractIdentity"
+  ],
+  "actualBinding": [
+    "VerifiedPlanIdentity",
+    "VerifierCertificateIdentity",
+    "VerifiedOperationIdentity",
+    "SidecarArtifactIdentity",
+    "ProducerProgramTemplateIdentity",
+    "ConsumerProgramTemplateIdentity",
+    "ProducerShaderBytecodeDigest",
+    "ConsumerShaderBytecodeDigest"
+  ],
+  "authorityMutationCount": 27,
+  "replayRejection": [
+    "CrossTargetProfile",
+    "CrossCommandSignatureContract",
+    "CrossObservationContract"
+  ],
+  "verifiedWarpCases": [
+    0,
+    65,
+    4096
+  ],
+  "runtimeDispatchDecision": "None",
+  "legacyCanonicalSchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "cu4Deferred": [
+    "FixedMaximumGuardedCandidate",
+    "BatchedExecuteIndirectCandidateFamily",
+    "BatchPartitionVerifier"
+  ]
+}

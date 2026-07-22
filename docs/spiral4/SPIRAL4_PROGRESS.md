@@ -58,3 +58,29 @@ CU1 Regression mode
 
 CU2 and all later Spiral 4 gates invoke CU1 in Regression mode. The standalone
 CU1 runner uses Auto mode and selects Snapshot before CU2, Regression after CU2.
+
+
+## CU3 delivery
+
+Baseline: `ca29f228687691769355afe33f390adf04c1ed24`
+
+```text
+[x] Raw Active Work Lowering Candidate
+[x] independent Planner project
+[x] Planner-independent Verifier project
+[x] opaque Verified Active Work Lowering type
+[x] 27 authority mutation rejections
+[x] attacker-recomputed Raw identity negative controls
+[x] target / command-signature / observation replay rejection
+[x] Verified Plan bound to actual CU2 sidecar artifact
+[x] producer and Consumer compiled shader bytecode digests observed
+[x] Frozen Verified execution path
+[x] Verified WARP cases Nf=0/65/4096
+[x] Debug/Release authority bundle comparison
+[ ] CU3 project registration and Source Manifest regeneration in destination checkout
+[ ] CU3 runner executed
+[ ] CU4 Candidate family started
+```
+
+CU3 does not change canonical Schema 17, Runtime 17, Composition Runtime, or
+the canonical D3D12 Backend.

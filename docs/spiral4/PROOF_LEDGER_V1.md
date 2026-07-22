@@ -7,10 +7,10 @@
 | S4-I03 | Active prefix exact; inactive tail untouched | CU5 | CU2 architectural subset qualified |
 | S4-I04 | Representation path fixed, not policy-authorized | CU1 | Frozen |
 | S4-I05 | All Candidates preserve identical meaning/output order | CU4 | Not started |
-| S4-I06 | Raw Candidate cannot Freeze/execute | CU3 | Not started |
-| S4-I07 | Planner-independent Verifier rederives all indirect decisions | CU3 | Not started |
+| S4-I06 | Raw Candidate cannot Freeze/execute | CU3 | Qualified by compile-time type boundaries |
+| S4-I07 | Planner-independent Verifier rederives all indirect decisions | CU3 | Qualified for Single ExecuteIndirect |
 | S4-I08 | Runtime performs no Active Count readback decision | CU2 | Qualified by GPU Argument Producer path |
-| S4-I09 | Backend maps explicit Frozen indirect Operation mechanically | CU2 | Qualified in versioned sidecar executor |
+| S4-I09 | Backend maps explicit Frozen indirect Operation mechanically | CU2 | CU3 binds mechanical sidecar execution to Verified authority |
 | S4-I10 | Batch partition is complete, disjoint, ordered | CU4 | Not started |
 | S4-I11 | V1 fixed Batch slots; no indirect count Buffer | CU4 | Contract frozen |
 | S4-I12 | ABI extension is minimal, versioned, evidence-justified | CU2 | Sidecar V1 qualified; final canonical integration deferred |
@@ -24,3 +24,13 @@
 | S4-I20 | Next capability remains Owner-only | CU6 | Preserved |
 
 “Qualified in sidecar executor” does not replace CU3 independent authority or CU5 whole-composition qualification.
+
+
+## CU3 authority evidence
+
+The Single ExecuteIndirect path now has a distinct Raw proposal, an independent
+Verifier, an opaque Verified Plan, a context-bound certificate, and an actual
+sidecar/shader execution binding.
+
+S4-I05 remains open because Fixed Maximum and Batched candidates are CU4.
+S4-I15 remains open because device-epoch and Recovery authority are CU5.
