@@ -39,3 +39,17 @@ run_sge4_5_spiral6_cu5_architecture_qualification.bat
 CU5 qualifies 21 cardinalities × 4 exact-set patterns × 3 Candidates. It requires exact writes, inactive sentinel preservation, full-output byte identity, fresh-process determinism, Controlled Recovery, actual Device Removal, and explicit Sparse set rebind plus Derived Representation rebuild.
 
 A successful runner declares `SGE4-5 SPIRAL 6 ARCHITECTURE COMPLETE`. Runtime Sparse policy remains unauthorized.
+
+## CU6
+
+Prepare the two measurement projects:
+
+```text
+run_sge4_5_spiral6_cu6_prepare.bat
+```
+
+Run deterministic self-tests, the real-GPU measurement and Decision Report:
+
+```text
+run_sge4_5_spiral6_cu6_measurement_decision_evidence.bat
+```
