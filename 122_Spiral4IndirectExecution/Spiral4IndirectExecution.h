@@ -8,7 +8,10 @@
 #include <cstdint>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
+
+struct ID3D12Device;
 
 namespace sge4_5::spiral4::execution
 {
@@ -27,7 +30,15 @@ struct IndirectExecutionCaseResultV1 final
     std::uint32_t activeMismatchCount = 0;
     std::uint32_t firstActiveMismatch = 0xFFFF'FFFFu;
     bool inactiveTailPreserved = false;
+    std::uint32_t nonFiniteCount = 0;
+    std::uint32_t homogeneousCoordinateMismatchCount = 0;
+    std::uint32_t duplicateWorkCount = 0;
+    std::uint32_t missingWorkCount = 0;
+    std::uint32_t reorderedWorkCount = 0;
+    std::uint32_t outOfRangeWorkCount = 0;
     float maxAbsoluteError = 0.0f;
+    float maxRelativeError = 0.0f;
+    std::uint32_t maxUlpError = 0;
     base::Digest256 readbackDigest{};
 };
 
@@ -38,6 +49,14 @@ struct SingleIndirectArchitectureResultV1 final
     base::Digest256 consumerShaderBytecodeDigest{};
     std::vector<IndirectExecutionCaseResultV1> cases;
 };
+
+[[nodiscard]] base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>
+RunSingleIndirectArchitectureOnDeviceV1(
+    ID3D12Device* device,
+    std::string_view adapterDescription,
+    const semantic::ActiveWorkSemanticV1& semantic,
+    const contract::FrozenSingleIndirectArtifactV1& artifact,
+    std::span<const std::uint32_t> activeCounts);
 
 [[nodiscard]] base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>
 RunSingleIndirectArchitectureOnWarpV1(

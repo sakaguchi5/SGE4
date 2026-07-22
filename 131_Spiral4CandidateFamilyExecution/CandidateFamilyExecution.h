@@ -10,7 +10,10 @@
 #include <cstdint>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
+
+struct ID3D12Device;
 
 namespace sge4_5::spiral4::family_execution
 {
@@ -63,7 +66,15 @@ struct CandidateFamilyCaseResultV1 final
     std::uint32_t activeMismatchCount = 0;
     std::uint32_t firstActiveMismatch = 0xFFFF'FFFFu;
     bool inactiveTailPreserved = false;
+    std::uint32_t nonFiniteCount = 0;
+    std::uint32_t homogeneousCoordinateMismatchCount = 0;
+    std::uint32_t duplicateWorkCount = 0;
+    std::uint32_t missingWorkCount = 0;
+    std::uint32_t reorderedWorkCount = 0;
+    std::uint32_t outOfRangeWorkCount = 0;
     float maxAbsoluteError = 0.0f;
+    float maxRelativeError = 0.0f;
+    std::uint32_t maxUlpError = 0;
     std::vector<family_contract::BatchDispatchRecordV1> observedBatchRecords;
     base::Digest256 outputDigest{};
 };
@@ -88,6 +99,17 @@ FreezeVerifiedCandidateFamilyV1(
     const semantic::ActiveWorkSemanticV1& semantic,
     const family_verification::CandidateFamilyVerificationContextV1& context,
     const family_verification::VerifiedCandidateFamilyV1& verified);
+
+[[nodiscard]] base::Result<
+    std::vector<CandidateFamilyRunResultV1>,
+    CandidateFamilyExecutionErrorV1>
+RunVerifiedCandidateFamilyCorpusOnDeviceV1(
+    ID3D12Device* device,
+    std::string_view adapterDescription,
+    const semantic::ActiveWorkSemanticV1& semantic,
+    const family_verification::CandidateFamilyVerificationContextV1& context,
+    std::span<const FrozenVerifiedCandidateFamilyV1> candidates,
+    std::span<const std::uint32_t> activeCounts);
 
 [[nodiscard]] base::Result<
     std::vector<CandidateFamilyRunResultV1>,

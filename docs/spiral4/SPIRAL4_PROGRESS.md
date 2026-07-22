@@ -107,3 +107,26 @@ Baseline: `04488a5203570d559ecd74372513d86abe34e4d0`
 [ ] CU4 runner executed
 [ ] CU5 full architecture qualification started
 ```
+
+
+## CU5 delivery
+
+Baseline: `8577ad1e4bb99f2a1c4d7125c6e586b33fb54154`
+
+```text
+[x] one persistent WARP DeviceDomain for A/B/C
+[x] full 7 × 19 WARP qualification design
+[x] 133 inactive-tail proofs
+[x] 95 GPU Batch-record proofs
+[x] fresh Debug A / Debug B / Release evidence comparison
+[x] controlled Recovery and device-epoch advance
+[x] stale handle and submission-token rejection
+[x] explicit dynamic-input rebind after Recovery
+[x] actual ID3D12Device5::RemoveDevice quarantine
+[x] removed WARP LUID exclusion in old process
+[x] fresh-process rematerialization
+[ ] destination Solution registration and Manifest regeneration
+[ ] CU5 runner executed
+[ ] Architecture Complete declaration observed
+[ ] CU6 real-GPU experiment started
+```

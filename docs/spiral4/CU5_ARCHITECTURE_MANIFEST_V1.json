@@ -1,0 +1,56 @@
+{
+  "schema": "SGE4-5.Spiral4.CU5ArchitectureManifest.V1",
+  "completionUnit": "CU5",
+  "baselineCommit": "8577ad1e4bb99f2a1c4d7125c6e586b33fb54154",
+  "candidateCount": 7,
+  "activeCountCaseCount": 19,
+  "warpQualificationCaseCount": 133,
+  "inactiveTailProofCount": 133,
+  "gpuBatchRecordProofCount": 95,
+  "freshProcessConfigurations": [
+    "DebugA",
+    "DebugB",
+    "Release"
+  ],
+  "controlledRecoveryActiveCounts": [
+    0,
+    65,
+    4096
+  ],
+  "controlledRecoveryCaseCountBefore": 21,
+  "controlledRecoveryCaseCountAfter": 21,
+  "actualRemovalMechanism": "ID3D12Device5.RemoveDevice",
+  "actualRemovalOldProcessState": "AwaitingAdapter",
+  "removedAdapterPolicy": "ExcludeRemovedWarpLuidUntilProcessExit",
+  "staleObjects": [
+    "EpochHandle",
+    "DynamicBinding",
+    "SubmissionToken",
+    "ArgumentBuffers",
+    "CommandSignatures",
+    "EndpointState"
+  ],
+  "dynamicRebindRequired": true,
+  "runtimeDispatchDecision": "None",
+  "architectureCompleteOnPass": true,
+  "cu6Deferred": [
+    "RealGpuMeasurement",
+    "BinaryPerformanceEvidence",
+    "CrossoverClassification",
+    "BatchDecisionReport",
+    "OwnerNextCapabilitySelection"
+  ],
+  "numericObservation": [
+    "ActiveMismatchCount",
+    "NonFiniteCount",
+    "HomogeneousCoordinateMismatchCount",
+    "MaxAbsoluteError",
+    "MaxRelativeError",
+    "MaxUlpError",
+    "DuplicateWorkCount",
+    "MissingWorkCount",
+    "ReorderedWorkCount",
+    "OutOfRangeWorkCount",
+    "ReadbackDigest"
+  ]
+}

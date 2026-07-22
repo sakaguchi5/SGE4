@@ -110,3 +110,23 @@ Then execute:
 
 CU4 compares correctness and authority, not performance. Real GPU ranking and
 crossover evidence remain CU6.
+
+
+## CU5 — Architecture qualification
+
+Prepare the two CU5 projects and regenerate the Source Manifest:
+
+```powershell
+.\run_sge4_5_spiral4_cu5_prepare.bat
+```
+
+Then run the full qualification:
+
+```powershell
+.\run_sge4_5_spiral4_cu5_architecture_qualification.bat
+```
+
+The runner executes the full WARP corpus three times for deterministic evidence,
+Controlled Recovery in Debug A/B/Release, actual Device removal in an isolated
+process, and fresh-process rematerialization. A successful final banner declares
+Spiral 4 Architecture Complete. CU6 is still required for Experiment Complete.

@@ -1,4 +1,4 @@
-#ifndef NOMINMAX
+﻿#ifndef NOMINMAX
 #define NOMINMAX
 #endif
 
@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstring>
 #include <iterator>
@@ -357,6 +358,29 @@ bool IsSentinel(const Float4& value)
     return std::memcmp(&value, &InactiveSentinel, sizeof(Float4)) == 0;
 }
 
+std::uint32_t OrderedFloatBits(float value) noexcept
+{
+    const std::uint32_t bits = std::bit_cast<std::uint32_t>(value);
+    if ((bits & 0x8000'0000u) != 0)
+    {
+        return 0x8000'0000u - (bits & 0x7FFF'FFFFu);
+    }
+    return 0x8000'0000u + bits;
+}
+
+std::uint32_t UlpDistance(float a, float b) noexcept
+{
+    const std::uint32_t x = OrderedFloatBits(a);
+    const std::uint32_t y = OrderedFloatBits(b);
+    return x > y ? x - y : y - x;
+}
+
+float RelativeError(float actual, float expected) noexcept
+{
+    const float denominator = std::max(std::abs(expected), 1.0e-20f);
+    return std::abs(actual - expected) / denominator;
+}
+
 base::Digest256 BuildBindingIdentity(
     const family_verification::VerifiedCandidateFamilyV1& verified,
     const family_contract::FrozenCandidateFamilyArtifactV1& artifact)
@@ -487,7 +511,9 @@ SerializeFrozenVerifiedCandidateFamilyV1(
 base::Result<
     std::vector<CandidateFamilyRunResultV1>,
     CandidateFamilyExecutionErrorV1>
-RunVerifiedCandidateFamilyCorpusOnWarpV1(
+RunVerifiedCandidateFamilyCorpusOnDeviceV1(
+    ID3D12Device* device,
+    std::string_view adapterDescription,
     const semantic::ActiveWorkSemanticV1& semantic,
     const family_verification::CandidateFamilyVerificationContextV1& context,
     std::span<const FrozenVerifiedCandidateFamilyV1> candidates,
@@ -537,7 +563,8 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
                 auto cu2Artifact =
                     contract::BuildCu2SingleIndirectArtifactV1(semantic);
                 auto singleRun =
-                    execution::RunSingleIndirectArchitectureOnWarpV1(
+                    execution::RunSingleIndirectArchitectureOnDeviceV1(
+                        device, adapterDescription,
                         semantic, cu2Artifact, activeCounts);
                 if (!singleRun)
                 {
@@ -574,8 +601,16 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
                         source.firstActiveMismatch;
                     target.inactiveTailPreserved =
                         source.inactiveTailPreserved;
-                    target.maxAbsoluteError =
-                        source.maxAbsoluteError;
+                    target.nonFiniteCount = source.nonFiniteCount;
+                    target.homogeneousCoordinateMismatchCount =
+                        source.homogeneousCoordinateMismatchCount;
+                    target.duplicateWorkCount = source.duplicateWorkCount;
+                    target.missingWorkCount = source.missingWorkCount;
+                    target.reorderedWorkCount = source.reorderedWorkCount;
+                    target.outOfRangeWorkCount = source.outOfRangeWorkCount;
+                    target.maxAbsoluteError = source.maxAbsoluteError;
+                    target.maxRelativeError = source.maxRelativeError;
+                    target.maxUlpError = source.maxUlpError;
                     target.outputDigest =
                         source.readbackDigest;
                     target.observedBatchRecords.push_back(
@@ -604,23 +639,13 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
             }
         }
 
-        ComPtr<IDXGIFactory6> factory;
-        ThrowIfFailed(
-            CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)),
-            "CreateDXGIFactory2");
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed(
-            factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)),
-            "EnumWarpAdapter");
-        DXGI_ADAPTER_DESC adapterDesc{};
-        ThrowIfFailed(warpAdapter->GetDesc(&adapterDesc), "GetDesc");
-
-        ComPtr<ID3D12Device> device;
-        ThrowIfFailed(
-            D3D12CreateDevice(
-                warpAdapter.Get(), D3D_FEATURE_LEVEL_11_0,
-                IID_PPV_ARGS(&device)),
-            "D3D12CreateDevice");
+        if (!device)
+        {
+            return base::Result<
+                std::vector<CandidateFamilyRunResultV1>,
+                CandidateFamilyExecutionErrorV1>::Failure(
+                    Error("d3d12/device", "A native D3D12 device is required."));
+        }
 
         D3D12_COMMAND_QUEUE_DESC queueDesc{};
         queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
@@ -689,16 +714,16 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
                 &consumerRanges[i];
         }
 
-        auto batchRoot = CreateRootSignature(device.Get(), batchParams);
-        auto consumerRoot = CreateRootSignature(device.Get(), consumerParams);
+        auto batchRoot = CreateRootSignature(device, batchParams);
+        auto consumerRoot = CreateRootSignature(device, consumerParams);
         auto batchShader = CompileShader(
             BatchProducerSource(), "Batch Argument Producer");
         auto consumerShader = CompileShader(
             ConsumerSource(), "Candidate Family Consumer");
         auto batchPipeline = CreateComputePipeline(
-            device.Get(), batchRoot.Get(), batchShader.Get());
+            device, batchRoot.Get(), batchShader.Get());
         auto consumerPipeline = CreateComputePipeline(
-            device.Get(), consumerRoot.Get(), consumerShader.Get());
+            device, consumerRoot.Get(), consumerShader.Get());
 
         const auto batchDigest = base::Sha256(
             std::span<const std::byte>(
@@ -738,31 +763,31 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
             64ull * sizeof(BatchCommand);
 
         auto transforms = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+            device, D3D12_HEAP_TYPE_UPLOAD,
             transformBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
         auto points = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+            device, D3D12_HEAP_TYPE_UPLOAD,
             workBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
         auto activeCount = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+            device, D3D12_HEAP_TYPE_UPLOAD,
             activeCountBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
         auto sentinelUpload = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+            device, D3D12_HEAP_TYPE_UPLOAD,
             workBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
         auto batchArguments = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_DEFAULT,
+            device, D3D12_HEAP_TYPE_DEFAULT,
             batchArgumentBytes,
             D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         auto output = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_DEFAULT,
+            device, D3D12_HEAP_TYPE_DEFAULT,
             workBytes, D3D12_RESOURCE_STATE_COPY_DEST,
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         auto outputReadback = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_READBACK,
+            device, D3D12_HEAP_TYPE_READBACK,
             workBytes, D3D12_RESOURCE_STATE_COPY_DEST);
         auto batchReadback = CreateBuffer(
-            device.Get(), D3D12_HEAP_TYPE_READBACK,
+            device, D3D12_HEAP_TYPE_READBACK,
             batchArgumentBytes, D3D12_RESOURCE_STATE_COPY_DEST);
 
         const auto transformValues = BuildTransforms();
@@ -898,7 +923,7 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
             run.kind = kind;
             run.batchSize = candidate.Verified().Plan().batchSize;
             run.adapterDescription =
-                Utf8FromWide(adapterDesc.Description);
+                std::string(adapterDescription);
             run.producerShaderBytecodeDigest =
                 kind ==
                     family_contract::CandidateFamilyKindV1::
@@ -1109,22 +1134,50 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
                     const Float4 expected =
                         ExpectedPoint(pointValues[i], i);
                     const Float4 actual = mappedOutput[i];
-                    const float errors[] = {
-                        std::abs(actual.x - expected.x),
-                        std::abs(actual.y - expected.y),
-                        std::abs(actual.z - expected.z),
-                        std::abs(actual.w - expected.w)
+                    const float actualValues[] = {
+                        actual.x, actual.y, actual.z, actual.w
                     };
-                    const float local =
-                        *std::max_element(
-                            std::begin(errors),
-                            std::end(errors));
+                    const float expectedValues[] = {
+                        expected.x, expected.y, expected.z, expected.w
+                    };
+                    float local = 0.0f;
+                    for (std::size_t component = 0; component < 4; ++component)
+                    {
+                        const float absolute = std::abs(
+                            actualValues[component] - expectedValues[component]);
+                        local = std::max(local, absolute);
+                        caseResult.maxRelativeError = std::max(
+                            caseResult.maxRelativeError,
+                            RelativeError(
+                                actualValues[component],
+                                expectedValues[component]));
+                        if (std::isfinite(actualValues[component]) &&
+                            std::isfinite(expectedValues[component]))
+                        {
+                            caseResult.maxUlpError = std::max(
+                                caseResult.maxUlpError,
+                                UlpDistance(
+                                    actualValues[component],
+                                    expectedValues[component]));
+                        }
+                    }
                     caseResult.maxAbsoluteError =
-                        std::max(
-                            caseResult.maxAbsoluteError,
-                            local);
-                    if (!std::isfinite(local) ||
-                        local > 1.0e-5f)
+                        std::max(caseResult.maxAbsoluteError, local);
+                    const bool finite =
+                        std::isfinite(actual.x) &&
+                        std::isfinite(actual.y) &&
+                        std::isfinite(actual.z) &&
+                        std::isfinite(actual.w);
+                    if (!finite)
+                    {
+                        ++caseResult.nonFiniteCount;
+                    }
+                    if (!std::isfinite(actual.w) ||
+                        std::abs(actual.w - 1.0f) > 1.0e-5f)
+                    {
+                        ++caseResult.homogeneousCoordinateMismatchCount;
+                    }
+                    if (!finite || local > 1.0e-5f)
                     {
                         if (caseResult.firstActiveMismatch ==
                             0xFFFF'FFFFu)
@@ -1152,6 +1205,12 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
                         semantic.maxWorkCount.Value())));
 
                 if (caseResult.activeMismatchCount != 0 ||
+                    caseResult.nonFiniteCount != 0 ||
+                    caseResult.homogeneousCoordinateMismatchCount != 0 ||
+                    caseResult.duplicateWorkCount != 0 ||
+                    caseResult.missingWorkCount != 0 ||
+                    caseResult.reorderedWorkCount != 0 ||
+                    caseResult.outOfRangeWorkCount != 0 ||
                     !caseResult.inactiveTailPreserved)
                 {
                     return base::Result<
@@ -1208,6 +1267,53 @@ RunVerifiedCandidateFamilyCorpusOnWarpV1(
             std::vector<CandidateFamilyRunResultV1>,
             CandidateFamilyExecutionErrorV1>::Failure(
                 Error("d3d12/exception", exception.what()));
+    }
+}
+
+
+base::Result<
+    std::vector<CandidateFamilyRunResultV1>,
+    CandidateFamilyExecutionErrorV1>
+RunVerifiedCandidateFamilyCorpusOnWarpV1(
+    const semantic::ActiveWorkSemanticV1& semantic,
+    const family_verification::CandidateFamilyVerificationContextV1& context,
+    std::span<const FrozenVerifiedCandidateFamilyV1> candidates,
+    std::span<const std::uint32_t> activeCounts)
+{
+    try
+    {
+        ComPtr<IDXGIFactory6> factory;
+        ThrowIfFailed(
+            CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)),
+            "CreateDXGIFactory2");
+        ComPtr<IDXGIAdapter> warpAdapter;
+        ThrowIfFailed(
+            factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)),
+            "EnumWarpAdapter");
+        DXGI_ADAPTER_DESC adapterDesc{};
+        ThrowIfFailed(warpAdapter->GetDesc(&adapterDesc), "GetDesc");
+
+        ComPtr<ID3D12Device> device;
+        ThrowIfFailed(
+            D3D12CreateDevice(
+                warpAdapter.Get(), D3D_FEATURE_LEVEL_11_0,
+                IID_PPV_ARGS(&device)),
+            "D3D12CreateDevice");
+
+        return RunVerifiedCandidateFamilyCorpusOnDeviceV1(
+            device.Get(),
+            Utf8FromWide(adapterDesc.Description),
+            semantic,
+            context,
+            candidates,
+            activeCounts);
+    }
+    catch (const std::exception& exception)
+    {
+        return base::Result<
+            std::vector<CandidateFamilyRunResultV1>,
+            CandidateFamilyExecutionErrorV1>::Failure(
+                Error("d3d12/warp-wrapper", exception.what()));
     }
 }
 }

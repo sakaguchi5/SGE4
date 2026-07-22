@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstring>
 #include <iterator>
@@ -398,6 +399,29 @@ bool EqualSentinel(const Float4& value)
     return std::memcmp(&value, &InactiveSentinel, sizeof(Float4)) == 0;
 }
 
+std::uint32_t OrderedFloatBits(float value) noexcept
+{
+    const std::uint32_t bits = std::bit_cast<std::uint32_t>(value);
+    if ((bits & 0x8000'0000u) != 0)
+    {
+        return 0x8000'0000u - (bits & 0x7FFF'FFFFu);
+    }
+    return 0x8000'0000u + bits;
+}
+
+std::uint32_t UlpDistance(float a, float b) noexcept
+{
+    const std::uint32_t x = OrderedFloatBits(a);
+    const std::uint32_t y = OrderedFloatBits(b);
+    return x > y ? x - y : y - x;
+}
+
+float RelativeError(float actual, float expected) noexcept
+{
+    const float denominator = std::max(std::abs(expected), 1.0e-20f);
+    return std::abs(actual - expected) / denominator;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE CpuHandle(
     D3D12_CPU_DESCRIPTOR_HANDLE start,
     UINT increment,
@@ -427,7 +451,9 @@ struct EventHandle final
 }
 
 base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>
-RunSingleIndirectArchitectureOnWarpV1(
+RunSingleIndirectArchitectureOnDeviceV1(
+    ID3D12Device* device,
+    std::string_view adapterDescription,
     const semantic::ActiveWorkSemanticV1& semantic,
     const contract::FrozenSingleIndirectArtifactV1& artifact,
     std::span<const std::uint32_t> activeCounts)
@@ -453,22 +479,11 @@ RunSingleIndirectArchitectureOnWarpV1(
             }
         }
 
-        ComPtr<IDXGIFactory6> factory;
-        ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)), "CreateDXGIFactory2");
-
-        ComPtr<IDXGIAdapter> warpAdapter;
-        ThrowIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)), "EnumWarpAdapter");
-
-        DXGI_ADAPTER_DESC adapterDesc{};
-        ThrowIfFailed(warpAdapter->GetDesc(&adapterDesc), "GetDesc");
-
-        ComPtr<ID3D12Device> device;
-        ThrowIfFailed(
-            D3D12CreateDevice(
-                warpAdapter.Get(),
-                D3D_FEATURE_LEVEL_11_0,
-                IID_PPV_ARGS(&device)),
-            "D3D12CreateDevice(WARP)");
+        if (!device)
+        {
+            return base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>::Failure(
+                Error("d3d12/device", "A native D3D12 device is required."));
+        }
 
         D3D12_COMMAND_QUEUE_DESC queueDesc{};
         queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
@@ -545,8 +560,8 @@ RunSingleIndirectArchitectureOnWarpV1(
                 &consumerRanges[i];
         }
 
-        auto producerRoot = CreateRootSignature(device.Get(), producerParameters);
-        auto consumerRoot = CreateRootSignature(device.Get(), consumerParameters);
+        auto producerRoot = CreateRootSignature(device, producerParameters);
+        auto consumerRoot = CreateRootSignature(device, consumerParameters);
 
         auto producerShader = CompileShader(
             ProducerShaderSource(artifact),
@@ -569,11 +584,11 @@ RunSingleIndirectArchitectureOnWarpV1(
                 consumerShader->GetBufferSize()));
 
         auto producerPipeline = CreateComputePipeline(
-            device.Get(),
+            device,
             producerRoot.Get(),
             producerShader.Get());
         auto consumerPipeline = CreateComputePipeline(
-            device.Get(),
+            device,
             consumerRoot.Get(),
             consumerShader.Get());
 
@@ -602,45 +617,45 @@ RunSingleIndirectArchitectureOnWarpV1(
         const std::uint64_t outputBytes = pointBytes;
 
         auto transforms = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_UPLOAD,
             transformBytes,
             D3D12_RESOURCE_STATE_GENERIC_READ);
         auto points = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_UPLOAD,
             pointBytes,
             D3D12_RESOURCE_STATE_GENERIC_READ);
         auto activeCount = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_UPLOAD,
             activeCountBytes,
             D3D12_RESOURCE_STATE_GENERIC_READ);
         auto sentinelUpload = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_UPLOAD,
             outputBytes,
             D3D12_RESOURCE_STATE_GENERIC_READ);
 
         auto arguments = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_DEFAULT,
             argumentBytes,
             D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         auto output = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_DEFAULT,
             outputBytes,
             D3D12_RESOURCE_STATE_COPY_DEST,
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         auto outputReadback = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_READBACK,
             outputBytes,
             D3D12_RESOURCE_STATE_COPY_DEST);
         auto argumentReadback = CreateBuffer(
-            device.Get(),
+            device,
             D3D12_HEAP_TYPE_READBACK,
             argumentBytes,
             D3D12_RESOURCE_STATE_COPY_DEST);
@@ -760,7 +775,7 @@ RunSingleIndirectArchitectureOnWarpV1(
 
         UINT64 fenceValue = 0;
         SingleIndirectArchitectureResultV1 result;
-        result.adapterDescription = Utf8FromWide(adapterDesc.Description);
+        result.adapterDescription = std::string(adapterDescription);
         result.producerShaderBytecodeDigest =
             producerShaderBytecodeDigest;
         result.consumerShaderBytecodeDigest =
@@ -929,17 +944,50 @@ RunSingleIndirectArchitectureOnWarpV1(
             {
                 const Float4 expected = ExpectedPoint(pointValues[i], i);
                 const Float4 actual = mappedOutput[i];
-                const float errors[] = {
-                    std::abs(actual.x - expected.x),
-                    std::abs(actual.y - expected.y),
-                    std::abs(actual.z - expected.z),
-                    std::abs(actual.w - expected.w)
+                const float actualValues[] = {
+                    actual.x, actual.y, actual.z, actual.w
                 };
-                const float localMax =
-                    *std::max_element(std::begin(errors), std::end(errors));
+                const float expectedValues[] = {
+                    expected.x, expected.y, expected.z, expected.w
+                };
+                float localMax = 0.0f;
+                for (std::size_t component = 0; component < 4; ++component)
+                {
+                    const float absolute = std::abs(
+                        actualValues[component] - expectedValues[component]);
+                    localMax = std::max(localMax, absolute);
+                    caseResult.maxRelativeError = std::max(
+                        caseResult.maxRelativeError,
+                        RelativeError(
+                            actualValues[component],
+                            expectedValues[component]));
+                    if (std::isfinite(actualValues[component]) &&
+                        std::isfinite(expectedValues[component]))
+                    {
+                        caseResult.maxUlpError = std::max(
+                            caseResult.maxUlpError,
+                            UlpDistance(
+                                actualValues[component],
+                                expectedValues[component]));
+                    }
+                }
                 caseResult.maxAbsoluteError =
                     std::max(caseResult.maxAbsoluteError, localMax);
-                if (!std::isfinite(localMax) || localMax > 1.0e-5f)
+                const bool finite =
+                    std::isfinite(actual.x) &&
+                    std::isfinite(actual.y) &&
+                    std::isfinite(actual.z) &&
+                    std::isfinite(actual.w);
+                if (!finite)
+                {
+                    ++caseResult.nonFiniteCount;
+                }
+                if (!std::isfinite(actual.w) ||
+                    std::abs(actual.w - 1.0f) > 1.0e-5f)
+                {
+                    ++caseResult.homogeneousCoordinateMismatchCount;
+                }
+                if (!finite || localMax > 1.0e-5f)
                 {
                     if (caseResult.firstActiveMismatch == 0xFFFF'FFFFu)
                     {
@@ -973,6 +1021,12 @@ RunSingleIndirectArchitectureOnWarpV1(
             if (caseResult.observedDispatchGroupCountX !=
                     caseResult.expectedDispatchGroupCountX ||
                 caseResult.activeMismatchCount != 0 ||
+                caseResult.nonFiniteCount != 0 ||
+                caseResult.homogeneousCoordinateMismatchCount != 0 ||
+                caseResult.duplicateWorkCount != 0 ||
+                caseResult.missingWorkCount != 0 ||
+                caseResult.reorderedWorkCount != 0 ||
+                caseResult.outOfRangeWorkCount != 0 ||
                 !caseResult.inactiveTailPreserved)
             {
                 return base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>::Failure(
@@ -993,6 +1047,50 @@ RunSingleIndirectArchitectureOnWarpV1(
     {
         return base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>::Failure(
             Error("d3d12/exception", error.what()));
+    }
+}
+
+
+base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>
+RunSingleIndirectArchitectureOnWarpV1(
+    const semantic::ActiveWorkSemanticV1& semantic,
+    const contract::FrozenSingleIndirectArtifactV1& artifact,
+    std::span<const std::uint32_t> activeCounts)
+{
+    try
+    {
+        ComPtr<IDXGIFactory6> factory;
+        ThrowIfFailed(
+            CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)),
+            "CreateDXGIFactory2");
+
+        ComPtr<IDXGIAdapter> warpAdapter;
+        ThrowIfFailed(
+            factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)),
+            "EnumWarpAdapter");
+
+        DXGI_ADAPTER_DESC adapterDesc{};
+        ThrowIfFailed(warpAdapter->GetDesc(&adapterDesc), "GetDesc");
+
+        ComPtr<ID3D12Device> device;
+        ThrowIfFailed(
+            D3D12CreateDevice(
+                warpAdapter.Get(),
+                D3D_FEATURE_LEVEL_11_0,
+                IID_PPV_ARGS(&device)),
+            "D3D12CreateDevice(WARP)");
+
+        return RunSingleIndirectArchitectureOnDeviceV1(
+            device.Get(),
+            Utf8FromWide(adapterDesc.Description),
+            semantic,
+            artifact,
+            activeCounts);
+    }
+    catch (const std::exception& error)
+    {
+        return base::Result<SingleIndirectArchitectureResultV1, IndirectExecutionErrorV1>::Failure(
+            Error("d3d12/warp-wrapper", error.what()));
     }
 }
 }
