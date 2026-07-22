@@ -275,6 +275,7 @@ struct GpuContext final
     EventHandle fenceEvent;
     std::uint64_t fenceValue = 0;
     std::string adapterDescription;
+    LUID adapterLuid{};
     ComPtr<ID3D12RootSignature> rootSignature;
     std::map<fc::SparseFamilyCandidateKindV1, ComPtr<ID3D12PipelineState>> pipelines;
     ComPtr<ID3D12CommandSignature> dispatchSignature;
@@ -288,6 +289,7 @@ struct GpuContext final
         DXGI_ADAPTER_DESC1 description{};
         Check(warp->GetDesc1(&description), "GetDesc1(WARP)");
         adapterDescription = WideToUtf8(description.Description);
+        adapterLuid = description.AdapterLuid;
         Check(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device)), "D3D12CreateDevice(WARP)");
         D3D12_COMMAND_QUEUE_DESC queueDesc{};
         queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -472,6 +474,47 @@ ExecutedCandidate ExecuteCandidate(
         throw std::runtime_error("Sparse Family WARP observation failed exact write-set qualification.");
     return result;
 }
+
+SparseCandidateFamilyCaseResultV1 RunVerifiedSparseCandidateFamilyWithGpuV1(
+    GpuContext& gpu,
+    const semantic::SparsePointTransformSemanticV1& semanticValue,
+    semantic::SparsePatternKindV1 pattern,
+    const semantic::ExactSparseWorkSetV1& set,
+    const fv::SparseFamilyVerificationContextV1& context,
+    const std::vector<FrozenVerifiedSparseFamilyCandidateV1>& frozen,
+    std::uint64_t currentDeviceEpoch)
+{
+    if (frozen.size() != 3)
+        throw std::runtime_error("Sparse Candidate Family requires exactly three Frozen Candidates.");
+    std::set<fc::SparseFamilyCandidateKindV1> kinds;
+    for (const auto& value : frozen)
+    {
+        auto valid = ValidateFrozenVerifiedSparseFamilyCandidateV1(
+            value, semanticValue, set, context, currentDeviceEpoch);
+        if (!valid) throw std::runtime_error(valid.Error());
+        kinds.insert(value.Artifact().Kind());
+    }
+    if (kinds.size() != 3)
+        throw std::runtime_error("Sparse Candidate Family kinds are not unique.");
+
+    SparseCandidateFamilyCaseResultV1 result;
+    result.adapterDescription = gpu.adapterDescription;
+    result.pattern = pattern;
+    result.semanticIdentity = semantic::SparsePointTransformSemanticIdentityV1(semanticValue);
+    result.sparseSetIdentity = set.Identity();
+    std::vector<std::vector<std::byte>> outputs;
+    for (const auto& value : frozen)
+    {
+        auto executed = ExecuteCandidate(gpu, semanticValue, set, value);
+        result.candidates.push_back(executed.observation);
+        outputs.push_back(std::move(executed.outputBytes));
+    }
+    result.pairwiseOutputByteIdentical =
+        outputs[0] == outputs[1] && outputs[1] == outputs[2];
+    if (!result.pairwiseOutputByteIdentical)
+        throw std::runtime_error("Sparse Candidate Family outputs are not byte-identical.");
+    return result;
+}
 #endif
 }
 
@@ -556,34 +599,11 @@ RunVerifiedSparseCandidateFamilyOnWarpV1(
 #else
     try
     {
-        if (frozen.size() != 3)
-            return base::Result<SparseCandidateFamilyCaseResultV1, SparseFamilyExecutionErrorV1>::Failure(
-                Error("execution/family", "Sparse Candidate Family requires exactly three Frozen Candidates."));
-        std::set<fc::SparseFamilyCandidateKindV1> kinds;
-        for (const auto& value : frozen)
-        {
-            auto valid = ValidateFrozenVerifiedSparseFamilyCandidateV1(value, semanticValue, set, context, currentDeviceEpoch);
-            if (!valid) throw std::runtime_error(valid.Error());
-            kinds.insert(value.Artifact().Kind());
-        }
-        if (kinds.size() != 3) throw std::runtime_error("Sparse Candidate Family kinds are not unique.");
         GpuContext gpu;
-        SparseCandidateFamilyCaseResultV1 result;
-        result.adapterDescription = gpu.adapterDescription;
-        result.pattern = pattern;
-        result.semanticIdentity = semantic::SparsePointTransformSemanticIdentityV1(semanticValue);
-        result.sparseSetIdentity = set.Identity();
-        std::vector<std::vector<std::byte>> outputs;
-        for (const auto& value : frozen)
-        {
-            auto executed = ExecuteCandidate(gpu, semanticValue, set, value);
-            result.candidates.push_back(executed.observation);
-            outputs.push_back(std::move(executed.outputBytes));
-        }
-        result.pairwiseOutputByteIdentical = outputs[0] == outputs[1] && outputs[1] == outputs[2];
-        if (!result.pairwiseOutputByteIdentical)
-            throw std::runtime_error("Sparse Candidate Family outputs are not byte-identical.");
-        return base::Result<SparseCandidateFamilyCaseResultV1, SparseFamilyExecutionErrorV1>::Success(std::move(result));
+        auto result = RunVerifiedSparseCandidateFamilyWithGpuV1(
+            gpu, semanticValue, pattern, set, context, frozen, currentDeviceEpoch);
+        return base::Result<SparseCandidateFamilyCaseResultV1, SparseFamilyExecutionErrorV1>::Success(
+            std::move(result));
     }
     catch (const std::exception& error)
     {
@@ -642,4 +662,678 @@ std::vector<std::byte> SerializeSparseCandidateFamilyCaseResultV1(
     Digest(writer, base::Sha256(writer.Bytes()));
     return std::move(writer).Take();
 }
+
+namespace
+{
+SparseCandidateFamilyRuntimeErrorV1 RuntimeError(
+    std::string stage,
+    std::string message,
+    long hresult = 0)
+{
+    return {std::move(stage), std::move(message), hresult};
+}
+
+[[maybe_unused]] base::Digest256 BuildSparseRuntimeCandidateBindingSetIdentityV1(
+    const semantic::SparsePointTransformSemanticV1& semanticValue,
+    const fv::SparseFamilyVerificationContextV1& context,
+    std::span<const SparseSetCandidateAuthorityV1> authorities)
+{
+    base::BinaryWriter writer;
+    Digest(writer, Literal("SGE4-5.Spiral6.SparseCandidateFamilyRuntimeAuthoritySet.V1"));
+    const auto semanticBytes = semantic::SerializeSparsePointTransformSemanticV1(semanticValue);
+    writer.WriteU32(static_cast<std::uint32_t>(semanticBytes.size()));
+    writer.WriteBytes(semanticBytes);
+    Digest(writer, context.targetProfileIdentity);
+    Digest(writer, context.observationContractIdentity);
+    Digest(writer, context.completionContractIdentity);
+    Digest(writer, context.deviceEpochPolicyIdentity);
+    Digest(writer, context.spiral4IndirectArtifactIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(authorities.size()));
+    for (const auto& authority : authorities)
+    {
+        writer.WriteU32(static_cast<std::uint32_t>(authority.pattern));
+        const auto setBytes = semantic::SerializeExactSparseWorkSetV1(authority.set);
+        writer.WriteU32(static_cast<std::uint32_t>(setBytes.size()));
+        writer.WriteBytes(setBytes);
+        writer.WriteU32(static_cast<std::uint32_t>(authority.candidates.size()));
+        for (const auto& candidate : authority.candidates)
+        {
+            const auto verified = fv::SerializeVerifiedSparseFamilyCandidateV1(candidate);
+            writer.WriteU32(static_cast<std::uint32_t>(verified.size()));
+            writer.WriteBytes(verified);
+        }
+    }
+    return base::Sha256(writer.Bytes());
+}
+
+[[maybe_unused]] base::Digest256 BuildSparseRuntimeDomainIdentityV1(
+    const semantic::SparsePointTransformSemanticV1& semanticValue,
+    const base::Digest256& bindingSetIdentity)
+{
+    base::BinaryWriter writer;
+    Digest(writer, Literal("SGE4-5.Spiral6.LoadedSparseCandidateFamilyRuntime.V1"));
+    Digest(writer, semantic::SparsePointTransformSemanticIdentityV1(semanticValue));
+    Digest(writer, bindingSetIdentity);
+    return base::Sha256(writer.Bytes());
+}
+
+const SparseSetCandidateAuthorityV1* FindSparseAuthorityV1(
+    std::span<const SparseSetCandidateAuthorityV1> authorities,
+    semantic::SparsePatternKindV1 pattern,
+    const base::Digest256& setIdentity)
+{
+    const auto found = std::find_if(
+        authorities.begin(), authorities.end(),
+        [&](const SparseSetCandidateAuthorityV1& value)
+        {
+            return value.pattern == pattern && value.set.Identity() == setIdentity;
+        });
+    return found == authorities.end() ? nullptr : &*found;
+}
+
+base::Digest256 BuildSparseSetBindingIdentityV1(
+    const base::Digest256& domainIdentity,
+    std::uint64_t deviceEpoch,
+    semantic::SparsePatternKindV1 pattern,
+    const base::Digest256& setIdentity)
+{
+    base::BinaryWriter writer;
+    Digest(writer, Literal("SGE4-5.Spiral6.SparseRuntimeSetBinding.V1"));
+    Digest(writer, domainIdentity);
+    writer.WriteU64(deviceEpoch);
+    writer.WriteU32(static_cast<std::uint32_t>(pattern));
+    Digest(writer, setIdentity);
+    return base::Sha256(writer.Bytes());
+}
+
+base::Digest256 BuildSparseRepresentationSetIdentityV1(
+    const SparseRuntimeSetBindingV1& binding,
+    std::span<const FrozenVerifiedSparseFamilyCandidateV1> frozen)
+{
+    base::BinaryWriter writer;
+    Digest(writer, Literal("SGE4-5.Spiral6.SparseRuntimeRepresentationSet.V1"));
+    writer.WriteU64(binding.deviceEpoch);
+    writer.WriteU32(static_cast<std::uint32_t>(binding.pattern));
+    Digest(writer, binding.sparseSetIdentity);
+    Digest(writer, binding.bindingIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(frozen.size()));
+    for (const auto& candidate : frozen)
+    {
+        const auto bytes = SerializeFrozenVerifiedSparseFamilyCandidateV1(candidate);
+        writer.WriteU32(static_cast<std::uint32_t>(bytes.size()));
+        writer.WriteBytes(bytes);
+    }
+    return base::Sha256(writer.Bytes());
+}
+
+[[maybe_unused]] base::Digest256 BuildSparseSubmissionTokenIdentityV1(
+    const base::Digest256& domainIdentity,
+    std::uint64_t deviceEpoch,
+    std::uint64_t ordinal,
+    const SparseRepresentationSetHandleV1& representations,
+    const SparseCandidateFamilyCaseResultV1& architecture)
+{
+    base::BinaryWriter writer;
+    Digest(writer, Literal("SGE4-5.Spiral6.SparseRuntimeSubmissionToken.V1"));
+    Digest(writer, domainIdentity);
+    writer.WriteU64(deviceEpoch);
+    writer.WriteU64(ordinal);
+    Digest(writer, representations.representationSetIdentity);
+    const auto evidence = SerializeSparseCandidateFamilyCaseResultV1(architecture);
+    writer.WriteU32(static_cast<std::uint32_t>(evidence.size()));
+    writer.WriteBytes(evidence);
+    return base::Sha256(writer.Bytes());
+}
+}
+
+struct LoadedSparseCandidateFamilyRuntimeV1::Impl final
+{
+    semantic::SparsePointTransformSemanticV1 semantic;
+    fv::SparseFamilyVerificationContextV1 context;
+    std::vector<SparseSetCandidateAuthorityV1> authorities;
+    SparseCandidateFamilyRuntimeStateV1 state = SparseCandidateFamilyRuntimeStateV1::Active;
+    std::uint64_t deviceEpoch = 1;
+    std::uint64_t submissionOrdinal = 0;
+    base::Digest256 domainIdentity{};
+    base::Digest256 candidateBindingSetIdentity{};
+    std::string adapterDescription;
+    bool sparseSetBound = false;
+    bool representationsBuilt = false;
+    SparseRuntimeSetBindingV1 currentBinding{};
+    SparseRepresentationSetHandleV1 currentRepresentations{};
+    std::vector<FrozenVerifiedSparseFamilyCandidateV1> currentFrozen;
+    std::vector<SparseRuntimeSubmissionTokenV1> issuedTokens;
+    std::vector<SparseRepresentationSetHandleV1> issuedRepresentations;
+#if defined(_WIN32)
+    std::unique_ptr<GpuContext> gpu;
+    bool hasExcludedAdapterLuid = false;
+    LUID excludedAdapterLuid{};
+#endif
+};
+
+LoadedSparseCandidateFamilyRuntimeV1::LoadedSparseCandidateFamilyRuntimeV1(
+    std::unique_ptr<Impl> impl)
+    : impl_(std::move(impl))
+{
+}
+LoadedSparseCandidateFamilyRuntimeV1::LoadedSparseCandidateFamilyRuntimeV1(
+    LoadedSparseCandidateFamilyRuntimeV1&&) noexcept = default;
+LoadedSparseCandidateFamilyRuntimeV1& LoadedSparseCandidateFamilyRuntimeV1::operator=(
+    LoadedSparseCandidateFamilyRuntimeV1&&) noexcept = default;
+LoadedSparseCandidateFamilyRuntimeV1::~LoadedSparseCandidateFamilyRuntimeV1() = default;
+
+SparseCandidateFamilyRuntimeStateV1 LoadedSparseCandidateFamilyRuntimeV1::State() const noexcept
+{
+    return impl_->state;
+}
+std::uint64_t LoadedSparseCandidateFamilyRuntimeV1::DeviceEpoch() const noexcept
+{
+    return impl_->deviceEpoch;
+}
+const base::Digest256& LoadedSparseCandidateFamilyRuntimeV1::DomainIdentity() const noexcept
+{
+    return impl_->domainIdentity;
+}
+const base::Digest256& LoadedSparseCandidateFamilyRuntimeV1::CandidateBindingSetIdentity() const noexcept
+{
+    return impl_->candidateBindingSetIdentity;
+}
+const std::string& LoadedSparseCandidateFamilyRuntimeV1::AdapterDescription() const noexcept
+{
+    return impl_->adapterDescription;
+}
+std::size_t LoadedSparseCandidateFamilyRuntimeV1::AuthorityCount() const noexcept
+{
+    return impl_->authorities.size();
+}
+bool LoadedSparseCandidateFamilyRuntimeV1::SparseSetBound() const noexcept
+{
+    return impl_->sparseSetBound;
+}
+bool LoadedSparseCandidateFamilyRuntimeV1::RepresentationsBuilt() const noexcept
+{
+    return impl_->representationsBuilt;
+}
+
+base::Result<LoadedSparseCandidateFamilyRuntimeV1, SparseCandidateFamilyRuntimeErrorV1>
+LoadSparseCandidateFamilyRuntimeOnWarpV1(
+    const semantic::SparsePointTransformSemanticV1& semanticValue,
+    const fv::SparseFamilyVerificationContextV1& context,
+    std::span<const SparseSetCandidateAuthorityV1> authorities)
+{
+#if !defined(_WIN32)
+    (void)semanticValue; (void)context; (void)authorities;
+    return base::Result<LoadedSparseCandidateFamilyRuntimeV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+        RuntimeError("sparse-runtime/platform", "Spiral 6 CU5 Runtime requires Windows D3D12."));
+#else
+    try
+    {
+        if (authorities.empty())
+            throw std::runtime_error("Sparse Runtime authority corpus is empty.");
+        std::set<std::pair<std::uint32_t, std::string>> unique;
+        for (const auto& authority : authorities)
+        {
+            if (authority.candidates.size() != 3)
+                throw std::runtime_error("Sparse Runtime authority requires three Candidates per set.");
+            const auto key = std::pair{
+                static_cast<std::uint32_t>(authority.pattern),
+                base::ToHex(authority.set.Identity())};
+            if (!unique.insert(key).second)
+                throw std::runtime_error("Sparse Runtime authority contains a duplicate pattern/set pair.");
+            std::set<fc::SparseFamilyCandidateKindV1> kinds;
+            for (const auto& candidate : authority.candidates)
+            {
+                auto valid = fv::ValidateVerifiedSparseFamilyCandidateV1(
+                    candidate, semanticValue, authority.set, context);
+                if (!valid) throw std::runtime_error(valid.Error());
+                kinds.insert(candidate.Plan().operation.kind);
+            }
+            if (kinds.size() != 3)
+                throw std::runtime_error("Sparse Runtime authority does not contain three unique Candidate kinds.");
+        }
+
+        auto impl = std::make_unique<LoadedSparseCandidateFamilyRuntimeV1::Impl>();
+        impl->semantic = semanticValue;
+        impl->context = context;
+        impl->authorities.assign(authorities.begin(), authorities.end());
+        impl->candidateBindingSetIdentity = BuildSparseRuntimeCandidateBindingSetIdentityV1(
+            semanticValue, context, authorities);
+        impl->domainIdentity = BuildSparseRuntimeDomainIdentityV1(
+            semanticValue, impl->candidateBindingSetIdentity);
+        impl->gpu = std::make_unique<GpuContext>();
+        impl->adapterDescription = impl->gpu->adapterDescription;
+        return base::Result<LoadedSparseCandidateFamilyRuntimeV1, SparseCandidateFamilyRuntimeErrorV1>::Success(
+            LoadedSparseCandidateFamilyRuntimeV1(std::move(impl)));
+    }
+    catch (const std::exception& error)
+    {
+        return base::Result<LoadedSparseCandidateFamilyRuntimeV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/load", error.what()));
+    }
+#endif
+}
+
+SparseRuntimeEpochHandleV1 CaptureSparseRuntimeEpochHandleV1(
+    const LoadedSparseCandidateFamilyRuntimeV1& runtime)
+{
+    SparseRuntimeEpochHandleV1 handle;
+    handle.deviceEpoch = runtime.impl_->deviceEpoch;
+    handle.domainIdentity = runtime.impl_->domainIdentity;
+    handle.candidateBindingSetIdentity = runtime.impl_->candidateBindingSetIdentity;
+    return handle;
+}
+
+base::Result<void, SparseCandidateFamilyRuntimeErrorV1>
+ValidateSparseRuntimeEpochHandleV1(
+    const LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    const SparseRuntimeEpochHandleV1& handle)
+{
+    const auto& impl = *runtime.impl_;
+    if (impl.state != SparseCandidateFamilyRuntimeStateV1::Active)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/device-state", "Sparse Runtime domain is not Active."));
+    if (handle.deviceEpoch != impl.deviceEpoch)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/stale-epoch", "Sparse Runtime handle belongs to another device epoch."));
+    if (handle.domainIdentity != impl.domainIdentity ||
+        handle.candidateBindingSetIdentity != impl.candidateBindingSetIdentity)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/handle-identity", "Sparse Runtime handle identity mismatch."));
+    return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Success();
+}
+
+base::Result<SparseRuntimeSetBindingV1, SparseCandidateFamilyRuntimeErrorV1>
+BindSparseWorkSetV1(
+    LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    const SparseRuntimeEpochHandleV1& handle,
+    semantic::SparsePatternKindV1 pattern,
+    const base::Digest256& sparseSetIdentity)
+{
+    auto handleValid = ValidateSparseRuntimeEpochHandleV1(runtime, handle);
+    if (!handleValid)
+        return base::Result<SparseRuntimeSetBindingV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            handleValid.Error());
+    auto& impl = *runtime.impl_;
+    if (!FindSparseAuthorityV1(impl.authorities, pattern, sparseSetIdentity))
+        return base::Result<SparseRuntimeSetBindingV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/set-authority", "Sparse set is not present in the Frozen authority corpus."));
+
+    SparseRuntimeSetBindingV1 binding;
+    binding.deviceEpoch = impl.deviceEpoch;
+    binding.pattern = pattern;
+    binding.sparseSetIdentity = sparseSetIdentity;
+    binding.bindingIdentity = BuildSparseSetBindingIdentityV1(
+        impl.domainIdentity, impl.deviceEpoch, pattern, sparseSetIdentity);
+    impl.sparseSetBound = true;
+    impl.representationsBuilt = false;
+    impl.currentBinding = binding;
+    impl.currentRepresentations = {};
+    impl.currentFrozen.clear();
+    return base::Result<SparseRuntimeSetBindingV1, SparseCandidateFamilyRuntimeErrorV1>::Success(binding);
+}
+
+base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>
+RebuildSparseRepresentationsV1(
+    LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    const SparseRuntimeEpochHandleV1& handle,
+    const SparseRuntimeSetBindingV1& binding)
+{
+    auto handleValid = ValidateSparseRuntimeEpochHandleV1(runtime, handle);
+    if (!handleValid)
+        return base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            handleValid.Error());
+    auto& impl = *runtime.impl_;
+    if (!impl.sparseSetBound)
+        return base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/rebind-required", "Current-epoch Sparse set must be rebound before representation rebuild."));
+    if (binding.deviceEpoch != impl.deviceEpoch ||
+        binding.pattern != impl.currentBinding.pattern ||
+        binding.sparseSetIdentity != impl.currentBinding.sparseSetIdentity ||
+        binding.bindingIdentity != impl.currentBinding.bindingIdentity ||
+        binding.bindingIdentity != BuildSparseSetBindingIdentityV1(
+            impl.domainIdentity, binding.deviceEpoch, binding.pattern, binding.sparseSetIdentity))
+        return base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/binding-identity", "Sparse set binding does not match the current Runtime binding."));
+
+    const auto* authority = FindSparseAuthorityV1(
+        impl.authorities, binding.pattern, binding.sparseSetIdentity);
+    if (!authority)
+        return base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/set-authority", "Sparse set authority disappeared during rebuild."));
+
+    try
+    {
+        std::vector<FrozenVerifiedSparseFamilyCandidateV1> frozen;
+        for (const auto& verified : authority->candidates)
+        {
+            const auto kind = verified.Plan().operation.kind;
+            const auto artifact = fc::BuildSparseFamilyArtifactV1(
+                impl.semantic, authority->set, kind);
+            const auto resource = BuildCanonicalSparseFamilyResourceBindingInputV1(
+                verified, impl.deviceEpoch);
+            auto value = FreezeVerifiedSparseFamilyCandidateV1(
+                impl.semantic, authority->set, impl.context, verified, artifact, resource);
+            if (!value) throw std::runtime_error(value.Error());
+            frozen.push_back(std::move(value).Value());
+        }
+        SparseRepresentationSetHandleV1 representations;
+        representations.deviceEpoch = impl.deviceEpoch;
+        representations.pattern = binding.pattern;
+        representations.sparseSetIdentity = binding.sparseSetIdentity;
+        representations.representationSetIdentity = BuildSparseRepresentationSetIdentityV1(
+            binding, frozen);
+        impl.currentFrozen = std::move(frozen);
+        impl.currentRepresentations = representations;
+        impl.representationsBuilt = true;
+        impl.issuedRepresentations.push_back(representations);
+        return base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>::Success(
+            representations);
+    }
+    catch (const std::exception& error)
+    {
+        return base::Result<SparseRepresentationSetHandleV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/rebuild", error.what()));
+    }
+}
+
+base::Result<void, SparseCandidateFamilyRuntimeErrorV1>
+ValidateSparseRepresentationSetHandleV1(
+    const LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    const SparseRepresentationSetHandleV1& representations)
+{
+    const auto& impl = *runtime.impl_;
+    if (impl.state != SparseCandidateFamilyRuntimeStateV1::Active)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/device-state", "Sparse representation belongs to an inactive domain."));
+    if (representations.deviceEpoch != impl.deviceEpoch)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/stale-epoch", "Sparse representation belongs to another device epoch."));
+    const bool issued = std::any_of(
+        impl.issuedRepresentations.begin(), impl.issuedRepresentations.end(),
+        [&](const SparseRepresentationSetHandleV1& value)
+        {
+            return value.deviceEpoch == representations.deviceEpoch &&
+                value.pattern == representations.pattern &&
+                value.sparseSetIdentity == representations.sparseSetIdentity &&
+                value.representationSetIdentity == representations.representationSetIdentity;
+        });
+    if (!issued)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/representation-identity", "Sparse representation handle is not recognized by this Runtime."));
+    return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Success();
+}
+
+base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>
+SubmitSparseWorkSetV1(
+    LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    const SparseRuntimeEpochHandleV1& handle,
+    const SparseRuntimeSetBindingV1& binding,
+    const SparseRepresentationSetHandleV1& representations)
+{
+#if !defined(_WIN32)
+    (void)runtime; (void)handle; (void)binding; (void)representations;
+    return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+        RuntimeError("sparse-runtime/platform", "Spiral 6 CU5 submission requires Windows D3D12."));
+#else
+    auto handleValid = ValidateSparseRuntimeEpochHandleV1(runtime, handle);
+    if (!handleValid)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            handleValid.Error());
+    auto& impl = *runtime.impl_;
+    if (!impl.sparseSetBound)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/rebind-required", "Current-epoch Sparse set must be rebound before submission."));
+    if (binding.deviceEpoch != impl.deviceEpoch || binding.bindingIdentity != impl.currentBinding.bindingIdentity)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/binding-identity", "Sparse submission binding is not current."));
+    if (!impl.representationsBuilt)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/rebuild-required", "Sparse derived representations must be explicitly rebuilt before submission."));
+    auto representationValid = ValidateSparseRepresentationSetHandleV1(runtime, representations);
+    if (!representationValid)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            representationValid.Error());
+    if (representations.representationSetIdentity != impl.currentRepresentations.representationSetIdentity)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/representation-current", "Sparse representation handle is not the current set binding."));
+    const auto* authority = FindSparseAuthorityV1(
+        impl.authorities, binding.pattern, binding.sparseSetIdentity);
+    if (!authority)
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/set-authority", "Sparse submission authority is missing."));
+    try
+    {
+        auto architecture = RunVerifiedSparseCandidateFamilyWithGpuV1(
+            *impl.gpu, impl.semantic, authority->pattern, authority->set,
+            impl.context, impl.currentFrozen, impl.deviceEpoch);
+        SparseRuntimeSubmissionV1 submission;
+        submission.representations = representations;
+        submission.representationResourcesMaterialized = true;
+        submission.indirectArgumentsMaterialized = true;
+        submission.completionStateMaterialized = true;
+        submission.readbackStateMaterialized = true;
+        submission.architecture = std::move(architecture);
+        submission.completion.deviceEpoch = impl.deviceEpoch;
+        submission.completion.submissionOrdinal = ++impl.submissionOrdinal;
+        submission.completion.tokenIdentity = BuildSparseSubmissionTokenIdentityV1(
+            impl.domainIdentity, impl.deviceEpoch, submission.completion.submissionOrdinal,
+            representations, submission.architecture);
+        impl.issuedTokens.push_back(submission.completion);
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Success(
+            std::move(submission));
+    }
+    catch (const std::exception& error)
+    {
+        return base::Result<SparseRuntimeSubmissionV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/submit", error.what()));
+    }
+#endif
+}
+
+base::Result<void, SparseCandidateFamilyRuntimeErrorV1>
+ValidateSparseRuntimeSubmissionTokenV1(
+    const LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    const SparseRuntimeSubmissionTokenV1& token)
+{
+    const auto& impl = *runtime.impl_;
+    if (impl.state != SparseCandidateFamilyRuntimeStateV1::Active)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/device-state", "Sparse submission belongs to an inactive domain."));
+    if (token.deviceEpoch != impl.deviceEpoch)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/stale-epoch", "Sparse submission token belongs to another device epoch."));
+    const bool issued = std::any_of(
+        impl.issuedTokens.begin(), impl.issuedTokens.end(),
+        [&](const SparseRuntimeSubmissionTokenV1& value)
+        {
+            return value.deviceEpoch == token.deviceEpoch &&
+                value.submissionOrdinal == token.submissionOrdinal &&
+                value.tokenIdentity == token.tokenIdentity;
+        });
+    if (!issued)
+        return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/token-identity", "Sparse submission token is not recognized by this Runtime."));
+    return base::Result<void, SparseCandidateFamilyRuntimeErrorV1>::Success();
+}
+
+base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>
+RecoverSparseCandidateFamilyRuntimeV1(
+    LoadedSparseCandidateFamilyRuntimeV1& runtime,
+    SparseCandidateFamilyRecoveryModeV1 mode)
+{
+#if !defined(_WIN32)
+    (void)runtime; (void)mode;
+    return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+        RuntimeError("sparse-runtime/platform", "Spiral 6 CU5 Recovery requires Windows D3D12."));
+#else
+    auto& impl = *runtime.impl_;
+    SparseCandidateFamilyRecoveryReportV1 report;
+    report.mode = mode;
+    report.stateBefore = impl.state;
+    report.stateAfter = impl.state;
+    report.previousDeviceEpoch = impl.deviceEpoch;
+    report.newDeviceEpoch = impl.deviceEpoch;
+    const auto frozenBefore = impl.candidateBindingSetIdentity;
+
+    if (mode == SparseCandidateFamilyRecoveryModeV1::RetryAdapterReacquisition)
+    {
+        if (impl.state != SparseCandidateFamilyRuntimeStateV1::AwaitingAdapter ||
+            !impl.hasExcludedAdapterLuid)
+            return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("sparse-runtime/retry-state", "Sparse adapter retry requires an excluded removed adapter."));
+        try
+        {
+            ComPtr<IDXGIFactory6> factory;
+            Check(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)), "CreateDXGIFactory2(retry)");
+            ComPtr<IDXGIAdapter1> warp;
+            Check(factory->EnumWarpAdapter(IID_PPV_ARGS(&warp)), "EnumWarpAdapter(retry)");
+            DXGI_ADAPTER_DESC1 description{};
+            Check(warp->GetDesc1(&description), "GetDesc1(retry)");
+            if (description.AdapterLuid.LowPart == impl.excludedAdapterLuid.LowPart &&
+                description.AdapterLuid.HighPart == impl.excludedAdapterLuid.HighPart)
+            {
+                report.adapterReacquired = false;
+                report.sparseRebindRequired = true;
+                report.explicitRepresentationRebuildRequired = true;
+                report.frozenAuthorityPreserved = frozenBefore == impl.candidateBindingSetIdentity;
+                return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Success(report);
+            }
+            impl.gpu = std::make_unique<GpuContext>();
+            ++impl.deviceEpoch;
+            impl.state = SparseCandidateFamilyRuntimeStateV1::Active;
+            impl.adapterDescription = impl.gpu->adapterDescription;
+            impl.sparseSetBound = false;
+            impl.representationsBuilt = false;
+            report.adapterReacquired = true;
+            report.nativeDeviceRematerialized = true;
+            report.executionContextRematerialized = true;
+            report.newDeviceEpoch = impl.deviceEpoch;
+            report.stateAfter = impl.state;
+            report.sparseRebindRequired = true;
+            report.explicitRepresentationRebuildRequired = true;
+            report.frozenAuthorityPreserved = frozenBefore == impl.candidateBindingSetIdentity;
+            return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Success(report);
+        }
+        catch (const std::exception& error)
+        {
+            return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("sparse-runtime/retry", error.what()));
+        }
+    }
+
+    if (impl.state != SparseCandidateFamilyRuntimeStateV1::Active || !impl.gpu)
+        return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/device-state", "Recovery requires an active Sparse Runtime."));
+
+    report.representationResourcesInvalidated = true;
+    report.indirectArgumentsInvalidated = true;
+    report.completionStateInvalidated = true;
+    report.readbackStateInvalidated = true;
+    report.sparseRebindRequired = true;
+    report.explicitRepresentationRebuildRequired = true;
+
+    if (mode == SparseCandidateFamilyRecoveryModeV1::ControlledRebuild)
+    {
+        try
+        {
+            impl.gpu.reset();
+            report.allRuntimeObjectsReleased = true;
+            impl.gpu = std::make_unique<GpuContext>();
+            impl.adapterDescription = impl.gpu->adapterDescription;
+            ++impl.deviceEpoch;
+            impl.submissionOrdinal = 0;
+            impl.sparseSetBound = false;
+            impl.representationsBuilt = false;
+            impl.currentBinding = {};
+            impl.currentRepresentations = {};
+            impl.currentFrozen.clear();
+            impl.issuedTokens.clear();
+            impl.issuedRepresentations.clear();
+            report.adapterReacquired = true;
+            report.nativeDeviceRematerialized = true;
+            report.executionContextRematerialized = true;
+            report.newDeviceEpoch = impl.deviceEpoch;
+            report.stateAfter = impl.state;
+            report.frozenAuthorityPreserved = frozenBefore == impl.candidateBindingSetIdentity;
+            return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Success(report);
+        }
+        catch (const std::exception& error)
+        {
+            return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("sparse-runtime/controlled", error.what()));
+        }
+    }
+
+    if (mode != SparseCandidateFamilyRecoveryModeV1::ForceRemovalForTest)
+        return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/recovery-mode", "Unknown Sparse Recovery mode."));
+
+    ComPtr<ID3D12Device5> removable;
+    HRESULT hr = impl.gpu->device.As(&removable);
+    if (FAILED(hr))
+        return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/query-device5", HResultText(hr), hr));
+    removable->RemoveDevice();
+    const HRESULT reason = impl.gpu->device->GetDeviceRemovedReason();
+    report.removalReason = static_cast<long>(reason);
+    if (SUCCEEDED(reason))
+        return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("sparse-runtime/remove-device", "ID3D12Device5::RemoveDevice did not remove the Sparse device."));
+
+    report.forcedRemoval = true;
+    impl.excludedAdapterLuid = impl.gpu->adapterLuid;
+    impl.hasExcludedAdapterLuid = true;
+    report.removedAdapterLuidLow = impl.excludedAdapterLuid.LowPart;
+    report.removedAdapterLuidHigh = impl.excludedAdapterLuid.HighPart;
+    impl.gpu.reset();
+    impl.state = SparseCandidateFamilyRuntimeStateV1::AwaitingAdapter;
+    impl.sparseSetBound = false;
+    impl.representationsBuilt = false;
+    impl.currentBinding = {};
+    impl.currentRepresentations = {};
+    impl.currentFrozen.clear();
+    impl.issuedTokens.clear();
+    impl.issuedRepresentations.clear();
+    report.allRuntimeObjectsReleased = true;
+    report.stateAfter = impl.state;
+    report.frozenAuthorityPreserved = frozenBefore == impl.candidateBindingSetIdentity;
+    return base::Result<SparseCandidateFamilyRecoveryReportV1, SparseCandidateFamilyRuntimeErrorV1>::Success(report);
+#endif
+}
+
+std::vector<std::byte> SerializeSparseCandidateFamilyRuntimeAuthorityV1(
+    const LoadedSparseCandidateFamilyRuntimeV1& runtime)
+{
+    const auto& impl = *runtime.impl_;
+    base::BinaryWriter writer;
+    Digest(writer, Literal("SGE4-5.Spiral6.SparseCandidateFamilyRuntimeAuthority.V1"));
+    const auto semanticBytes = semantic::SerializeSparsePointTransformSemanticV1(impl.semantic);
+    writer.WriteU32(static_cast<std::uint32_t>(semanticBytes.size()));
+    writer.WriteBytes(semanticBytes);
+    Digest(writer, impl.context.targetProfileIdentity);
+    Digest(writer, impl.context.observationContractIdentity);
+    Digest(writer, impl.context.completionContractIdentity);
+    Digest(writer, impl.context.deviceEpochPolicyIdentity);
+    Digest(writer, impl.context.spiral4IndirectArtifactIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(impl.authorities.size()));
+    for (const auto& authority : impl.authorities)
+    {
+        writer.WriteU32(static_cast<std::uint32_t>(authority.pattern));
+        const auto setBytes = semantic::SerializeExactSparseWorkSetV1(authority.set);
+        writer.WriteU32(static_cast<std::uint32_t>(setBytes.size()));
+        writer.WriteBytes(setBytes);
+        writer.WriteU32(static_cast<std::uint32_t>(authority.candidates.size()));
+        for (const auto& candidate : authority.candidates)
+        {
+            const auto verified = fv::SerializeVerifiedSparseFamilyCandidateV1(candidate);
+            writer.WriteU32(static_cast<std::uint32_t>(verified.size()));
+            writer.WriteBytes(verified);
+        }
+    }
+    Digest(writer, impl.domainIdentity);
+    Digest(writer, impl.candidateBindingSetIdentity);
+    Digest(writer, base::Sha256(writer.Bytes()));
+    return std::move(writer).Take();
+}
+
 }

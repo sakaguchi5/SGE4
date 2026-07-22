@@ -6,15 +6,20 @@
 - CU2: PASSED — canonical Sparse Semantic, Compact Index List sidecar, WARP exact-write-set architecture and Debug/Release deterministic evidence.
 - CU3: PASSED — Raw Candidate, Planner-independent Verifier, opaque Verified Plan, Resource/role/device-epoch binding and 36 mutation/replay gates.
 - CU3 authority evidence: `C04FCA6674BDA7EA2FBBB9BEE3208757A960EA7B606BE266EA737023573D398C`.
-- CU4: implementation supplied — Dense Mask / Compact Index List / Active Block Local Mask Candidate family, full-output byte equivalence and family authority.
-- CU5: not started.
+- CU4: PASSED — Dense Mask / Compact Index List / Active Block Local Mask Candidate family, pairwise full-output byte identity and family authority. Accepted commit: `698b86510dda5d11b7259f01ffff288a07076f56`.
+- CU5: implementation supplied — complete 84-set WARP corpus, deterministic evidence, Controlled Recovery, actual Device Removal and explicit Sparse rebind/rebuild.
 - CU6: not started.
 
-CU4 retains:
+Successful CU5 execution may declare:
+
+```text
+SGE4-5 SPIRAL 6 ARCHITECTURE COMPLETE
+```
+
+CU5 retains:
 
 ```text
 RuntimePolicyAuthorization = None
-Architecture Complete = DeferredToCU5
 Real GPU measurement = DeferredToCU6
 ```
 

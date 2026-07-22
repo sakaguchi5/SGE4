@@ -1,0 +1,72 @@
+{
+  "schema": "SGE4-5.Spiral6.CU5ArchitectureManifest.V1",
+  "completionUnit": "CU5",
+  "baselineCommit": "698b86510dda5d11b7259f01ffff288a07076f56",
+  "predecessor": {
+    "cu3AuthorityEvidenceSha256": "C04FCA6674BDA7EA2FBBB9BEE3208757A960EA7B606BE266EA737023573D398C",
+    "cu4AcceptedCommit": "698b86510dda5d11b7259f01ffff288a07076f56",
+    "candidateFamily": "DenseMembershipMaskPredicate/CompactIndexListDispatch/ActiveBlockListLocalMask"
+  },
+  "completionDeclaration": "SGE4-5 SPIRAL 6 ARCHITECTURE COMPLETE",
+  "qualificationCardinalities": [
+    0, 1, 2, 31, 32, 63, 64, 65, 127, 128, 129,
+    255, 256, 257, 511, 512, 1024, 2048, 3072, 4095, 4096
+  ],
+  "qualificationPatterns": [
+    "PrefixControl",
+    "UniformStride",
+    "BlockClusteredPermutation",
+    "HashScatterPermutation"
+  ],
+  "exactSparseSetCountPerQualification": 84,
+  "candidateKinds": [
+    "DenseMembershipMaskPredicate",
+    "CompactIndexListDispatch",
+    "ActiveBlockListLocalMask"
+  ],
+  "candidateExecutionsPerQualification": 252,
+  "qualificationProofs": {
+    "exactWriteSet": true,
+    "inactiveFloat4ZeroByteStable": true,
+    "pairwiseFullOutputByteIdentical": true,
+    "zeroWorkDenseDispatchGroups": 64,
+    "zeroWorkCompactDispatchGroups": 0,
+    "zeroWorkActiveBlockDispatchGroups": 0,
+    "currentEpochTokenForgeryRejected": true,
+    "currentEpochRepresentationForgeryRejected": true
+  },
+  "determinism": {
+    "architectureEvidence": "FreshDebugA/FreshDebugB/ReleaseByteIdentical",
+    "controlledRecoveryEvidence": "FreshDebugA/FreshDebugB/ReleaseByteIdentical",
+    "freshRematerializationEvidence": "FreshDebugA/FreshDebugB/ReleaseByteIdentical"
+  },
+  "controlledRecovery": {
+    "deviceEpochAdvances": true,
+    "staleSetBindingRejected": true,
+    "staleRepresentationRejected": true,
+    "staleCompletionRejected": true,
+    "explicitSparseRebindRequired": true,
+    "explicitRepresentationRebuildRequired": true,
+    "frozenAuthorityPreserved": true
+  },
+  "actualRecovery": {
+    "mechanism": "ID3D12Device5::RemoveDevice",
+    "quarantineState": "AwaitingAdapter",
+    "removedAdapterLuidExcluded": true,
+    "deviceEpochDoesNotAdvanceWhileQuarantined": true
+  },
+  "freshRematerializationCases": [
+    "PrefixControl/K0",
+    "PrefixControl/K65",
+    "UniformStride/K65",
+    "BlockClusteredPermutation/K65",
+    "HashScatterPermutation/K65",
+    "PrefixControl/K4096"
+  ],
+  "runtimeSparsePolicyDecision": "None",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None",
+  "nextCompletionUnit": "CU6RealGpuMeasurementAndDecisionEvidence"
+}

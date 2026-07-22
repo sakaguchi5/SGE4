@@ -24,16 +24,18 @@ Current path:
 CU1 research contract                         PASSED
 CU2 Compact Index architecture                PASSED
 CU3 independent Sparse authority              PASSED
-CU4 Sparse Candidate family                   supplied
-CU5 Architecture qualification                next
+CU4 Sparse Candidate family                   PASSED
+CU5 Architecture qualification                supplied
 CU6 real-GPU measurement and Decision Report
 ```
 
-CU4 preparation and runner:
+CU5 preparation and runner:
 
 ```text
-run_sge4_5_spiral6_cu4_prepare.bat
-run_sge4_5_spiral6_cu4_candidate_family.bat
+run_sge4_5_spiral6_cu5_prepare.bat
+run_sge4_5_spiral6_cu5_architecture_qualification.bat
 ```
 
-CU4 requires all twelve exact Sparse cases to produce byte-identical 65536-byte outputs across Dense Mask, Compact Index List and Active Block Local Mask. Runtime Sparse policy remains unauthorized.
+CU5 qualifies 21 cardinalities × 4 exact-set patterns × 3 Candidates. It requires exact writes, inactive sentinel preservation, full-output byte identity, fresh-process determinism, Controlled Recovery, actual Device Removal, and explicit Sparse set rebind plus Derived Representation rebuild.
+
+A successful runner declares `SGE4-5 SPIRAL 6 ARCHITECTURE COMPLETE`. Runtime Sparse policy remains unauthorized.
