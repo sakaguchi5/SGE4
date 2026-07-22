@@ -1,0 +1,172 @@
+{
+  "schema": "SGE4-5.Spiral5.ContractManifest.V1",
+  "completionUnit": "CU1",
+  "baselineCommit": "f29d6597ec370d963c7b7dfbbc9af9590e8bd58f",
+  "ownerSelection": "TemporalStateFlowVerifiedHistoryReuseLowering",
+  "title": "Temporal State Flow and Verified History Reuse Lowering",
+  "japaneseTitle": "Temporal State Flow＋更新頻度・履歴再利用Lowering",
+  "ownerOnlyGate": "NextCapabilitySelection",
+  "selectionRecord": "docs/spiral5/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL4.md",
+  "targetAbiBaseline": {
+    "d3d12Schema": 17,
+    "runtime": 17,
+    "spiral4IndirectExtension": "VersionedSidecarIndirectExtensionV1"
+  },
+  "cu1AbiMutation": "None",
+  "abiExtensionPolicy": "VersionedTemporalExtensionOnlyAfterBaselineInsufficiencyProof",
+  "baselineInventory": {
+    "frameNumberInvocationField": true,
+    "perInvocationDynamicData": true,
+    "wholeCompositionRecovery": true,
+    "spiral4VerifiedIndirectDispatch": true,
+    "temporalHistoryFlowContract": false,
+    "historyGenerationArtifact": false,
+    "updateScheduleArtifact": false,
+    "retainedHistoryCompletion": false,
+    "runtimeTemporalPolicyDecision": "Forbidden"
+  },
+  "fixedMeaning": {
+    "semantic": "PiecewiseConstantEightBoneDirectPgaTemporalTransformV1",
+    "representationPath": "DirectPgaThroughConsumerV1",
+    "boneCount": 8,
+    "maxReusePerBone": 512,
+    "workCount": 4096,
+    "activeWorkCount": 4096,
+    "threadsPerGroup": 64,
+    "timelineLength": 128,
+    "historyDepth": 1,
+    "temporalRule": "LastUpdateWinsPiecewiseConstant",
+    "initialInvocation": "UpdateRequired",
+    "semanticGraphShape": "Fixed",
+    "resourceCapacity": "Fixed",
+    "outputOrder": "Fixed"
+  },
+  "runtimeInputs": {
+    "invocationIndexType": "TemporalInvocationIndexV1",
+    "invocationIndexSymbol": "t",
+    "minimumInvocationIndex": 0,
+    "maximumInvocationIndex": 127,
+    "sourceGenerationType": "SourceGenerationV1",
+    "updateEventType": "TemporalUpdateEventV1",
+    "dynamicMotorPalette": "EightLocalMotorsV1",
+    "holdInputRule": "MotorBytesAndGenerationEqualMostRecentUpdate",
+    "scheduleAuthority": "ExternalVerifiedInput",
+    "runtimeMayChooseUpdate": false
+  },
+  "candidateKinds": [
+    "EveryInvocationRecompute",
+    "GlobalMotorHistoryReuse",
+    "FinalOutputHistoryReuse"
+  ],
+  "candidateExecutionRules": {
+    "EveryInvocationRecompute": "HierarchyAndConsumerExecuteOnEveryInvocation",
+    "GlobalMotorHistoryReuse": "HierarchyExecutesOnlyOnUpdateConsumerExecutesEveryInvocation",
+    "FinalOutputHistoryReuse": "HierarchyAndConsumerExecuteOnlyOnUpdateOutputRetainedOnHold"
+  },
+  "measurementUpdateIntervals": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64
+  ],
+  "qualificationSchedules": [
+    {
+      "id": "P1",
+      "kind": "Periodic",
+      "updateInterval": 1
+    },
+    {
+      "id": "P2",
+      "kind": "Periodic",
+      "updateInterval": 2
+    },
+    {
+      "id": "P4",
+      "kind": "Periodic",
+      "updateInterval": 4
+    },
+    {
+      "id": "P8",
+      "kind": "Periodic",
+      "updateInterval": 8
+    },
+    {
+      "id": "P16",
+      "kind": "Periodic",
+      "updateInterval": 16
+    },
+    {
+      "id": "P32",
+      "kind": "Periodic",
+      "updateInterval": 32
+    },
+    {
+      "id": "P64",
+      "kind": "Periodic",
+      "updateInterval": 64
+    },
+    {
+      "id": "BurstThenHold",
+      "kind": "ExplicitFrames",
+      "updateFrames": [
+        0,
+        1,
+        2,
+        3,
+        64,
+        65,
+        127
+      ]
+    },
+    {
+      "id": "Irregular",
+      "kind": "ExplicitFrames",
+      "updateFrames": [
+        0,
+        2,
+        5,
+        11,
+        17,
+        29,
+        47,
+        79,
+        127
+      ]
+    }
+  ],
+  "historyPolicy": {
+    "logicalDepth": 1,
+    "initialState": "InvalidUntilFirstUpdate",
+    "generationRule": "IncrementByOneOnUpdateUnchangedOnHold",
+    "deviceEpochBinding": "Required",
+    "staleHistory": "Rejected",
+    "recoveryPolicy": "InvalidateAndExplicitlyReseed",
+    "holdOutputRule": "ByteIdenticalToMostRecentUpdateOutput"
+  },
+  "interpolationPolicy": "NotInV1SeparateSemanticMeaning",
+  "level4Policy": "MinimalVersionedTemporalHistoryExtensionOnlyIfRequired",
+  "level5Policy": "HistoryMaterializationPositionIsAVerifiedLoweringChoice",
+  "runtimePolicyAuthorization": "None",
+  "authoritativeSpec": "docs/spiral5/SGE4-5_Spiral5_Completion_Spec_v0.1.md",
+  "amendments": [],
+  "typeSafety": {
+    "temporalDimensions": [
+      "TemporalInvocationIndexV1",
+      "SourceGenerationV1",
+      "UpdateIntervalV1",
+      "HistoryGenerationV1",
+      "HistoryDepthV1"
+    ],
+    "rawToVerified": "CompileTimeUnavailable",
+    "sealReplayRejectedAcross": [
+      "TemporalSemantic",
+      "UpdateScheduleContract",
+      "HistoryReusePlan",
+      "TargetProfile",
+      "HistoryResourceRole"
+    ]
+  }
+}
