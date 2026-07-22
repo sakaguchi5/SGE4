@@ -343,6 +343,7 @@ struct GpuContext final
     EventHandle fenceEvent;
     std::uint64_t fenceValue = 0;
     std::string adapterDescription;
+    LUID adapterLuid{};
 
     ComPtr<ID3DBlob> argumentShader;
     ComPtr<ID3DBlob> hierarchyShader;
@@ -362,6 +363,7 @@ struct GpuContext final
         DXGI_ADAPTER_DESC adapterDesc{};
         Check(adapter->GetDesc(&adapterDesc), "GetDesc");
         adapterDescription = WideToUtf8(adapterDesc.Description);
+        adapterLuid = adapterDesc.AdapterLuid;
         Check(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device)),
               "D3D12CreateDevice(WARP)");
 
@@ -1029,7 +1031,6 @@ base::Digest256 BuildFamilyBindingIdentity(
 #if defined(_WIN32)
 TemporalCandidateObservationV1 ExecuteFamilyCandidate(
     GpuContext& gpu,
-    //const semantic::TemporalStateSemanticV1& semanticValue,
     const semantic::UpdateScheduleV1& schedule,
     const FrozenVerifiedTemporalCandidateV1& frozen)
 {
@@ -1336,6 +1337,63 @@ base::Result<FrozenVerifiedTemporalCandidateV1,std::string> FreezeVerifiedTempor
     return base::Result<FrozenVerifiedTemporalCandidateV1,std::string>::Success(std::move(frozen));
 }
 
+#if defined(_WIN32)
+namespace
+{
+TemporalCandidateFamilyArchitectureResultV1
+RunVerifiedTemporalCandidateFamilyWithGpuV1(
+    GpuContext& gpu,
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    std::span<const FrozenVerifiedTemporalCandidateV1> candidates,
+    std::uint64_t expectedDeviceEpoch)
+{
+    if (candidates.size() != 3)
+        throw std::runtime_error("Temporal Candidate family must contain exactly three candidates.");
+    constexpr std::array<family_candidate::TemporalCandidateKindV1,3> expectedKinds{
+        family_candidate::TemporalCandidateKindV1::EveryInvocationRecompute,
+        family_candidate::TemporalCandidateKindV1::GlobalMotorHistoryReuse,
+        family_candidate::TemporalCandidateKindV1::FinalOutputHistoryReuse};
+    for (std::size_t index = 0; index < candidates.size(); ++index)
+    {
+        const auto& candidate = candidates[index];
+        auto valid = ValidateFrozenVerifiedTemporalCandidateV1(
+            candidate, semanticValue, schedule, context, expectedDeviceEpoch);
+        if (!valid)
+            throw std::runtime_error("Temporal Candidate family authority: " + valid.Error());
+        if (candidate.Verified().Plan().operation.kind != expectedKinds[index])
+            throw std::runtime_error(
+                "Temporal Candidate family order or uniqueness differs from A/B/C.");
+    }
+
+    TemporalCandidateFamilyArchitectureResultV1 result;
+    result.adapterDescription = gpu.adapterDescription;
+    result.scheduleId = schedule.id;
+    result.semanticIdentity = semantic::TemporalStateSemanticIdentityV1(semanticValue);
+    result.scheduleIdentity = semantic::UpdateScheduleIdentityV1(schedule);
+    result.argumentProducerShaderDigest = BlobDigest(gpu.argumentShader.Get());
+    result.hierarchyShaderDigest = BlobDigest(gpu.hierarchyShader.Get());
+    result.consumerShaderDigest = BlobDigest(gpu.consumerShader.Get());
+    for (const auto& candidate : candidates)
+        result.candidates.push_back(ExecuteFamilyCandidate(gpu, schedule, candidate));
+
+    for (std::size_t invocation = 0; invocation < schedule.invocations.size(); ++invocation)
+    {
+        const auto digest = result.candidates.front().invocations[invocation].outputDigest;
+        for (std::size_t candidate = 1; candidate < result.candidates.size(); ++candidate)
+        {
+            if (result.candidates[candidate].invocations[invocation].outputDigest != digest)
+                throw std::runtime_error(
+                    "Temporal Candidate outputs differ at one Invocation.");
+        }
+    }
+    result.pairwiseOutputEquivalent = true;
+    return result;
+}
+}
+#endif
+
 base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>
 RunVerifiedTemporalCandidateFamilyOnWarpV1(
     const semantic::TemporalStateSemanticV1& semanticValue,
@@ -1347,44 +1405,15 @@ RunVerifiedTemporalCandidateFamilyOnWarpV1(
 #if defined(_WIN32)
     try
     {
-        if(candidates.size()!=3)return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
-            Error("family/input","Temporal Candidate family must contain exactly three candidates."));
-        constexpr std::array<family_candidate::TemporalCandidateKindV1,3> expectedKinds{
-            family_candidate::TemporalCandidateKindV1::EveryInvocationRecompute,
-            family_candidate::TemporalCandidateKindV1::GlobalMotorHistoryReuse,
-            family_candidate::TemporalCandidateKindV1::FinalOutputHistoryReuse};
-        for(std::size_t index=0;index<candidates.size();++index)
-        {
-            const auto& candidate=candidates[index];
-            auto valid=ValidateFrozenVerifiedTemporalCandidateV1(candidate,semanticValue,schedule,context,expectedDeviceEpoch);
-            if(!valid)return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(Error("family/authority",valid.Error()));
-            if(candidate.Verified().Plan().operation.kind!=expectedKinds[index])
-                return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
-                    Error("family/order","Temporal Candidate family order or uniqueness differs from A/B/C."));
-        }
         GpuContext gpu;
-        TemporalCandidateFamilyArchitectureResultV1 result;
-        result.adapterDescription=gpu.adapterDescription; result.scheduleId=schedule.id;
-        result.semanticIdentity=semantic::TemporalStateSemanticIdentityV1(semanticValue);
-        result.scheduleIdentity=semantic::UpdateScheduleIdentityV1(schedule);
-        result.argumentProducerShaderDigest=BlobDigest(gpu.argumentShader.Get());
-        result.hierarchyShaderDigest=BlobDigest(gpu.hierarchyShader.Get());
-        result.consumerShaderDigest=BlobDigest(gpu.consumerShader.Get());
-        for(const auto& candidate:candidates)result.candidates.push_back(ExecuteFamilyCandidate(gpu,schedule,candidate));
-        for(std::size_t invocation=0;invocation<schedule.invocations.size();++invocation)
-        {
-            const auto digest=result.candidates.front().invocations[invocation].outputDigest;
-            for(std::size_t candidate=1;candidate<result.candidates.size();++candidate)
-                if(result.candidates[candidate].invocations[invocation].outputDigest!=digest)
-                    return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
-                        Error("family/pairwise","Temporal Candidate outputs differ at one Invocation."));
-        }
-        result.pairwiseOutputEquivalent=true;
-        return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Success(std::move(result));
+        return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Success(
+            RunVerifiedTemporalCandidateFamilyWithGpuV1(
+                gpu, semanticValue, schedule, context, candidates, expectedDeviceEpoch));
     }
-    catch(const std::exception& error)
+    catch (const std::exception& error)
     {
-        return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(Error("family/d3d12",error.what()));
+        return base::Result<TemporalCandidateFamilyArchitectureResultV1,TemporalExecutionErrorV1>::Failure(
+            Error("family/d3d12", error.what()));
     }
 #else
     (void)semanticValue;(void)schedule;(void)context;(void)candidates;(void)expectedDeviceEpoch;
@@ -1429,6 +1458,737 @@ std::vector<std::byte> SerializeTemporalCandidateFamilyArchitectureEvidenceV1(
             writer.WriteU32(invocation.mismatchCount);writer.WriteU32(invocation.nonFiniteCount);
             writer.WriteU32(invocation.homogeneousCoordinateMismatchCount);WriteFloat(writer,invocation.maxAbsoluteError);
             WriteDigest(writer,invocation.retainedHistoryDigest);WriteDigest(writer,invocation.outputDigest);
+        }
+    }
+    return std::move(writer).Take();
+}
+
+namespace
+{
+TemporalCandidateFamilyRuntimeErrorV1 RuntimeError(
+    std::string stage,
+    std::string message,
+    long hresult = 0)
+{
+    return {std::move(stage), std::move(message), hresult};
+}
+
+[[maybe_unused]] base::Digest256 BuildTemporalCandidateBindingSetIdentityV1(
+    std::span<const TemporalScheduleCandidateAuthorityV1> authorities)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.TemporalCandidateBindingSet.V1"));
+    writer.WriteU32(static_cast<std::uint32_t>(authorities.size()));
+    for (const auto& authority : authorities)
+    {
+        writer.WriteBytes(semantic::UpdateScheduleIdentityV1(authority.schedule));
+        writer.WriteU32(static_cast<std::uint32_t>(authority.candidates.size()));
+        for (const auto& candidate : authority.candidates)
+        {
+            writer.WriteBytes(candidate.Plan().planIdentity);
+            writer.WriteBytes(candidate.CertificateIdentity());
+        }
+    }
+    return base::Sha256(writer.Bytes());
+}
+
+[[maybe_unused]] base::Digest256 BuildTemporalRuntimeDomainIdentityV1(
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    const base::Digest256& bindingSetIdentity)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.TemporalCandidateFamilyRuntimeDomain.V1"));
+    writer.WriteBytes(semantic::TemporalStateSemanticIdentityV1(semanticValue));
+    writer.WriteBytes(context.targetProfileIdentity);
+    writer.WriteBytes(context.observationContractIdentity);
+    writer.WriteBytes(context.deviceEpochPolicyIdentity);
+    writer.WriteBytes(bindingSetIdentity);
+    return base::Sha256(writer.Bytes());
+}
+
+base::Digest256 BuildTemporalDynamicBindingIdentityV1(
+    const base::Digest256& domainIdentity,
+    const base::Digest256& bindingSetIdentity,
+    std::uint64_t deviceEpoch)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.TemporalRuntimeDynamicBinding.V1"));
+    writer.WriteBytes(domainIdentity);
+    writer.WriteBytes(bindingSetIdentity);
+    writer.WriteU64(deviceEpoch);
+    return base::Sha256(writer.Bytes());
+}
+
+base::Digest256 BuildTemporalSeedIdentityV1(
+    const TemporalRuntimeDynamicBindingV1& binding)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.TemporalHistoryExplicitReseed.V1"));
+    writer.WriteU64(binding.deviceEpoch);
+    writer.WriteBytes(binding.bindingIdentity);
+    writer.WriteU32(0);
+    return base::Sha256(writer.Bytes());
+}
+
+#if defined(_WIN32)
+bool SameLuidV1(const LUID& left, const LUID& right) noexcept
+{
+    return left.LowPart == right.LowPart && left.HighPart == right.HighPart;
+}
+#endif
+}
+
+struct LoadedTemporalCandidateFamilyRuntimeV1::Impl final
+{
+    semantic::TemporalStateSemanticV1 semantic;
+    family_verification::TemporalCandidateFamilyVerificationContextV1 context;
+    std::vector<TemporalScheduleCandidateAuthorityV1> authorities;
+    TemporalCandidateFamilyRuntimeStateV1 state =
+        TemporalCandidateFamilyRuntimeStateV1::Active;
+    std::uint64_t deviceEpoch = 1;
+    std::uint64_t submissionOrdinal = 0;
+    base::Digest256 domainIdentity{};
+    base::Digest256 candidateBindingSetIdentity{};
+    std::string adapterDescription;
+    bool dynamicInputsBound = false;
+    bool historySeeded = false;
+    TemporalRuntimeDynamicBindingV1 currentBinding{};
+    TemporalHistorySeedV1 currentSeed{};
+    std::vector<TemporalRuntimeSubmissionTokenV1> issuedTokens;
+    std::vector<TemporalHistoryHandleV1> issuedHistories;
+#if defined(_WIN32)
+    std::unique_ptr<GpuContext> gpu;
+    bool hasExcludedAdapterLuid = false;
+    LUID excludedAdapterLuid{};
+#endif
+};
+
+LoadedTemporalCandidateFamilyRuntimeV1::LoadedTemporalCandidateFamilyRuntimeV1(
+    std::unique_ptr<Impl> impl)
+    : impl_(std::move(impl))
+{
+}
+
+LoadedTemporalCandidateFamilyRuntimeV1::LoadedTemporalCandidateFamilyRuntimeV1(
+    LoadedTemporalCandidateFamilyRuntimeV1&&) noexcept = default;
+LoadedTemporalCandidateFamilyRuntimeV1&
+LoadedTemporalCandidateFamilyRuntimeV1::operator=(
+    LoadedTemporalCandidateFamilyRuntimeV1&&) noexcept = default;
+LoadedTemporalCandidateFamilyRuntimeV1::~LoadedTemporalCandidateFamilyRuntimeV1() = default;
+
+TemporalCandidateFamilyRuntimeStateV1
+LoadedTemporalCandidateFamilyRuntimeV1::State() const noexcept
+{
+    return impl_->state;
+}
+
+std::uint64_t LoadedTemporalCandidateFamilyRuntimeV1::DeviceEpoch() const noexcept
+{
+    return impl_->deviceEpoch;
+}
+
+const base::Digest256&
+LoadedTemporalCandidateFamilyRuntimeV1::DomainIdentity() const noexcept
+{
+    return impl_->domainIdentity;
+}
+
+const base::Digest256&
+LoadedTemporalCandidateFamilyRuntimeV1::CandidateBindingSetIdentity() const noexcept
+{
+    return impl_->candidateBindingSetIdentity;
+}
+
+const std::string&
+LoadedTemporalCandidateFamilyRuntimeV1::AdapterDescription() const noexcept
+{
+    return impl_->adapterDescription;
+}
+
+std::size_t LoadedTemporalCandidateFamilyRuntimeV1::ScheduleCount() const noexcept
+{
+    return impl_->authorities.size();
+}
+
+bool LoadedTemporalCandidateFamilyRuntimeV1::DynamicInputsBound() const noexcept
+{
+    return impl_->dynamicInputsBound;
+}
+
+bool LoadedTemporalCandidateFamilyRuntimeV1::HistorySeeded() const noexcept
+{
+    return impl_->historySeeded;
+}
+
+base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>
+LoadTemporalCandidateFamilyRuntimeOnWarpV1(
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    std::span<const TemporalScheduleCandidateAuthorityV1> authorities)
+{
+#if defined(_WIN32)
+    try
+    {
+        constexpr std::array<std::string_view, 9> expectedSchedules{
+            "P1", "P2", "P4", "P8", "P16", "P32", "P64",
+            "BurstThenHold", "Irregular"};
+        if (authorities.size() != expectedSchedules.size())
+        {
+            return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("temporal-runtime/authority-count",
+                    "Temporal Runtime requires the complete nine-schedule authority corpus."));
+        }
+
+        constexpr std::array<family_candidate::TemporalCandidateKindV1, 3> expectedKinds{
+            family_candidate::TemporalCandidateKindV1::EveryInvocationRecompute,
+            family_candidate::TemporalCandidateKindV1::GlobalMotorHistoryReuse,
+            family_candidate::TemporalCandidateKindV1::FinalOutputHistoryReuse};
+
+        auto impl = std::make_unique<LoadedTemporalCandidateFamilyRuntimeV1::Impl>();
+        impl->semantic = semanticValue;
+        impl->context = context;
+        impl->authorities.assign(authorities.begin(), authorities.end());
+
+        for (std::size_t scheduleIndex = 0;
+             scheduleIndex < impl->authorities.size();
+             ++scheduleIndex)
+        {
+            auto& authority = impl->authorities[scheduleIndex];
+            auto scheduleValid = semantic::ValidateUpdateScheduleV1(authority.schedule);
+            if (!scheduleValid)
+            {
+                return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                    RuntimeError("temporal-runtime/schedule", scheduleValid.Error().message));
+            }
+            if (authority.schedule.id != expectedSchedules[scheduleIndex])
+            {
+                return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                    RuntimeError("temporal-runtime/schedule-order",
+                        "Temporal Runtime schedule corpus order is not canonical."));
+            }
+            if (authority.candidates.size() != expectedKinds.size())
+            {
+                return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                    RuntimeError("temporal-runtime/candidate-count",
+                        "Each Temporal schedule must contain exactly A/B/C."));
+            }
+            for (std::size_t candidateIndex = 0;
+                 candidateIndex < authority.candidates.size();
+                 ++candidateIndex)
+            {
+                const auto& candidate = authority.candidates[candidateIndex];
+                auto candidateValid =
+                    family_verification::ValidateVerifiedTemporalCandidateContextV1(
+                        candidate, semanticValue, authority.schedule, context);
+                if (!candidateValid)
+                {
+                    return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                        RuntimeError("temporal-runtime/candidate-authority", candidateValid.Error()));
+                }
+                if (candidate.Plan().operation.kind != expectedKinds[candidateIndex])
+                {
+                    return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                        RuntimeError("temporal-runtime/candidate-order",
+                            "Temporal Candidate order differs from A/B/C."));
+                }
+            }
+        }
+
+        impl->candidateBindingSetIdentity =
+            BuildTemporalCandidateBindingSetIdentityV1(impl->authorities);
+        impl->domainIdentity = BuildTemporalRuntimeDomainIdentityV1(
+            impl->semantic, impl->context, impl->candidateBindingSetIdentity);
+        impl->gpu = std::make_unique<GpuContext>();
+        impl->adapterDescription = impl->gpu->adapterDescription;
+
+        return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(
+            LoadedTemporalCandidateFamilyRuntimeV1(std::move(impl)));
+    }
+    catch (const std::exception& error)
+    {
+        return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/load", error.what()));
+    }
+#else
+    (void)semanticValue;(void)context;(void)authorities;
+    return base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+        RuntimeError("temporal-runtime/platform",
+            "Spiral 5 CU5 Temporal Runtime requires Windows D3D12."));
+#endif
+}
+
+base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+ValidateTemporalRuntimeEpochHandleV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeEpochHandleV1& handle)
+{
+    const auto& impl = *runtime.impl_;
+    if (impl.state != TemporalCandidateFamilyRuntimeStateV1::Active)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/device-state",
+                "Temporal Runtime is not active."));
+    }
+    if (handle.deviceEpoch != impl.deviceEpoch)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/stale-epoch",
+                "Temporal Runtime handle belongs to another device epoch."));
+    }
+    if (handle.domainIdentity != impl.domainIdentity ||
+        handle.candidateBindingSetIdentity != impl.candidateBindingSetIdentity)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/handle-identity",
+                "Temporal Runtime handle identity mismatch."));
+    }
+    return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Success();
+}
+
+TemporalRuntimeEpochHandleV1 CaptureTemporalRuntimeEpochHandleV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime)
+{
+    return {
+        runtime.impl_->deviceEpoch,
+        runtime.impl_->domainIdentity,
+        runtime.impl_->candidateBindingSetIdentity};
+}
+
+base::Result<TemporalRuntimeDynamicBindingV1, TemporalCandidateFamilyRuntimeErrorV1>
+BindCanonicalTemporalRuntimeInputsV1(LoadedTemporalCandidateFamilyRuntimeV1& runtime)
+{
+    auto& impl = *runtime.impl_;
+    if (impl.state != TemporalCandidateFamilyRuntimeStateV1::Active)
+    {
+        return base::Result<TemporalRuntimeDynamicBindingV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/device-state",
+                "Temporal Runtime cannot bind inputs while inactive."));
+    }
+    impl.currentBinding.deviceEpoch = impl.deviceEpoch;
+    impl.currentBinding.bindingIdentity = BuildTemporalDynamicBindingIdentityV1(
+        impl.domainIdentity, impl.candidateBindingSetIdentity, impl.deviceEpoch);
+    impl.dynamicInputsBound = true;
+    impl.historySeeded = false;
+    impl.currentSeed = {};
+    return base::Result<TemporalRuntimeDynamicBindingV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(
+        impl.currentBinding);
+}
+
+base::Result<TemporalHistorySeedV1, TemporalCandidateFamilyRuntimeErrorV1>
+ReseedTemporalHistoriesV1(
+    LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeEpochHandleV1& handle,
+    const TemporalRuntimeDynamicBindingV1& binding)
+{
+    auto handleValid = ValidateTemporalRuntimeEpochHandleV1(runtime, handle);
+    if (!handleValid)
+        return base::Result<TemporalHistorySeedV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            handleValid.Error());
+    auto& impl = *runtime.impl_;
+    if (!impl.dynamicInputsBound ||
+        binding.deviceEpoch != impl.deviceEpoch ||
+        binding.bindingIdentity != impl.currentBinding.bindingIdentity)
+    {
+        return base::Result<TemporalHistorySeedV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/rebind-required",
+                "Current-epoch Temporal dynamic inputs must be rebound before reseed."));
+    }
+    impl.currentSeed.deviceEpoch = impl.deviceEpoch;
+    impl.currentSeed.sourceGeneration = 0;
+    impl.currentSeed.seedIdentity = BuildTemporalSeedIdentityV1(binding);
+    impl.historySeeded = true;
+    return base::Result<TemporalHistorySeedV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(
+        impl.currentSeed);
+}
+
+base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>
+SubmitTemporalScheduleV1(
+    LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeEpochHandleV1& handle,
+    const TemporalRuntimeDynamicBindingV1& binding,
+    const TemporalHistorySeedV1& seed,
+    const base::Digest256& scheduleIdentity)
+{
+#if defined(_WIN32)
+    auto handleValid = ValidateTemporalRuntimeEpochHandleV1(runtime, handle);
+    if (!handleValid)
+        return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            handleValid.Error());
+    auto& impl = *runtime.impl_;
+    if (!impl.dynamicInputsBound ||
+        binding.deviceEpoch != impl.deviceEpoch ||
+        binding.bindingIdentity != impl.currentBinding.bindingIdentity)
+    {
+        return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/rebind-required",
+                "Temporal submission requires a current-epoch dynamic binding."));
+    }
+    if (!impl.historySeeded ||
+        seed.deviceEpoch != impl.deviceEpoch ||
+        seed.sourceGeneration != 0 ||
+        seed.seedIdentity != impl.currentSeed.seedIdentity)
+    {
+        return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/reseed-required",
+                "Temporal history is invalid until an explicit generation-zero reseed is authorized."));
+    }
+
+    auto authority = std::find_if(
+        impl.authorities.begin(), impl.authorities.end(),
+        [&](const TemporalScheduleCandidateAuthorityV1& value)
+        {
+            return semantic::UpdateScheduleIdentityV1(value.schedule) == scheduleIdentity;
+        });
+    if (authority == impl.authorities.end())
+    {
+        return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/schedule-authority",
+                "Requested schedule is not in the Frozen CU5 authority corpus."));
+    }
+
+    try
+    {
+        std::vector<FrozenVerifiedTemporalCandidateV1> frozen;
+        frozen.reserve(authority->candidates.size());
+        for (const auto& verified : authority->candidates)
+        {
+            auto resourceBinding =
+                BuildCanonicalTemporalCandidateResourceBindingInputV1(
+                    verified, impl.deviceEpoch);
+            auto value = FreezeVerifiedTemporalCandidateV1(
+                impl.semantic, authority->schedule, impl.context,
+                verified, resourceBinding);
+            if (!value)
+            {
+                return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                    RuntimeError("temporal-runtime/freeze", value.Error()));
+            }
+            frozen.push_back(std::move(value).Value());
+        }
+
+        TemporalRuntimeSubmissionV1 submission;
+        submission.architecture = RunVerifiedTemporalCandidateFamilyWithGpuV1(
+            *impl.gpu, impl.semantic, authority->schedule,
+            impl.context, frozen, impl.deviceEpoch);
+        submission.historyResourcesMaterialized = true;
+        submission.temporalArgumentsRegenerated = true;
+        submission.completionStateMaterialized = true;
+        submission.readbackStateMaterialized = true;
+
+        ++impl.submissionOrdinal;
+        base::BinaryWriter token;
+        token.WriteBytes(VerifiedLiteralIdentity(
+            "SGE4-5.Spiral5.TemporalRuntimeSubmissionToken.V1"));
+        token.WriteBytes(impl.domainIdentity);
+        token.WriteU64(impl.deviceEpoch);
+        token.WriteU64(impl.submissionOrdinal);
+        token.WriteBytes(scheduleIdentity);
+        const auto architectureBytes =
+            SerializeTemporalCandidateFamilyArchitectureEvidenceV1(
+                submission.architecture);
+        token.WriteBytes(base::Sha256(architectureBytes));
+        submission.completion.deviceEpoch = impl.deviceEpoch;
+        submission.completion.submissionOrdinal = impl.submissionOrdinal;
+        submission.completion.tokenIdentity = base::Sha256(token.Bytes());
+
+        const auto lastGeneration = authority->schedule.invocations.back().sourceGeneration;
+        base::BinaryWriter history;
+        history.WriteBytes(VerifiedLiteralIdentity(
+            "SGE4-5.Spiral5.TemporalRetainedHistoryHandle.V1"));
+        history.WriteBytes(impl.domainIdentity);
+        history.WriteU64(impl.deviceEpoch);
+        history.WriteBytes(scheduleIdentity);
+        history.WriteU32(lastGeneration);
+        for (const auto& candidate : submission.architecture.candidates)
+            history.WriteBytes(candidate.invocations.back().retainedHistoryDigest);
+        submission.retainedHistory.deviceEpoch = impl.deviceEpoch;
+        submission.retainedHistory.scheduleIdentity = scheduleIdentity;
+        submission.retainedHistory.sourceGeneration = lastGeneration;
+        submission.retainedHistory.historyIdentity = base::Sha256(history.Bytes());
+        impl.issuedTokens.push_back(submission.completion);
+        impl.issuedHistories.push_back(submission.retainedHistory);
+
+        return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(
+            std::move(submission));
+    }
+    catch (const std::exception& error)
+    {
+        return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/submit", error.what()));
+    }
+#else
+    (void)runtime;(void)handle;(void)binding;(void)seed;(void)scheduleIdentity;
+    return base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+        RuntimeError("temporal-runtime/platform",
+            "Spiral 5 CU5 Temporal submission requires Windows D3D12."));
+#endif
+}
+
+base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+ValidateTemporalRuntimeSubmissionTokenV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeSubmissionTokenV1& token)
+{
+    const auto& impl = *runtime.impl_;
+    if (impl.state != TemporalCandidateFamilyRuntimeStateV1::Active)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/device-state",
+                "Temporal submission token belongs to an inactive domain."));
+    }
+    if (token.deviceEpoch != impl.deviceEpoch)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/stale-epoch",
+                "Temporal submission token belongs to another device epoch."));
+    }
+    const bool issued = std::any_of(
+        impl.issuedTokens.begin(), impl.issuedTokens.end(),
+        [&](const TemporalRuntimeSubmissionTokenV1& value)
+        {
+            return value.deviceEpoch == token.deviceEpoch &&
+                value.submissionOrdinal == token.submissionOrdinal &&
+                value.tokenIdentity == token.tokenIdentity;
+        });
+    if (!issued)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/token-identity",
+                "Temporal submission token is not recognized by this Runtime."));
+    }
+    return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Success();
+}
+
+base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+ValidateTemporalHistoryHandleV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalHistoryHandleV1& history)
+{
+    const auto& impl = *runtime.impl_;
+    if (impl.state != TemporalCandidateFamilyRuntimeStateV1::Active)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/device-state",
+                "Temporal history belongs to an inactive domain."));
+    }
+    if (history.deviceEpoch != impl.deviceEpoch)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/stale-epoch",
+                "Temporal history belongs to another device epoch."));
+    }
+    const bool issued = std::any_of(
+        impl.issuedHistories.begin(), impl.issuedHistories.end(),
+        [&](const TemporalHistoryHandleV1& value)
+        {
+            return value.deviceEpoch == history.deviceEpoch &&
+                value.scheduleIdentity == history.scheduleIdentity &&
+                value.sourceGeneration == history.sourceGeneration &&
+                value.historyIdentity == history.historyIdentity;
+        });
+    if (!issued)
+    {
+        return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/history-identity",
+                "Temporal retained-history handle is not recognized by this Runtime."));
+    }
+    return base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>::Success();
+}
+
+base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>
+RecoverTemporalCandidateFamilyRuntimeV1(
+    LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    TemporalCandidateFamilyRecoveryModeV1 mode)
+{
+#if defined(_WIN32)
+    auto& impl = *runtime.impl_;
+    TemporalCandidateFamilyRecoveryReportV1 report;
+    report.mode = mode;
+    report.stateBefore = impl.state;
+    report.stateAfter = impl.state;
+    report.previousDeviceEpoch = impl.deviceEpoch;
+    report.newDeviceEpoch = impl.deviceEpoch;
+    const auto frozenBefore = impl.candidateBindingSetIdentity;
+
+    if (mode == TemporalCandidateFamilyRecoveryModeV1::RetryAdapterReacquisition)
+    {
+        if (impl.state != TemporalCandidateFamilyRuntimeStateV1::AwaitingAdapter ||
+            !impl.hasExcludedAdapterLuid)
+        {
+            return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("temporal-runtime/retry-state",
+                    "Adapter retry requires an excluded removed adapter."));
+        }
+        try
+        {
+            ComPtr<IDXGIFactory6> factory;
+            Check(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)), "CreateDXGIFactory2(retry)");
+            ComPtr<IDXGIAdapter> adapter;
+            Check(factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter)), "EnumWarpAdapter(retry)");
+            DXGI_ADAPTER_DESC desc{};
+            Check(adapter->GetDesc(&desc), "GetDesc(retry)");
+            if (SameLuidV1(desc.AdapterLuid, impl.excludedAdapterLuid))
+            {
+                report.adapterReacquired = false;
+                report.stateAfter = impl.state;
+                report.dynamicRebindRequired = true;
+                report.explicitReseedRequired = true;
+                report.frozenAuthorityPreserved =
+                    frozenBefore == impl.candidateBindingSetIdentity;
+                return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(report);
+            }
+            impl.gpu = std::make_unique<GpuContext>();
+            ++impl.deviceEpoch;
+            impl.state = TemporalCandidateFamilyRuntimeStateV1::Active;
+            impl.adapterDescription = impl.gpu->adapterDescription;
+            impl.dynamicInputsBound = false;
+            impl.historySeeded = false;
+            report.adapterReacquired = true;
+            report.nativeDeviceRematerialized = true;
+            report.executionContextRematerialized = true;
+            report.newDeviceEpoch = impl.deviceEpoch;
+            report.stateAfter = impl.state;
+            report.dynamicRebindRequired = true;
+            report.explicitReseedRequired = true;
+            report.frozenAuthorityPreserved =
+                frozenBefore == impl.candidateBindingSetIdentity;
+            return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(report);
+        }
+        catch (const std::exception& error)
+        {
+            return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("temporal-runtime/retry", error.what()));
+        }
+    }
+
+    if (impl.state != TemporalCandidateFamilyRuntimeStateV1::Active || !impl.gpu)
+    {
+        return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/device-state",
+                "Recovery requires an active Temporal Runtime."));
+    }
+
+    report.historyResourcesInvalidated = true;
+    report.temporalArgumentsInvalidated = true;
+    report.completionStateInvalidated = true;
+    report.readbackStateInvalidated = true;
+    report.dynamicRebindRequired = true;
+    report.explicitReseedRequired = true;
+
+    if (mode == TemporalCandidateFamilyRecoveryModeV1::ControlledRebuild)
+    {
+        try
+        {
+            impl.gpu.reset();
+            report.allRuntimeObjectsReleased = true;
+            impl.gpu = std::make_unique<GpuContext>();
+            impl.adapterDescription = impl.gpu->adapterDescription;
+            ++impl.deviceEpoch;
+            impl.submissionOrdinal = 0;
+            impl.dynamicInputsBound = false;
+            impl.historySeeded = false;
+            impl.currentBinding = {};
+            impl.currentSeed = {};
+            impl.issuedTokens.clear();
+            impl.issuedHistories.clear();
+            report.adapterReacquired = true;
+            report.nativeDeviceRematerialized = true;
+            report.executionContextRematerialized = true;
+            report.newDeviceEpoch = impl.deviceEpoch;
+            report.stateAfter = impl.state;
+            report.frozenAuthorityPreserved =
+                frozenBefore == impl.candidateBindingSetIdentity;
+            return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(report);
+        }
+        catch (const std::exception& error)
+        {
+            return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+                RuntimeError("temporal-runtime/controlled", error.what()));
+        }
+    }
+
+    if (mode != TemporalCandidateFamilyRecoveryModeV1::ForceRemovalForTest)
+    {
+        return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/recovery-mode", "Unknown Temporal Recovery mode."));
+    }
+
+    ComPtr<ID3D12Device5> removable;
+    HRESULT hr = impl.gpu->device.As(&removable);
+    if (FAILED(hr))
+    {
+        return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/query-device5", HResultText(hr), hr));
+    }
+    removable->RemoveDevice();
+    const HRESULT reason = impl.gpu->device->GetDeviceRemovedReason();
+    report.removalReason = static_cast<long>(reason);
+    if (SUCCEEDED(reason))
+    {
+        return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+            RuntimeError("temporal-runtime/remove-device",
+                "ID3D12Device5::RemoveDevice did not remove the Temporal device."));
+    }
+
+    report.forcedRemoval = true;
+    impl.excludedAdapterLuid = impl.gpu->adapterLuid;
+    impl.hasExcludedAdapterLuid = true;
+    report.removedAdapterLuidLow = impl.excludedAdapterLuid.LowPart;
+    report.removedAdapterLuidHigh = impl.excludedAdapterLuid.HighPart;
+    impl.gpu.reset();
+    impl.state = TemporalCandidateFamilyRuntimeStateV1::AwaitingAdapter;
+    impl.dynamicInputsBound = false;
+    impl.historySeeded = false;
+    impl.currentBinding = {};
+    impl.currentSeed = {};
+    impl.issuedTokens.clear();
+    impl.issuedHistories.clear();
+    report.allRuntimeObjectsReleased = true;
+    report.stateAfter = impl.state;
+    report.frozenAuthorityPreserved =
+        frozenBefore == impl.candidateBindingSetIdentity;
+    return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Success(report);
+#else
+    (void)runtime;(void)mode;
+    return base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>::Failure(
+        RuntimeError("temporal-runtime/platform",
+            "Spiral 5 CU5 Recovery requires Windows D3D12."));
+#endif
+}
+
+std::vector<std::byte> SerializeTemporalCandidateFamilyRuntimeAuthorityV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime)
+{
+    const auto& impl = *runtime.impl_;
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.TemporalCandidateFamilyRuntimeAuthority.V1"));
+    writer.WriteBytes(impl.domainIdentity);
+    writer.WriteBytes(impl.candidateBindingSetIdentity);
+    const auto semanticBytes = semantic::SerializeTemporalStateSemanticV1(impl.semantic);
+    writer.WriteU32(static_cast<std::uint32_t>(semanticBytes.size()));
+    writer.WriteBytes(semanticBytes);
+    writer.WriteBytes(impl.context.targetProfileIdentity);
+    writer.WriteBytes(impl.context.observationContractIdentity);
+    writer.WriteBytes(impl.context.deviceEpochPolicyIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(impl.authorities.size()));
+    for (const auto& authority : impl.authorities)
+    {
+        const auto scheduleBytes = semantic::SerializeUpdateScheduleV1(authority.schedule);
+        writer.WriteU32(static_cast<std::uint32_t>(scheduleBytes.size()));
+        writer.WriteBytes(scheduleBytes);
+        writer.WriteU32(static_cast<std::uint32_t>(authority.candidates.size()));
+        for (const auto& candidate : authority.candidates)
+        {
+            const auto candidateBytes =
+                family_verification::SerializeVerifiedTemporalCandidateV1(candidate);
+            writer.WriteU32(static_cast<std::uint32_t>(candidateBytes.size()));
+            writer.WriteBytes(candidateBytes);
         }
     }
     return std::move(writer).Take();

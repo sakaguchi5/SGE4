@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <span>
 #include <string>
 #include <vector>
@@ -286,5 +287,225 @@ SerializeFrozenVerifiedTemporalCandidateV1(const FrozenVerifiedTemporalCandidate
 [[nodiscard]] std::vector<std::byte>
 SerializeTemporalCandidateFamilyArchitectureEvidenceV1(
     const TemporalCandidateFamilyArchitectureResultV1& value);
+
+
+enum class TemporalCandidateFamilyRuntimeStateV1 : std::uint8_t
+{
+    Active = 0,
+    AwaitingAdapter = 1
+};
+
+enum class TemporalCandidateFamilyRecoveryModeV1 : std::uint8_t
+{
+    ControlledRebuild = 0,
+    ForceRemovalForTest = 1,
+    RetryAdapterReacquisition = 2
+};
+
+struct TemporalScheduleCandidateAuthorityV1 final
+{
+    semantic::UpdateScheduleV1 schedule;
+    std::vector<family_verification::VerifiedTemporalCandidateV1> candidates;
+};
+
+struct TemporalCandidateFamilyRuntimeErrorV1 final
+{
+    std::string stage;
+    std::string message;
+    long hresult = 0;
+};
+
+struct TemporalRuntimeEpochHandleV1 final
+{
+    std::uint64_t deviceEpoch = 0;
+    base::Digest256 domainIdentity{};
+    base::Digest256 candidateBindingSetIdentity{};
+};
+
+struct TemporalRuntimeDynamicBindingV1 final
+{
+    std::uint64_t deviceEpoch = 0;
+    base::Digest256 bindingIdentity{};
+};
+
+struct TemporalHistorySeedV1 final
+{
+    std::uint64_t deviceEpoch = 0;
+    std::uint32_t sourceGeneration = semantic::InvalidGenerationV1;
+    base::Digest256 seedIdentity{};
+};
+
+struct TemporalHistoryHandleV1 final
+{
+    std::uint64_t deviceEpoch = 0;
+    base::Digest256 scheduleIdentity{};
+    std::uint32_t sourceGeneration = semantic::InvalidGenerationV1;
+    base::Digest256 historyIdentity{};
+};
+
+struct TemporalRuntimeSubmissionTokenV1 final
+{
+    std::uint64_t deviceEpoch = 0;
+    std::uint64_t submissionOrdinal = 0;
+    base::Digest256 tokenIdentity{};
+};
+
+struct TemporalRuntimeSubmissionV1 final
+{
+    TemporalRuntimeSubmissionTokenV1 completion;
+    TemporalHistoryHandleV1 retainedHistory;
+    bool historyResourcesMaterialized = false;
+    bool temporalArgumentsRegenerated = false;
+    bool completionStateMaterialized = false;
+    bool readbackStateMaterialized = false;
+    TemporalCandidateFamilyArchitectureResultV1 architecture;
+};
+
+struct TemporalCandidateFamilyRecoveryReportV1 final
+{
+    TemporalCandidateFamilyRecoveryModeV1 mode =
+        TemporalCandidateFamilyRecoveryModeV1::ControlledRebuild;
+    TemporalCandidateFamilyRuntimeStateV1 stateBefore =
+        TemporalCandidateFamilyRuntimeStateV1::Active;
+    TemporalCandidateFamilyRuntimeStateV1 stateAfter =
+        TemporalCandidateFamilyRuntimeStateV1::Active;
+    std::uint64_t previousDeviceEpoch = 0;
+    std::uint64_t newDeviceEpoch = 0;
+    long removalReason = 0;
+    std::uint32_t removedAdapterLuidLow = 0;
+    std::int32_t removedAdapterLuidHigh = 0;
+    bool forcedRemoval = false;
+    bool adapterReacquired = false;
+    bool nativeDeviceRematerialized = false;
+    bool allRuntimeObjectsReleased = false;
+    bool executionContextRematerialized = false;
+    bool historyResourcesInvalidated = false;
+    bool temporalArgumentsInvalidated = false;
+    bool completionStateInvalidated = false;
+    bool readbackStateInvalidated = false;
+    bool dynamicRebindRequired = false;
+    bool explicitReseedRequired = false;
+    bool frozenAuthorityPreserved = false;
+};
+
+class LoadedTemporalCandidateFamilyRuntimeV1 final
+{
+public:
+    LoadedTemporalCandidateFamilyRuntimeV1(
+        LoadedTemporalCandidateFamilyRuntimeV1&&) noexcept;
+    LoadedTemporalCandidateFamilyRuntimeV1& operator=(
+        LoadedTemporalCandidateFamilyRuntimeV1&&) noexcept;
+    ~LoadedTemporalCandidateFamilyRuntimeV1();
+
+    LoadedTemporalCandidateFamilyRuntimeV1(
+        const LoadedTemporalCandidateFamilyRuntimeV1&) = delete;
+    LoadedTemporalCandidateFamilyRuntimeV1& operator=(
+        const LoadedTemporalCandidateFamilyRuntimeV1&) = delete;
+
+    [[nodiscard]] TemporalCandidateFamilyRuntimeStateV1 State() const noexcept;
+    [[nodiscard]] std::uint64_t DeviceEpoch() const noexcept;
+    [[nodiscard]] const base::Digest256& DomainIdentity() const noexcept;
+    [[nodiscard]] const base::Digest256& CandidateBindingSetIdentity() const noexcept;
+    [[nodiscard]] const std::string& AdapterDescription() const noexcept;
+    [[nodiscard]] std::size_t ScheduleCount() const noexcept;
+    [[nodiscard]] bool DynamicInputsBound() const noexcept;
+    [[nodiscard]] bool HistorySeeded() const noexcept;
+
+private:
+    struct Impl;
+    explicit LoadedTemporalCandidateFamilyRuntimeV1(std::unique_ptr<Impl> impl);
+    std::unique_ptr<Impl> impl_;
+
+    friend base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>
+    LoadTemporalCandidateFamilyRuntimeOnWarpV1(
+        const semantic::TemporalStateSemanticV1&,
+        const family_verification::TemporalCandidateFamilyVerificationContextV1&,
+        std::span<const TemporalScheduleCandidateAuthorityV1>);
+    friend base::Result<TemporalRuntimeDynamicBindingV1, TemporalCandidateFamilyRuntimeErrorV1>
+    BindCanonicalTemporalRuntimeInputsV1(LoadedTemporalCandidateFamilyRuntimeV1&);
+    friend TemporalRuntimeEpochHandleV1 CaptureTemporalRuntimeEpochHandleV1(
+        const LoadedTemporalCandidateFamilyRuntimeV1&);
+    friend base::Result<TemporalHistorySeedV1, TemporalCandidateFamilyRuntimeErrorV1>
+    ReseedTemporalHistoriesV1(
+        LoadedTemporalCandidateFamilyRuntimeV1&,
+        const TemporalRuntimeEpochHandleV1&,
+        const TemporalRuntimeDynamicBindingV1&);
+    friend base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>
+    SubmitTemporalScheduleV1(
+        LoadedTemporalCandidateFamilyRuntimeV1&,
+        const TemporalRuntimeEpochHandleV1&,
+        const TemporalRuntimeDynamicBindingV1&,
+        const TemporalHistorySeedV1&,
+        const base::Digest256&);
+    friend base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+    ValidateTemporalRuntimeEpochHandleV1(
+        const LoadedTemporalCandidateFamilyRuntimeV1&,
+        const TemporalRuntimeEpochHandleV1&);
+    friend base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+    ValidateTemporalRuntimeSubmissionTokenV1(
+        const LoadedTemporalCandidateFamilyRuntimeV1&,
+        const TemporalRuntimeSubmissionTokenV1&);
+    friend base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+    ValidateTemporalHistoryHandleV1(
+        const LoadedTemporalCandidateFamilyRuntimeV1&,
+        const TemporalHistoryHandleV1&);
+    friend base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>
+    RecoverTemporalCandidateFamilyRuntimeV1(
+        LoadedTemporalCandidateFamilyRuntimeV1&,
+        TemporalCandidateFamilyRecoveryModeV1);
+    friend std::vector<std::byte>
+    SerializeTemporalCandidateFamilyRuntimeAuthorityV1(
+        const LoadedTemporalCandidateFamilyRuntimeV1&);
+};
+
+[[nodiscard]] base::Result<LoadedTemporalCandidateFamilyRuntimeV1, TemporalCandidateFamilyRuntimeErrorV1>
+LoadTemporalCandidateFamilyRuntimeOnWarpV1(
+    const semantic::TemporalStateSemanticV1& semantic,
+    const family_verification::TemporalCandidateFamilyVerificationContextV1& context,
+    std::span<const TemporalScheduleCandidateAuthorityV1> authorities);
+
+[[nodiscard]] base::Result<TemporalRuntimeDynamicBindingV1, TemporalCandidateFamilyRuntimeErrorV1>
+BindCanonicalTemporalRuntimeInputsV1(LoadedTemporalCandidateFamilyRuntimeV1& runtime);
+
+[[nodiscard]] TemporalRuntimeEpochHandleV1
+CaptureTemporalRuntimeEpochHandleV1(const LoadedTemporalCandidateFamilyRuntimeV1& runtime);
+
+[[nodiscard]] base::Result<TemporalHistorySeedV1, TemporalCandidateFamilyRuntimeErrorV1>
+ReseedTemporalHistoriesV1(
+    LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeEpochHandleV1& handle,
+    const TemporalRuntimeDynamicBindingV1& binding);
+
+[[nodiscard]] base::Result<TemporalRuntimeSubmissionV1, TemporalCandidateFamilyRuntimeErrorV1>
+SubmitTemporalScheduleV1(
+    LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeEpochHandleV1& handle,
+    const TemporalRuntimeDynamicBindingV1& binding,
+    const TemporalHistorySeedV1& seed,
+    const base::Digest256& scheduleIdentity);
+
+[[nodiscard]] base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+ValidateTemporalRuntimeEpochHandleV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeEpochHandleV1& handle);
+
+[[nodiscard]] base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+ValidateTemporalRuntimeSubmissionTokenV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalRuntimeSubmissionTokenV1& token);
+
+[[nodiscard]] base::Result<void, TemporalCandidateFamilyRuntimeErrorV1>
+ValidateTemporalHistoryHandleV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    const TemporalHistoryHandleV1& history);
+
+[[nodiscard]] base::Result<TemporalCandidateFamilyRecoveryReportV1, TemporalCandidateFamilyRuntimeErrorV1>
+RecoverTemporalCandidateFamilyRuntimeV1(
+    LoadedTemporalCandidateFamilyRuntimeV1& runtime,
+    TemporalCandidateFamilyRecoveryModeV1 mode);
+
+[[nodiscard]] std::vector<std::byte>
+SerializeTemporalCandidateFamilyRuntimeAuthorityV1(
+    const LoadedTemporalCandidateFamilyRuntimeV1& runtime);
 
 }

@@ -1,0 +1,60 @@
+{
+  "schema": "SGE4-5.Spiral5.CU5ArchitectureManifest.V1",
+  "completionUnit": "CU5",
+  "baselineCommit": "a3d9a19a1a3033b723df918e70f5af6a24d884a0",
+  "predecessor": {
+    "cu4CandidateFamilyEvidenceSha256": "74643570F20C88230CF3BBAD94FE6E10489AA164C83C876E6255A5F7D6BA3B17"
+  },
+  "completionDeclaration": "SGE4-5 SPIRAL 5 ARCHITECTURE COMPLETE",
+  "scheduleCorpus": [
+    "P1",
+    "P2",
+    "P4",
+    "P8",
+    "P16",
+    "P32",
+    "P64",
+    "BurstThenHold",
+    "Irregular"
+  ],
+  "candidateKinds": [
+    "EveryInvocationRecompute",
+    "GlobalMotorHistoryReuse",
+    "FinalOutputHistoryReuse"
+  ],
+  "timelineLength": 128,
+  "candidateInvocationCountPerQualification": 3456,
+  "qualification": {
+    "cpuReferenceEveryInvocation": true,
+    "pairwiseByteIdentityEveryInvocation": true,
+    "holdHistoryByteStability": true,
+    "noUnauthorizedHoldWrite": true,
+    "explicitCompletionOrdinal": true
+  },
+  "determinism": {
+    "architecture": "FreshDebugAEqualsFreshDebugBEqualsRelease",
+    "controlledRecovery": "FreshDebugAEqualsFreshDebugBEqualsRelease",
+    "freshRematerialization": "FreshDebugAEqualsFreshDebugBEqualsRelease"
+  },
+  "controlledRecovery": {
+    "deviceEpochAdvance": true,
+    "staleRuntimeHandleRejected": true,
+    "staleCompletionTokenRejected": true,
+    "staleHistoryRejected": true,
+    "dynamicRebindRequired": true,
+    "generationZeroReseedRequired": true,
+    "observationPreserved": true
+  },
+  "actualRecovery": {
+    "mechanism": "ID3D12Device5::RemoveDevice",
+    "quarantineState": "AwaitingAdapter",
+    "removedAdapterLuidExcluded": true,
+    "staleSubmissionRejected": true,
+    "staleHistoryRejected": true
+  },
+  "runtimeTemporalPolicyDecision": "None",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "nextCompletionUnit": "CU6RealGpuMeasurementAndDecisionEvidence"
+}
