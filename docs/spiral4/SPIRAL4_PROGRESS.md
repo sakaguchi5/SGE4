@@ -84,3 +84,26 @@ Baseline: `ca29f228687691769355afe33f390adf04c1ed24`
 
 CU3 does not change canonical Schema 17, Runtime 17, Composition Runtime, or
 the canonical D3D12 Backend.
+
+
+## CU4 delivery
+
+Baseline: `04488a5203570d559ecd74372513d86abe34e4d0`
+
+```text
+[x] A.FixedMaximumGuarded
+[x] B.SingleExecuteIndirectDispatch
+[x] C.BatchedExecuteIndirectDispatch
+[x] Batch sizes 64/128/256/512/1024
+[x] independent Candidate-family Verifier
+[x] fixed-slot Batch artifacts and 16-byte records
+[x] 95 Active Count/Batch partition proofs
+[x] 24 mutation and attacker-rehash rejections
+[x] GPU Batch-record observation
+[x] 21 minimal WARP equivalence cases
+[x] byte-identical output across all seven Candidates
+[x] CU3 V1 authority left unchanged
+[ ] destination Solution registration and Manifest regeneration
+[ ] CU4 runner executed
+[ ] CU5 full architecture qualification started
+```

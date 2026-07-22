@@ -1,0 +1,71 @@
+{
+  "schema": "SGE4-5.Spiral4.CU4CandidateFamilyManifest.V1",
+  "completionUnit": "CU4",
+  "baselineCommit": "04488a5203570d559ecd74372513d86abe34e4d0",
+  "candidateCount": 7,
+  "candidates": [
+    {
+      "id": "A",
+      "kind": "FixedMaximumGuarded",
+      "batchSize": 0
+    },
+    {
+      "id": "B",
+      "kind": "SingleExecuteIndirectDispatch",
+      "batchSize": 0
+    },
+    {
+      "id": "C64",
+      "kind": "BatchedExecuteIndirectDispatch",
+      "batchSize": 64
+    },
+    {
+      "id": "C128",
+      "kind": "BatchedExecuteIndirectDispatch",
+      "batchSize": 128
+    },
+    {
+      "id": "C256",
+      "kind": "BatchedExecuteIndirectDispatch",
+      "batchSize": 256
+    },
+    {
+      "id": "C512",
+      "kind": "BatchedExecuteIndirectDispatch",
+      "batchSize": 512
+    },
+    {
+      "id": "C1024",
+      "kind": "BatchedExecuteIndirectDispatch",
+      "batchSize": 1024
+    }
+  ],
+  "batchSlotPolicy": "FixedMaximumSlotsWithZeroDispatchForEmptySlots",
+  "indirectCountBuffer": "None",
+  "batchRecord": {
+    "strideBytes": 16,
+    "fields": [
+      "FirstWorkRootConstant",
+      "DispatchX",
+      "DispatchY",
+      "DispatchZ"
+    ]
+  },
+  "batchPartitionCaseCount": 95,
+  "warpActiveCounts": [
+    0,
+    65,
+    4096
+  ],
+  "warpEquivalenceCaseCount": 21,
+  "mutationRejectionCount": 24,
+  "runtimeDispatchDecision": "None",
+  "cu3Compatibility": "V1SingleIndirectAuthorityUnchanged",
+  "cu5Deferred": [
+    "FullActiveCountCorpusWARP",
+    "FreshProcessDeterminism",
+    "ControlledRecovery",
+    "ActualDeviceRemovalRecovery",
+    "StaleEpochRejection"
+  ]
+}

@@ -92,3 +92,21 @@ Then run:
 
 CU3 does not authorize Fixed Maximum or Batched execution. Those become
 additional verified Candidate families in CU4.
+
+
+## CU4 — Candidate family
+
+Prepare the six CU4 projects and regenerate the Source Manifest:
+
+```powershell
+.\run_sge4_5_spiral4_cu4_prepare.bat
+```
+
+Then execute:
+
+```powershell
+.\run_sge4_5_spiral4_cu4_candidate_family.bat
+```
+
+CU4 compares correctness and authority, not performance. Real GPU ranking and
+crossover evidence remain CU6.
