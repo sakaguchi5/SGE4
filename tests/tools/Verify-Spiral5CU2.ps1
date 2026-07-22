@@ -1,6 +1,16 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿param(
+    [ValidateSet('Auto','Snapshot','Regression')]
+    [string]$Mode = 'Auto'
+)
+
+$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 function Require([bool]$Condition,[string]$Message){if(-not $Condition){throw $Message}}
+
+if ($Mode -eq 'Auto') {
+    $cu3Manifest = Join-Path $root 'docs\spiral5\CU3_AUTHORITY_MANIFEST_V1.json'
+    $Mode = if (Test-Path -LiteralPath $cu3Manifest -PathType Leaf) { 'Regression' } else { 'Snapshot' }
+}
 
 $manifestPath = Join-Path $root 'docs\spiral5\CU2_ARCHITECTURE_MANIFEST_V1.json'
 Require (Test-Path -LiteralPath $manifestPath -PathType Leaf) 'Spiral 5 CU2 architecture manifest missing.'
@@ -63,7 +73,13 @@ Require ($composition -notmatch '\bRetainedHistoryCompletion\b') 'Canonical Comp
 $contractProject = Get-Content -Raw -LiteralPath (Join-Path $root '135_Spiral5TemporalContracts\135_Spiral5TemporalContracts.vcxproj') -Encoding UTF8
 Require ($contractProject -match '121_Spiral4Contracts') 'Temporal Contract must bind the Spiral 4 indirect sidecar.'
 $executionProject = Get-Content -Raw -LiteralPath (Join-Path $root '136_Spiral5TemporalExecution\136_Spiral5TemporalExecution.vcxproj') -Encoding UTF8
-foreach($forbidden in @('137_TemporalLoweringCandidate','138_TemporalLoweringPlanner','139_TemporalLoweringVerifier','22_CompositionRuntime','14_D3D12Backend')){Require ($executionProject -notmatch [regex]::Escape($forbidden)) "CU2 execution has forbidden dependency: $forbidden"}
+if ($Mode -eq 'Snapshot') {
+    foreach($forbidden in @('137_TemporalLoweringCandidate','138_TemporalLoweringPlanner','139_TemporalLoweringVerifier','22_CompositionRuntime','14_D3D12Backend')){Require ($executionProject -notmatch [regex]::Escape($forbidden)) "CU2 Snapshot execution has forbidden dependency: $forbidden"}
+} elseif ($Mode -eq 'Regression') {
+    Require (Test-Path -LiteralPath (Join-Path $root 'docs\spiral5\CU3_AUTHORITY_MANIFEST_V1.json') -PathType Leaf) 'CU2 Regression requires the CU3 authority marker.'
+    Require ($executionProject -match '139_TemporalLoweringVerifier') 'CU3 must route verified execution through the Temporal Verifier type.'
+    foreach($forbidden in @('137_TemporalLoweringCandidate','138_TemporalLoweringPlanner','22_CompositionRuntime','14_D3D12Backend')){Require ($executionProject -notmatch [regex]::Escape($forbidden)) "CU2 Regression execution has forbidden direct dependency: $forbidden"}
+} else { throw "Unexpected Spiral 5 CU2 verification mode: $Mode" }
 
 $contractCpp = Get-Content -Raw -LiteralPath (Join-Path $root '135_Spiral5TemporalContracts\Spiral5TemporalContracts.cpp') -Encoding UTF8
 foreach($token in @('VersionedSidecarTemporalExtension','GlobalMotorHistoryReuse','ConsumerCompletionRetainsHistory','Spiral4IndirectIdentity','HierarchyHoldDispatchX')){Require ($contractCpp -match [regex]::Escape($token)) "CU2 contract token missing: $token"}
@@ -72,6 +88,6 @@ foreach($token in @('updateFlag','sourceGeneration','GlobalHistory','ExecuteIndi
 $testCpp = Get-Content -Raw -LiteralPath (Join-Path $root '145_Spiral5TemporalArchitectureTests\main.cpp') -Encoding UTF8
 foreach($token in @('invalidInitial','invalidGeneration','corruptedBytes','P64','Irregular','Runtime temporal-policy decision: None')){Require ($testCpp -match [regex]::Escape($token)) "CU2 test token missing: $token"}
 
-Write-Host 'SGE4-5 Spiral 5 CU2 static architecture boundaries passed.'
+Write-Host "SGE4-5 Spiral 5 CU2 static architecture boundaries passed. Mode: $Mode"
 Write-Host 'Package Temporal support reused; Composition generation/schedule/completion gap proven.'
 Write-Host 'Legacy Schema 17 / Runtime 17 / Backend mutation: None.'

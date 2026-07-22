@@ -4,6 +4,7 @@
 #include "../00_Foundation/Sha256.h"
 #include "../134_TemporalStateSemantic/TemporalStateSemantic.h"
 #include "../135_Spiral5TemporalContracts/Spiral5TemporalContracts.h"
+#include "../139_TemporalLoweringVerifier/TemporalLoweringVerifier.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -75,4 +76,102 @@ RunGlobalMotorHistoryArchitecturesOnWarpV1(
 
 [[nodiscard]] std::vector<std::byte> SerializeGlobalMotorHistoryArchitectureEvidenceV1(
     const GlobalMotorHistoryArchitectureResultV1& result);
+
+struct TemporalHistoryResourceBindingInputV1 final
+{
+    std::uint64_t deviceEpoch = 0;
+    base::Digest256 actualHistoryResourceIdentity{};
+    contract::TemporalHistoryRoleV1 historyRole =
+        contract::TemporalHistoryRoleV1::GlobalMotorHistory;
+    std::uint32_t historyDepth = 0;
+    std::uint32_t historyBytes = 0;
+};
+
+class FrozenVerifiedGlobalMotorHistoryExecutionV1 final
+{
+public:
+    FrozenVerifiedGlobalMotorHistoryExecutionV1() = delete;
+    FrozenVerifiedGlobalMotorHistoryExecutionV1(
+        const FrozenVerifiedGlobalMotorHistoryExecutionV1&) = default;
+    FrozenVerifiedGlobalMotorHistoryExecutionV1& operator=(
+        const FrozenVerifiedGlobalMotorHistoryExecutionV1&) = default;
+
+    [[nodiscard]] const verification::VerifiedTemporalLoweringV1& Verified() const noexcept
+    {
+        return verified_;
+    }
+    [[nodiscard]] const contract::FrozenGlobalMotorHistoryArtifactV1& Artifact() const noexcept
+    {
+        return artifact_;
+    }
+    [[nodiscard]] const TemporalHistoryResourceBindingInputV1& ResourceBinding() const noexcept
+    {
+        return resourceBinding_;
+    }
+    [[nodiscard]] const base::Digest256& BindingIdentity() const noexcept
+    {
+        return bindingIdentity_;
+    }
+
+private:
+    FrozenVerifiedGlobalMotorHistoryExecutionV1(
+        verification::VerifiedTemporalLoweringV1 verified,
+        contract::FrozenGlobalMotorHistoryArtifactV1 artifact,
+        TemporalHistoryResourceBindingInputV1 resourceBinding,
+        base::Digest256 bindingIdentity);
+
+    verification::VerifiedTemporalLoweringV1 verified_;
+    contract::FrozenGlobalMotorHistoryArtifactV1 artifact_;
+    TemporalHistoryResourceBindingInputV1 resourceBinding_{};
+    base::Digest256 bindingIdentity_{};
+
+    friend base::Result<FrozenVerifiedGlobalMotorHistoryExecutionV1, std::string>
+    FreezeVerifiedGlobalMotorHistoryExecutionV1(
+        const semantic::TemporalStateSemanticV1&,
+        const semantic::UpdateScheduleV1&,
+        const verification::TemporalVerificationContextV1&,
+        const verification::VerifiedTemporalLoweringV1&,
+        TemporalHistoryResourceBindingInputV1);
+};
+
+struct VerifiedGlobalMotorHistoryRunResultV1 final
+{
+    GlobalMotorHistoryArchitectureResultV1 architecture;
+    base::Digest256 verifiedBindingIdentity{};
+    base::Digest256 actualExecutionIdentity{};
+};
+
+[[nodiscard]] TemporalHistoryResourceBindingInputV1
+BuildCanonicalGlobalMotorHistoryResourceBindingInputV1(
+    const contract::FrozenGlobalMotorHistoryArtifactV1& artifact,
+    std::uint64_t deviceEpoch);
+
+[[nodiscard]] base::Result<FrozenVerifiedGlobalMotorHistoryExecutionV1, std::string>
+FreezeVerifiedGlobalMotorHistoryExecutionV1(
+    const semantic::TemporalStateSemanticV1& semantic,
+    const semantic::UpdateScheduleV1& schedule,
+    const verification::TemporalVerificationContextV1& context,
+    const verification::VerifiedTemporalLoweringV1& verified,
+    TemporalHistoryResourceBindingInputV1 resourceBinding);
+
+[[nodiscard]] base::Result<void, std::string>
+ValidateFrozenVerifiedGlobalMotorHistoryExecutionV1(
+    const FrozenVerifiedGlobalMotorHistoryExecutionV1& frozen,
+    const semantic::TemporalStateSemanticV1& semantic,
+    const semantic::UpdateScheduleV1& schedule,
+    const verification::TemporalVerificationContextV1& context,
+    std::uint64_t expectedDeviceEpoch);
+
+[[nodiscard]] base::Result<VerifiedGlobalMotorHistoryRunResultV1, TemporalExecutionErrorV1>
+RunVerifiedGlobalMotorHistoryOnWarpV1(
+    const FrozenVerifiedGlobalMotorHistoryExecutionV1& frozen,
+    const semantic::TemporalStateSemanticV1& semantic,
+    const semantic::UpdateScheduleV1& schedule,
+    const verification::TemporalVerificationContextV1& context,
+    std::uint64_t expectedDeviceEpoch);
+
+[[nodiscard]] std::vector<std::byte>
+SerializeFrozenVerifiedGlobalMotorHistoryExecutionV1(
+    const FrozenVerifiedGlobalMotorHistoryExecutionV1& value);
+
 }

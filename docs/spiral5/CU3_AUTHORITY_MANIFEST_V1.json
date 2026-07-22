@@ -1,0 +1,61 @@
+{
+  "schema": "SGE4-5.Spiral5.CU3AuthorityManifest.V1",
+  "completionUnit": "CU3",
+  "ownerBaselineCommit": "f29d6597ec370d963c7b7dfbbc9af9590e8bd58f",
+  "predecessor": {
+    "completionUnit": "CU2",
+    "architectureEvidenceSha256": "C7599F52F0D5D7AA9288568274F8E8663A023C52859F1E992D18BF454BF1EC92"
+  },
+  "projects": {
+    "candidate": "137_TemporalLoweringCandidate",
+    "planner": "138_TemporalLoweringPlanner",
+    "verifier": "139_TemporalLoweringVerifier",
+    "authorityTests": "146_Spiral5AuthorityMutationTests"
+  },
+  "candidate": "GlobalMotorHistoryReuse",
+  "verifiedSchedule": "P4",
+  "verifiedInvocationCount": 128,
+  "verifiedDeviceEpoch": 1,
+  "plannerIndependentVerifier": true,
+  "verifierDependsOnPlanner": false,
+  "rawToVerified": "CompileTimeUnavailable",
+  "rawToFrozen": "CompileTimeUnavailable",
+  "authorityBindings": [
+    "TemporalSemanticIdentity",
+    "UpdateScheduleIdentity",
+    "InvocationGenerationAuthority",
+    "TargetProfileIdentity",
+    "ObservationContractIdentity",
+    "HistoryResourceContractIdentity",
+    "RetainedCompletionContractIdentity",
+    "DeviceEpochPolicyIdentity",
+    "Spiral4IndirectArtifactIdentity",
+    "ArgumentProducerProgramIdentity",
+    "HierarchyProgramIdentity",
+    "ConsumerProgramIdentity",
+    "CU2TemporalArtifactIdentity",
+    "ActualHistoryResourceIdentity",
+    "DeviceEpoch"
+  ],
+  "mutationProposalCount": 40,
+  "replayGates": [
+    "CrossSchedule",
+    "CrossTarget",
+    "CrossHistoryContract",
+    "CrossEpochPolicy",
+    "WrongActualHistoryResource",
+    "WrongHistoryRole",
+    "WrongHistoryBytes",
+    "ZeroDeviceEpoch",
+    "CrossDeviceEpochFrozenReplay"
+  ],
+  "runtimeTemporalPolicyDecision": "None",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "cu4Deferred": [
+    "EveryInvocationRecompute",
+    "FinalOutputHistoryReuse",
+    "TemporalCandidateFamily"
+  ]
+}

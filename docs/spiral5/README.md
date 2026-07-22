@@ -1,37 +1,38 @@
 # Spiral 5 — Temporal State Flow
 
-Spiral 5 studies exact temporal history reuse for one fixed rigid-transform workload.
-
-The V1 meaning is piecewise constant. An external verified schedule states Update and Hold invocations. Candidate Lowerings differ only in where derived history is retained.
+Spiral 5 studies exact temporal history reuse for one fixed rigid-transform workload. The V1 meaning is piecewise constant: an external verified schedule states Update and Hold invocations, and Candidate Lowerings differ only in where exact derived history is retained.
 
 ## Current completion unit
 
 ```text
-CU2 — Global Motor History Architecture
+CU3 — Independent Temporal Authority
 ```
 
-CU2 adds one Candidate:
+CU3 adds:
 
 ```text
-B.GlobalMotorHistoryReuse
+Raw Temporal Candidate
+-> Planner proposal
+-> Planner-independent Verifier
+-> opaque Verified Temporal Plan
+-> actual CU2 artifact and History Resource binding
+-> device-epoch-bound verified WARP execution
 ```
 
-It uses a versioned Temporal sidecar bound to the existing Spiral 4 Dispatch-only indirect artifact. Schema 17, Runtime 17, and the canonical Backend remain unchanged.
-
-## Apply CU2
+## Apply CU3
 
 ```powershell
-.\run_sge4_5_spiral5_cu2_prepare.bat
-.\run_sge4_5_spiral5_cu2_global_motor_history.bat
+.\run_sge4_5_spiral5_cu3_prepare.bat
+.\run_sge4_5_spiral5_cu3_independent_authority.bat
 ```
 
-The prepare step registers four projects and regenerates the Source Manifest. The architecture runner builds Debug and Release, executes P1/P4/P64/Irregular on WARP, and requires byte-identical evidence.
+The prepare step registers four projects and regenerates the Source Manifest. The authority runner builds fresh Debug and Release processes, rejects the mutation and replay matrix, executes verified P4 on WARP, and requires byte-identical authority evidence.
 
 ## Candidate sequence
 
 ```text
-CU2: B.GlobalMotorHistoryReuse
-CU3: independent Temporal authority
+CU2: B.GlobalMotorHistoryReuse architecture
+CU3: independent B authority
 CU4: A/B/C Candidate family
 CU5: all schedules, determinism, Recovery
 CU6: real-GPU measurement and Decision Report

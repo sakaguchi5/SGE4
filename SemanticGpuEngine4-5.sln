@@ -280,12 +280,36 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "136_Spiral5TemporalExecutio
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "145_Spiral5TemporalArchitectureTests", "145_Spiral5TemporalArchitectureTests\145_Spiral5TemporalArchitectureTests.vcxproj", "{00000091-0000-5000-8000-000000000091}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "137_TemporalLoweringCandidate", "137_TemporalLoweringCandidate\137_TemporalLoweringCandidate.vcxproj", "{00000089-0000-5000-8000-000000000089}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "138_TemporalLoweringPlanner", "138_TemporalLoweringPlanner\138_TemporalLoweringPlanner.vcxproj", "{0000008A-0000-5000-8000-00000000008A}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "139_TemporalLoweringVerifier", "139_TemporalLoweringVerifier\139_TemporalLoweringVerifier.vcxproj", "{0000008B-0000-5000-8000-00000000008B}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "146_Spiral5AuthorityMutationTests", "146_Spiral5AuthorityMutationTests\146_Spiral5AuthorityMutationTests.vcxproj", "{00000092-0000-5000-8000-000000000092}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00000089-0000-5000-8000-000000000089}.Debug|x64.ActiveCfg = Debug|x64
+		{00000089-0000-5000-8000-000000000089}.Debug|x64.Build.0 = Debug|x64
+		{00000089-0000-5000-8000-000000000089}.Release|x64.ActiveCfg = Release|x64
+		{00000089-0000-5000-8000-000000000089}.Release|x64.Build.0 = Release|x64
+		{0000008A-0000-5000-8000-00000000008A}.Debug|x64.ActiveCfg = Debug|x64
+		{0000008A-0000-5000-8000-00000000008A}.Debug|x64.Build.0 = Debug|x64
+		{0000008A-0000-5000-8000-00000000008A}.Release|x64.ActiveCfg = Release|x64
+		{0000008A-0000-5000-8000-00000000008A}.Release|x64.Build.0 = Release|x64
+		{0000008B-0000-5000-8000-00000000008B}.Debug|x64.ActiveCfg = Debug|x64
+		{0000008B-0000-5000-8000-00000000008B}.Debug|x64.Build.0 = Debug|x64
+		{0000008B-0000-5000-8000-00000000008B}.Release|x64.ActiveCfg = Release|x64
+		{0000008B-0000-5000-8000-00000000008B}.Release|x64.Build.0 = Release|x64
+		{00000092-0000-5000-8000-000000000092}.Debug|x64.ActiveCfg = Debug|x64
+		{00000092-0000-5000-8000-000000000092}.Debug|x64.Build.0 = Debug|x64
+		{00000092-0000-5000-8000-000000000092}.Release|x64.ActiveCfg = Release|x64
+		{00000092-0000-5000-8000-000000000092}.Release|x64.Build.0 = Release|x64
 		{00000086-0000-5000-8000-000000000086}.Debug|x64.ActiveCfg = Debug|x64
 		{00000086-0000-5000-8000-000000000086}.Debug|x64.Build.0 = Debug|x64
 		{00000086-0000-5000-8000-000000000086}.Release|x64.ActiveCfg = Release|x64

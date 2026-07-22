@@ -788,4 +788,223 @@ std::vector<std::byte> SerializeGlobalMotorHistoryArchitectureEvidenceV1(
     }
     return std::move(writer).Take();
 }
+
+namespace
+{
+base::Digest256 VerifiedLiteralIdentity(std::string_view value)
+{
+    return base::Sha256(std::as_bytes(std::span(value.data(), value.size())));
+}
+
+base::Digest256 ExpectedVerifiedHistoryResourceIdentity(
+    const contract::FrozenGlobalMotorHistoryArtifactV1& artifact)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.ActualHistoryResource.GlobalMotor.V1"));
+    writer.WriteBytes(artifact.ArtifactIdentity());
+    writer.WriteBytes(artifact.HierarchyProgramIdentity());
+    writer.WriteBytes(artifact.ConsumerProgramIdentity());
+    writer.WriteU32(static_cast<std::uint32_t>(artifact.HistoryRole()));
+    writer.WriteU32(artifact.HistoryDepth());
+    writer.WriteU32(artifact.HistoryBytes());
+    return base::Sha256(writer.Bytes());
+}
+
+base::Digest256 BuildVerifiedTemporalBindingIdentity(
+    const verification::VerifiedTemporalLoweringV1& verified,
+    const contract::FrozenGlobalMotorHistoryArtifactV1& artifact,
+    const TemporalHistoryResourceBindingInputV1& binding)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.FrozenVerifiedGlobalMotorHistoryBinding.V1"));
+    writer.WriteBytes(verified.Plan().planIdentity);
+    writer.WriteBytes(verified.CertificateIdentity());
+    writer.WriteBytes(artifact.ArtifactIdentity());
+    writer.WriteU64(binding.deviceEpoch);
+    writer.WriteBytes(binding.actualHistoryResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(binding.historyRole));
+    writer.WriteU32(binding.historyDepth);
+    writer.WriteU32(binding.historyBytes);
+    return base::Sha256(writer.Bytes());
+}
+}
+
+FrozenVerifiedGlobalMotorHistoryExecutionV1::
+FrozenVerifiedGlobalMotorHistoryExecutionV1(
+    verification::VerifiedTemporalLoweringV1 verified,
+    contract::FrozenGlobalMotorHistoryArtifactV1 artifact,
+    TemporalHistoryResourceBindingInputV1 resourceBinding,
+    base::Digest256 bindingIdentity)
+    : verified_(std::move(verified)),
+      artifact_(std::move(artifact)),
+      resourceBinding_(resourceBinding),
+      bindingIdentity_(bindingIdentity)
+{
+}
+
+TemporalHistoryResourceBindingInputV1
+BuildCanonicalGlobalMotorHistoryResourceBindingInputV1(
+    const contract::FrozenGlobalMotorHistoryArtifactV1& artifact,
+    std::uint64_t deviceEpoch)
+{
+    TemporalHistoryResourceBindingInputV1 binding;
+    binding.deviceEpoch = deviceEpoch;
+    binding.actualHistoryResourceIdentity =
+        ExpectedVerifiedHistoryResourceIdentity(artifact);
+    binding.historyRole = artifact.HistoryRole();
+    binding.historyDepth = artifact.HistoryDepth();
+    binding.historyBytes = artifact.HistoryBytes();
+    return binding;
+}
+
+base::Result<void, std::string>
+ValidateFrozenVerifiedGlobalMotorHistoryExecutionV1(
+    const FrozenVerifiedGlobalMotorHistoryExecutionV1& frozen,
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const verification::TemporalVerificationContextV1& context,
+    std::uint64_t expectedDeviceEpoch)
+{
+    auto verified = verification::ValidateVerifiedTemporalLoweringContextV1(
+        frozen.Verified(), semanticValue, schedule, context);
+    if (!verified) return verified;
+
+    auto artifact = contract::ValidateGlobalMotorHistoryArtifactForExecutionV1(
+        frozen.Artifact(), semanticValue, schedule);
+    if (!artifact)
+        return base::Result<void, std::string>::Failure(
+            artifact.Error().stage + ": " + artifact.Error().message);
+
+    const auto& operation = frozen.Verified().Plan().operation;
+    const auto& binding = frozen.ResourceBinding();
+    if (operation.artifactIdentity != frozen.Artifact().ArtifactIdentity() ||
+        operation.historyResourceIdentity != binding.actualHistoryResourceIdentity ||
+        operation.historyRole != binding.historyRole ||
+        operation.historyDepth != binding.historyDepth ||
+        operation.historyBytes != binding.historyBytes ||
+        operation.spiral4IndirectArtifactIdentity !=
+            frozen.Artifact().Spiral4IndirectArtifactIdentity() ||
+        operation.argumentProducerProgramIdentity !=
+            frozen.Artifact().ArgumentProducerProgramIdentity() ||
+        operation.hierarchyProgramIdentity !=
+            frozen.Artifact().HierarchyProgramIdentity() ||
+        operation.consumerProgramIdentity !=
+            frozen.Artifact().ConsumerProgramIdentity())
+    {
+        return base::Result<void, std::string>::Failure(
+            "verified temporal plan is not bound to the actual artifact and History Resource");
+    }
+
+    if (expectedDeviceEpoch == 0 || binding.deviceEpoch != expectedDeviceEpoch)
+        return base::Result<void, std::string>::Failure(
+            "temporal History binding belongs to another device epoch");
+    if (binding.actualHistoryResourceIdentity !=
+            ExpectedVerifiedHistoryResourceIdentity(frozen.Artifact()) ||
+        binding.historyRole != contract::TemporalHistoryRoleV1::GlobalMotorHistory ||
+        binding.historyDepth != 1 ||
+        binding.historyBytes != semantic::BoneCountV1 * sizeof(semantic::PgaMotorRecordV1))
+    {
+        return base::Result<void, std::string>::Failure(
+            "actual Temporal History Resource binding is not canonical");
+    }
+
+    if (frozen.BindingIdentity() != BuildVerifiedTemporalBindingIdentity(
+            frozen.Verified(), frozen.Artifact(), binding))
+        return base::Result<void, std::string>::Failure(
+            "frozen verified Temporal binding identity mismatch");
+    return base::Result<void, std::string>::Success();
+}
+
+base::Result<FrozenVerifiedGlobalMotorHistoryExecutionV1, std::string>
+FreezeVerifiedGlobalMotorHistoryExecutionV1(
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const verification::TemporalVerificationContextV1& context,
+    const verification::VerifiedTemporalLoweringV1& verified,
+    TemporalHistoryResourceBindingInputV1 resourceBinding)
+{
+    auto verifiedContext = verification::ValidateVerifiedTemporalLoweringContextV1(
+        verified, semanticValue, schedule, context);
+    if (!verifiedContext)
+        return base::Result<FrozenVerifiedGlobalMotorHistoryExecutionV1, std::string>::Failure(
+            verifiedContext.Error());
+
+    auto artifact = contract::BuildCu2GlobalMotorHistoryArtifactV1(
+        semanticValue, schedule);
+    const auto bindingIdentity = BuildVerifiedTemporalBindingIdentity(
+        verified, artifact, resourceBinding);
+    FrozenVerifiedGlobalMotorHistoryExecutionV1 frozen(
+        verified, std::move(artifact), resourceBinding, bindingIdentity);
+    auto validation = ValidateFrozenVerifiedGlobalMotorHistoryExecutionV1(
+        frozen, semanticValue, schedule, context, resourceBinding.deviceEpoch);
+    if (!validation)
+        return base::Result<FrozenVerifiedGlobalMotorHistoryExecutionV1, std::string>::Failure(
+            validation.Error());
+    return base::Result<FrozenVerifiedGlobalMotorHistoryExecutionV1, std::string>::Success(
+        std::move(frozen));
+}
+
+base::Result<VerifiedGlobalMotorHistoryRunResultV1, TemporalExecutionErrorV1>
+RunVerifiedGlobalMotorHistoryOnWarpV1(
+    const FrozenVerifiedGlobalMotorHistoryExecutionV1& frozen,
+    const semantic::TemporalStateSemanticV1& semanticValue,
+    const semantic::UpdateScheduleV1& schedule,
+    const verification::TemporalVerificationContextV1& context,
+    std::uint64_t expectedDeviceEpoch)
+{
+    auto validation = ValidateFrozenVerifiedGlobalMotorHistoryExecutionV1(
+        frozen, semanticValue, schedule, context, expectedDeviceEpoch);
+    if (!validation)
+        return base::Result<VerifiedGlobalMotorHistoryRunResultV1, TemporalExecutionErrorV1>::Failure(
+            Error("authority/context", validation.Error()));
+
+    std::vector<TemporalScheduleExecutionInputV1> inputs;
+    inputs.push_back({schedule, frozen.Artifact()});
+    auto run = RunGlobalMotorHistoryArchitecturesOnWarpV1(semanticValue, inputs);
+    if (!run)
+        return base::Result<VerifiedGlobalMotorHistoryRunResultV1, TemporalExecutionErrorV1>::Failure(
+            run.Error());
+
+    VerifiedGlobalMotorHistoryRunResultV1 result;
+    result.architecture = std::move(run).Value();
+    result.verifiedBindingIdentity = frozen.BindingIdentity();
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.ActualVerifiedGlobalMotorHistoryExecution.V1"));
+    writer.WriteBytes(result.verifiedBindingIdentity);
+    writer.WriteBytes(result.architecture.argumentProducerShaderDigest);
+    writer.WriteBytes(result.architecture.hierarchyShaderDigest);
+    writer.WriteBytes(result.architecture.consumerShaderDigest);
+    const auto evidence = SerializeGlobalMotorHistoryArchitectureEvidenceV1(
+        result.architecture);
+    writer.WriteBytes(base::Sha256(evidence));
+    result.actualExecutionIdentity = base::Sha256(writer.Bytes());
+    return base::Result<VerifiedGlobalMotorHistoryRunResultV1, TemporalExecutionErrorV1>::Success(
+        std::move(result));
+}
+
+std::vector<std::byte>
+SerializeFrozenVerifiedGlobalMotorHistoryExecutionV1(
+    const FrozenVerifiedGlobalMotorHistoryExecutionV1& value)
+{
+    base::BinaryWriter writer;
+    writer.WriteBytes(VerifiedLiteralIdentity(
+        "SGE4-5.Spiral5.FrozenVerifiedGlobalMotorHistoryExecution.V1"));
+    const auto verified = verification::SerializeVerifiedTemporalLoweringV1(
+        value.Verified());
+    writer.WriteU32(static_cast<std::uint32_t>(verified.size()));
+    writer.WriteBytes(verified);
+    writer.WriteU32(static_cast<std::uint32_t>(value.Artifact().Bytes().size()));
+    writer.WriteBytes(value.Artifact().Bytes());
+    writer.WriteU64(value.ResourceBinding().deviceEpoch);
+    writer.WriteBytes(value.ResourceBinding().actualHistoryResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(value.ResourceBinding().historyRole));
+    writer.WriteU32(value.ResourceBinding().historyDepth);
+    writer.WriteU32(value.ResourceBinding().historyBytes);
+    writer.WriteBytes(value.BindingIdentity());
+    return std::move(writer).Take();
+}
+
 }
