@@ -1,0 +1,131 @@
+{
+  "schema": "SGE4-5.Spiral4.CU6MeasurementManifest.V1",
+  "completionUnit": "CU6",
+  "baselineCommit": "302e31569c2cec5d69fbc53f3ddb363cd0af777c",
+  "title": "Real GPU Measurement and Decision Evidence",
+  "architectureEvidenceSha256": "60CF81FB8BAC565CD35D696612B7050F464576DEDE5CEF7E2FE61B0CDFA7C32E",
+  "controlledRecoveryEvidenceSha256": "4CCAA3F2BB250A0AF16037C74DA8CFF8F65A0834F912803ADC3C8C7CF607B4D9",
+  "freshRematerializationEvidenceSha256": "E1794F15D6808B4C220EE0D2527564551EE7FA1D2DAA70B4F360531819F13DC3",
+  "candidateCount": 7,
+  "candidates": [
+    {
+      "index": 0,
+      "id": "A",
+      "name": "FixedMaximumGuarded",
+      "batchSize": 0
+    },
+    {
+      "index": 1,
+      "id": "B",
+      "name": "SingleExecuteIndirectDispatch",
+      "batchSize": 0
+    },
+    {
+      "index": 2,
+      "id": "C64",
+      "name": "BatchedExecuteIndirectDispatch",
+      "batchSize": 64
+    },
+    {
+      "index": 3,
+      "id": "C128",
+      "name": "BatchedExecuteIndirectDispatch",
+      "batchSize": 128
+    },
+    {
+      "index": 4,
+      "id": "C256",
+      "name": "BatchedExecuteIndirectDispatch",
+      "batchSize": 256
+    },
+    {
+      "index": 5,
+      "id": "C512",
+      "name": "BatchedExecuteIndirectDispatch",
+      "batchSize": 512
+    },
+    {
+      "index": 6,
+      "id": "C1024",
+      "name": "BatchedExecuteIndirectDispatch",
+      "batchSize": 1024
+    }
+  ],
+  "activeCountCaseCount": 19,
+  "activeCountCorpus": [
+    0,
+    1,
+    63,
+    64,
+    65,
+    127,
+    128,
+    129,
+    255,
+    256,
+    257,
+    511,
+    512,
+    513,
+    1023,
+    1024,
+    2048,
+    4095,
+    4096
+  ],
+  "balancedOrderCount": 14,
+  "orderDesign": "SevenCyclicForwardPlusSevenCyclicReverse",
+  "orderBalance": "EachCandidateAppearsTwiceAtEveryOrderPosition",
+  "canonicalMeasurementConfig": {
+    "warmupCyclesPerOrder": 1,
+    "measurementCyclesPerOrder": 2,
+    "runCount": 2,
+    "samplesPerCandidateAndActiveCount": 56,
+    "totalMeasuredSamples": 7448,
+    "clockPolicy": "uncontrolled",
+    "adapterIndex": 0
+  },
+  "primaryMetric": "GpuCandidatePathNanoseconds",
+  "primaryMetricComponents": [
+    "GpuArgumentGenerationNanoseconds",
+    "GpuStateTransitionNanoseconds",
+    "GpuExecutionNanoseconds",
+    "GpuOutputSynchronizationNanoseconds"
+  ],
+  "separateEvidenceComponents": [
+    "ActiveInputPreparationNanoseconds",
+    "CommandRecordingNanoseconds",
+    "SubmitAndWaitNanoseconds",
+    "NumericObservationNanoseconds",
+    "CpuEndToEndNanoseconds",
+    "GpuObservationCopyNanoseconds",
+    "GpuTotalNanoseconds"
+  ],
+  "noisePolicy": {
+    "absoluteFloorNanoseconds": 100.0,
+    "relativeFloor": 0.02,
+    "equivalenceRule": "abs(a-b) <= max(100ns, 2% of faster median)"
+  },
+  "hardwareAdapterPolicy": "DXGI high-performance non-software D3D12 adapter by explicit index",
+  "timestampPolicy": "D3D12 compute queue timestamp queries",
+  "evidenceArtifacts": [
+    "spiral4_measurement_evidence_v1.bin",
+    "spiral4_measurement_samples_v1.csv",
+    "spiral4_measurement_summary_v1.json",
+    "SPIRAL4_DECISION_EVIDENCE_REPORT.md"
+  ],
+  "decisionOutputs": [
+    "PerNfGlobalWinnerSet",
+    "PerNfBestObservedBatchSize",
+    "FixedVersusSingleTransitionClassification",
+    "SingleVersusBestBatchTransitionClassification",
+    "GlobalWinnerSetChangeFlag"
+  ],
+  "runtimePolicyAuthorization": "None",
+  "nextCapabilitySelection": "DeferredByOwner",
+  "selectionStatus": "OWNER_DECISION_REQUIRED",
+  "experimentCompleteOnPass": true,
+  "spiralClosedOnPass": false,
+  "performanceSuperiorityIsCompletionGate": false,
+  "crossoverExistenceIsCompletionGate": false
+}

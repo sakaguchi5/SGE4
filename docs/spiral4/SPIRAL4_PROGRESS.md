@@ -130,3 +130,42 @@ Baseline: `8577ad1e4bb99f2a1c4d7125c6e586b33fb54154`
 [ ] Architecture Complete declaration observed
 [ ] CU6 real-GPU experiment started
 ```
+
+
+## CU5 observed completion
+
+Commit: `302e31569c2cec5d69fbc53f3ddb363cd0af777c`
+
+```text
+[x] SGE4-5 SPIRAL 4 ARCHITECTURE COMPLETE
+[x] 7 Candidates × 19 Active Counts = 133 WARP cases
+[x] 133 inactive-tail sentinel proofs
+[x] 95 GPU Batch-record proofs
+[x] fresh Debug A / Debug B / Release byte-identical
+[x] Controlled Recovery with epoch/stale/rebind proof
+[x] actual RemoveDevice quarantine
+[x] fresh-process rematerialization
+```
+
+## CU6 delivery
+
+Baseline: `302e31569c2cec5d69fbc53f3ddb363cd0af777c`
+
+```text
+[x] two-project real-GPU measurement boundary
+[x] seven-Candidate hardware measurement corpus
+[x] nineteen Active Count cases
+[x] fourteen balanced cyclic/reverse orders
+[x] D3D12 timestamp decomposition
+[x] binary checksum and corruption self-test
+[x] per-Nf winner set and best Batch analysis
+[x] Fixed/Single and Single/BestBatch classification
+[x] Runtime policy authorization remains None
+[x] next capability remains Owner-only
+[ ] destination Solution registration and Manifest regeneration
+[ ] CU6 self-test executed on Windows
+[ ] real-GPU measurement evidence captured
+[ ] Decision Evidence Report generated
+[ ] Experiment Complete banner observed
+[ ] Owner next-capability decision recorded
+```

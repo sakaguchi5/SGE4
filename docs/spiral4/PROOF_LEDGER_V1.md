@@ -17,11 +17,11 @@
 | S4-I13 | Active output/reference and inactive sentinel qualify | CU5 | Full 133-case reference/sentinel gate supplied |
 | S4-I14 | Debug/Release/fresh-process artifacts are byte-identical | CU5 | Debug A/B/Release evidence comparison gate supplied |
 | S4-I15 | Recovery regenerates arguments and rejects stale epochs | CU5 | Controlled/actual/fresh-process gates supplied |
-| S4-I16 | Hardware evidence binds all identities and variables | CU6 | Not started |
+| S4-I16 | Hardware evidence binds all identities and variables | CU6 | Real-GPU evidence gate supplied; runner pending |
 | S4-I17 | Winner/crossover is not a completion requirement | CU1 | Frozen |
-| S4-I18 | Runtime policy authorization remains none | CU6 | Preserved |
+| S4-I18 | Runtime policy authorization remains none | CU6 | Explicitly frozen in binary/report boundary |
 | S4-I19 | Spiral 3 evidence remains immutable history | CU1 | Preserved |
-| S4-I20 | Next capability remains Owner-only | CU6 | Preserved |
+| S4-I20 | Next capability remains Owner-only | CU6 | Decision Report requires OWNER_DECISION_REQUIRED |
 
 “Qualified in sidecar executor” does not replace CU3 independent authority or CU5 whole-composition qualification.
 
@@ -48,3 +48,11 @@ fresh-process artifacts, Recovery, and stale-epoch rejection.
 CU5 closes S4-I05, S4-I13, S4-I14, and S4-I15 only when the Windows runner
 prints `SGE4-5 SPIRAL 4 ARCHITECTURE COMPLETE`. Performance invariants S4-I16,
 S4-I17, and the Owner decision remain CU6.
+
+
+## CU6 measurement evidence
+
+CU6 completes S4-I16 only after the Windows runner captures valid non-software
+D3D12 hardware evidence and generates the Decision Evidence Report. A winner or
+crossover is not required. Runtime policy remains unauthorized and Spiral 4
+Closed remains withheld until the Owner decision.

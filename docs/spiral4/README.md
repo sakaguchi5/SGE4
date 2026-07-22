@@ -130,3 +130,25 @@ The runner executes the full WARP corpus three times for deterministic evidence,
 Controlled Recovery in Debug A/B/Release, actual Device removal in an isolated
 process, and fresh-process rematerialization. A successful final banner declares
 Spiral 4 Architecture Complete. CU6 is still required for Experiment Complete.
+
+
+## CU6 — real GPU measurement and Decision Evidence
+
+Register the two CU6 projects and regenerate the Source Manifest:
+
+```powershell
+.\run_sge4_5_spiral4_cu6_prepare.bat
+```
+
+Run the canonical self-test, hardware measurement, and report pipeline:
+
+```powershell
+.\run_sge4_5_spiral4_cu6_measurement_decision_evidence.bat
+```
+
+The default profile collects 56 samples per Candidate and Active Count using
+fourteen balanced orders. Adapter index 0 selects the first compatible
+high-performance non-software D3D12 adapter.
+
+A successful CU6 banner declares `SGE4-5 SPIRAL 4 EXPERIMENT COMPLETE`. It does
+not declare `Spiral 4 Closed`; the next capability remains an Owner decision.
