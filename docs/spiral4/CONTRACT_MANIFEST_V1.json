@@ -1,0 +1,105 @@
+{
+  "schema": "SGE4-5.Spiral4.ContractManifest.V1",
+  "completionUnit": "CU1",
+  "baselineCommit": "8c1125394ba4b45d571d7cba4e7ad685bb90918b",
+  "ownerSelection": "DynamicActiveWorkCountVerifiedExecuteIndirectAndBatchLowering",
+  "title": "Dynamic Active Work Count and Verified Indirect Batch Lowering",
+  "japaneseTitle": "可変Work Count＋DispatchIndirect＋Batch比較",
+  "ownerOnlyGate": "NextCapabilitySelection",
+  "selectionRecord": "docs/spiral4/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL3.md",
+  "targetAbiBaseline": {
+    "d3d12Schema": 17,
+    "runtime": 17
+  },
+  "cu1AbiMutation": "None",
+  "abiExtensionPolicy": "VersionedExtensionOnlyAfterSchema17InsufficiencyProof",
+  "baselineInventory": {
+    "indirectArgumentResourceState": true,
+    "executeIndirectOperation": false,
+    "commandSignatureArtifact": false,
+    "runtimeDispatchDimensionDecision": "Forbidden"
+  },
+  "fixedMeaning": {
+    "semantic": "FixedEightBoneDirectPgaPointTransformWorkV1",
+    "representationPath": "DirectPgaThroughConsumerV1",
+    "boneCount": 8,
+    "maxReusePerBone": 512,
+    "maxWorkCount": 4096,
+    "workRecordSchema": "Spiral3R512CanonicalPointRecordV1",
+    "activeRange": "Prefix[0,Nf)",
+    "inactiveRange": "[Nf,Nmax)",
+    "threadsPerGroup": 64,
+    "semanticGraphShape": "Fixed",
+    "leafCount": "Fixed",
+    "resourceCapacity": "Fixed"
+  },
+  "runtimeInputs": {
+    "activeWorkCountType": "ActiveWorkCountV1",
+    "activeWorkCountSymbol": "Nf",
+    "minimum": 0,
+    "maximum": 4096,
+    "activeWorkBytes": "FixedCapacityDynamicContents",
+    "dynamicMotorPalette": "EightLocalMotorsV1"
+  },
+  "candidateKinds": [
+    "FixedMaximumGuarded",
+    "SingleExecuteIndirectDispatch",
+    "BatchedExecuteIndirectDispatch"
+  ],
+  "batchPolicy": {
+    "candidateFamily": "BatchedExecuteIndirectDispatch",
+    "batchSizes": [
+      64,
+      128,
+      256,
+      512,
+      1024
+    ],
+    "maximumBatchSlots": 64,
+    "emptyBatchEncoding": "ZeroDispatchGroups",
+    "indirectCountBuffer": "NotInV1"
+  },
+  "activeCountCorpus": [
+    0,
+    1,
+    63,
+    64,
+    65,
+    127,
+    128,
+    129,
+    255,
+    256,
+    257,
+    511,
+    512,
+    513,
+    1023,
+    1024,
+    2048,
+    4095,
+    4096
+  ],
+  "level4Policy": "MinimalVersionedIndirectExtensionOnlyIfRequired",
+  "level5Policy": "DispatchAndBatchStructureAreVerifiedLoweringChoices",
+  "runtimePolicyAuthorization": "None",
+  "authoritativeSpec": "docs/spiral4/SGE4-5_Spiral4_Completion_Spec_v0.1.md",
+  "amendments": [],
+  "typeSafety": {
+    "workloadDimensions": [
+      "MaxWorkCountV1",
+      "ActiveWorkCountV1",
+      "ThreadGroupSizeV1",
+      "BatchSizeV1",
+      "BatchSlotCountV1"
+    ],
+    "rawToVerified": "CompileTimeUnavailable",
+    "sealReplayRejectedAcross": [
+      "ActiveWorkSemantic",
+      "ActiveCountContract",
+      "BatchPlan",
+      "TargetProfile",
+      "CommandSignature"
+    ]
+  }
+}
