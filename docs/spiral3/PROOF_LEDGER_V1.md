@@ -1,6 +1,6 @@
 ﻿# Spiral 3 proof ledger V1
 
-This ledger is monotonic. CU0-CU5 are implemented here; CU5 becomes qualified only after the owner runs the Windows/WARP gate.
+This ledger is monotonic. CU0-CU5 are qualified by the owner. CU6 is implemented here and becomes qualified only after the owner runs the real-hardware gate.
 
 | Invariant | Status | Evidence |
 |---|---|---|
@@ -13,9 +13,10 @@ This ledger is monotonic. CU0-CU5 are implemented here; CU5 becomes qualified on
 | S3-I07 | Qualified in CU4 | One Dynamic Motor source and one immutable Point source fan out to all applicable candidates with exactly one writer per Flow. |
 | S3-I08 | Qualified in CU4 | Every fixed R experiment freezes as an eleven-Leaf/twelve-Flow Buffer-only Level 4 v1 Composition without ABI/Runtime extension. |
 | S3-I09 | Qualified in CU4 | Representation, conversion position, schedule, allocation, state, signal and wait authority are bound before Runtime; CU4 has no Runtime/Backend dependency. |
-| S3-I10 | Implemented in CU5 | Six R cases by twelve palettes execute on WARP; A/B/C are checked against the independent reference and pairwise, with GPU-record reconstruction. |
-| S3-I11 | Implemented in CU5 | Twelve palette changes preserve Frozen bytes; distinct R scenarios remain distinct frozen identities. |
-| S3-I12 | Implemented in CU5 | Per-R WARP evidence and the architecture Freeze bundle are compared byte-for-byte across Debug, Release and fresh processes. |
-| S3-I13 | Implemented in CU5 | Controlled rebuild advances epoch, rejects stale handles and requires explicit rebind; actual removal enters quarantine and fresh rematerialization reproduces evidence. |
-| S3-I14-S3-I15 | Planned for CU6 | Hardware-bound measurement and owner-deferred Decision Report are not included yet. |
-| S3-I16 | Frozen in CU0 | Next capability remains Owner-deferred. |
+| S3-I10 | Qualified in CU5 | Six R cases by twelve palettes execute on WARP; A/B/C satisfy independent-reference and pairwise Observation Contract checks with GPU-record reconstruction. |
+| S3-I11 | Qualified in CU5 | Twelve palette changes preserve Frozen bytes; distinct R scenarios remain distinct frozen identities; R64 frame-order permutation passes. |
+| S3-I12 | Qualified in CU5 | Per-R WARP evidence and the architecture Freeze bundle are byte-identical across Debug, Release and fresh processes. |
+| S3-I13 | Qualified in CU5 | Controlled rebuild advances epoch, rejects stale handles and requires explicit rebind; actual removal enters quarantine and fresh rematerialization reproduces evidence. |
+| S3-I14 | Implemented in CU6 | One non-software hardware adapter, target/profile identities, six balanced orders and 576 timestamped order samples are preserved in binary evidence. |
+| S3-I15 | Implemented in CU6 | Winner per sampled R, adjacent observed transition intervals, full structural/numeric metrics and a non-authoritative Decision Report are generated. |
+| S3-I16 | Preserved in CU6 | `NextCapabilitySelection = DeferredByOwner`; no Runtime policy or universal representation rule is authorized. |

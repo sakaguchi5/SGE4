@@ -1,28 +1,37 @@
-# Spiral 3 project boundaries V1
+﻿# Spiral 3 project boundaries V1
 
-## Present in CU0/CU1
+## Semantic and planning
 
 ```text
-101 Spiral3Contracts
-  explicit Bone / Reuse / Point workload boundary types
-
 100 ReuseSweepSemantic
-  hierarchy + fixed-R Consumer meaning; no Matrix or Backend concepts
-
+101 Spiral3Contracts
 102 Spiral3Corpus
-  fixed hierarchy, point corpus, frame pairing and independent CPU reference
-
-110 Spiral3SemanticTests
-  compile-time dimension separation, semantic validation and deterministic corpus evidence
+103 ReuseRepresentationCandidate
+104 ReuseRepresentationPlanner
+105 ReuseRepresentationVerifier
 ```
 
-Enforced boundaries:
+The Semantic layer contains no Matrix/Backend policy. Raw candidates cannot construct the opaque Verified type. The Verifier has no Planner reference.
 
-- `BoneCountV1`, `ReuseCountV1` and `PointCountV1` are explicit and non-interchangeable.
-- Semantic projects do not reference Runtime or Backend.
-- Runtime and Backend do not reference projects 100-102.
-- Spiral 3 reuses D3D12 Schema 17, Runtime 17 and the Spiral 2 dynamic Motor contract unchanged.
+## Frozen Level 4 lowering
 
-## Planned after CU1
+```text
+106 Spiral3LeafCompiler
+107 Spiral3Scenarios
+```
 
-Projects 103-109 and tests 111-119 are reserved by the completion specification but are not part of this delivery.
+Only Verified Representation enters the Leaf Compiler. `107` freezes the eleven-Leaf/twelve-Flow comparison and remains Runtime/Backend-free.
+
+## Execution and evidence
+
+```text
+108 Spiral3Execution
+109 Spiral3PerformanceExperiment
+115 WarpObservationTests
+116 RecoveryTests
+117 FreezeTests
+118 PerformanceTests
+119 Launcher
+```
+
+`108` owns WARP/runtime observation. `109` owns real-hardware measurement, binary evidence and report generation. No CU6 concept is added to Package Runtime, D3D12 Backend or Composition Runtime. Schema 17 and Runtime 17 remain unchanged.

@@ -1,32 +1,33 @@
 ﻿# Spiral 3 progress
 
 Original baseline: `398891936bf498fed532b26c06884bbfbf66f3a8`.
-CU5 delivery baseline: `e5161687c87cd2d3ab4d19d4fd6d520f35c0ef2d`.
+CU6 delivery baseline: `db2f48c841dcd18ed9fbd2a06d2a7489f6043c56`.
 
 ## Qualified by the owner
 
-- CU0 research contract and baseline gate.
-- CU1 fixed eight-bone hierarchy and R1/R4/R16/R64/R256/R512 Semantic/corpus.
-- CU2 18 independently verified A/B/C candidate plans; 24 invalid proposals rejected.
-- CU3 18 verified candidate groups lowered into 60 Schema 17 Frozen Leaves; 80 binding mutations rejected.
-- CU4 six eleven-Leaf/twelve-Flow comparison Compositions; 54 mutations rejected.
-- CU4 Composition evidence SHA-256: `E914816BDC4979F5F5AC5564E65FF01082BE1E67CAE8482E4EF0D316360AA4DF`.
+- CU0 contract and baseline.
+- CU1 fixed hierarchy, typed R workload and deterministic corpus.
+- CU2 18 independently verified A/B/C plans; 24 invalid proposals rejected.
+- CU3 60 Schema 17 Frozen Leaves; 80 mutations rejected.
+- CU4 six eleven-Leaf/twelve-Flow Frozen Compositions; 54 mutations rejected.
+- CU5 72 WARP executions, deterministic Freeze/WARP evidence, controlled recovery and actual RemoveDevice quarantine.
+- CU5 Freeze SHA-256: `5987AE2B87CF93C7E6BD9C59E539EDF8EFD9ED233127E01C9FDDFC0A5039068B`.
+- CU5 WARP corpus SHA-256: `FCE8D7861DC07BAF278A69662490CBC1273877F980747881D50C1F963921769B`.
+- CU5 R256/F07 rematerialization SHA-256: `1DEF40F54B0E842FFB62ACDEB9A94D23A6501749F79A44DD08978450D75C5E90`.
 
 ## Included in this delivery
 
-- CU5 Runtime-only execution support, leaving CU4 architecture Runtime/Backend-free.
-- 72 WARP executions: six reuse counts by twelve dynamic Motor palettes.
-- Independent CPU reference, A/B/C pairwise checks, rigidity/orientation checks where R supplies basis probes.
-- CPU reconstruction of GPU absolute/relative/ULP Observation records.
-- Frozen-byte invariance across palette changes and frame-order permutation.
-- Debug/Release/fresh-process evidence comparisons.
-- Controlled whole-composition recovery, stale-epoch rejection and explicit rebind requirement.
-- Actual RemoveDevice quarantine and fresh-process rematerialization equivalence.
+- CU6 binary Measurement Evidence V1 and corruption/roundtrip self-test.
+- Non-software hardware adapter fingerprint and timestamp-frequency capture.
+- Separate verifier-sealed A/B/C candidate Compositions.
+- Six balanced orders, canonical 2 warmups/order, 8 measured cycles/order and 2 runs.
+- 96 measured order samples per R; 576 across six R cases.
+- Per-R winner and adjacent observed crossover intervals, without interpolation.
+- Decision report with `RecommendationAuthority = NonAuthoritative` and `RuntimePolicyAuthorization = None`.
+- Owner-deferred next-capability boundary.
 
 ## Next Windows qualification
 
 ```bat
-run_sge4_5_spiral3_cu5_warp_determinism_recovery.bat
+run_sge4_5_spiral3_cu6_measurement_decision_evidence.bat
 ```
-
-CU6 real-GPU measurement and decision evidence are not included in this delivery.
