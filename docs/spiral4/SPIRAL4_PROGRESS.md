@@ -2,25 +2,59 @@
 
 ## Current state
 
-CU1 delivery prepared.
+CU1 passed at commit `4033e8bf84650b6d1edbb6a8a83d97d5e1c3e4d1`.
+
+CU2 delivery prepared.
 
 ```text
-[x] Owner selection recorded
-[x] baseline commit fixed
-[x] variable Work Count terminology narrowed to Active element-work count
-[x] fixed/variable ownership boundary frozen
-[x] Candidate family frozen
-[x] Active Count and Batch corpus frozen
-[x] Level 4 extension policy frozen
-[x] Runtime/Backend prohibitions frozen
-[x] completion invariants and CU map frozen
-[ ] source manifest regenerated in the destination checkout
-[ ] CU1 verifier executed
-[ ] CU2 implementation started
+[x] Owner selection and Research Contract Freeze
+[x] ActiveWorkSemanticV1 with Nmax/Nf/thread-group type boundaries
+[x] versioned Single Indirect extension bytes
+[x] canonical parser and digest corruption rejection
+[x] explicit Dispatch Command Signature contract
+[x] GPU Argument Producer
+[x] UAV -> INDIRECT_ARGUMENT state transition
+[x] mechanical ExecuteIndirect call
+[x] WARP cases Nf=0/1/63/64/65/1024/4096
+[x] active reference and inactive-tail sentinel observation
+[x] legacy Schema 17 / Runtime 17 / Backend files preserved
+[ ] CU2 projects registered in SemanticGpuEngine4-5.sln
+[x] Fix01 Solution registration tool supplied
+[ ] source manifest regenerated after Solution registration
+[ ] CU2 runner executed
+[ ] CU3 Planner-independent authority started
 ```
 
-## Current authorized work
+## CU2 architectural status
 
-Only CU1 contract integration and verification are authorized.
+CU2 is a real D3D12 indirect execution path, but it is not yet the final Verified Candidate authority path.
 
-No C++ project, ABI record, Operation code, Runtime branch, Backend branch, or Shader template is authorized by CU1.
+CU3 must introduce the independent Planner/Verifier separation before the extension may be treated as a general Level 5 lowering authority.
+
+## CU2 Fix01
+
+The first CU2 delivery incorrectly deferred Solution membership until CU3.
+That contradicted the repository-wide identity invariant that every `.vcxproj`
+must be registered in `SemanticGpuEngine4-5.sln`.
+
+Fix01 restores the invariant by registering all four CU2 projects and both
+Debug/Release x64 configurations. The identity verifier is not weakened.
+
+
+## CU2 Fix02
+
+CU2 then exposed a second integration issue: the CU1 verifier treated
+“future projects do not exist yet” as a permanent invariant.
+
+Fix02 separates:
+
+```text
+CU1 Snapshot mode
+  exact CU1 checkout; later projects and indirect implementation must be absent
+
+CU1 Regression mode
+  immutable CU1 contract remains valid; later Completion Units may exist
+```
+
+CU2 and all later Spiral 4 gates invoke CU1 in Regression mode. The standalone
+CU1 runner uses Auto mode and selects Snapshot before CU2, Regression after CU2.

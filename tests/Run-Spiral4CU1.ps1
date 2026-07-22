@@ -5,7 +5,7 @@ $root = Split-Path -Parent $testsRoot
 
 & (Join-Path $testsRoot 'tools\Verify-SourceManifest.ps1')
 & (Join-Path $testsRoot 'tools\Verify-SGE4_5Identity.ps1')
-& (Join-Path $testsRoot 'tools\Verify-Spiral4CU1.ps1')
+& (Join-Path $testsRoot 'tools\Verify-Spiral4CU1.ps1') -Mode Auto
 
 Write-Host '============================================================'
 Write-Host 'SGE4-5 SPIRAL 4 COMPLETION UNIT 1 PASSED'

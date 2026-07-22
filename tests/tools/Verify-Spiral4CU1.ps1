@@ -1,6 +1,21 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿param(
+    [ValidateSet('Auto', 'Snapshot', 'Regression')]
+    [string]$Mode = 'Auto'
+)
+
+$ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+
+if ($Mode -eq 'Auto') {
+    $cu2Manifest = Join-Path $root 'docs\spiral4\CU2_ARCHITECTURE_MANIFEST_V1.json'
+    $Mode = if (Test-Path -LiteralPath $cu2Manifest -PathType Leaf) {
+        'Regression'
+    } else {
+        'Snapshot'
+    }
+}
+
 
 function Require([bool]$Condition, [string]$Message) {
     if (-not $Condition) { throw $Message }
@@ -92,22 +107,42 @@ $schemaPath = Join-Path $root '10_D3D12PackageSchema\D3D12Schema.h'
 Require (Test-Path -LiteralPath $schemaPath -PathType Leaf) 'Baseline D3D12 schema header missing.'
 $schema = Get-Content -Raw -LiteralPath $schemaPath -Encoding UTF8
 Require ($schema -match 'IndirectArgument\s*=\s*1u\s*<<\s*10') 'Baseline IndirectArgument state not found.'
-Require ($schema -notmatch '\bExecuteIndirect\b') 'CU1 must not already implement ExecuteIndirect.'
-Require ($schema -notmatch '\bDispatchIndirect\b') 'CU1 must not already implement DispatchIndirect.'
-Require ($schema -notmatch '\bCommandSignature') 'CU1 must not already implement a Command Signature artifact.'
 
-$solution = Get-Content -Raw -LiteralPath (Join-Path $root 'SemanticGpuEngine4-5.sln') -Encoding UTF8
-foreach ($futureProject in @(
-    '120_ActiveWorkSemantic',
-    '121_Spiral4Contracts',
-    '123_ActiveWorkLoweringCandidate',
-    '125_ActiveWorkLoweringVerifier',
-    '139_Spiral4Launcher'
-)) {
-    Require ($solution -notmatch [regex]::Escape($futureProject)) "CU1 must not pre-create future project: $futureProject"
+if ($Mode -eq 'Snapshot') {
+    # Snapshot-only obligations describe the exact CU1 checkout. They are not
+    # monotonic invariants after later Completion Units intentionally add code.
+    Require ($schema -notmatch '\bExecuteIndirect\b') 'CU1 Snapshot must not already implement ExecuteIndirect.'
+    Require ($schema -notmatch '\bDispatchIndirect\b') 'CU1 Snapshot must not already implement DispatchIndirect.'
+    Require ($schema -notmatch '\bCommandSignature') 'CU1 Snapshot must not already implement a Command Signature artifact.'
+
+    $solution = Get-Content -Raw -LiteralPath (Join-Path $root 'SemanticGpuEngine4-5.sln') -Encoding UTF8
+    foreach ($futureProject in @(
+        '120_ActiveWorkSemantic',
+        '121_Spiral4Contracts',
+        '123_ActiveWorkLoweringCandidate',
+        '125_ActiveWorkLoweringVerifier',
+        '139_Spiral4Launcher'
+    )) {
+        Require ($solution -notmatch [regex]::Escape($futureProject)) "CU1 Snapshot must not pre-create future project: $futureProject"
+    }
+}
+elseif ($Mode -eq 'Regression') {
+    # Regression mode proves that the immutable CU1 research contract remains
+    # present and coherent. It deliberately does not require later CU projects
+    # or capabilities to remain absent.
+    $cu2Manifest = Join-Path $root 'docs\spiral4\CU2_ARCHITECTURE_MANIFEST_V1.json'
+    Require (Test-Path -LiteralPath $cu2Manifest -PathType Leaf) 'CU1 Regression mode requires a later Completion Unit marker.'
+}
+else {
+    throw "Unexpected Spiral 4 CU1 verification mode: $Mode"
 }
 
 $spiral3Report = Join-Path $root 'docs\spiral3\CU6_EVIDENCE_LEDGER.md'
 Require (Test-Path -LiteralPath $spiral3Report -PathType Leaf) 'Spiral 3 CU6 evidence must remain present.'
 
-Write-Host 'SGE4-5 Spiral 4 CU1 research contract and baseline boundaries passed.'
+Write-Host "SGE4-5 Spiral 4 CU1 research contract passed. Mode: $Mode"
+if ($Mode -eq 'Snapshot') {
+    Write-Host 'Snapshot-only absence boundaries passed.'
+} else {
+    Write-Host 'Later Completion Units are allowed; immutable CU1 contract regression passed.'
+}

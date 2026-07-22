@@ -1,0 +1,49 @@
+{
+  "schema": "SGE4-5.Spiral4.CU2ArchitectureManifest.V1",
+  "completionUnit": "CU2",
+  "baselineCommit": "4033e8bf84650b6d1edbb6a8a83d97d5e1c3e4d1",
+  "contractManifest": "docs/spiral4/CONTRACT_MANIFEST_V1.json",
+  "extensionStrategy": "VersionedSidecarIndirectExtensionV1",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "semanticProject": "120_ActiveWorkSemantic",
+  "contractProject": "121_Spiral4Contracts",
+  "executionProject": "122_Spiral4IndirectExecution",
+  "testProject": "140_Spiral4IndirectArchitectureTests",
+  "runtimeDispatchDecision": "None",
+  "argumentFlow": "GPUProducerToIndirectConsumer",
+  "commandSignature": {
+    "kind": "Dispatch",
+    "byteStride": 12,
+    "maxCommandCount": 1,
+    "argumentOffset": 0,
+    "countBuffer": "None"
+  },
+  "operation": {
+    "name": "ExecuteDispatch",
+    "code": "0x00040201",
+    "mapping": "ID3D12GraphicsCommandList::ExecuteIndirect"
+  },
+  "states": [
+    "UnorderedAccess",
+    "IndirectArgument",
+    "CopySource"
+  ],
+  "zeroWorkEncoding": "DispatchGroupsXEqualsZero",
+  "architectureCases": [
+    0,
+    1,
+    63,
+    64,
+    65,
+    1024,
+    4096
+  ],
+  "cu3DeferredAuthority": [
+    "PlannerIndependentVerifier",
+    "OpaqueVerifierSeal",
+    "CrossContextReplayRejection",
+    "ActualPackageDigestBinding"
+  ]
+}
