@@ -18,8 +18,16 @@ C. ActiveBlockListLocalMask
 
 The Semantic set, output order and inactive sentinel are fixed. Only sparse representation and execution granularity vary.
 
-Start with:
+Current path:
 
 ```text
-run_sge4_5_spiral6_cu1_research_contract.bat
+CU1 research contract
+CU2 Compact Index architecture
+CU3 independent Sparse authority
+```
+
+CU3 runner:
+
+```text
+run_sge4_5_spiral6_cu3_independent_authority.bat
 ```

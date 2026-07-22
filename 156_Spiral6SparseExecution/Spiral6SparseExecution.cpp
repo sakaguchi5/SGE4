@@ -511,4 +511,193 @@ std::vector<std::byte> SerializeCompactIndexArchitectureReportV1(
     writer.WriteBytes(digest);
     return std::move(writer).Take();
 }
+
+namespace
+{
+base::Digest256 BuildSparseBindingIdentity(
+    const verification::VerifiedSparseLoweringV1& verified,
+    const SparseIndexResourceBindingInputV1& binding)
+{
+    constexpr std::string_view domain =
+        "SGE4-5.Spiral6.FrozenVerifiedCompactIndexBinding.V1";
+    base::BinaryWriter writer;
+    writer.WriteBytes(base::Sha256(
+        std::as_bytes(std::span(domain.data(), domain.size()))));
+    writer.WriteBytes(verified.Plan().planIdentity);
+    writer.WriteBytes(verified.CertificateIdentity());
+    writer.WriteU64(binding.deviceEpoch);
+    writer.WriteBytes(binding.actualIndexResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(binding.representationRole));
+    writer.WriteU32(binding.fixedCapacityBytes);
+    writer.WriteU32(binding.indexStrideBytes);
+    return base::Sha256(writer.Bytes());
+}
+}
+
+FrozenVerifiedCompactIndexExecutionV1::FrozenVerifiedCompactIndexExecutionV1(
+    verification::VerifiedSparseLoweringV1 verified,
+    contract::FrozenCompactIndexListArtifactV1 artifact,
+    SparseIndexResourceBindingInputV1 binding,
+    base::Digest256 bindingIdentity)
+    : verified_(std::move(verified)),
+      artifact_(std::move(artifact)),
+      binding_(binding),
+      bindingIdentity_(bindingIdentity)
+{
+}
+
+base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>
+FreezeVerifiedCompactIndexExecutionV1(
+    const verification::VerifiedSparseLoweringV1& verified,
+    const semantic::SparsePointTransformSemanticV1& semanticValue,
+    const semantic::ExactSparseWorkSetV1& set,
+    const contract::FrozenCompactIndexListArtifactV1& artifact,
+    const SparseIndexResourceBindingInputV1& binding)
+{
+    const auto context = verification::BuildCanonicalSparseVerificationContextV1();
+    auto verifiedContext = verification::ValidateVerifiedSparseLoweringContextV1(
+        verified, semanticValue, set, context);
+    if (!verifiedContext)
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            verifiedContext.Error());
+
+    auto artifactValidation = contract::ValidateCompactIndexListArtifactForExecutionV1(
+        artifact, semanticValue, set);
+    if (!artifactValidation)
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            artifactValidation.Error().stage + ": " + artifactValidation.Error().message);
+
+    const auto& operation = verified.Plan().operation;
+    if (artifact.ArtifactIdentity() != operation.artifactIdentity ||
+        artifact.SparseSetIdentity() != verified.Plan().sparseSetIdentity ||
+        artifact.RepresentationRole() != operation.representationRole ||
+        artifact.ActiveCount() != operation.activeCount ||
+        artifact.DispatchGroupsX() != operation.dispatchGroupsX)
+    {
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            "Frozen Sparse artifact does not match the Verified Plan.");
+    }
+    if (binding.deviceEpoch == 0)
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            "Sparse resource binding requires a non-zero device epoch.");
+    if (binding.actualIndexResourceIdentity != operation.indexResourceIdentity)
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            "actual Compact Index Resource identity mismatch");
+    if (binding.representationRole != operation.representationRole)
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            "Compact Index Resource role mismatch");
+    if (binding.fixedCapacityBytes != operation.fixedCapacityBytes ||
+        binding.indexStrideBytes != operation.indexStrideBytes)
+    {
+        return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Failure(
+            "Compact Index Resource layout mismatch");
+    }
+
+    const auto identity = BuildSparseBindingIdentity(verified, binding);
+    return base::Result<FrozenVerifiedCompactIndexExecutionV1, std::string>::Success(
+        FrozenVerifiedCompactIndexExecutionV1(
+            verified, artifact, binding, identity));
+}
+
+base::Result<void, std::string>
+ValidateFrozenCompactIndexExecutionEpochV1(
+    const FrozenVerifiedCompactIndexExecutionV1& frozen,
+    std::uint64_t currentDeviceEpoch)
+{
+    if (currentDeviceEpoch == 0 ||
+        currentDeviceEpoch != frozen.ResourceBinding().deviceEpoch)
+    {
+        return base::Result<void, std::string>::Failure(
+            "frozen Sparse execution belongs to a stale or different device epoch");
+    }
+    if (frozen.BindingIdentity() !=
+        BuildSparseBindingIdentity(frozen.Verified(), frozen.ResourceBinding()))
+    {
+        return base::Result<void, std::string>::Failure(
+            "frozen Sparse resource binding identity mismatch");
+    }
+    return base::Result<void, std::string>::Success();
+}
+
+base::Result<VerifiedCompactIndexExecutionReportV1, SparseExecutionErrorV1>
+ExecuteVerifiedCompactIndexListV1(
+    const semantic::SparsePointTransformSemanticV1& semanticValue,
+    const semantic::ExactSparseWorkSetV1& set,
+    const FrozenVerifiedCompactIndexExecutionV1& frozen,
+    std::uint64_t currentDeviceEpoch)
+{
+    auto epoch = ValidateFrozenCompactIndexExecutionEpochV1(
+        frozen, currentDeviceEpoch);
+    if (!epoch)
+        return base::Result<VerifiedCompactIndexExecutionReportV1, SparseExecutionErrorV1>::Failure(
+            Error("execution/epoch", epoch.Error()));
+
+    const auto context = verification::BuildCanonicalSparseVerificationContextV1();
+    auto verifiedContext = verification::ValidateVerifiedSparseLoweringContextV1(
+        frozen.Verified(), semanticValue, set, context);
+    if (!verifiedContext)
+        return base::Result<VerifiedCompactIndexExecutionReportV1, SparseExecutionErrorV1>::Failure(
+            Error("execution/authority", verifiedContext.Error()));
+
+    std::vector<CompactIndexArchitectureCaseV1> cases;
+    cases.emplace_back(
+        semantic::SparsePatternKindV1::HashScatterPermutation,
+        set,
+        frozen.Artifact());
+    auto architecture = ExecuteCompactIndexListArchitectureV1(
+        semanticValue, cases);
+    if (!architecture)
+        return base::Result<VerifiedCompactIndexExecutionReportV1, SparseExecutionErrorV1>::Failure(
+            architecture.Error());
+
+    VerifiedCompactIndexExecutionReportV1 report;
+    report.deviceEpoch = currentDeviceEpoch;
+    report.bindingIdentity = frozen.BindingIdentity();
+    report.architecture = std::move(architecture).Value();
+    return base::Result<VerifiedCompactIndexExecutionReportV1, SparseExecutionErrorV1>::Success(
+        std::move(report));
+}
+
+std::vector<std::byte> SerializeFrozenVerifiedCompactIndexExecutionV1(
+    const FrozenVerifiedCompactIndexExecutionV1& value)
+{
+    constexpr std::string_view domain =
+        "SGE4-5.Spiral6.FrozenVerifiedCompactIndexExecution.V1";
+    base::BinaryWriter writer;
+    writer.WriteBytes(base::Sha256(
+        std::as_bytes(std::span(domain.data(), domain.size()))));
+    const auto verified = verification::SerializeVerifiedSparseLoweringV1(
+        value.Verified());
+    writer.WriteU32(static_cast<std::uint32_t>(verified.size()));
+    writer.WriteBytes(verified);
+    writer.WriteBytes(value.Artifact().Bytes());
+    writer.WriteU64(value.ResourceBinding().deviceEpoch);
+    writer.WriteBytes(value.ResourceBinding().actualIndexResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(
+        value.ResourceBinding().representationRole));
+    writer.WriteU32(value.ResourceBinding().fixedCapacityBytes);
+    writer.WriteU32(value.ResourceBinding().indexStrideBytes);
+    writer.WriteBytes(value.BindingIdentity());
+    return std::move(writer).Take();
+}
+
+std::vector<std::byte> SerializeVerifiedCompactIndexExecutionReportV1(
+    const VerifiedCompactIndexExecutionReportV1& value)
+{
+    constexpr std::string_view domain =
+        "SGE4-5.Spiral6.CU3.VerifiedCompactIndexExecutionEvidence.V1";
+    base::BinaryWriter writer;
+    writer.WriteBytes(base::Sha256(
+        std::as_bytes(std::span(domain.data(), domain.size()))));
+    writer.WriteU64(value.deviceEpoch);
+    writer.WriteBytes(value.bindingIdentity);
+    const auto architecture = SerializeCompactIndexArchitectureReportV1(
+        value.architecture);
+    writer.WriteU32(static_cast<std::uint32_t>(architecture.size()));
+    writer.WriteBytes(architecture);
+    const auto digest = base::Sha256(writer.Bytes());
+    writer.WriteBytes(digest);
+    return std::move(writer).Take();
+}
+
 }

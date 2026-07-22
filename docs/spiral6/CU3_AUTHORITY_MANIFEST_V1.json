@@ -1,0 +1,64 @@
+{
+  "schema": "SGE4-5.Spiral6.CU3AuthorityManifest.V1",
+  "completionUnit": "CU3",
+  "ownerBaselineCommit": "46554ab55e532c438c9c4214ff1df3e7cd68638e",
+  "cu1AcceptedCommit": "b74f820ba2c4504ab44aa1b954da4b0cfafff3d2",
+  "cu2AcceptedCommit": "1b46e8090b2684e82022aff3f9a0f4e383d6e1fe",
+  "authorityChain": [
+    "ExactSparseWorkSetV1",
+    "RawSparseLoweringCandidateV1",
+    "SparseLoweringPlanner",
+    "PlannerIndependentSparseLoweringVerifier",
+    "OpaqueVerifiedSparseLoweringV1",
+    "FrozenCompactIndexListArtifactV1",
+    "DeviceEpochBoundCompactIndexResource",
+    "VerifiedWARPExecution"
+  ],
+  "qualifiedCandidate": "CompactIndexListDispatch",
+  "qualifiedPattern": "HashScatterPermutation",
+  "qualifiedCardinality": 1024,
+  "qualifiedDeviceEpoch": 1,
+  "rawMutationAttackCount": 36,
+  "replayGates": [
+    "CrossSparseSet",
+    "CrossTarget",
+    "CrossObservationContract",
+    "CrossArtifact",
+    "CrossResourceIdentity",
+    "CrossRepresentationRole",
+    "CrossResourceLayout",
+    "CrossDeviceEpoch"
+  ],
+  "verifiedBindings": [
+    "SparseSemanticIdentity",
+    "ExactSparseSetIdentity",
+    "TargetProfileIdentity",
+    "ObservationContractIdentity",
+    "CompactIndexRepresentationRole",
+    "Spiral4IndirectArtifactIdentity",
+    "ConsumerProgramIdentity",
+    "SparseSidecarArtifactIdentity",
+    "WriteSetAuthorityIdentity",
+    "ActualIndexResourceIdentity",
+    "DeviceEpoch"
+  ],
+  "typeBoundaries": {
+    "rawToVerified": "CompileTimeUnavailable",
+    "rawToFrozen": "CompileTimeUnavailable",
+    "verifiedDefaultConstruction": "Unavailable",
+    "frozenDefaultConstruction": "Unavailable"
+  },
+  "dependencyBoundaries": {
+    "verifierDependsOnPlanner": false,
+    "executionDependsOnVerifier": true,
+    "executionDependsDirectlyOnRawCandidate": false,
+    "executionDependsDirectlyOnPlanner": false
+  },
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None",
+  "candidateFamilyQualification": "DeferredToCU4",
+  "recoveryQualification": "DeferredToCU5",
+  "runtimeSparsePolicyDecision": "None"
+}
