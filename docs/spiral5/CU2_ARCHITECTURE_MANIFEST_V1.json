@@ -1,0 +1,57 @@
+{
+  "schema": "SGE4-5.Spiral5.CU2ArchitectureManifest.V1",
+  "completionUnit": "CU2",
+  "ownerBaselineCommit": "f29d6597ec370d963c7b7dfbbc9af9590e8bd58f",
+  "cu1Contract": "docs/spiral5/CONTRACT_MANIFEST_V1.json",
+  "extensionStrategy": "VersionedSidecarTemporalExtensionV1",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "spiral4IndirectExtension": "ReusedAndIdentityBound",
+  "existingPackageTemporalCapabilities": [
+    "ResourceFlags.Temporal",
+    "ResourceViewFlags.TemporalCurrent",
+    "ResourceViewFlags.TemporalPrevious",
+    "WaitTemporal"
+  ],
+  "compositionContractGap": [
+    "TemporalHistoryRole",
+    "HistorySourceGeneration",
+    "UpdateScheduleArtifact",
+    "RetainedHistoryCompletion",
+    "LegalHistoryReadWriteGeneration"
+  ],
+  "semanticProject": "134_TemporalStateSemantic",
+  "contractProject": "135_Spiral5TemporalContracts",
+  "executionProject": "136_Spiral5TemporalExecution",
+  "testProject": "145_Spiral5TemporalArchitectureTests",
+  "candidate": "GlobalMotorHistoryReuse",
+  "historyRole": "GlobalMotorHistory",
+  "historyDepth": 1,
+  "historyBytes": 256,
+  "initialHistory": "InvalidUntilInvocationZeroUpdate",
+  "updateDispatchRule": "GPUGeneratedUpdate1Hold0",
+  "consumerDispatchX": 64,
+  "holdCompletion": "ConsumerCompletionRetainsHistory",
+  "recoveryPolicy": "InvalidateThenExplicitUpdateReseed",
+  "runtimeTemporalPolicyDecision": "None",
+  "architectureSchedules": [
+    "P1",
+    "P4",
+    "P64",
+    "Irregular"
+  ],
+  "architectureInvocationCount": 512,
+  "negativeCases": [
+    "InitialHold",
+    "GenerationMutation",
+    "ArtifactCorruption"
+  ],
+  "cu3DeferredAuthority": [
+    "RawTemporalCandidate",
+    "PlannerIndependentVerifier",
+    "OpaqueContextBoundSeal",
+    "CrossRoleReplayRejection",
+    "ActualHistoryResourceIdentityBinding"
+  ]
+}

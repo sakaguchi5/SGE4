@@ -3,41 +3,44 @@
 ## Current phase
 
 ```text
-CU1 — Research Contract Freeze
+CU2 — Global Motor History Architecture
 ```
 
-## Frozen by CU1
+## Completed
 
 ```text
-[x] Owner selected Temporal State Flow
-[x] piecewise-constant exact temporal meaning
-[x] timeline length 128
-[x] update interval corpus U=1/2/4/8/16/32/64
-[x] non-periodic qualification schedules
-[x] history depth 1
-[x] A/B/C history-materialization Candidates
-[x] Runtime/Backend temporal policy prohibition
-[x] interpolation excluded from V1
-[x] CU1 documents and verification only
+[x] CU1 research contract
+[x] Canonical Temporal Semantic C++ types
+[x] periodic and irregular Update Schedule artifacts
+[x] source-generation derivation and mutation rejection
+[x] Versioned Sidecar Temporal Extension V1
+[x] Spiral 4 Dispatch-only sidecar identity binding
+[x] B.GlobalMotorHistoryReuse physical path
+[x] GPU-generated Update/Hold hierarchy Dispatch
+[x] depth-1 Global Motor History
+[x] explicit retained-history completion
+[x] P1/P4/P64/Irregular WARP architecture corpus
+[x] Debug/Release architecture evidence equality
+[x] Schema 17/Runtime 17/canonical Backend preserved
 ```
 
-## Not yet implemented
+## Deferred
 
 ```text
-[ ] Canonical Temporal Semantic C++ types
-[ ] Temporal History sidecar/artifact
-[ ] Global Motor history execution
-[ ] independent Temporal Verifier
-[ ] Candidate family execution
-[ ] WARP qualification and Recovery
-[ ] real-GPU measurement
-[ ] Decision Report
+[ ] Raw Candidate and Planner
+[ ] Planner-independent Temporal Verifier
+[ ] role/generation/epoch/Target-bound opaque seal
+[ ] A.EveryInvocationRecompute
+[ ] C.FinalOutputHistoryReuse
+[ ] all nine schedule Architecture Qualification
+[ ] Recovery and stale History rejection
+[ ] real-GPU measurement and Decision Report
 ```
 
 ## Formal state
 
 ```text
-Spiral 4: Experiment Complete; Owner next-capability decision resolved
-Spiral 5: CU1 contract proposed
+Spiral 4: Experiment Complete; next capability selected
+Spiral 5: CU2 architecture implemented; CU3 authority not yet complete
 RuntimePolicyAuthorization: None
 ```

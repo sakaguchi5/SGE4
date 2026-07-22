@@ -2,41 +2,37 @@
 
 Spiral 5 studies exact temporal history reuse for one fixed rigid-transform workload.
 
-The V1 meaning is piecewise constant. An external verified schedule states update and hold invocations. Candidate Lowerings differ only in where derived history is retained.
+The V1 meaning is piecewise constant. An external verified schedule states Update and Hold invocations. Candidate Lowerings differ only in where derived history is retained.
 
-## CU1
-
-CU1 contains documents and verification only. It does not add C++ projects or mutate ABI.
-
-After copying the CU1 files, regenerate the Source Manifest:
-
-```powershell
-powershell.exe -NoLogo -NoProfile -NonInteractive `
-  -ExecutionPolicy Bypass `
-  -File .\tests\tools\Update-SourceManifest.ps1
-```
-
-Then run:
-
-```powershell
-.\run_sge4_5_spiral5_cu1_research_contract.bat
-```
-
-## Candidate summary
+## Current completion unit
 
 ```text
-A.EveryInvocationRecompute
+CU2 — Global Motor History Architecture
+```
+
+CU2 adds one Candidate:
+
+```text
 B.GlobalMotorHistoryReuse
-C.FinalOutputHistoryReuse
 ```
 
-## Completion sequence
+It uses a versioned Temporal sidecar bound to the existing Spiral 4 Dispatch-only indirect artifact. Schema 17, Runtime 17, and the canonical Backend remain unchanged.
+
+## Apply CU2
+
+```powershell
+.\run_sge4_5_spiral5_cu2_prepare.bat
+.\run_sge4_5_spiral5_cu2_global_motor_history.bat
+```
+
+The prepare step registers four projects and regenerates the Source Manifest. The architecture runner builds Debug and Release, executes P1/P4/P64/Irregular on WARP, and requires byte-identical evidence.
+
+## Candidate sequence
 
 ```text
-CU1 contract
-CU2 one temporal history architecture
-CU3 independent authority
-CU4 Candidate family
-CU5 architecture qualification and Recovery
-CU6 real-GPU measurement and Decision Report
+CU2: B.GlobalMotorHistoryReuse
+CU3: independent Temporal authority
+CU4: A/B/C Candidate family
+CU5: all schedules, determinism, Recovery
+CU6: real-GPU measurement and Decision Report
 ```
