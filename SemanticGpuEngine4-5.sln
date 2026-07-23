@@ -334,12 +334,24 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "170_Spiral6PerformanceExper
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "171_Spiral6PerformanceTests", "171_Spiral6PerformanceTests\171_Spiral6PerformanceTests.vcxproj", "{000000AB-0000-5000-8000-0000000000AB}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "172_Spiral6EquivalentSetAuditTests", "172_Spiral6EquivalentSetAuditTests\172_Spiral6EquivalentSetAuditTests.vcxproj", "{000000AC-0000-5000-8000-0000000000AC}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "173_Spiral6TransitionProbeTests", "173_Spiral6TransitionProbeTests\173_Spiral6TransitionProbeTests.vcxproj", "{000000AD-0000-5000-8000-0000000000AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{000000AD-0000-5000-8000-0000000000AD}.Debug|x64.ActiveCfg = Debug|x64
+		{000000AD-0000-5000-8000-0000000000AD}.Debug|x64.Build.0 = Debug|x64
+		{000000AD-0000-5000-8000-0000000000AD}.Release|x64.ActiveCfg = Release|x64
+		{000000AD-0000-5000-8000-0000000000AD}.Release|x64.Build.0 = Release|x64
+		{000000AC-0000-5000-8000-0000000000AC}.Debug|x64.ActiveCfg = Debug|x64
+		{000000AC-0000-5000-8000-0000000000AC}.Debug|x64.Build.0 = Debug|x64
+		{000000AC-0000-5000-8000-0000000000AC}.Release|x64.ActiveCfg = Release|x64
+		{000000AC-0000-5000-8000-0000000000AC}.Release|x64.Build.0 = Release|x64
 		{000000AA-0000-5000-8000-0000000000AA}.Debug|x64.ActiveCfg = Debug|x64
 		{000000AA-0000-5000-8000-0000000000AA}.Debug|x64.Build.0 = Debug|x64
 		{000000AA-0000-5000-8000-0000000000AA}.Release|x64.ActiveCfg = Release|x64
