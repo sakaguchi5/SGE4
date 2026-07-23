@@ -8,7 +8,7 @@ Versioned Sparse Delta Flow and Verified Incremental History Lowering
 
 Spiral 7 is the final exploratory Spiral before Level 4 v2 Canonical reconstruction.
 
-It combines three already verified dimensions:
+It combines:
 
 ```text
 Spiral 4: verified indirect execution quantity
@@ -16,7 +16,7 @@ Spiral 5: verified temporal history
 Spiral 6: verified exact sparse membership
 ```
 
-into one authority problem:
+into one authority relation:
 
 ```text
 A_t  current exact Active Set
@@ -30,29 +30,41 @@ T_t  physical transition
 
 ## Completion Units
 
-- CU1: Research Contract Freeze
-- CU2: Sparse Temporal Delta Architecture
+- CU1: Research Contract Freeze — PASSED
+- CU2: Sparse Temporal Delta Architecture — implementation supplied
 - CU3: Independent Delta Authority
 - CU4: Incremental History Candidate Family
 - CU5: Architecture Qualification
 - CU6: Real-GPU Measurement and Decision Evidence
 
-## CU1 command
+## CU2 commands
 
-After extracting the overlay into a clean checkout at the baseline commit, run:
+After extracting the CU2 overlay into the checkout where CU1 passed, register the four projects and regenerate the Source Manifest:
 
 ```powershell
-.\run_sge4_5_spiral7_cu1_prepare.bat
+.\run_sge4_5_spiral7_cu2_prepare.bat
 ```
 
-The prepare runner regenerates `SOURCE_MANIFEST.sha256` and then executes the CU1 gate.
-
-Direct rerun after the manifest is current:
+Then execute the CU2 gate:
 
 ```powershell
-.\run_sge4_5_spiral7_cu1_research_contract.bat
+.\run_sge4_5_spiral7_cu2_compact_delta_history.bat
+```
+
+The gate builds Debug and Release, runs fourteen WARP transition cases and requires byte-identical evidence.
+
+## CU2 architecture
+
+```text
+previous history bytes
+    + exact A_t
+    + exact M_t
+    -> independently derived W_t / H_t / R_t / T_t
+    -> fixed-capacity sorted uint2 transition records
+    -> ExecuteIndirect ceil(|T_t|/64)
+    -> Update W_t / Clear R_t / do not write H_t
 ```
 
 ## Authority boundary
 
-CU1 adds no C++ and changes no ABI. Runtime and Backend remain forbidden to choose Active membership, modified membership, transition action, Candidate or history policy.
+Runtime and Backend remain forbidden to choose Active membership, modified membership, transition action, Candidate or history policy. CU2 adds no Canonical Level 4 v2 ABI.
