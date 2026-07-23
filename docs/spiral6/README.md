@@ -26,7 +26,7 @@ CU2 Compact Index architecture                PASSED
 CU3 independent Sparse authority              PASSED
 CU4 Sparse Candidate family                   PASSED
 CU5 Architecture qualification                supplied
-CU6 real-GPU measurement and Decision Report
+CU6 block-local paired real-GPU Relative Map  implementation supplied
 ```
 
 CU5 preparation and runner:
@@ -36,6 +36,13 @@ run_sge4_5_spiral6_cu5_prepare.bat
 run_sge4_5_spiral6_cu5_architecture_qualification.bat
 ```
 
+CU6 preparation and runner:
+
+```text
+run_sge4_5_spiral6_cu6_prepare.bat
+run_sge4_5_spiral6_cu6_measurement_decision_evidence.bat
+```
+
 CU5 qualifies 21 cardinalities × 4 exact-set patterns × 3 Candidates. It requires exact writes, inactive sentinel preservation, full-output byte identity, fresh-process determinism, Controlled Recovery, actual Device Removal, and explicit Sparse set rebind plus Derived Representation rebuild.
 
-A successful runner declares `SGE4-5 SPIRAL 6 ARCHITECTURE COMPLETE`. Runtime Sparse policy remains unauthorized.
+CU6 measures A/B/C relative advantages inside the same Pattern/K GPU block. A/B and B/C paired ratios, not cross-block absolute nanoseconds, form the Decision Map. Runtime Sparse policy remains unauthorized.

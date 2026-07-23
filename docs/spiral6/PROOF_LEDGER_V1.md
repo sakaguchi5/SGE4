@@ -12,5 +12,5 @@
 | S6-P08 | Cross-set, cross-role, cross-Candidate and cross-epoch seals are rejected. | CU4 PASSED: 40 family mutations plus set, Resource, role, layout and epoch replay gates |
 | S6-P09 | Recovery invalidates derived sparse Resources and requires explicit rebuild. | CU5 supplied: controlled epoch advance, stale handle rejection, explicit rebind/rebuild and actual RemoveDevice quarantine |
 | S6-P10 | Architecture evidence is deterministic across fresh Debug A/B/Release. | CU5 supplied: Architecture, Controlled Recovery and Fresh Rematerialization evidence require Debug A/Debug B/Release byte identity |
-| S6-P11 | Real-GPU evidence separates representation and sparse execution costs. | Planned CU6 |
-| S6-P12 | Decision evidence does not authorize Runtime policy. | Runtime policy remains `None`; formal Decision Report planned CU6 |
+| S6-P11 | Real-GPU evidence isolates block-local relative A/B/C execution behavior without requiring cross-block absolute-clock identity. | CU6 V2 implementation supplied: complete paired blocks, all-six-order balance, fixed-control drift rejection, descriptive absolute time and paired ratios |
+| S6-P12 | Decision evidence does not authorize Runtime policy. | CU6 V2 report retains `RuntimePolicyAuthorization=None`, `DeferredByOwner` and `OWNER_DECISION_REQUIRED` |

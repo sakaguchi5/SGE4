@@ -1,0 +1,41 @@
+{
+  "schema": "SGE4-5.Spiral6.CU6RelativeMeasurementManifest.V2",
+  "completionUnit": "CU6",
+  "baselineCommit": "18cc16db82c5cf7b5d7be00d51345196df046447",
+  "title": "Block-local paired Sparse representation map",
+  "candidateFamily": [
+    "A.DenseMembershipMaskPredicate",
+    "B.CompactIndexListDispatch",
+    "C.ActiveBlockListLocalMask"
+  ],
+  "patterns": [
+    "PrefixControl",
+    "UniformStride",
+    "BlockClusteredPermutation",
+    "HashScatterPermutation"
+  ],
+  "cardinalities": [1, 8, 32, 64, 128, 256, 512, 1024, 2048, 3072, 4096],
+  "primaryEvidence": "BlockLocalPairedCandidateRatio",
+  "absoluteNanosecondsRole": "DescriptiveOnly",
+  "controlNormalization": "CandidateTimeDividedByGeometricMeanOfBlockControls",
+  "candidateOrders": ["ABC", "ACB", "BAC", "BCA", "CAB", "CBA"],
+  "defaults": {
+    "runs": 2,
+    "cyclesPerOrder": 2,
+    "iterationsPerBatch": 512,
+    "warmupIterations": 4096,
+    "maximumBlockAttempts": 4,
+    "maximumControlRatio": 1.20,
+    "relativeNoiseFloor": 0.02,
+    "minimumPairAgreement": 0.70
+  },
+  "resourcePolicy": "PrebuiltBeforeMeasurement",
+  "queuePolicy": "OneContinuousPairedSubmitPerPatternAndCardinalityBlock",
+  "rejectionPolicy": "RejectAndRetryWholePairedBlock",
+  "telemetryPolicy": "OptionalDiagnosticOnly",
+  "pStatePolicy": "NotAnAcceptanceCondition",
+  "crossBlockAbsoluteComparison": "Forbidden",
+  "runtimePolicyAuthorization": "None",
+  "nextCapabilitySelection": "DeferredByOwner",
+  "selectionStatus": "OWNER_DECISION_REQUIRED"
+}
