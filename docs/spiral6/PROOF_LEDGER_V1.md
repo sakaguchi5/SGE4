@@ -14,14 +14,3 @@
 | S6-P10 | Architecture evidence is deterministic across fresh Debug A/B/Release. | CU5 supplied: Architecture, Controlled Recovery and Fresh Rematerialization evidence require Debug A/Debug B/Release byte identity |
 | S6-P11 | Real-GPU evidence separates representation and sparse execution costs. | Planned CU6 |
 | S6-P12 | Decision evidence does not authorize Runtime policy. | Runtime policy remains `None`; formal Decision Report planned CU6 |
-
-## CU6 — Real-GPU Sparse measurement and Decision Evidence
-
-- [implementation supplied] all four Patterns and eleven measurement cardinalities are represented.
-- [implementation supplied] all six A/B/C orders are position-balanced.
-- [implementation supplied] GPU Candidate Path separates sentinel, argument, Sparse Consumer and completion phases.
-- [implementation supplied] construction/upload and observation costs remain separate.
-- [implementation supplied] binary evidence round-trip and corruption rejection are deterministic.
-- [implementation supplied] Decision Report classifies A/B and B/C per Pattern and tests same-K Pattern sensitivity.
-- [retained] RuntimePolicyAuthorization = None.
-- [retained] Spiral closure remains Owner-gated.
