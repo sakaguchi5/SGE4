@@ -1,42 +1,45 @@
-# Spiral 7 CU5 changeset
+# Spiral 7 CU5 finalization changeset
 
-## Added projects
-
-```text
-185_Spiral7DeltaFamilyRuntime
-186_Spiral7ArchitectureQualificationTests
-```
-
-## Added behavior
-
-- Frozen 128-invocation Delta Family Runtime authority.
-- Explicit timeline binding and Candidate representation rebuild.
-- Device-epoch-bound representation, History and Completion handles.
-- Complete WARP qualification corpus: 128 invocations / 384 Candidate executions.
-- Controlled whole-Composition Recovery with explicit `A_t/M_t` rebind.
-- Exact-generation forced full-active post-Recovery materialization.
-- Actual `ID3D12Device5::RemoveDevice` quarantine and removed-LUID exclusion.
-- Fresh-process rematerialization and Debug/Release evidence comparison.
-
-## Changed documents
+Base commit:
 
 ```text
-docs/spiral7/README.md
-docs/spiral7/SPIRAL7_PROGRESS.md
-docs/spiral7/PROOF_LEDGER_V1.md
+67cb40b5204e1e06ecac576206ba969ec2db02b6
 ```
 
-## Deleted files
+## Changed
 
-None.
+- The standard CU5 runner is now the routine regression gate.
+- Added a four-invocation Debug A/B/C WARP smoke mode.
+- Routine full qualification, Controlled Recovery, RemoveDevice and Fresh rematerialization run in Release.
+- Routine evidence must equal the accepted exhaustive-audit SHA-256 values.
+- Added an explicit full Debug/Release exhaustive determinism audit runner.
+- Updated manifest, evidence ledger, application instructions, progress and proof ledger.
 
-## Git operations
+## Added
 
-None.
+```text
+tests/Run-Spiral7CU5ExhaustiveAudit.ps1
+tests/tools/Finalize-Spiral7CU5Layout.ps1
+run_sge4_5_spiral7_cu5_exhaustive_audit.bat
+docs/spiral7/CU5_TEST_OPERATION_POLICY.md
+docs/spiral7/CU5_DELETIONS.md
+```
 
-## Execution optimization V2 amendment
+## Deleted
 
-- Replaced per-Candidate committed-resource creation with one reusable fixed-capacity resource set.
-- Batched A/B/C into one CommandList submission and one Fence wait per invocation.
-- Added 16-invocation WARP progress reporting and per-stage elapsed-time reporting.
-- Preserved Candidate count, observation checks, evidence serialization and Debug/Release equality requirements.
+```text
+docs/spiral7/CU5_EXECUTION_OPTIMIZATION_V2.md
+```
+
+The deleted document was an intermediate optimization note. Its durable requirements are consolidated into the final Architecture, operation-policy and evidence documents.
+
+## Unchanged
+
+- 128-invocation Frozen authority.
+- A/B/C Candidate semantics and order.
+- Evidence serialization and accepted evidence bytes.
+- Recovery and Device-epoch authority.
+- Schema 17, Runtime 17, canonical Backend and Composition Contract.
+- Runtime Candidate-policy authorization: `None`.
+
+Git operations are not included.

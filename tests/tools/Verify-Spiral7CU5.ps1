@@ -36,6 +36,17 @@ Require ([int]$m.executionOptimization.fenceWaitsPerQualificationRun -eq 128) 'C
 Require ([int]$m.executionOptimization.candidateDispatchesPerSubmission -eq 3) 'CU5 A/B/C batching width mismatch.'
 Require ([int]$m.executionOptimization.committedBufferCountPerExecutionContext -eq 22) 'CU5 reusable committed Buffer count mismatch.'
 Require ($m.executionOptimization.semanticAndEvidenceFormatMutation -eq 'None' -and $m.executionOptimization.cu4EvidenceSerialization -eq 'Unchanged') 'CU5 optimization changed Semantic or evidence format.'
+Require ($m.acceptedExhaustiveAudit.baseCommit -eq '67cb40b5204e1e06ecac576206ba969ec2db02b6') 'CU5 accepted exhaustive-audit commit mismatch.'
+Require ($m.acceptedExhaustiveAudit.ownerRunStatus -eq 'Passed') 'CU5 accepted exhaustive audit must be Passed.'
+Require ($m.acceptedExhaustiveAudit.architectureEvidenceSha256 -eq '1F1D09B4E52DBC35E961E0D3751B32292B2C30EEDCFA473800C5BB8E8CB5AB73') 'CU5 accepted Architecture digest mismatch.'
+Require ($m.acceptedExhaustiveAudit.controlledRecoveryEvidenceSha256 -eq '7F0247B193F9BC20F4EDA5FEED590C1DA5722EF36B133640292B1ED616CFF62B') 'CU5 accepted Controlled Recovery digest mismatch.'
+Require ($m.acceptedExhaustiveAudit.freshProcessEvidenceSha256 -eq '091EAEC0D27287FE897F6813043FD75C090D5DA17054461DF314F99B2A6F5A92') 'CU5 accepted Fresh-process digest mismatch.'
+Require (-not [bool]$m.acceptedExhaustiveAudit.fullDebugAuditRequiredForEveryRoutineRun) 'CU5 routine gate must not require the full Debug audit.'
+Require ($m.testOperationPolicy.routinePurpose -eq 'FastRegressionAgainstAcceptedArchitectureEvidence') 'CU5 routine policy mismatch.'
+Require ($m.testOperationPolicy.routineDebugScope -eq 'FourInvocationRepresentativeABCWarpSmoke') 'CU5 Debug smoke policy mismatch.'
+Require ($m.testOperationPolicy.routineEvidenceRule -eq 'ReleaseEvidenceMustEqualAcceptedExhaustiveAuditSha256') 'CU5 routine evidence policy mismatch.'
+Require ($m.testOperationPolicy.exhaustivePurpose -eq 'ExplicitDebugReleaseFullDeterminismReaudit') 'CU5 exhaustive-audit policy mismatch.'
+Require (-not [bool]$m.testOperationPolicy.exhaustiveDefault) 'CU5 exhaustive audit must not be the default routine gate.'
 Require ($m.legacySchemaMutation -eq 'None' -and $m.legacyRuntimeMutation -eq 'None' -and $m.legacyBackendMutation -eq 'None' -and $m.compositionContractMutation -eq 'None') 'CU5 changed a frozen legacy boundary.'
 
 $stableHashes = @{
@@ -66,7 +77,11 @@ $required = @(
 'docs\spiral7\CU5_EVIDENCE_LEDGER.md',
 'docs\spiral7\CU5_CHANGESET.md',
 'docs\spiral7\APPLY_CU5_JA.md',
-'docs\spiral7\CU5_EXECUTION_OPTIMIZATION_V2.md'
+'docs\spiral7\CU5_TEST_OPERATION_POLICY.md',
+'docs\spiral7\CU5_DELETIONS.md',
+'tests\Run-Spiral7CU5ExhaustiveAudit.ps1',
+'tests\tools\Finalize-Spiral7CU5Layout.ps1',
+'run_sge4_5_spiral7_cu5_exhaustive_audit.bat'
 )
 foreach($relative in $required){Require (Test-Path -LiteralPath (Join-Path $root $relative) -PathType Leaf) "Missing Spiral 7 CU5 file: $relative"}
 
@@ -96,12 +111,18 @@ $executionCpp = Get-Content -Raw -LiteralPath (Join-Path $root '181_Spiral7Delta
 foreach($token in @('ReusableFamilyResourcesV1','ExecuteInvocationBatch','candidateCount * 2','gpu.SubmitAndWait();','resources.outputsAreCopySource = true','[WARP-BATCH]','previousHistory = std::move(outputs[0])')){Require ($executionCpp -match [regex]::Escape($token)) "CU5 optimized execution token missing: $token"}
 Require (([regex]::Matches($executionCpp,[regex]::Escape('gpu.SubmitAndWait();'))).Count -eq 1) 'Optimized executor must contain one submission site for the A/B/C invocation batch.'
 $testCpp = Get-Content -Raw -LiteralPath (Join-Path $root '186_Spiral7ArchitectureQualificationTests\main.cpp') -Encoding UTF8
-foreach($token in @('corpus.cases.size() == s7::semantic::TimelineLengthV1','candidateCount == 384','BindBuildSubmitPrefix(runtime, handle, 128)','recoveryModified','BuildModified(active, active, 64)','Recovery M_t update did not change the materialized History output','--actual-removal','128 exact Sparse-Temporal invocations','Runtime Candidate-policy decision: None')){Require ($testCpp -match [regex]::Escape($token)) "CU5 test token missing: $token"}
+foreach($token in @('corpus.cases.size() == s7::semantic::TimelineLengthV1','candidateCount == 384','BindBuildSubmitPrefix(runtime, handle, 128)','recoveryModified','BuildModified(active, active, 64)','Recovery M_t update did not change the materialized History output','BuildDebugSmokeCases','DebugSmokeInitialPrefix64','DebugSmokeHoldPrefix64','DebugSmokeDirty8Prefix64','DebugSmokeEmptyReset','--debug-smoke','--actual-removal','128 exact Sparse-Temporal invocations','Runtime Candidate-policy decision: None')){Require ($testCpp -match [regex]::Escape($token)) "CU5 test token missing: $token"}
 
 $runner = Get-Content -Raw -LiteralPath (Join-Path $root 'tests\Run-Spiral7CU5.ps1') -Encoding UTF8
-foreach($token in @('Invoke-CU5Stage','128-invocation WARP qualification Debug','Optimized execution: A/B/C share one CommandList submission and one Fence wait per invocation','CU5 total elapsed')){Require ($runner -match [regex]::Escape($token)) "CU5 optimized runner token missing: $token"}
+foreach($token in @('Debug representative WARP smoke','Release portable full-authority self-test','Release 128-invocation WARP qualification','Release Controlled Recovery','Release ID3D12Device5::RemoveDevice quarantine','Release Fresh rematerialization','accepted CU5 exhaustive-audit digest','CU5 ROUTINE REGRESSION PASSED','run_sge4_5_spiral7_cu5_exhaustive_audit.bat')){Require ($runner -match [regex]::Escape($token)) "CU5 routine runner token missing: $token"}
+Require ($runner -notmatch [regex]::Escape('128-invocation WARP qualification Debug')) 'CU5 routine runner must not repeat the complete Debug qualification.'
+$auditRunner = Get-Content -Raw -LiteralPath (Join-Path $root 'tests\Run-Spiral7CU5ExhaustiveAudit.ps1') -Encoding UTF8
+foreach($token in @('Portable authority self-test Debug','128-invocation WARP qualification Debug','Controlled Recovery Debug','Actual ID3D12Device5::RemoveDevice quarantine Debug','Fresh rematerialization Debug','Test-BytesEqual','EXHAUSTIVE DETERMINISM AUDIT PASSED')){Require ($auditRunner -match [regex]::Escape($token)) "CU5 exhaustive runner token missing: $token"}
+$obsoleteOptimizationDoc = Join-Path $root 'docs\spiral7\CU5_EXECUTION_OPTIMIZATION_V2.md'
+Require (-not (Test-Path -LiteralPath $obsoleteOptimizationDoc -PathType Leaf)) 'Superseded CU5 execution-optimization document must be deleted.'
 $progress = Get-Content -Raw -LiteralPath (Join-Path $root 'docs\spiral7\SPIRAL7_PROGRESS.md') -Encoding UTF8
 Require ($progress -match '8f3b17e25d2a500beb2b658e6bc0a1d3f646ec26') 'CU4 accepted commit is not recorded in progress.'
+Require ($progress -match '67cb40b5204e1e06ecac576206ba969ec2db02b6') 'CU5 accepted exhaustive-audit commit is not recorded in progress.'
 $proof = Get-Content -Raw -LiteralPath (Join-Path $root 'docs\spiral7\PROOF_LEDGER_V1.md') -Encoding UTF8
 Require ($proof -match 'S7-I18.*CU5' -and $proof -match 'S7-I19.*CU5') 'CU5 Recovery proof ledger entries are missing.'
 

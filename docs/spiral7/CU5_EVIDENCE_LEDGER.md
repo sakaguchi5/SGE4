@@ -1,20 +1,25 @@
 # Spiral 7 CU5 evidence ledger
 
-| Evidence | Required result |
-|---|---|
-| Portable authority self-test | 128 invocations and 384 verified Candidate artifacts validate without Runtime policy selection. |
-| Architecture qualification | 128 chained WARP invocations and 384 Candidate executions pass all output and exact-write observations. |
-| Corpus coverage | All frozen Active counts, Transition counts and eight transition kinds are present. |
-| Runtime handle integrity | Forged representation, History and Completion identities are rejected. |
-| Controlled Recovery | Device epoch increments; all old handles are stale; explicit `A_t/M_t` rebind and representation rebuild are mandatory. |
-| Forced recovery seed | `W_t=A_t`, `H_t=empty`; exact modified-survivor generations are rebuilt without stale-history retention. |
-| Actual removal | `ID3D12Device5::RemoveDevice` enters quarantine and excludes the removed WARP LUID from retry. |
-| Fresh process | The same 128-invocation Frozen authority rematerializes and a representative 16-invocation prefix produces qualified observations. |
-| Determinism | Debug and Release Architecture, Controlled-Recovery and Fresh-process evidence bytes are identical. |
-| Legacy boundary | Schema 17, Runtime 17, canonical Backend and Composition Contract remain unchanged. |
+## Accepted exhaustive evidence
 
-The actual evidence SHA-256 values are printed by the Owner-run gate and are not predeclared in this overlay.
+| Evidence | Accepted SHA-256 | Result |
+|---|---|---|
+| Architecture Qualification | `1F1D09B4E52DBC35E961E0D3751B32292B2C30EEDCFA473800C5BB8E8CB5AB73` | Debug/Release byte-identical |
+| Controlled Recovery | `7F0247B193F9BC20F4EDA5FEED590C1DA5722EF36B133640292B1ED616CFF62B` | Debug/Release byte-identical |
+| Fresh rematerialization | `091EAEC0D27287FE897F6813043FD75C090D5DA17054461DF314F99B2A6F5A92` | Debug/Release byte-identical |
 
-## Execution optimization V2 evidence condition
+Accepted base commit: `67cb40b5204e1e06ecac576206ba969ec2db02b6`.
 
-The Architecture, Controlled Recovery and Fresh evidence bytes remain defined by the same serializers. V2 changes only the physical test harness schedule: three independently verified Candidate dispatches are submitted together per invocation, all three Output and Write-Audit resources are read back, and the existing observation predicates are evaluated unchanged. Debug/Release byte equality remains mandatory.
+## Proof obligations
+
+| Evidence | Required result | Routine enforcement | Exhaustive enforcement |
+|---|---|---|---|
+| Portable authority | 128 invocations and 384 Verified Candidate artifacts | Full Release | Full Debug and Release |
+| Debug execution boundary | Representative A/B/C WARP execution | Four-invocation Debug smoke | Complete Debug qualification |
+| Architecture qualification | 128 chained invocations and 384 Candidate executions | Full Release plus frozen digest | Full Debug/Release byte comparison plus frozen digest |
+| Controlled Recovery | Epoch increment, stale-handle rejection, explicit `A_t/M_t` rebind and exact-generation seed | Full Release plus frozen digest | Full Debug/Release byte comparison plus frozen digest |
+| Actual removal | RemoveDevice quarantine and removed-LUID exclusion | Full Release | Full Debug |
+| Fresh process | Same Frozen authority and representative rematerialization | Full Release plus frozen digest | Full Debug/Release byte comparison plus frozen digest |
+| Legacy boundary | No Schema 17, Runtime 17, Backend or Composition mutation | Static verifier | Static verifier |
+
+The routine gate is not a smaller semantic corpus. It executes the complete corpus in Release and checks exact accepted evidence. Only the redundant complete Debug repetition is moved to the explicit exhaustive audit.

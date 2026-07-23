@@ -6,27 +6,7 @@
 Versioned Sparse Delta Flow and Verified Incremental History Lowering
 ```
 
-Spiral 7 is the final exploratory Spiral before Level 4 v2 Canonical reconstruction.
-
-It combines:
-
-```text
-Spiral 4: verified indirect execution quantity
-Spiral 5: verified temporal history
-Spiral 6: verified exact sparse membership
-```
-
-into one authority relation:
-
-```text
-A_t  current exact Active Set
-M_t  exact modified surviving members
-N_t  activation
-R_t  deactivation
-W_t  update
-H_t  retained valid history
-T_t  physical transition
-```
+Spiral 7 combines verified indirect quantity, temporal history and exact sparse membership into one authority relation over `A_t`, `M_t`, `N_t`, `R_t`, `W_t`, `H_t` and `T_t`. It is the final exploratory Spiral before Level 4 v2 Canonical reconstruction.
 
 ## Completion Units
 
@@ -34,8 +14,14 @@ T_t  physical transition
 - CU2: Sparse Temporal Delta Architecture — PASSED
 - CU3: Independent Delta Authority — PASSED
 - CU4: Incremental History Candidate Family — PASSED
-- CU5: Architecture Qualification — implementation supplied
-- CU6: Real-GPU Measurement and Decision Evidence
+- CU5: Architecture Qualification — PASSED
+- CU6: Real-GPU Measurement and Decision Evidence — pending
+
+CU5 accepted exhaustive-audit base commit:
+
+```text
+67cb40b5204e1e06ecac576206ba969ec2db02b6
+```
 
 ## Candidate family
 
@@ -45,49 +31,25 @@ B = CompactDeltaIndexHistoryReuse
 C = AffectedBlockDeltaHistoryReuse
 ```
 
-CU4 proves per-invocation semantic equivalence. CU5 qualifies the complete fixed timeline and Recovery boundary. Neither unit chooses a winner.
+CU4 proves per-invocation semantic equivalence. CU5 qualifies the complete 128-invocation timeline, Runtime materialization and Recovery boundary. Neither unit chooses a winner.
 
-## CU2 commands
-
-```powershell
-.\run_sge4_5_spiral7_cu2_prepare.bat
-.\run_sge4_5_spiral7_cu2_compact_delta_history.bat
-```
-
-## CU3 commands
-
-```powershell
-.\run_sge4_5_spiral7_cu3_prepare.bat
-.\run_sge4_5_spiral7_cu3_independent_authority.bat
-```
-
-## CU4 commands
-
-```powershell
-.\run_sge4_5_spiral7_cu4_prepare.bat
-.\run_sge4_5_spiral7_cu4_candidate_family.bat
-```
-
-## CU5 commands
+## CU5 routine command
 
 ```powershell
 .\run_sge4_5_spiral7_cu5_prepare.bat
 .\run_sge4_5_spiral7_cu5_architecture_qualification.bat
 ```
 
-CU5 builds Debug and Release and requires:
+The routine gate uses Debug for a representative four-invocation A/B/C WARP smoke and Release for the complete 128-invocation authority, Architecture Qualification, Controlled Recovery, actual RemoveDevice and Fresh rematerialization. Release evidence must equal the accepted exhaustive-audit SHA-256 values.
 
-- 128 chained Sparse–Temporal invocations,
-- 384 WARP Candidate executions per configuration,
-- complete frozen Active/Transition count and transition-kind coverage,
-- byte-identical A/B/C output after every invocation,
-- forged and stale Runtime handle rejection,
-- Controlled Recovery with explicit `A_t/M_t` rebind,
-- exact-generation full-active post-Recovery rebuild,
-- actual `ID3D12Device5::RemoveDevice` quarantine,
-- fresh-process authority rematerialization,
-- byte-identical Debug/Release evidence.
+## CU5 exhaustive audit
+
+```powershell
+.\run_sge4_5_spiral7_cu5_exhaustive_audit.bat
+```
+
+The exhaustive audit repeats the complete Debug and Release paths and verifies byte-identical evidence. It is reserved for Architecture, serializer, toolchain, Recovery, Device-epoch or D3D12 execution changes, or explicit Owner re-audit.
 
 ## Authority boundary
 
-Runtime and Backend remain forbidden to choose Active membership, modified membership, transition action, Candidate or history policy. Spiral 7 adds no Canonical Level 4 v2 ABI mutation.
+Runtime and Backend remain forbidden to choose Active membership, modified membership, transition action, Candidate or history policy. Spiral 7 adds no Canonical Level 4 v2 ABI mutation. Runtime Candidate-policy authorization remains `None`.

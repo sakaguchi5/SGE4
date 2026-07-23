@@ -1,0 +1,29 @@
+Base commit: 67cb40b5204e1e06ecac576206ba969ec2db02b6
+Purpose: separate the routine CU5 regression gate from the explicit exhaustive Debug/Release audit.
+
+Changed files:
+- 186_Spiral7ArchitectureQualificationTests/main.cpp
+- tests/Run-Spiral7CU5.ps1
+- tests/tools/Verify-Spiral7CU5.ps1
+- run_sge4_5_spiral7_cu5_prepare.bat
+- docs/spiral7/APPLY_CU5_JA.md
+- docs/spiral7/CU5_ARCHITECTURE_QUALIFICATION.md
+- docs/spiral7/CU5_ARCHITECTURE_QUALIFICATION_MANIFEST_V1.json
+- docs/spiral7/CU5_CHANGESET.md
+- docs/spiral7/CU5_EVIDENCE_LEDGER.md
+- docs/spiral7/README.md
+- docs/spiral7/SPIRAL7_PROGRESS.md
+- docs/spiral7/PROOF_LEDGER_V1.md
+
+New files:
+- tests/Run-Spiral7CU5ExhaustiveAudit.ps1
+- tests/tools/Finalize-Spiral7CU5Layout.ps1
+- run_sge4_5_spiral7_cu5_exhaustive_audit.bat
+- docs/spiral7/CU5_TEST_OPERATION_POLICY.md
+- docs/spiral7/CU5_DELETIONS.md
+- docs/spiral7/CU5_FINALIZATION_PACKAGE_MANIFEST.txt
+
+Deleted by prepare:
+- docs/spiral7/CU5_EXECUTION_OPTIMIZATION_V2.md
+
+Git operations: none.

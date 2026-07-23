@@ -1,43 +1,43 @@
-# Spiral 7 CU5 適用手順
+# Spiral 7 CU5 最終版 適用手順
 
 基点コミット:
 
 ```text
-8f3b17e25d2a500beb2b658e6bc0a1d3f646ec26
+67cb40b5204e1e06ecac576206ba969ec2db02b6
 ```
 
-CU5 ZIPをSGE4ルートへ上書き展開します。削除ファイルはありません。
-
-最初にProject登録とSOURCE_MANIFEST更新を実行します。
+ZIPをSGE4ルートへ上書き展開します。準備処理は、旧中間文書 `docs/spiral7/CU5_EXECUTION_OPTIMIZATION_V2.md` を削除し、Project登録を確認してSOURCE_MANIFESTを再生成します。
 
 ```powershell
 .\run_sge4_5_spiral7_cu5_prepare.bat
 ```
 
-続いてCU5 gateを実行します。
+通常は次の正式回帰gateを実行します。
 
 ```powershell
 .\run_sge4_5_spiral7_cu5_architecture_qualification.bat
 ```
 
-gateは次を実行します。
+通常gateはDebugの4 Invocation WARP smokeと、Releaseの完全128 Invocation Qualification、Controlled Recovery、RemoveDevice、Fresh rematerializationを実行し、Release証拠が受理済み完全監査SHA-256と一致することを要求します。
 
-1. CU1〜CU5静的境界検証
-2. Debug／Releaseビルド
-3. 128 Invocation／384 Candidate WARP Architecture Qualification
-4. Controlled Recoveryと旧epoch handle拒否
-5. `A_t/M_t`明示rebindと全Active exact-generation再構築
-6. 実際の`ID3D12Device5::RemoveDevice` quarantine
-7. Fresh-process rematerialization
-8. Debug／Release証拠bytes一致
+Architecture、証拠serializer、コンパイラ／ツールチェーン、Recovery、Device epoch、D3D12実行経路を変更した場合、またはOwnerが再監査を要求した場合は次を実行します。
 
-成功時:
-
-```text
-SGE4-5 SPIRAL 7 COMPLETION UNIT 5 PASSED
-SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE
+```powershell
+.\run_sge4_5_spiral7_cu5_exhaustive_audit.bat
 ```
 
-## 実行最適化V2
+完全監査は従来どおりDebug／Releaseの全経路を実行するため長時間かかります。日常回帰には使用しません。
 
-V2は証明内容を減らさず、A/B/CをInvocation単位で一括送信します。128 InvocationのQualificationでは、Candidate実行回数384回は維持したまま、Fence待ちを384回から128回へ削減します。固定容量Bufferも全Timelineで再利用します。実行中は16 Invocationごとに進捗が表示されます。
+通常gate成功時:
+
+```text
+SGE4-5 SPIRAL 7 CU5 ROUTINE REGRESSION PASSED
+SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE EVIDENCE PRESERVED
+```
+
+完全監査成功時:
+
+```text
+SGE4-5 SPIRAL 7 CU5 EXHAUSTIVE DETERMINISM AUDIT PASSED
+SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE EVIDENCE RECONFIRMED
+```

@@ -592,6 +592,59 @@ std::vector<std::byte> RunFreshRematerialization()
     return std::move(evidence).Take();
 }
 
+std::vector<fe::VerifiedDeltaFamilyCaseV1> BuildDebugSmokeCases(
+    const s7::semantic::SparseTemporalDeltaSemanticV1& semanticValue,
+    const fv::DeltaFamilyVerificationContextV1& context)
+{
+    std::vector<fe::VerifiedDeltaFamilyCaseV1> cases;
+    auto previousActive = BuildExact({});
+    auto generations = s7::semantic::BuildInitialInvalidGenerationsV1();
+
+    auto add = [&](std::string id,
+                   s7::semantic::ExactSparseWorkSetV1 active,
+                   std::uint32_t modifiedCount)
+    {
+        const auto modified = BuildModified(previousActive, active, modifiedCount);
+        auto invocationResult = s7::semantic::BuildSparseDeltaInvocationV1(
+            static_cast<std::uint32_t>(cases.size()),
+            previousActive, active, modified, generations, false);
+        if (!invocationResult)
+            throw std::runtime_error(invocationResult.Error().stage + ": " +
+                                     invocationResult.Error().message);
+        auto invocation = std::move(invocationResult).Value();
+        generations = invocation.ItemGenerations();
+        previousActive = active;
+        cases.push_back(BuildCase(std::move(id), semanticValue, context,
+                                  std::move(invocation)));
+    };
+
+    add("DebugSmokeInitialPrefix64",
+        BuildSet(s7::semantic::SparsePatternKindV1::PrefixControl, 64), 0);
+    add("DebugSmokeHoldPrefix64",
+        BuildSet(s7::semantic::SparsePatternKindV1::PrefixControl, 64), 0);
+    add("DebugSmokeDirty8Prefix64",
+        BuildSet(s7::semantic::SparsePatternKindV1::PrefixControl, 64), 8);
+    add("DebugSmokeEmptyReset", BuildExact({}), 0);
+    Require(cases.size() == 4, "CU5 Debug smoke corpus size differs.");
+    return cases;
+}
+
+void RunDebugSmoke()
+{
+    const auto semanticValue = s7::semantic::BuildCanonicalSparseTemporalDeltaSemanticV1();
+    const auto context = fv::BuildCanonicalDeltaFamilyVerificationContextV1();
+    const auto cases = BuildDebugSmokeCases(semanticValue, context);
+    auto report = fe::ExecuteVerifiedDeltaCandidateFamilyV1(semanticValue, cases);
+    if (!report)
+        throw std::runtime_error(report.Error().stage + ": " + report.Error().message);
+    RequireQualifiedReport(report.Value(), cases.size());
+    std::cout
+        << "Spiral 7 CU5 Debug smoke passed.\n"
+        << "Representative timeline: Initial, Hold, DirtyOnly, EmptyReset\n"
+        << "Candidate executions: 4 x 3 = 12\n"
+        << "A/B/C outputs after every smoke invocation: byte-identical\n";
+}
+
 void RunPortableSelfTest()
 {
     const auto semanticValue = s7::semantic::BuildCanonicalSparseTemporalDeltaSemanticV1();
@@ -625,7 +678,7 @@ int main(int argc, char** argv)
 {
     try
     {
-        enum class Mode { Qualification, Controlled, ActualRemoval, Fresh, Portable };
+        enum class Mode { Qualification, Controlled, ActualRemoval, Fresh, Portable, DebugSmoke };
         Mode mode = Mode::Qualification;
         std::filesystem::path output;
         for (int index = 1; index < argc; ++index)
@@ -636,6 +689,7 @@ int main(int argc, char** argv)
             else if (argument == "--actual-removal") mode = Mode::ActualRemoval;
             else if (argument == "--fresh-rematerialization") mode = Mode::Fresh;
             else if (argument == "--portable-self-test") mode = Mode::Portable;
+            else if (argument == "--debug-smoke") mode = Mode::DebugSmoke;
             else if (argument == "--emit" && index + 1 < argc) output = argv[++index];
             else throw std::runtime_error("Unknown or incomplete argument: " + std::string(argument));
         }
@@ -648,6 +702,11 @@ int main(int argc, char** argv)
         if (mode == Mode::Portable)
         {
             RunPortableSelfTest();
+            return 0;
+        }
+        if (mode == Mode::DebugSmoke)
+        {
+            RunDebugSmoke();
             return 0;
         }
 

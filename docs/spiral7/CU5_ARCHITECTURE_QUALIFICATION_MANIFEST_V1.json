@@ -91,7 +91,39 @@
     "removedAdapterLuidExcludedFromRetry": true,
     "deviceEpochDoesNotAdvanceWithoutReacquisition": true
   },
+  "acceptedExhaustiveAudit": {
+    "baseCommit": "67cb40b5204e1e06ecac576206ba969ec2db02b6",
+    "ownerRunStatus": "Passed",
+    "architectureEvidenceSha256": "1F1D09B4E52DBC35E961E0D3751B32292B2C30EEDCFA473800C5BB8E8CB5AB73",
+    "controlledRecoveryEvidenceSha256": "7F0247B193F9BC20F4EDA5FEED590C1DA5722EF36B133640292B1ED616CFF62B",
+    "freshProcessEvidenceSha256": "091EAEC0D27287FE897F6813043FD75C090D5DA17054461DF314F99B2A6F5A92",
+    "debugReleaseEvidence": "ByteIdentical",
+    "fullDebugAuditRequiredForEveryRoutineRun": false
+  },
+  "testOperationPolicy": {
+    "routineRunner": "run_sge4_5_spiral7_cu5_architecture_qualification.bat",
+    "routinePurpose": "FastRegressionAgainstAcceptedArchitectureEvidence",
+    "routineDebugScope": "FourInvocationRepresentativeABCWarpSmoke",
+    "routineReleaseScope": [
+      "PortableFullAuthority128",
+      "ArchitectureQualification128",
+      "ControlledRecovery",
+      "ActualRemoveDevice",
+      "FreshRematerialization"
+    ],
+    "routineEvidenceRule": "ReleaseEvidenceMustEqualAcceptedExhaustiveAuditSha256",
+    "exhaustiveRunner": "run_sge4_5_spiral7_cu5_exhaustive_audit.bat",
+    "exhaustivePurpose": "ExplicitDebugReleaseFullDeterminismReaudit",
+    "exhaustiveDefault": false,
+    "exhaustiveTrigger": [
+      "ArchitectureOrEvidenceSerializerChange",
+      "CompilerOrRuntimeToolchainChange",
+      "RecoveryOrDeviceEpochChange",
+      "OwnerRequestedReaudit"
+    ]
+  },
   "determinism": {
+    "status": "EstablishedByAcceptedExhaustiveAuditAndEnforcedByFrozenDigestInRoutineGate",
     "debugReleaseArchitectureEvidence": "ByteIdentical",
     "debugReleaseControlledRecoveryEvidence": "ByteIdentical",
     "debugReleaseFreshProcessEvidence": "ByteIdentical"
@@ -116,5 +148,8 @@
     "progressIntervalInvocations": 16,
     "cu4EvidenceSerialization": "Unchanged",
     "committedBufferCountPerExecutionContext": 22
-  }
+  },
+  "deletedObsoleteFiles": [
+    "docs/spiral7/CU5_EXECUTION_OPTIMIZATION_V2.md"
+  ]
 }

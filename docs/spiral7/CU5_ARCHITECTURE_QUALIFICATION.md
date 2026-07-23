@@ -1,20 +1,18 @@
 # Spiral 7 CU5 — Architecture Qualification
 
-## Status represented by this overlay
+## Status
 
-CU5 is the Architecture Qualification unit for `Versioned Sparse Delta Flow and Verified Incremental History Lowering`.
-
-The accepted input boundary is CU4 commit:
+CU5 is complete. The accepted exhaustive Owner run is based on commit:
 
 ```text
-8f3b17e25d2a500beb2b658e6bc0a1d3f646ec26
+67cb40b5204e1e06ecac576206ba969ec2db02b6
 ```
 
-CU5 does not choose a Candidate. It qualifies the frozen A/B/C family as one deterministic Architecture.
+It established the complete 128-invocation A/B/C WARP Architecture, Controlled Recovery, actual device-removal quarantine, fresh-process rematerialization and Debug/Release evidence identity.
 
 ## Frozen runtime authority
 
-The CU5 Runtime loads exactly 128 independently verified Sparse–Temporal invocations. Every invocation contains the fixed Candidate order:
+The Runtime loads exactly 128 independently verified Sparse–Temporal invocations in the fixed order:
 
 ```text
 A = FullActiveDenseRecompute
@@ -22,78 +20,32 @@ B = CompactDeltaIndexHistoryReuse
 C = AffectedBlockDeltaHistoryReuse
 ```
 
-The serialized authority binds:
+The serialized authority binds Semantic, verification context, invocation, Active/Modified/Transition sets and all Candidate artifacts and certificates. Runtime may materialize this authority but may not choose membership, action, history policy or Candidate.
 
-- Sparse–Temporal Semantic identity,
-- verification-context identities,
-- all 128 invocation identities,
-- previous/current Active identities,
-- Modified Survivor and Transition identities,
-- the Candidate artifact/certificate set for every invocation.
+## Complete qualification
 
-Runtime may materialize this authority, but may not choose membership, modified membership, transition action, history policy or Candidate.
+Each complete qualification executes 128 chained invocations and 384 Candidate executions. It covers all frozen Active counts, Transition counts and eight transition kinds. After every invocation, active output matches the exact current-generation oracle, inactive output is the canonical sentinel, B/C preserve `H_t` without a write, observed writes equal the verified legal set and A/B/C full outputs are byte-identical.
 
-## Complete qualification corpus
+## Recovery
 
-The WARP qualification executes 128 chained invocations and therefore 384 Candidate executions per build configuration.
+Controlled Recovery increments the Device epoch, rejects old epoch, representation, History and Completion handles, requires explicit `A_t/M_t` rebind and Candidate representation rebuild, and forces `W_t=A_t`, `H_t=empty` with exact per-item generations. Actual `ID3D12Device5::RemoveDevice` enters `AwaitingAdapter` and excludes the removed WARP LUID from retry.
 
-Required Active counts:
+## Accepted evidence
 
 ```text
-0, 1, 32, 63, 64, 65, 256, 1024, 2048, 4095, 4096
+Architecture        1F1D09B4E52DBC35E961E0D3751B32292B2C30EEDCFA473800C5BB8E8CB5AB73
+Controlled Recovery 7F0247B193F9BC20F4EDA5FEED590C1DA5722EF36B133640292B1ED616CFF62B
+Fresh process       091EAEC0D27287FE897F6813043FD75C090D5DA17054461DF314F99B2A6F5A92
 ```
 
-Required Transition counts:
+## Operation
 
-```text
-0, 1, 8, 31, 32, 63, 64, 65, 256, 1024, 4096
-```
+The ordinary runner is now a fast regression against these accepted evidence identities. The complete Debug/Release re-audit is preserved as a separate explicit command. See `CU5_TEST_OPERATION_POLICY.md`.
 
-Required transition kinds:
-
-```text
-Hold
-DirtyOnly
-ActivateOnly
-DeactivateOnly
-BalancedChurn
-PatternMigration
-FullInvalidation
-EmptyReset
-```
-
-After every invocation:
-
-- all active records equal the exact current-generation oracle,
-- all inactive records equal the canonical zero sentinel,
-- B/C do not write retained `H_t`,
-- observed writes equal each Candidate's verified legal write set,
-- A/B/C full 4096-record outputs are byte-identical.
-
-## Runtime materialization boundary
-
-A submission requires, in order:
-
-```text
-current Device-epoch handle
-    -> explicit timeline bind
-    -> explicit A/B/C representation rebuild
-    -> verified WARP submission
-    -> Device-epoch-bound History and Completion handles
-```
-
-The gate rejects forged current-epoch representation, History and Completion identities.
-
-## Architecture result
-
-A successful CU5 gate establishes:
+Successful CU5 evidence establishes:
 
 ```text
 SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE
 ```
 
-This does not establish an empirical winner. Real-GPU measurement and Owner decision evidence remain CU6 responsibilities.
-
-## Execution optimization V2
-
-The accepted Architecture proof is executed through reusable fixed-capacity WARP resources. A/B/C remain three independent `ExecuteIndirect` dispatches, but all three are recorded in one CommandList and completed by one Fence wait per invocation. The executor still reads back and validates all three full outputs and all three Write-Audit buffers. Evidence serialization is unchanged. See `CU5_EXECUTION_OPTIMIZATION_V2.md`.
+It does not establish a universal Candidate winner. CU6 remains real-GPU measurement and Owner decision evidence.
