@@ -1,0 +1,56 @@
+{
+  "schema": "SGE4-5.Spiral7.CU3AuthorityManifest.V1",
+  "completionUnit": "CU3",
+  "ownerBaselineCommit": "d0bb0d406fca8beabed2331daff870ea414dd87d",
+  "cu2AcceptedCommit": "87ae8946f403841199b2d18714348a11c007b65d",
+  "cu2ArchitectureEvidenceSha256": "50B4D4C848721442CC606EE8BFDA207832BA03E7B6FCD5B24F4EEC9A7FE3DDC3",
+  "extensionStrategy": "VersionedSparseTemporalDeltaExtensionV1",
+  "authorityChain": [
+    "RawDeltaLoweringCandidateV1",
+    "DeltaLoweringPlanner",
+    "PlannerIndependentDeltaVerifier",
+    "OpaqueVerifiedDeltaLoweringV1",
+    "FrozenVerifiedCompactDeltaExecutionV1"
+  ],
+  "candidate": "CompactDeltaIndexHistoryReuse",
+  "plannerPackageAuthority": "None",
+  "verifierReconstruction": "IndependentFromSemanticInvocationAndCanonicalContext",
+  "rawToVerified": "CompileTimeUnavailable",
+  "verifiedToFrozen": "ExplicitResourceAndDeviceEpochBindingRequired",
+  "boundSemanticIdentities": [
+    "SparseTemporalDeltaSemantic",
+    "Invocation",
+    "PreviousActiveSet",
+    "ActiveSet",
+    "ModifiedSurvivorSet",
+    "TransitionSet",
+    "TransitionRecords"
+  ],
+  "boundExecutionIdentities": [
+    "Spiral4IndirectExtension",
+    "Spiral5TemporalExtension",
+    "Spiral6SparseExtension",
+    "ConsumerProgram",
+    "FrozenCompactDeltaArtifact",
+    "TransitionAuthority"
+  ],
+  "resourceBindings": [
+    "CanonicalSortedIndexActionList",
+    "PreviousHistoryReadOnly",
+    "OutputHistoryWriteOnly"
+  ],
+  "deviceEpochRule": "NonZeroExactMatchStaleRejected",
+  "resourceAliasing": "PreviousAndOutputHistoryMustBeDistinct",
+  "rawMutationAttackCount": 50,
+  "verifiedReplayGateCount": 4,
+  "resourceArtifactEpochGateCount": 14,
+  "warpCaseCount": 1,
+  "warpCase": "Prefix1024ToHashScatter1024With64ModifiedSurvivors",
+  "runtimeTransitionPolicyDecision": "None",
+  "candidateFamilyQualification": "DeferredToCU4",
+  "recoveryQualification": "DeferredToCU5",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None"
+}

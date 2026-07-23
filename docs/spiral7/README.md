@@ -31,8 +31,8 @@ T_t  physical transition
 ## Completion Units
 
 - CU1: Research Contract Freeze — PASSED
-- CU2: Sparse Temporal Delta Architecture — implementation supplied
-- CU3: Independent Delta Authority
+- CU2: Sparse Temporal Delta Architecture — PASSED
+- CU3: Independent Delta Authority — implementation supplied
 - CU4: Incremental History Candidate Family
 - CU5: Architecture Qualification
 - CU6: Real-GPU Measurement and Decision Evidence
@@ -68,3 +68,12 @@ previous history bytes
 ## Authority boundary
 
 Runtime and Backend remain forbidden to choose Active membership, modified membership, transition action, Candidate or history policy. CU2 adds no Canonical Level 4 v2 ABI.
+
+## CU3 commands
+
+```powershell
+.\run_sge4_5_spiral7_cu3_prepare.bat
+.\run_sge4_5_spiral7_cu3_independent_authority.bat
+```
+
+CU3 builds Debug and Release, rejects 50 Raw proposal mutations plus Verified/resource/artifact/epoch replay attempts, executes one verified WARP transition, and requires byte-identical evidence.

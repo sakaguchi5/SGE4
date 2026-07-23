@@ -59,6 +59,34 @@ void WriteDigest(base::BinaryWriter& writer, const base::Digest256& value)
     writer.WriteBytes(value);
 }
 
+
+base::Digest256 BuildDeltaBindingIdentity(
+    const verification::VerifiedDeltaLoweringV1& verified,
+    const contract::FrozenCompactDeltaArtifactV1& artifact,
+    const DeltaResourceBindingInputV1& binding)
+{
+    base::BinaryWriter writer;
+    constexpr std::string_view domain =
+        "SGE4-5.Spiral7.FrozenVerifiedCompactDeltaBinding.V1";
+    WriteDigest(writer, base::Sha256(std::as_bytes(
+        std::span(domain.data(), domain.size()))));
+    WriteDigest(writer, verified.Plan().planIdentity);
+    WriteDigest(writer, verified.CertificateIdentity());
+    WriteDigest(writer, artifact.ArtifactIdentity());
+    writer.WriteU64(binding.deviceEpoch);
+    WriteDigest(writer, binding.actualDeltaResourceIdentity);
+    WriteDigest(writer, binding.actualPreviousHistoryResourceIdentity);
+    WriteDigest(writer, binding.actualOutputHistoryResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(binding.deltaRole));
+    writer.WriteU32(static_cast<std::uint32_t>(binding.previousHistoryRole));
+    writer.WriteU32(static_cast<std::uint32_t>(binding.outputHistoryRole));
+    writer.WriteU32(binding.deltaFixedCapacityBytes);
+    writer.WriteU32(binding.deltaRecordStrideBytes);
+    writer.WriteU32(binding.previousHistoryBytes);
+    writer.WriteU32(binding.outputHistoryBytes);
+    return base::Sha256(writer.Bytes());
+}
+
 #if defined(_WIN32)
 using Microsoft::WRL::ComPtr;
 
@@ -618,4 +646,183 @@ std::vector<std::byte> SerializeCompactDeltaArchitectureReportV1(
     }
     return std::move(writer).Take();
 }
+
+
+FrozenVerifiedCompactDeltaExecutionV1::FrozenVerifiedCompactDeltaExecutionV1(
+    verification::VerifiedDeltaLoweringV1 verified,
+    contract::FrozenCompactDeltaArtifactV1 artifact,
+    DeltaResourceBindingInputV1 binding,
+    base::Digest256 bindingIdentity)
+    : verified_(std::move(verified)),
+      artifact_(std::move(artifact)),
+      binding_(binding),
+      bindingIdentity_(bindingIdentity)
+{
+}
+
+base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>
+FreezeVerifiedCompactDeltaExecutionV1(
+    const verification::VerifiedDeltaLoweringV1& verified,
+    const semantic::SparseTemporalDeltaSemanticV1& semanticValue,
+    const semantic::SparseDeltaInvocationV1& invocation,
+    const contract::FrozenCompactDeltaArtifactV1& artifact,
+    const DeltaResourceBindingInputV1& binding)
+{
+    const auto context = verification::BuildCanonicalDeltaVerificationContextV1();
+    const auto verifiedValid = verification::ValidateVerifiedDeltaLoweringContextV1(
+        verified, semanticValue, invocation, context);
+    if (!verifiedValid)
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            verifiedValid.Error());
+
+    const auto artifactValid = contract::ValidateCompactDeltaArtifactForExecutionV1(
+        artifact, semanticValue, invocation);
+    if (!artifactValid)
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            artifactValid.Error().stage + ": " + artifactValid.Error().message);
+
+    const auto& operation = verified.Plan().operation;
+    if (operation.artifactIdentity != artifact.ArtifactIdentity() ||
+        operation.transitionCount != artifact.TransitionCount() ||
+        operation.updateCount != artifact.UpdateCount() ||
+        operation.clearCount != artifact.ClearCount() ||
+        operation.dispatchGroupsX != artifact.DispatchGroupsX() ||
+        operation.recordStrideBytes != artifact.RecordStrideBytes() ||
+        operation.fixedCapacityBytes != artifact.FixedCapacityBytes())
+    {
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            "verified Delta operation does not match the supplied Frozen artifact");
+    }
+
+    if (binding.deviceEpoch == 0)
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            "device epoch zero is not a valid Frozen binding epoch");
+    if (binding.actualDeltaResourceIdentity == binding.actualPreviousHistoryResourceIdentity ||
+        binding.actualDeltaResourceIdentity == binding.actualOutputHistoryResourceIdentity ||
+        binding.actualPreviousHistoryResourceIdentity == binding.actualOutputHistoryResourceIdentity)
+    {
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            "Delta, previous History and output History resource identities must be distinct");
+    }
+    if (binding.actualDeltaResourceIdentity != operation.deltaResourceIdentity ||
+        binding.actualPreviousHistoryResourceIdentity != operation.previousHistoryResourceIdentity ||
+        binding.actualOutputHistoryResourceIdentity != operation.outputHistoryResourceIdentity)
+    {
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            "actual Delta/History resource identity does not match the verified plan");
+    }
+    if (binding.deltaRole != DeltaBindingRoleV1::CanonicalSortedIndexActionList ||
+        binding.previousHistoryRole != DeltaBindingRoleV1::PreviousHistoryReadOnly ||
+        binding.outputHistoryRole != DeltaBindingRoleV1::OutputHistoryWriteOnly)
+    {
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            "Delta resource binding role mismatch");
+    }
+    if (binding.deltaFixedCapacityBytes != operation.fixedCapacityBytes ||
+        binding.deltaRecordStrideBytes != operation.recordStrideBytes ||
+        binding.previousHistoryBytes != operation.historyBytes ||
+        binding.outputHistoryBytes != operation.historyBytes)
+    {
+        return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Failure(
+            "Delta resource binding byte-size or stride mismatch");
+    }
+
+    const auto identity = BuildDeltaBindingIdentity(verified, artifact, binding);
+    return base::Result<FrozenVerifiedCompactDeltaExecutionV1, std::string>::Success(
+        FrozenVerifiedCompactDeltaExecutionV1(verified, artifact, binding, identity));
+}
+
+base::Result<void, std::string>
+ValidateFrozenCompactDeltaExecutionEpochV1(
+    const FrozenVerifiedCompactDeltaExecutionV1& frozen,
+    std::uint64_t currentDeviceEpoch)
+{
+    if (currentDeviceEpoch == 0 ||
+        currentDeviceEpoch != frozen.ResourceBinding().deviceEpoch)
+    {
+        return base::Result<void, std::string>::Failure(
+            "Frozen Compact Delta execution is stale for the current device epoch");
+    }
+    if (frozen.BindingIdentity() != BuildDeltaBindingIdentity(
+            frozen.Verified(), frozen.Artifact(), frozen.ResourceBinding()))
+    {
+        return base::Result<void, std::string>::Failure(
+            "Frozen Compact Delta binding identity mismatch");
+    }
+    return base::Result<void, std::string>::Success();
+}
+
+base::Result<CompactDeltaArchitectureReportV1, DeltaExecutionErrorV1>
+ExecuteVerifiedCompactDeltaHistoryV1(
+    const semantic::SparseTemporalDeltaSemanticV1& semanticValue,
+    const semantic::SparseDeltaInvocationV1& invocation,
+    const FrozenVerifiedCompactDeltaExecutionV1& frozen,
+    const std::vector<std::byte>& previousHistoryBytes,
+    std::uint64_t currentDeviceEpoch)
+{
+    const auto epoch = ValidateFrozenCompactDeltaExecutionEpochV1(
+        frozen, currentDeviceEpoch);
+    if (!epoch)
+    {
+        return base::Result<CompactDeltaArchitectureReportV1, DeltaExecutionErrorV1>::Failure(
+            Error("verified/epoch", epoch.Error()));
+    }
+    const auto context = verification::BuildCanonicalDeltaVerificationContextV1();
+    const auto valid = verification::ValidateVerifiedDeltaLoweringContextV1(
+        frozen.Verified(), semanticValue, invocation, context);
+    if (!valid)
+    {
+        return base::Result<CompactDeltaArchitectureReportV1, DeltaExecutionErrorV1>::Failure(
+            Error("verified/context", valid.Error()));
+    }
+    if (frozen.Artifact().ArtifactIdentity() !=
+        frozen.Verified().Plan().operation.artifactIdentity)
+    {
+        return base::Result<CompactDeltaArchitectureReportV1, DeltaExecutionErrorV1>::Failure(
+            Error("verified/artifact", "Frozen artifact identity differs from verified operation."));
+    }
+    const auto expectedBytes = semantic::BuildCanonicalInactiveHistoryBytesV1().size();
+    if (previousHistoryBytes.size() != expectedBytes)
+    {
+        return base::Result<CompactDeltaArchitectureReportV1, DeltaExecutionErrorV1>::Failure(
+            Error("verified/history", "Previous History byte size is not canonical."));
+    }
+
+    std::vector<CompactDeltaArchitectureCaseV1> cases;
+    cases.emplace_back(
+        "VerifiedCompactDeltaAuthority",
+        invocation,
+        frozen.Artifact(),
+        previousHistoryBytes);
+    return ExecuteCompactDeltaArchitectureV1(semanticValue, cases);
+}
+
+std::vector<std::byte> SerializeFrozenVerifiedCompactDeltaExecutionV1(
+    const FrozenVerifiedCompactDeltaExecutionV1& value)
+{
+    base::BinaryWriter writer;
+    constexpr std::string_view domain =
+        "SGE4-5.Spiral7.FrozenVerifiedCompactDeltaExecution.V1";
+    WriteDigest(writer, base::Sha256(std::as_bytes(
+        std::span(domain.data(), domain.size()))));
+    const auto verified = verification::SerializeVerifiedDeltaLoweringV1(value.Verified());
+    writer.WriteU32(static_cast<std::uint32_t>(verified.size()));
+    writer.WriteBytes(verified);
+    WriteDigest(writer, value.Artifact().ArtifactIdentity());
+    const auto& binding = value.ResourceBinding();
+    writer.WriteU64(binding.deviceEpoch);
+    WriteDigest(writer, binding.actualDeltaResourceIdentity);
+    WriteDigest(writer, binding.actualPreviousHistoryResourceIdentity);
+    WriteDigest(writer, binding.actualOutputHistoryResourceIdentity);
+    writer.WriteU32(static_cast<std::uint32_t>(binding.deltaRole));
+    writer.WriteU32(static_cast<std::uint32_t>(binding.previousHistoryRole));
+    writer.WriteU32(static_cast<std::uint32_t>(binding.outputHistoryRole));
+    writer.WriteU32(binding.deltaFixedCapacityBytes);
+    writer.WriteU32(binding.deltaRecordStrideBytes);
+    writer.WriteU32(binding.previousHistoryBytes);
+    writer.WriteU32(binding.outputHistoryBytes);
+    WriteDigest(writer, value.BindingIdentity());
+    return std::move(writer).Take();
+}
+
 } // namespace sge4_5::spiral7::execution
