@@ -32,8 +32,8 @@ T_t  physical transition
 
 - CU1: Research Contract Freeze — PASSED
 - CU2: Sparse Temporal Delta Architecture — PASSED
-- CU3: Independent Delta Authority — implementation supplied
-- CU4: Incremental History Candidate Family
+- CU3: Independent Delta Authority — PASSED
+- CU4: Incremental History Candidate Family — implementation supplied
 - CU5: Architecture Qualification
 - CU6: Real-GPU Measurement and Decision Evidence
 
@@ -77,3 +77,12 @@ Runtime and Backend remain forbidden to choose Active membership, modified membe
 ```
 
 CU3 builds Debug and Release, rejects 50 Raw proposal mutations plus Verified/resource/artifact/epoch replay attempts, executes one verified WARP transition, and requires byte-identical evidence.
+
+## CU4 commands
+
+```powershell
+.\run_sge4_5_spiral7_cu4_prepare.bat
+.\run_sge4_5_spiral7_cu4_candidate_family.bat
+```
+
+CU4 executes A/B/C over one chained eighteen-invocation WARP timeline, requires 54 Candidate executions and pairwise byte-identical full outputs, and does not select a winner.

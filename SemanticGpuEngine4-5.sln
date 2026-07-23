@@ -350,12 +350,42 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "177_SparseTemporalDeltaLowe
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "183_Spiral7AuthorityMutationTests", "183_Spiral7AuthorityMutationTests\183_Spiral7AuthorityMutationTests.vcxproj", "{000000B7-0000-5000-8000-0000000000B7}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "178_SparseTemporalDeltaCandidateFamily", "178_SparseTemporalDeltaCandidateFamily\178_SparseTemporalDeltaCandidateFamily.vcxproj", "{000000B2-0000-5000-8000-0000000000B2}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "179_SparseTemporalDeltaCandidateFamilyPlanner", "179_SparseTemporalDeltaCandidateFamilyPlanner\179_SparseTemporalDeltaCandidateFamilyPlanner.vcxproj", "{000000B3-0000-5000-8000-0000000000B3}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "180_SparseTemporalDeltaCandidateFamilyVerifier", "180_SparseTemporalDeltaCandidateFamilyVerifier\180_SparseTemporalDeltaCandidateFamilyVerifier.vcxproj", "{000000B4-0000-5000-8000-0000000000B4}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "181_Spiral7DeltaFamilyExecution", "181_Spiral7DeltaFamilyExecution\181_Spiral7DeltaFamilyExecution.vcxproj", "{000000B5-0000-5000-8000-0000000000B5}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "184_Spiral7CandidateFamilyTests", "184_Spiral7CandidateFamilyTests\184_Spiral7CandidateFamilyTests.vcxproj", "{000000B8-0000-5000-8000-0000000000B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{000000B2-0000-5000-8000-0000000000B2}.Debug|x64.ActiveCfg = Debug|x64
+		{000000B2-0000-5000-8000-0000000000B2}.Debug|x64.Build.0 = Debug|x64
+		{000000B2-0000-5000-8000-0000000000B2}.Release|x64.ActiveCfg = Release|x64
+		{000000B2-0000-5000-8000-0000000000B2}.Release|x64.Build.0 = Release|x64
+		{000000B3-0000-5000-8000-0000000000B3}.Debug|x64.ActiveCfg = Debug|x64
+		{000000B3-0000-5000-8000-0000000000B3}.Debug|x64.Build.0 = Debug|x64
+		{000000B3-0000-5000-8000-0000000000B3}.Release|x64.ActiveCfg = Release|x64
+		{000000B3-0000-5000-8000-0000000000B3}.Release|x64.Build.0 = Release|x64
+		{000000B4-0000-5000-8000-0000000000B4}.Debug|x64.ActiveCfg = Debug|x64
+		{000000B4-0000-5000-8000-0000000000B4}.Debug|x64.Build.0 = Debug|x64
+		{000000B4-0000-5000-8000-0000000000B4}.Release|x64.ActiveCfg = Release|x64
+		{000000B4-0000-5000-8000-0000000000B4}.Release|x64.Build.0 = Release|x64
+		{000000B5-0000-5000-8000-0000000000B5}.Debug|x64.ActiveCfg = Debug|x64
+		{000000B5-0000-5000-8000-0000000000B5}.Debug|x64.Build.0 = Debug|x64
+		{000000B5-0000-5000-8000-0000000000B5}.Release|x64.ActiveCfg = Release|x64
+		{000000B5-0000-5000-8000-0000000000B5}.Release|x64.Build.0 = Release|x64
+		{000000B8-0000-5000-8000-0000000000B8}.Debug|x64.ActiveCfg = Debug|x64
+		{000000B8-0000-5000-8000-0000000000B8}.Debug|x64.Build.0 = Debug|x64
+		{000000B8-0000-5000-8000-0000000000B8}.Release|x64.ActiveCfg = Release|x64
+		{000000B8-0000-5000-8000-0000000000B8}.Release|x64.Build.0 = Release|x64
 		{000000AF-0000-5000-8000-0000000000AF}.Debug|x64.ActiveCfg = Debug|x64
 		{000000AF-0000-5000-8000-0000000000AF}.Debug|x64.Build.0 = Debug|x64
 		{000000AF-0000-5000-8000-0000000000AF}.Release|x64.ActiveCfg = Release|x64

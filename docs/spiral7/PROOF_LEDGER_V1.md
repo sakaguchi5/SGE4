@@ -13,16 +13,16 @@
 | S7-I09 | Inactive final bytes equal the canonical zero sentinel. | CU2 WARP supplied |
 | S7-I10 | Retained members receive no GPU write and remain byte-identical to valid previous history. | CU2 WARP supplied |
 | S7-I11 | Compact transition records denote exactly `T_t=W_t union R_t`. | CU2 supplied |
-| S7-I12 | Block update and clear masks are disjoint and reconstruct exactly `W_t` and `R_t`. | Deferred to CU4 |
-| S7-I13 | A/B/C full outputs are byte-identical after every invocation. | Deferred to CU4 |
+| S7-I12 | Block update and clear masks are disjoint and reconstruct exactly `W_t` and `R_t`. | CU4 implementation supplied |
+| S7-I13 | A/B/C full outputs are byte-identical after every invocation. | CU4 implementation supplied |
 | S7-I14 | Raw Candidate cannot be converted to Verified Candidate without the independent Verifier. | CU3 supplied |
 | S7-I15 | Planner and Verifier independently derive transition identities. | CU3 supplied |
-| S7-I16 | Replay is rejected across Active, Modified, Transition, Candidate, Resource, generation, Target and Device epoch identities. | CU3 supplied for Compact Delta path |
+| S7-I16 | Replay is rejected across Active, Modified, Transition, Candidate, Resource, generation, Target and Device epoch identities. | CU3 passed; CU4 family replay gate supplied |
 | S7-I17 | Runtime and Backend cannot choose membership, action, Candidate or history policy. | CU1/CU2 boundary supplied |
 | S7-I18 | Device epoch change rejects stale history and forces a full rebuild of `A_t`. | Deferred to CU5 |
 | S7-I19 | Recovery requires explicit external set rebind and deterministic derived-representation rebuild. | Deferred to CU5 |
-| S7-I20 | Debug/Release and fresh-process Frozen evidence are deterministic within the qualified boundary. | Debug/Release CU2 supplied |
+| S7-I20 | Debug/Release and fresh-process Frozen evidence are deterministic within the qualified boundary. | CU2 passed; CU3 passed; CU4 gate supplied |
 | S7-I21 | Real-GPU evidence is observational and does not authorize a universal winner. | Deferred to CU6 |
 | S7-I22 | Spiral closure and next capability selection remain Owner-gated. | Retained |
 
-CU3 establishes independent Candidate authority for the Compact Delta path. Candidate-family equivalence and Recovery remain deferred to CU4 and CU5.
+CU3 establishes independent Candidate authority for the Compact Delta path. CU4 supplies Candidate-family equivalence; Recovery remains deferred to CU5.

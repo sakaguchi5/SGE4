@@ -1,0 +1,83 @@
+{
+  "schema": "SGE4-5.Spiral7.CU4CandidateFamilyManifest.V1",
+  "completionUnit": "CU4",
+  "ownerBaselineCommit": "d0bb0d406fca8beabed2331daff870ea414dd87d",
+  "cu2AcceptedCommit": "87ae8946f403841199b2d18714348a11c007b65d",
+  "cu2ArchitectureEvidenceSha256": "50B4D4C848721442CC606EE8BFDA207832BA03E7B6FCD5B24F4EEC9A7FE3DDC3",
+  "cu3AcceptedCommit": "21e7e91e1f85bb5620fca50e9def76b7c9a76291",
+  "cu3OwnerRunStatus": "Passed",
+  "cu3EvidenceSha256": "NotProvidedByOwner",
+  "extensionStrategy": "VersionedSparseTemporalDeltaExtensionV1",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None",
+  "candidateOrder": [
+    "FullActiveDenseRecompute",
+    "CompactDeltaIndexHistoryReuse",
+    "AffectedBlockDeltaHistoryReuse"
+  ],
+  "candidateRepresentations": {
+    "FullActiveDenseRecompute": {
+      "role": "DenseActiveMask4096",
+      "recordStrideBytes": 4,
+      "fixedCapacityBytes": 512,
+      "dispatch": "Fixed64Groups",
+      "legalWriteSet": "EntireUniverse"
+    },
+    "CompactDeltaIndexHistoryReuse": {
+      "role": "CanonicalSortedIndexActionList",
+      "recordStrideBytes": 8,
+      "fixedCapacityBytes": 32768,
+      "dispatch": "CeilTransitionCountOver64",
+      "legalWriteSet": "ExactlyTransitionSetT_t"
+    },
+    "AffectedBlockDeltaHistoryReuse": {
+      "role": "AffectedBlockUpdateClearMasks",
+      "recordStrideBytes": 24,
+      "fixedCapacityBytes": 1536,
+      "dispatch": "OneGroupPerAffectedBlock",
+      "legalWriteSet": "ExactlyTransitionSetT_t"
+    }
+  },
+  "blockRecord": "BlockIdU32ReservedU32UpdateMaskU64ClearMaskU64",
+  "blockMaskDisjointness": "Required",
+  "blockMaskReconstruction": "UpdateMaskEqualsW_tAndClearMaskEqualsR_t",
+  "timelineInvocationCount": 18,
+  "candidateExecutionCount": 54,
+  "rawMutationAttackCount": 16,
+  "architectureCases": [
+    "InitialPrefix64",
+    "HoldPrefix64",
+    "DirtyOnePrefix64",
+    "Dirty32Prefix64",
+    "ActivatePrefix65",
+    "DeactivatePrefix32",
+    "BalancedChurnUniform32",
+    "PatternMigrationHash32",
+    "ActivateBlock256",
+    "HoldBlock256",
+    "Dirty64Block256",
+    "ExpandPrefix1024",
+    "MigrateHash1024",
+    "HoldHash1024",
+    "EmptyReset",
+    "FullActivate4096",
+    "Dirty1024Full",
+    "DeactivateHash4095"
+  ],
+  "pairwiseCandidateOutputPerInvocation": "ByteIdentical",
+  "candidateWinnerSelection": "ForbiddenInCU4",
+  "runtimeCandidatePolicyDecision": "None",
+  "recoveryQualification": "DeferredToCU5",
+  "performanceQualification": "DeferredToCU6",
+  "debugReleaseEvidence": "MustBeByteIdentical",
+  "legacyFileSha256": {
+    "10_D3D12PackageSchema/D3D12Schema.h": "48b9e8695ab0808be5b2e50cc6c74b61d27b0a627945bf05409c0378887bb44f",
+    "14_D3D12Backend/D3D12Backend.h": "abcdbcbf72ca4fe9dd6fa7f49c137d30b80583462630c48438918060554bcf15",
+    "14_D3D12Backend/D3D12Backend.cpp": "2ac76f2284ce7984859a360bd498716ccb0d28764da1047e1e0da96cfce0c462",
+    "17_CompositionContract/CompositionContract.h": "b6b3d724cb73d36ef424543ca14ce1122e9afbdf310a3725659e8c2e374c7b6b",
+    "22_CompositionRuntime/CompositionRuntime.h": "96091b79b0c3c801ad622d86f5bc2b69dded6cbf083aabbaf674b9c4f9309f4f",
+    "22_CompositionRuntime/CompositionRuntime.cpp": "56163b62c4aa4c615a64702c4c953b89803c05b552381ba3c34e07a5c704f3bf"
+  }
+}
