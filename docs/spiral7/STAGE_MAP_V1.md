@@ -36,12 +36,23 @@ Keep the CU5 Architecture frozen. Measure A/B/C on a real hardware D3D12 Adapter
 
 Use exact legal Hold/DirtyOnly/ReplaceAndClear constructors, all six Candidate orders, D3D12 Timestamp Query, output-equivalent audit-free Timing shaders, block-local drift controls and corruption-safe binary evidence.
 
+CU6-1 captures the canonical 160-coordinate surface. CU6-2 corrects the Decision authority without changing the measured Candidate semantics:
+
+- median ranking remains descriptive only,
+- a stable winner must win paired decisions against both alternatives,
+- a stable equivalent set must be pairwise noise-equivalent and beat every outside Candidate,
+- `T=0` is classified as B/C ZeroDispatchEquivalent and excluded from crossover authority,
+- unresolved coordinates cannot create a crossover,
+- a 100-coordinate high-Transition refinement pass measures `T={1024,1536,2048,3072,4096}` with greater repetition,
+- refinement observations replace duplicate canonical coordinates at `T=1024` and `T=4096`.
+
 Generate:
 
-- per-case median ranking,
+- descriptive per-case median ranking,
 - paired A/B, B/C and A/C decisions,
-- Transition-count crossover surface,
-- Active-count crossover surface,
+- paired-authority classification,
+- resolved Transition-count crossover brackets,
+- resolved Active-count crossover brackets,
 - Pattern dependence at equal `(A,T)`.
 
 May declare:

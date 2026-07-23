@@ -1234,16 +1234,17 @@ RunRealGpuMeasurementV1(const MeasurementConfigV1& config)
         evidence.semanticIdentity = semantic::SparseTemporalDeltaSemanticIdentityV1(semanticValue);
         evidence.verificationContextIdentity = VerificationContextIdentityV1();
         evidence.measurementProfileIdentity = BuildMeasurementProfileIdentityV1(config);
-        evidence.caseScheduleIdentity = BuildCaseScheduleIdentityV1(config.runCount);
+        evidence.caseScheduleIdentity = BuildCaseScheduleIdentityV1(config);
         evidence.candidateOrderIdentity = BuildCandidateOrderIdentityV1();
 
         bool profilesInitialized = false;
         const auto balancedOrders = CanonicalBalancedOrdersV1();
         std::uint32_t completedAcceptedBlocks = 0;
-        const std::uint32_t totalAcceptedBlocks = config.runCount * CanonicalCaseCountV1;
+        const std::uint32_t totalAcceptedBlocks = config.runCount *
+            MeasurementCaseCountPerRunV2(config.measurementPass);
         for (std::uint32_t run = 0; run < config.runCount; ++run)
         {
-            const auto schedule = CanonicalCaseScheduleV1(run);
+            const auto schedule = MeasurementCaseScheduleV2(config.measurementPass, run);
             for (std::size_t caseOrder = 0; caseOrder < schedule.size(); ++caseOrder)
             {
                 const auto pattern = static_cast<PatternKindV1>(schedule[caseOrder][0]);
@@ -1357,7 +1358,8 @@ RunRealGpuMeasurementV1(const MeasurementConfigV1& config)
                 }
                 Require(accepted, "No accepted measurement block remained after maximum attempts.");
                 ++completedAcceptedBlocks;
-                std::cout << "[MEASURED] " << completedAcceptedBlocks << '/'
+                std::cout << "[MEASURED] pass=" << MeasurementPassNameV2(config.measurementPass)
+                          << " " << completedAcceptedBlocks << '/'
                           << totalAcceptedBlocks
                           << " run=" << run
                           << " pattern=" << PatternNameV1(pattern)

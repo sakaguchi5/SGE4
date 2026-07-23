@@ -22,12 +22,19 @@
 | S7-I18 | Device epoch change rejects stale history and forces a full rebuild of `A_t`. | CU5 passed |
 | S7-I19 | Recovery requires explicit external set rebind and deterministic representation rebuild. | CU5 passed with exact `A_t/M_t` and generation reconstruction |
 | S7-I20 | Debug/Release and fresh-process Frozen evidence are deterministic. | CU5 exhaustive audit passed; routine gate enforces accepted SHA-256 values |
-| S7-I21 | Real-GPU evidence is observational and does not authorize a universal winner. | CU6 implementation supplied; Owner real-GPU run pending |
+| S7-I21 | Real-GPU evidence is observational and does not authorize a universal winner. | CU6-1/CU6-2 implementation supplied; Owner real-GPU run pending |
 | S7-I22 | Spiral closure and next program remain Owner-gated. | Retained; CU6 cannot close Spiral 7 automatically |
 | S7-I23 | Every frozen `(ActiveCount,TransitionCount)` measurement coordinate is represented by an exact legal transition without silent clipping. | CU6 canonical Hold/DirtyOnly/ReplaceAndClear constructor supplied |
 | S7-I24 | Candidate timing uses all six A/B/C orders and block-local paired controls. | CU6 supplied |
 | S7-I25 | Decision evidence exposes Transition, Active and Pattern-dependent winner surfaces rather than one scalar winner. | CU6 supplied |
+| S7-I26 | Median ranking is descriptive only and cannot authorize a winner or crossover. | CU6-2 supplied |
+| S7-I27 | A StableWinner requires paired victory against both alternative Candidates. | CU6-2 supplied |
+| S7-I28 | `T=0` is B/C ZeroDispatchEquivalent and is excluded from crossover analysis. | CU6-2 supplied |
+| S7-I29 | Unresolved coordinates are excluded from crossover; reported transitions are resolved-coordinate brackets. | CU6-2 supplied |
+| S7-I30 | High-Transition refinement binds the same Adapter, Semantic, verification context, Candidate order and Shader digests as the canonical pass. | CU6-2 supplied |
 
-Accepted CU5 commit: `c9f0b5a62e2a7f3c9e0355cdaa1c683819c6dcfa`.
+Accepted CU5 exhaustive-audit base commit: `67cb40b5204e1e06ecac576206ba969ec2db02b6`.
+Accepted CU5 final commit: `c9f0b5a62e2a7f3c9e0355cdaa1c683819c6dcfa`.
+CU6-1 base commit: `903e00be0f7e39ffd1758004c117fbc0233b0164`.
 
-CU5 establishes `SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE`. CU6 does not reopen that Architecture. It measures the fixed Candidate family on a real hardware Adapter, binds the output to the CU5 evidence identities, and produces an Owner-gated local relative Decision map. Successful execution may establish `SGE4-5 SPIRAL 7 EXPERIMENT COMPLETE`; `SPIRAL 7 CLOSED` remains a separate Owner action.
+CU5 establishes `SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE`. CU6 does not reopen that Architecture. CU6-2 refines only the observational Decision authority: paired comparisons authorize local classifications, `T=0` remains ZeroDispatchEquivalent, unresolved coordinates cannot create crossovers, and no result grants Runtime Candidate-policy authority. Successful execution may establish `SGE4-5 SPIRAL 7 EXPERIMENT COMPLETE`; `SPIRAL 7 CLOSED` remains a separate Owner action.

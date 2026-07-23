@@ -69,6 +69,13 @@ double ParseDouble(std::string_view text, std::string_view name)
     return value;
 }
 
+perf::MeasurementPassV2 ParsePass(std::string_view text)
+{
+    if (text == "canonical") return perf::MeasurementPassV2::CanonicalSurface;
+    if (text == "refinement") return perf::MeasurementPassV2::HighTransitionRefinement;
+    throw std::runtime_error("Unknown measurement pass: " + std::string(text));
+}
+
 std::string WinnerSetText(const std::vector<perf::CandidateKindV1>& values)
 {
     if (values.empty()) return "Unresolved";
@@ -87,24 +94,31 @@ void PrintDecisionSummary(
     const base::Digest256& evidenceDigest)
 {
     std::cout
-        << "Spiral 7 CU6 real-GPU measurement passed.\n"
+        << "Spiral 7 CU6-2 real-GPU measurement passed.\n"
+        << "Measurement pass: " << perf::MeasurementPassNameV2(evidence.config.measurementPass) << '\n'
         << "Adapter: " << evidence.adapter.description << '\n'
-        << "Canonical cases per run: " << perf::CanonicalCaseCountV1 << '\n'
+        << "Cases per run: " << perf::MeasurementCaseCountPerRunV2(evidence.config.measurementPass) << '\n'
         << "Runs: " << evidence.config.runCount << '\n'
         << "Accepted blocks: " << analysis.acceptedBlockCount
         << ", rejected attempts: " << analysis.rejectedBlockCount << '\n'
-        << "Timestamp-resolution-censored samples: "
-        << analysis.timestampResolutionCensoredSampleCount << '\n'
-        << "Overall observed winner set: " << WinnerSetText(analysis.overallObservedWinnerSet) << '\n'
-        << "Winner changes across Transition count: "
+        << "Decision classes: zeroDispatchEquivalent=" << analysis.zeroDispatchEquivalentCaseCount
+        << ", stableWinner=" << analysis.stableWinnerCaseCount
+        << ", stableEquivalent=" << analysis.stableEquivalentCaseCount
+        << ", unresolved=" << analysis.unresolvedCaseCount << '\n'
+        << "Overall paired authority set: " << WinnerSetText(analysis.overallPairedAuthoritySet) << '\n'
+        << "Stable paired-authority changes across Transition count: "
         << (analysis.winnerChangesAcrossTransitionCount ? "true" : "false") << '\n'
-        << "Winner changes across Active count: "
-        << (analysis.winnerChangesAcrossActiveCount ? "true" : "false") << '\n'
-        << "Pattern-dependent winner at equal (A,T): "
-        << (analysis.sameActiveAndTransitionWinnerDependsOnPattern ? "true" : "false") << '\n'
         << "Runtime Candidate-policy decision: None\n"
         << "Spiral 7 closure: Owner required\n"
         << "Measurement evidence SHA-256: " << base::ToHex(evidenceDigest) << '\n';
+}
+
+perf::MeasurementEvidenceV1 ParseEvidence(const std::filesystem::path& path)
+{
+    const auto bytes = ReadBytes(path);
+    auto parsed = perf::DeserializeMeasurementEvidenceV1(bytes);
+    if (!parsed) throw std::runtime_error(parsed.Error());
+    return std::move(parsed).Value();
 }
 } // namespace
 
@@ -112,9 +126,11 @@ int main(int argc, char** argv)
 {
     try
     {
-        enum class Mode { SelfTest, Measure, Verify };
+        enum class Mode { SelfTest, Measure, Verify, Combine };
         Mode mode = Mode::SelfTest;
         std::filesystem::path evidencePath;
+        std::filesystem::path baseEvidencePath;
+        std::filesystem::path refinementEvidencePath;
         std::filesystem::path csvPath;
         std::filesystem::path reportPath;
         std::filesystem::path selfTestEmitPath;
@@ -133,10 +149,14 @@ int main(int argc, char** argv)
             if (argument == "--self-test") mode = Mode::SelfTest;
             else if (argument == "--measure") mode = Mode::Measure;
             else if (argument == "--verify") mode = Mode::Verify;
+            else if (argument == "--combine") mode = Mode::Combine;
             else if (argument == "--evidence") evidencePath = requireValue(argument);
+            else if (argument == "--base-evidence") baseEvidencePath = requireValue(argument);
+            else if (argument == "--refinement-evidence") refinementEvidencePath = requireValue(argument);
             else if (argument == "--csv") csvPath = requireValue(argument);
             else if (argument == "--report") reportPath = requireValue(argument);
             else if (argument == "--emit") selfTestEmitPath = requireValue(argument);
+            else if (argument == "--pass") config.measurementPass = ParsePass(requireValue(argument));
             else if (argument == "--adapter")
                 config.adapterIndex = ParseU32(requireValue(argument), "adapter index");
             else if (argument == "--runs")
@@ -164,22 +184,49 @@ int main(int argc, char** argv)
         {
             const auto result = perf::RunMeasurementFormatSelfTestV1();
             if (!result) throw std::runtime_error(result.Error());
-            const auto bytes = perf::BuildSyntheticSelfTestEvidenceV1();
-            if (!selfTestEmitPath.empty()) WriteBytes(selfTestEmitPath, bytes);
-            const auto parsed = perf::DeserializeMeasurementEvidenceV1(bytes);
-            if (!parsed) throw std::runtime_error(parsed.Error());
-            const auto analysis = perf::AnalyzeMeasurementEvidenceV1(parsed.Value());
+            const auto canonicalBytes = perf::BuildSyntheticSelfTestEvidenceV1();
+            const auto refinementBytes = perf::BuildSyntheticRefinementSelfTestEvidenceV2();
+            std::vector<std::byte> combinedBytes = canonicalBytes;
+            combinedBytes.insert(combinedBytes.end(), refinementBytes.begin(), refinementBytes.end());
+            if (!selfTestEmitPath.empty()) WriteBytes(selfTestEmitPath, combinedBytes);
+            const auto canonical = perf::DeserializeMeasurementEvidenceV1(canonicalBytes);
+            const auto refinement = perf::DeserializeMeasurementEvidenceV1(refinementBytes);
+            if (!canonical || !refinement) throw std::runtime_error("Synthetic S7M3 evidence did not parse.");
+            const auto combined = perf::AnalyzeCombinedMeasurementEvidenceV2(
+                canonical.Value(), refinement.Value());
             std::cout
-                << "Spiral 7 CU6 S7M2 format, corruption rejection, zero-dispatch censoring, balanced-order and decision-surface self-test passed.\n"
-                << "Synthetic cases: " << analysis.cases.size() << '\n'
-                << "Transition-surface events: " << analysis.transitionSurfaceEvents.size() << '\n'
-                << "Active-surface events: " << analysis.activeSurfaceEvents.size() << '\n'
-                << "Synthetic evidence SHA-256: " << base::ToHex(base::Sha256(bytes)) << '\n';
+                << "Spiral 7 CU6-2 S7M3 format, corruption rejection, paired-authority, zero-dispatch exclusion and refinement-merge self-test passed.\n"
+                << "Canonical synthetic cases: " << perf::CanonicalCaseCountV1 << '\n'
+                << "Refinement synthetic cases: " << perf::RefinementCaseCountV2 << '\n'
+                << "Combined decision cases: " << combined.cases.size() << '\n'
+                << "Stable Transition brackets: " << combined.transitionSurfaceEvents.size() << '\n'
+                << "Synthetic evidence bundle SHA-256: " << base::ToHex(base::Sha256(combinedBytes)) << '\n';
             return 0;
         }
 
-        if (evidencePath.empty())
-            throw std::runtime_error("--evidence path is required.");
+        if (mode == Mode::Combine)
+        {
+            if (baseEvidencePath.empty() || refinementEvidencePath.empty() ||
+                csvPath.empty() || reportPath.empty())
+                throw std::runtime_error("--combine requires --base-evidence, --refinement-evidence, --csv and --report.");
+            const auto canonical = ParseEvidence(baseEvidencePath);
+            const auto refinement = ParseEvidence(refinementEvidencePath);
+            const auto analysis = perf::AnalyzeCombinedMeasurementEvidenceV2(canonical, refinement);
+            WriteText(csvPath, perf::BuildCombinedDecisionCsvV2(canonical, refinement, analysis));
+            WriteText(reportPath, perf::BuildCombinedDecisionReportV2(canonical, refinement, analysis));
+            std::cout
+                << "Spiral 7 CU6-2 combined paired Decision Map passed.\n"
+                << "Combined cases: " << analysis.cases.size() << '\n'
+                << "Stable winners: " << analysis.stableWinnerCaseCount
+                << ", stable equivalent sets: " << analysis.stableEquivalentCaseCount
+                << ", unresolved: " << analysis.unresolvedCaseCount << '\n'
+                << "Stable Transition brackets: " << analysis.transitionSurfaceEvents.size() << '\n'
+                << "Runtime Candidate-policy decision: None\n"
+                << "Spiral 7 closure: Owner required\n";
+            return 0;
+        }
+
+        if (evidencePath.empty()) throw std::runtime_error("--evidence path is required.");
 
         if (mode == Mode::Measure)
         {
@@ -203,12 +250,12 @@ int main(int argc, char** argv)
         if (!reportPath.empty())
             WriteText(reportPath, perf::BuildDecisionReportV1(parsed.Value(), analysis));
         PrintDecisionSummary(parsed.Value(), analysis, base::Sha256(bytes));
-        std::cout << "Spiral 7 CU6 evidence reload and independent decision analysis passed.\n";
+        std::cout << "Spiral 7 CU6-2 evidence reload and independent paired analysis passed.\n";
         return 0;
     }
     catch (const std::exception& error)
     {
-        std::cerr << "Spiral 7 CU6 failed: " << error.what() << '\n';
+        std::cerr << "Spiral 7 CU6-2 failed: " << error.what() << '\n';
         return 1;
     }
 }

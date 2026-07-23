@@ -1,13 +1,14 @@
 {
   "schema": "SGE4-5.Spiral7.CU6RealGpuMeasurementManifest.V1",
-  "completionUnit": "CU6",
+  "completionUnit": "CU6-2",
   "ownerBaselineCommit": "d0bb0d406fca8beabed2331daff870ea414dd87d",
   "cu5AcceptedCommit": "c9f0b5a62e2a7f3c9e0355cdaa1c683819c6dcfa",
+  "cu6_1AcceptedCommit": "903e00be0f7e39ffd1758004c117fbc0233b0164",
   "cu5OwnerRunStatus": "Passed",
   "cu5ArchitectureEvidenceSha256": "1F1D09B4E52DBC35E961E0D3751B32292B2C30EEDCFA473800C5BB8E8CB5AB73",
   "cu5ControlledRecoveryEvidenceSha256": "7F0247B193F9BC20F4EDA5FEED590C1DA5722EF36B133640292B1ED616CFF62B",
   "cu5FreshEvidenceSha256": "091EAEC0D27287FE897F6813043FD75C090D5DA17054461DF314F99B2A6F5A92",
-  "purpose": "ObserveTheAdapterSpecificRelativeWinnerSurfaceWithoutChangingTheCompletedArchitecture",
+  "purpose": "ReplaceMedianWinnerAuthorityWithPairedAgreementAndRefineTheHighTransitionBoundary",
   "architectureMutation": "None",
   "candidateOrder": [
     "FullActiveDenseRecompute",
@@ -20,43 +21,45 @@
     "BlockClusteredPermutation",
     "HashScatterPermutation"
   ],
-  "measurementActiveCounts": [
-    64,
-    256,
-    1024,
-    2048,
-    4096
-  ],
-  "measurementTransitionCounts": [
-    0,
-    1,
-    8,
-    32,
-    64,
-    256,
-    1024,
-    4096
-  ],
-  "canonicalCaseCountPerRun": 160,
+  "measurementActiveCounts": [64, 256, 1024, 2048, 4096],
+  "measurementPasses": {
+    "canonicalSurface": {
+      "transitionCounts": [0, 1, 8, 32, 64, 256, 1024, 4096],
+      "caseCountPerRun": 160,
+      "defaultRunCount": 2,
+      "defaultCyclesPerOrder": 1,
+      "defaultIterationsPerBatch": 128,
+      "defaultWarmupIterations": 1024,
+      "defaultMaximumBlockAttempts": 3
+    },
+    "highTransitionRefinement": {
+      "transitionCounts": [1024, 1536, 2048, 3072, 4096],
+      "caseCountPerRun": 100,
+      "defaultRunCount": 3,
+      "defaultCyclesPerOrder": 3,
+      "defaultIterationsPerBatch": 256,
+      "defaultWarmupIterations": 2048,
+      "defaultMaximumBlockAttempts": 4,
+      "duplicateCoordinatePolicy": "RefinementOverridesCanonicalAtT1024AndT4096"
+    }
+  },
+  "balancedCandidateOrderCount": 6,
+  "primaryMetric": "GpuCandidateBatchNanosecondsPerEffectiveIteration",
+  "decisionAuthority": {
+    "medianRanking": "DescriptiveOnly",
+    "stableWinner": "CandidateMustWinPairedDecisionsAgainstBothAlternatives",
+    "stableEquivalentSet": "PairMustBeNoiseEquivalentAndEveryMemberMustBeatTheOutsideCandidate",
+    "unresolved": "ExcludedFromCrossover",
+    "transitionCountZero": "BAndCZeroDispatchEquivalent",
+    "transitionCountZeroIncludedInCrossover": false,
+    "crossoverSource": "ConsecutiveResolvedPairedAuthorityCoordinatesOnly"
+  },
   "canonicalTransitionConstructor": {
     "transitionCountZero": "Hold",
     "transitionCountAtMostActiveCount": "DirtyOnlyWithExactlyTModifiedSurvivors",
     "transitionCountGreaterThanActiveCount": "DisjointPreviousActiveReplacementWithUpdateCountAAndClearCountTMinusA",
     "silentClipping": "Forbidden"
   },
-  "defaultMeasurementConfig": {
-    "runCount": 2,
-    "measurementCyclesPerOrder": 1,
-    "iterationsPerBatch": 128,
-    "warmupIterations": 1024,
-    "maximumBlockAttempts": 3,
-    "maximumControlRatio": 1.2,
-    "relativeNoiseFloor": 0.02,
-    "minimumPairAgreement": 0.7
-  },
-  "balancedCandidateOrderCount": 6,
-  "primaryMetric": "GpuCandidateBatchNanosecondsPerEffectiveIteration",
-  "secondaryMetric": "ControlNormalizedGpuTime",
   "blockAcceptance": "FixedCandidateAControlBeforeAfterRatioAtMostMaximumControlRatio",
   "correctnessBeforeTiming": {
     "independentVerifiedCandidateValidation": true,
@@ -77,20 +80,17 @@
     "zeroDispatchTimestampResolution": "ExplicitlyCensoredAtOneTickUpperBound",
     "nonzeroDispatchAdaptiveIterationRetry": true
   },
-  "decisionDimensions": [
-    "ActiveCount",
-    "TransitionCount",
-    "UpdateCount",
-    "ClearCount",
-    "AffectedBlockCount",
-    "SparsePattern"
-  ],
-  "decisionOutputs": [
-    "PerCaseMedianRanking",
-    "PairwisePairedRatioDecision",
-    "TransitionCountCrossoverSurface",
-    "ActiveCountCrossoverSurface",
-    "PatternDependenceAtEqualActiveAndTransition"
+  "binaryEvidenceSchema": "S7M3",
+  "binaryEvidenceSchemaVersion": 3,
+  "timestampResolutionPolicy": {
+    "zeroDispatchZeroTickInterval": "ResolutionCensoredOneTickConservativeUpperBound",
+    "censoringAllowedOnlyWhenExpectedDispatchGroupsXIsZero": true,
+    "nonzeroDispatchZeroTickInterval": "RetryWholeBalancedOrderWithDoubledIterations",
+    "maximumAdaptiveIterations": 65536
+  },
+  "combinedOutputs": [
+    "combined_paired_decision_cases_v3.csv",
+    "combined_paired_decision_report_v3.txt"
   ],
   "runtimeCandidatePolicyAuthorization": "None",
   "universalWinnerClaim": "Forbidden",
@@ -101,18 +101,5 @@
   "legacySchemaMutation": "None",
   "legacyRuntimeMutation": "None",
   "legacyBackendMutation": "None",
-  "compositionContractMutation": "None",
-  "binaryEvidenceSchema": "S7M2",
-  "binaryEvidenceSchemaVersion": 2,
-  "timestampResolutionPolicy": {
-    "zeroDispatchZeroTickInterval": "ResolutionCensoredOneTickConservativeUpperBound",
-    "censoringAllowedOnlyWhenExpectedDispatchGroupsXIsZero": true,
-    "nonzeroDispatchZeroTickInterval": "RetryWholeBalancedOrderWithDoubledIterations",
-    "maximumAdaptiveIterations": 65536,
-    "recordedPerSample": [
-      "TimestampTickCount",
-      "EffectiveIterations",
-      "TimestampResolutionCensored"
-    ]
-  }
+  "compositionContractMutation": "None"
 }

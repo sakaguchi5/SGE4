@@ -1,32 +1,25 @@
-SGE4-5 Spiral 7 CU6 final package lineage manifest
-Baseline: c9f0b5a62e2a7f3c9e0355cdaa1c683819c6dcfa
-Canonical CU6 files after FIX02: 23
-Deleted files: none
-Git operations: none
+SGE4-5 Spiral 7 CU6-2 overlay
+Base commit: 903e00be0f7e39ffd1758004c117fbc0233b0164
 
-187_Spiral7PerformanceExperiment/187_Spiral7PerformanceExperiment.vcxproj
-187_Spiral7PerformanceExperiment/Spiral7PerformanceExperiment.cpp
+Changed/new files:
 187_Spiral7PerformanceExperiment/Spiral7PerformanceExperiment.h
+187_Spiral7PerformanceExperiment/Spiral7PerformanceExperiment.cpp
 187_Spiral7PerformanceExperiment/Spiral7RealGpuMeasurement.cpp
-188_Spiral7PerformanceTests/188_Spiral7PerformanceTests.vcxproj
 188_Spiral7PerformanceTests/main.cpp
-docs/spiral7/APPLY_CU6_JA.md
-docs/spiral7/CU6_CHANGESET.md
+tests/Run-Spiral7CU6.ps1
+tests/tools/Verify-Spiral7CU6.ps1
+docs/spiral7/CU6_REAL_GPU_MEASUREMENT_MANIFEST_V1.json
+docs/spiral7/CU6_REAL_GPU_MEASUREMENT.md
 docs/spiral7/CU6_DECISION_EVIDENCE.md
 docs/spiral7/CU6_EVIDENCE_LEDGER.md
-docs/spiral7/CU6_FIX02_TIMESTAMP_RESOLUTION.md
+docs/spiral7/CU6_2_PAIRED_DECISION_REFINEMENT.md
+docs/spiral7/CU6_CHANGESET.md
+docs/spiral7/APPLY_CU6_JA.md
 docs/spiral7/CU6_PACKAGE_MANIFEST.txt
-docs/spiral7/CU6_REAL_GPU_MEASUREMENT.md
-docs/spiral7/CU6_REAL_GPU_MEASUREMENT_MANIFEST_V1.json
+docs/spiral7/SPIRAL7_PROGRESS.md
 docs/spiral7/PROOF_LEDGER_V1.md
 docs/spiral7/README.md
-docs/spiral7/SPIRAL7_PROGRESS.md
 docs/spiral7/STAGE_MAP_V1.md
-run_sge4_5_spiral7_cu6_measurement_decision_evidence.bat
-run_sge4_5_spiral7_cu6_prepare.bat
-tests/Run-Spiral7CU6.ps1
-tests/tools/Register-Spiral7CU6Projects.ps1
-tests/tools/Verify-Spiral7CU6.ps1
 
-FIX01: preserve CU5 exhaustive-audit lineage in SPIRAL7_PROGRESS.md
-FIX02: S7M2 timestamp-resolution contract for legal zero-dispatch cases
+Deleted files: none
+Git operations: none

@@ -23,9 +23,9 @@ namespace sge4_5::spiral7::performance
 {
 namespace
 {
-constexpr std::uint32_t EvidenceMagic = 0x324D3753u; // "S7M2"
-constexpr std::string_view ProfileDomain = "SGE4-5.Spiral7.RelativePerformanceProfile.V2";
-constexpr std::string_view ScheduleDomain = "SGE4-5.Spiral7.BalancedMeasurementCaseSchedule.V1";
+constexpr std::uint32_t EvidenceMagic = 0x334D3753u; // "S7M3"
+constexpr std::string_view ProfileDomain = "SGE4-5.Spiral7.RelativePerformanceProfile.V3";
+constexpr std::string_view ScheduleDomain = "SGE4-5.Spiral7.BalancedMeasurementCaseSchedule.V2";
 constexpr std::string_view OrderDomain = "SGE4-5.Spiral7.BalancedCandidateOrders.V1";
 constexpr std::string_view ContextDomain = "SGE4-5.Spiral7.DeltaFamilyVerificationContext.V1";
 
@@ -209,8 +209,21 @@ family_candidate::DeltaFamilyDispatchPolicyV1 DispatchFromU32(std::uint32_t valu
     }
 }
 
+MeasurementPassV2 MeasurementPassFromU32(std::uint32_t value)
+{
+    switch (value)
+    {
+    case 1: return MeasurementPassV2::CanonicalSurface;
+    case 2: return MeasurementPassV2::HighTransitionRefinement;
+    default: throw std::runtime_error("Unknown measurement pass in evidence.");
+    }
+}
+
 void ValidateConfig(const MeasurementConfigV1& config)
 {
+    Require(config.measurementPass == MeasurementPassV2::CanonicalSurface ||
+            config.measurementPass == MeasurementPassV2::HighTransitionRefinement,
+            "measurementPass outside qualified range.");
     Require(config.runCount > 0 && config.runCount <= 8, "runCount outside qualified range.");
     Require(config.measurementCyclesPerOrder > 0 && config.measurementCyclesPerOrder <= 8,
             "measurementCyclesPerOrder outside qualified range.");
@@ -230,6 +243,7 @@ void ValidateConfig(const MeasurementConfigV1& config)
 
 void WriteConfig(base::BinaryWriter& writer, const MeasurementConfigV1& value)
 {
+    writer.WriteU32(static_cast<std::uint32_t>(value.measurementPass));
     writer.WriteU32(value.runCount);
     writer.WriteU32(value.measurementCyclesPerOrder);
     writer.WriteU32(value.iterationsPerBatch);
@@ -245,6 +259,7 @@ void WriteConfig(base::BinaryWriter& writer, const MeasurementConfigV1& value)
 MeasurementConfigV1 ReadConfig(base::BinaryReader& reader)
 {
     MeasurementConfigV1 value;
+    value.measurementPass = MeasurementPassFromU32(ReadU32(reader));
     value.runCount = ReadU32(reader);
     value.measurementCyclesPerOrder = ReadU32(reader);
     value.iterationsPerBatch = ReadU32(reader);
@@ -561,6 +576,232 @@ PairDecisionV1 BuildPairDecision(
     return result;
 }
 
+
+bool PairDeclaresWinner(
+    const PairDecisionV1& decision,
+    CandidateKindV1 candidate)
+{
+    if (decision.winner == PairWinnerV1::Left) return decision.left == candidate;
+    if (decision.winner == PairWinnerV1::Right) return decision.right == candidate;
+    return false;
+}
+
+bool PairIsNoiseEquivalent(
+    const PairDecisionV1& decision,
+    CandidateKindV1 a,
+    CandidateKindV1 b)
+{
+    return decision.winner == PairWinnerV1::NoiseEquivalent &&
+        ((decision.left == a && decision.right == b) ||
+         (decision.left == b && decision.right == a));
+}
+
+const PairDecisionV1& PairFor(
+    const CaseDecisionV1& decision,
+    CandidateKindV1 a,
+    CandidateKindV1 b)
+{
+    const auto matches = [&](const PairDecisionV1& value)
+    {
+        return (value.left == a && value.right == b) ||
+               (value.left == b && value.right == a);
+    };
+    if (matches(decision.fullVersusCompact)) return decision.fullVersusCompact;
+    if (matches(decision.compactVersusBlock)) return decision.compactVersusBlock;
+    if (matches(decision.fullVersusBlock)) return decision.fullVersusBlock;
+    throw std::logic_error("Requested Candidate pair is not present.");
+}
+
+bool CandidateBeats(
+    const CaseDecisionV1& decision,
+    CandidateKindV1 winner,
+    CandidateKindV1 loser)
+{
+    return PairDeclaresWinner(PairFor(decision, winner, loser), winner);
+}
+
+void ClassifyPairedAuthority(CaseDecisionV1& decision)
+{
+    const auto A = CandidateKindV1::FullActiveDenseRecompute;
+    const auto B = CandidateKindV1::CompactDeltaIndexHistoryReuse;
+    const auto C = CandidateKindV1::AffectedBlockDeltaHistoryReuse;
+    decision.pairedAuthoritySet.clear();
+    decision.eligibleForCrossover = false;
+
+    if (decision.key.transitionCount == 0)
+    {
+        decision.pairedAuthoritySet = {B, C};
+        decision.decisionClass = CaseDecisionClassV2::ZeroDispatchEquivalent;
+        return;
+    }
+
+    for (const auto candidate : CanonicalCandidateKindsV1())
+    {
+        const bool winsBoth =
+            (candidate == A && CandidateBeats(decision, A, B) && CandidateBeats(decision, A, C)) ||
+            (candidate == B && CandidateBeats(decision, B, A) && CandidateBeats(decision, B, C)) ||
+            (candidate == C && CandidateBeats(decision, C, A) && CandidateBeats(decision, C, B));
+        if (winsBoth) decision.pairedAuthoritySet.push_back(candidate);
+    }
+    if (!decision.pairedAuthoritySet.empty())
+    {
+        decision.decisionClass = CaseDecisionClassV2::StableWinner;
+        decision.eligibleForCrossover = true;
+        return;
+    }
+
+    const bool allEquivalent =
+        PairIsNoiseEquivalent(decision.fullVersusCompact, A, B) &&
+        PairIsNoiseEquivalent(decision.compactVersusBlock, B, C) &&
+        PairIsNoiseEquivalent(decision.fullVersusBlock, A, C);
+    if (allEquivalent)
+    {
+        decision.pairedAuthoritySet = {A, B, C};
+        decision.decisionClass = CaseDecisionClassV2::StableEquivalentSet;
+        decision.eligibleForCrossover = true;
+        return;
+    }
+
+    if (PairIsNoiseEquivalent(decision.fullVersusCompact, A, B) &&
+        CandidateBeats(decision, A, C) && CandidateBeats(decision, B, C))
+        decision.pairedAuthoritySet = {A, B};
+    else if (PairIsNoiseEquivalent(decision.fullVersusBlock, A, C) &&
+             CandidateBeats(decision, A, B) && CandidateBeats(decision, C, B))
+        decision.pairedAuthoritySet = {A, C};
+    else if (PairIsNoiseEquivalent(decision.compactVersusBlock, B, C) &&
+             CandidateBeats(decision, B, A) && CandidateBeats(decision, C, A))
+        decision.pairedAuthoritySet = {B, C};
+
+    if (!decision.pairedAuthoritySet.empty())
+    {
+        decision.decisionClass = CaseDecisionClassV2::StableEquivalentSet;
+        decision.eligibleForCrossover = true;
+    }
+    else
+    {
+        decision.decisionClass = CaseDecisionClassV2::Unresolved;
+    }
+}
+
+void FinalizeDecisionAnalysis(DecisionAnalysisV1& analysis)
+{
+    analysis.transitionSurfaceEvents.clear();
+    analysis.activeSurfaceEvents.clear();
+    analysis.overallPairedAuthoritySet.clear();
+    analysis.winnerChangesAcrossTransitionCount = false;
+    analysis.winnerChangesAcrossActiveCount = false;
+    analysis.sameActiveAndTransitionWinnerDependsOnPattern = false;
+    analysis.zeroDispatchEquivalentCaseCount = 0;
+    analysis.stableWinnerCaseCount = 0;
+    analysis.stableEquivalentCaseCount = 0;
+    analysis.unresolvedCaseCount = 0;
+
+    std::sort(analysis.cases.begin(), analysis.cases.end(), [](const auto& a, const auto& b)
+    {
+        return std::tuple{
+            static_cast<std::uint32_t>(a.key.pattern), a.key.activeCount,
+            a.key.transitionCount, static_cast<std::uint32_t>(a.sourcePass)}
+          < std::tuple{
+            static_cast<std::uint32_t>(b.key.pattern), b.key.activeCount,
+            b.key.transitionCount, static_cast<std::uint32_t>(b.sourcePass)};
+    });
+
+    std::set<CandidateKindV1> overall;
+    for (const auto& value : analysis.cases)
+    {
+        switch (value.decisionClass)
+        {
+        case CaseDecisionClassV2::ZeroDispatchEquivalent:
+            ++analysis.zeroDispatchEquivalentCaseCount;
+            break;
+        case CaseDecisionClassV2::StableWinner:
+            ++analysis.stableWinnerCaseCount;
+            overall.insert(value.pairedAuthoritySet.begin(), value.pairedAuthoritySet.end());
+            break;
+        case CaseDecisionClassV2::StableEquivalentSet:
+            ++analysis.stableEquivalentCaseCount;
+            overall.insert(value.pairedAuthoritySet.begin(), value.pairedAuthoritySet.end());
+            break;
+        case CaseDecisionClassV2::Unresolved:
+            ++analysis.unresolvedCaseCount;
+            break;
+        }
+    }
+    analysis.overallPairedAuthoritySet.assign(overall.begin(), overall.end());
+
+    for (const auto pattern : CanonicalPatternsV1())
+    {
+        for (const auto active : CanonicalMeasurementActiveCountsV1())
+        {
+            std::vector<const CaseDecisionV1*> row;
+            for (const auto& value : analysis.cases)
+                if (value.key.pattern == pattern && value.key.activeCount == active &&
+                    value.eligibleForCrossover)
+                    row.push_back(&value);
+            std::sort(row.begin(), row.end(), [](const auto* a, const auto* b)
+            {
+                return a->key.transitionCount < b->key.transitionCount;
+            });
+            for (std::size_t index = 1; index < row.size(); ++index)
+            {
+                if (!WinnerSetsEqual(row[index - 1]->pairedAuthoritySet,
+                                     row[index]->pairedAuthoritySet))
+                {
+                    analysis.winnerChangesAcrossTransitionCount = true;
+                    analysis.transitionSurfaceEvents.push_back({
+                        pattern, active,
+                        row[index - 1]->key.transitionCount, row[index]->key.transitionCount,
+                        row[index - 1]->pairedAuthoritySet, row[index]->pairedAuthoritySet});
+                }
+            }
+        }
+
+        std::set<std::uint32_t> transitions;
+        for (const auto& value : analysis.cases)
+            if (value.key.pattern == pattern && value.eligibleForCrossover)
+                transitions.insert(value.key.transitionCount);
+        for (const auto transition : transitions)
+        {
+            std::vector<const CaseDecisionV1*> column;
+            for (const auto& value : analysis.cases)
+                if (value.key.pattern == pattern &&
+                    value.key.transitionCount == transition &&
+                    value.eligibleForCrossover)
+                    column.push_back(&value);
+            std::sort(column.begin(), column.end(), [](const auto* a, const auto* b)
+            {
+                return a->key.activeCount < b->key.activeCount;
+            });
+            for (std::size_t index = 1; index < column.size(); ++index)
+            {
+                if (!WinnerSetsEqual(column[index - 1]->pairedAuthoritySet,
+                                     column[index]->pairedAuthoritySet))
+                {
+                    analysis.winnerChangesAcrossActiveCount = true;
+                    analysis.activeSurfaceEvents.push_back({
+                        pattern, transition,
+                        column[index - 1]->key.activeCount, column[index]->key.activeCount,
+                        column[index - 1]->pairedAuthoritySet, column[index]->pairedAuthoritySet});
+                }
+            }
+        }
+    }
+
+    std::map<std::pair<std::uint32_t,std::uint32_t>,
+             std::vector<const CaseDecisionV1*>> equalCoordinates;
+    for (const auto& value : analysis.cases)
+        if (value.eligibleForCrossover)
+            equalCoordinates[{value.key.activeCount, value.key.transitionCount}].push_back(&value);
+    for (const auto& [coordinate, values] : equalCoordinates)
+    {
+        (void)coordinate;
+        for (std::size_t index = 1; index < values.size(); ++index)
+            if (!WinnerSetsEqual(values.front()->pairedAuthoritySet,
+                                 values[index]->pairedAuthoritySet))
+                analysis.sameActiveAndTransitionWinnerDependsOnPattern = true;
+    }
+}
+
 std::tuple<std::uint32_t, std::uint32_t, std::uint32_t> CaseTuple(const MeasurementCaseKeyV1& key)
 {
     return {static_cast<std::uint32_t>(key.pattern), key.activeCount, key.transitionCount};
@@ -663,6 +904,28 @@ std::string TransitionShapeNameV1(TransitionShapeV1 value)
     return "Unknown";
 }
 
+std::string MeasurementPassNameV2(MeasurementPassV2 value)
+{
+    switch (value)
+    {
+    case MeasurementPassV2::CanonicalSurface: return "CanonicalSurface";
+    case MeasurementPassV2::HighTransitionRefinement: return "HighTransitionRefinement";
+    }
+    return "Unknown";
+}
+
+std::string DecisionClassNameV2(CaseDecisionClassV2 value)
+{
+    switch (value)
+    {
+    case CaseDecisionClassV2::ZeroDispatchEquivalent: return "ZeroDispatchEquivalent";
+    case CaseDecisionClassV2::StableWinner: return "StableWinner";
+    case CaseDecisionClassV2::StableEquivalentSet: return "StableEquivalentSet";
+    case CaseDecisionClassV2::Unresolved: return "Unresolved";
+    }
+    return "Unknown";
+}
+
 std::array<CandidateKindV1, CanonicalCandidateCountV1> CanonicalCandidateKindsV1()
 {
     return {CandidateKindV1::FullActiveDenseRecompute,
@@ -694,19 +957,50 @@ CanonicalMeasurementTransitionCountsV1() noexcept
     return values;
 }
 
+const std::array<std::uint32_t, RefinementTransitionCountCountV2>&
+HighTransitionRefinementCountsV2() noexcept
+{
+    static constexpr std::array<std::uint32_t, RefinementTransitionCountCountV2> values{
+        1024u, 1536u, 2048u, 3072u, 4096u};
+    return values;
+}
+
+std::vector<std::uint32_t> MeasurementTransitionCountsV2(MeasurementPassV2 pass)
+{
+    if (pass == MeasurementPassV2::CanonicalSurface)
+        return {CanonicalMeasurementTransitionCountsV1().begin(),
+                CanonicalMeasurementTransitionCountsV1().end()};
+    if (pass == MeasurementPassV2::HighTransitionRefinement)
+        return {HighTransitionRefinementCountsV2().begin(),
+                HighTransitionRefinementCountsV2().end()};
+    throw std::invalid_argument("Unknown measurement pass.");
+}
+
+std::uint32_t MeasurementCaseCountPerRunV2(MeasurementPassV2 pass)
+{
+    switch (pass)
+    {
+    case MeasurementPassV2::CanonicalSurface: return CanonicalCaseCountV1;
+    case MeasurementPassV2::HighTransitionRefinement: return RefinementCaseCountV2;
+    }
+    throw std::invalid_argument("Unknown measurement pass.");
+}
+
 std::vector<std::array<std::uint32_t, CanonicalCandidateCountV1>> CanonicalBalancedOrdersV1()
 {
     return {{0u,1u,2u}, {0u,2u,1u}, {1u,0u,2u},
             {1u,2u,0u}, {2u,0u,1u}, {2u,1u,0u}};
 }
 
-std::vector<std::array<std::uint32_t, 3>> CanonicalCaseScheduleV1(std::uint32_t run)
+std::vector<std::array<std::uint32_t, 3>>
+MeasurementCaseScheduleV2(MeasurementPassV2 pass, std::uint32_t run)
 {
     std::vector<std::array<std::uint32_t, 3>> cases;
-    cases.reserve(CanonicalCaseCountV1);
+    cases.reserve(MeasurementCaseCountPerRunV2(pass));
+    const auto transitions = MeasurementTransitionCountsV2(pass);
     for (const auto pattern : CanonicalPatternsV1())
         for (const auto active : CanonicalMeasurementActiveCountsV1())
-            for (const auto transition : CanonicalMeasurementTransitionCountsV1())
+            for (const auto transition : transitions)
                 cases.push_back({static_cast<std::uint32_t>(pattern), active, transition});
 
     if ((run & 1u) != 0u) std::reverse(cases.begin(), cases.end());
@@ -725,18 +1019,22 @@ base::Digest256 BuildMeasurementProfileIdentityV1(const MeasurementConfigV1& con
     writer.WriteBytes(std::as_bytes(std::span(ProfileDomain.data(), ProfileDomain.size())));
     WriteConfig(writer, config);
     for (const auto value : CanonicalMeasurementActiveCountsV1()) writer.WriteU32(value);
-    for (const auto value : CanonicalMeasurementTransitionCountsV1()) writer.WriteU32(value);
+    const auto transitions = MeasurementTransitionCountsV2(config.measurementPass);
+    writer.WriteU32(static_cast<std::uint32_t>(transitions.size()));
+    for (const auto value : transitions) writer.WriteU32(value);
     return base::Sha256(writer.Bytes());
 }
 
-base::Digest256 BuildCaseScheduleIdentityV1(std::uint32_t runCount)
+base::Digest256 BuildCaseScheduleIdentityV1(const MeasurementConfigV1& config)
 {
+    ValidateConfig(config);
     base::BinaryWriter writer;
     writer.WriteBytes(std::as_bytes(std::span(ScheduleDomain.data(), ScheduleDomain.size())));
-    writer.WriteU32(runCount);
-    for (std::uint32_t run = 0; run < runCount; ++run)
+    writer.WriteU32(static_cast<std::uint32_t>(config.measurementPass));
+    writer.WriteU32(config.runCount);
+    for (std::uint32_t run = 0; run < config.runCount; ++run)
     {
-        const auto schedule = CanonicalCaseScheduleV1(run);
+        const auto schedule = MeasurementCaseScheduleV2(config.measurementPass, run);
         writer.WriteU32(static_cast<std::uint32_t>(schedule.size()));
         for (const auto& value : schedule)
         {
@@ -844,7 +1142,7 @@ base::Result<void, std::string> ValidateMeasurementEvidenceV1(const MeasurementE
 {
     try
     {
-        Require(evidence.schemaVersion == MeasurementEvidenceSchemaVersionV2,
+        Require(evidence.schemaVersion == MeasurementEvidenceSchemaVersionV3,
                 "Measurement evidence schema mismatch.");
         ValidateConfig(evidence.config);
         Require(!evidence.adapter.description.empty(), "Adapter description is empty.");
@@ -858,7 +1156,7 @@ base::Result<void, std::string> ValidateMeasurementEvidenceV1(const MeasurementE
                 "CU5 Fresh evidence binding mismatch.");
         Require(evidence.measurementProfileIdentity == BuildMeasurementProfileIdentityV1(evidence.config),
                 "Measurement profile identity mismatch.");
-        Require(evidence.caseScheduleIdentity == BuildCaseScheduleIdentityV1(evidence.config.runCount),
+        Require(evidence.caseScheduleIdentity == BuildCaseScheduleIdentityV1(evidence.config),
                 "Case schedule identity mismatch.");
         Require(evidence.candidateOrderIdentity == BuildCandidateOrderIdentityV1(),
                 "Candidate order identity mismatch.");
@@ -878,18 +1176,21 @@ base::Result<void, std::string> ValidateMeasurementEvidenceV1(const MeasurementE
         }
 
         const auto& activeValues = CanonicalMeasurementActiveCountsV1();
-        const auto& transitionValues = CanonicalMeasurementTransitionCountsV1();
+        const auto transitionValues = MeasurementTransitionCountsV2(
+            evidence.config.measurementPass);
+        const auto expectedCaseCount = MeasurementCaseCountPerRunV2(
+            evidence.config.measurementPass);
         std::map<std::tuple<std::uint32_t,std::uint32_t,std::uint32_t>, std::uint32_t> acceptedCounts;
         std::set<std::tuple<std::uint32_t,std::uint32_t,std::uint32_t,std::uint32_t>> acceptedRunCases;
         for (const auto& attempt : evidence.attempts)
         {
             Require(attempt.run < evidence.config.runCount, "Attempt run is outside config.");
-            Require(attempt.caseOrder < CanonicalCaseCountV1, "Attempt case order is outside schedule.");
+            Require(attempt.caseOrder < expectedCaseCount, "Attempt case order is outside schedule.");
             Require(attempt.attempt < evidence.config.maximumBlockAttempts, "Attempt ordinal outside config.");
             Require(std::find(activeValues.begin(), activeValues.end(), attempt.key.activeCount) != activeValues.end(),
-                    "Attempt Active count is outside canonical grid.");
+                    "Attempt Active count is outside measurement grid.");
             Require(std::find(transitionValues.begin(), transitionValues.end(), attempt.key.transitionCount) != transitionValues.end(),
-                    "Attempt Transition count is outside canonical grid.");
+                    "Attempt Transition count is outside measurement pass.");
             Require(attempt.key.updateCount + attempt.key.clearCount == attempt.key.transitionCount,
                     "Attempt update/clear count does not equal transition count.");
             Require(attempt.key.affectedBlockCount <= 64, "Attempt affected block count exceeds 64.");
@@ -971,14 +1272,14 @@ base::Result<void, std::string> ValidateMeasurementEvidenceV1(const MeasurementE
         }
 
         Require(acceptedRunCases.size() ==
-                    static_cast<std::size_t>(evidence.config.runCount) * CanonicalCaseCountV1,
-                "Evidence does not contain one accepted block for every run/canonical case.");
+                    static_cast<std::size_t>(evidence.config.runCount) * expectedCaseCount,
+                "Evidence does not contain one accepted block for every run/measurement case.");
         for (const auto pattern : CanonicalPatternsV1())
             for (const auto active : activeValues)
                 for (const auto transition : transitionValues)
                     Require(acceptedCounts[{static_cast<std::uint32_t>(pattern), active, transition}] ==
                                 evidence.config.runCount,
-                            "A canonical case is missing an accepted block in one or more runs.");
+                            "A measurement case is missing an accepted block in one or more runs.");
         return base::Result<void, std::string>::Success();
     }
     catch (const std::exception& error)
@@ -1007,7 +1308,9 @@ DecisionAnalysisV1 AnalyzeMeasurementEvidenceV1(const MeasurementEvidenceV1& evi
 
     for (const auto& [key, attempts] : groups)
     {
+        (void)key;
         CaseDecisionV1 decision;
+        decision.sourcePass = evidence.config.measurementPass;
         decision.key = attempts.front()->key;
         std::array<std::vector<double>, CanonicalCandidateCountV1> absolute;
         std::array<std::vector<double>, CanonicalCandidateCountV1> normalized;
@@ -1032,13 +1335,15 @@ DecisionAnalysisV1 AnalyzeMeasurementEvidenceV1(const MeasurementEvidenceV1& evi
             decision.medianNanosecondsPerIteration[index] = Median(absolute[index]);
             decision.medianControlNormalizedTime[index] = Median(normalized[index]);
         }
+
         const double minimum = *std::min_element(
-            decision.medianNanosecondsPerIteration.begin(), decision.medianNanosecondsPerIteration.end());
+            decision.medianNanosecondsPerIteration.begin(),
+            decision.medianNanosecondsPerIteration.end());
         const auto kinds = CanonicalCandidateKindsV1();
         for (std::size_t index = 0; index < kinds.size(); ++index)
             if (decision.medianNanosecondsPerIteration[index] <=
                     minimum * (1.0 + evidence.config.relativeNoiseFloor))
-                decision.observedWinnerSet.push_back(kinds[index]);
+                decision.descriptiveMedianWinnerSet.push_back(kinds[index]);
 
         decision.fullVersusCompact = BuildPairDecision(
             samplePointers, kinds[0], kinds[1], evidence.config);
@@ -1046,82 +1351,75 @@ DecisionAnalysisV1 AnalyzeMeasurementEvidenceV1(const MeasurementEvidenceV1& evi
             samplePointers, kinds[1], kinds[2], evidence.config);
         decision.fullVersusBlock = BuildPairDecision(
             samplePointers, kinds[0], kinds[2], evidence.config);
-        decision.pairedObservationCount = decision.fullVersusCompact.pairedObservationCount;
+        decision.pairedObservationCount =
+            decision.fullVersusCompact.pairedObservationCount;
+        ClassifyPairedAuthority(decision);
         analysis.cases.push_back(std::move(decision));
     }
 
-    std::sort(analysis.cases.begin(), analysis.cases.end(), [](const auto& a, const auto& b)
-    {
-        return CaseTuple(a.key) < CaseTuple(b.key);
-    });
-
-    std::set<CandidateKindV1> overall;
-    for (const auto& value : analysis.cases)
-        overall.insert(value.observedWinnerSet.begin(), value.observedWinnerSet.end());
-    analysis.overallObservedWinnerSet.assign(overall.begin(), overall.end());
-
-    for (const auto pattern : CanonicalPatternsV1())
-    {
-        for (const auto active : CanonicalMeasurementActiveCountsV1())
-        {
-            std::vector<const CaseDecisionV1*> row;
-            for (const auto& value : analysis.cases)
-                if (value.key.pattern == pattern && value.key.activeCount == active) row.push_back(&value);
-            std::sort(row.begin(), row.end(), [](const auto* a, const auto* b)
-            {
-                return a->key.transitionCount < b->key.transitionCount;
-            });
-            for (std::size_t index = 1; index < row.size(); ++index)
-            {
-                if (!WinnerSetsEqual(row[index - 1]->observedWinnerSet, row[index]->observedWinnerSet))
-                {
-                    analysis.winnerChangesAcrossTransitionCount = true;
-                    analysis.transitionSurfaceEvents.push_back({
-                        pattern, active,
-                        row[index - 1]->key.transitionCount, row[index]->key.transitionCount,
-                        row[index - 1]->observedWinnerSet, row[index]->observedWinnerSet});
-                }
-            }
-        }
-        for (const auto transition : CanonicalMeasurementTransitionCountsV1())
-        {
-            std::vector<const CaseDecisionV1*> column;
-            for (const auto& value : analysis.cases)
-                if (value.key.pattern == pattern && value.key.transitionCount == transition)
-                    column.push_back(&value);
-            std::sort(column.begin(), column.end(), [](const auto* a, const auto* b)
-            {
-                return a->key.activeCount < b->key.activeCount;
-            });
-            for (std::size_t index = 1; index < column.size(); ++index)
-            {
-                if (!WinnerSetsEqual(column[index - 1]->observedWinnerSet,
-                                     column[index]->observedWinnerSet))
-                {
-                    analysis.winnerChangesAcrossActiveCount = true;
-                    analysis.activeSurfaceEvents.push_back({
-                        pattern, transition,
-                        column[index - 1]->key.activeCount, column[index]->key.activeCount,
-                        column[index - 1]->observedWinnerSet, column[index]->observedWinnerSet});
-                }
-            }
-        }
-    }
-
-    for (const auto active : CanonicalMeasurementActiveCountsV1())
-    {
-        for (const auto transition : CanonicalMeasurementTransitionCountsV1())
-        {
-            std::vector<std::vector<CandidateKindV1>> sets;
-            for (const auto& value : analysis.cases)
-                if (value.key.activeCount == active && value.key.transitionCount == transition)
-                    sets.push_back(value.observedWinnerSet);
-            for (std::size_t index = 1; index < sets.size(); ++index)
-                if (!WinnerSetsEqual(sets.front(), sets[index]))
-                    analysis.sameActiveAndTransitionWinnerDependsOnPattern = true;
-        }
-    }
+    FinalizeDecisionAnalysis(analysis);
     return analysis;
+}
+
+DecisionAnalysisV1 AnalyzeCombinedMeasurementEvidenceV2(
+    const MeasurementEvidenceV1& canonical,
+    const MeasurementEvidenceV1& refinement)
+{
+    const auto canonicalValid = ValidateMeasurementEvidenceV1(canonical);
+    const auto refinementValid = ValidateMeasurementEvidenceV1(refinement);
+    if (!canonicalValid) throw std::invalid_argument(canonicalValid.Error());
+    if (!refinementValid) throw std::invalid_argument(refinementValid.Error());
+    Require(canonical.config.measurementPass == MeasurementPassV2::CanonicalSurface,
+            "Combined analysis requires CanonicalSurface evidence first.");
+    Require(refinement.config.measurementPass ==
+                MeasurementPassV2::HighTransitionRefinement,
+            "Combined analysis requires HighTransitionRefinement evidence second.");
+    Require(canonical.adapter.fingerprint == refinement.adapter.fingerprint,
+            "Combined evidence adapter fingerprints differ.");
+    Require(canonical.semanticIdentity == refinement.semanticIdentity,
+            "Combined evidence Semantic identities differ.");
+    Require(canonical.verificationContextIdentity ==
+                refinement.verificationContextIdentity,
+            "Combined evidence verification contexts differ.");
+    Require(canonical.candidateOrderIdentity == refinement.candidateOrderIdentity,
+            "Combined evidence Candidate orders differ.");
+    for (std::size_t index = 0; index < CanonicalCandidateCountV1; ++index)
+    {
+        Require(canonical.candidates[index].kind == refinement.candidates[index].kind,
+                "Combined evidence Candidate kinds differ.");
+        Require(canonical.candidates[index].timingShaderBytecodeDigest ==
+                    refinement.candidates[index].timingShaderBytecodeDigest,
+                "Combined evidence timing Shader bytecode differs.");
+        Require(canonical.candidates[index].validationShaderBytecodeDigest ==
+                    refinement.candidates[index].validationShaderBytecodeDigest,
+                "Combined evidence validation Shader bytecode differs.");
+    }
+
+    auto canonicalAnalysis = AnalyzeMeasurementEvidenceV1(canonical);
+    auto refinementAnalysis = AnalyzeMeasurementEvidenceV1(refinement);
+    DecisionAnalysisV1 combined;
+    combined.combinedProfile = true;
+    combined.acceptedBlockCount = canonicalAnalysis.acceptedBlockCount +
+        refinementAnalysis.acceptedBlockCount;
+    combined.rejectedBlockCount = canonicalAnalysis.rejectedBlockCount +
+        refinementAnalysis.rejectedBlockCount;
+    combined.timestampResolutionCensoredSampleCount =
+        canonicalAnalysis.timestampResolutionCensoredSampleCount +
+        refinementAnalysis.timestampResolutionCensoredSampleCount;
+
+    std::map<std::tuple<std::uint32_t,std::uint32_t,std::uint32_t>,
+             CaseDecisionV1> merged;
+    for (auto& value : canonicalAnalysis.cases)
+        merged[CaseTuple(value.key)] = std::move(value);
+    for (auto& value : refinementAnalysis.cases)
+        merged[CaseTuple(value.key)] = std::move(value);
+    for (auto& [key, value] : merged)
+    {
+        (void)key;
+        combined.cases.push_back(std::move(value));
+    }
+    FinalizeDecisionAnalysis(combined);
+    return combined;
 }
 
 std::string BuildDecisionReportV1(
@@ -1129,27 +1427,47 @@ std::string BuildDecisionReportV1(
     const DecisionAnalysisV1& analysis)
 {
     std::ostringstream stream;
-    stream << "SGE4-5 Spiral 7 CU6 Real-GPU Measurement and Decision Evidence V2\n";
+    stream << "SGE4-5 Spiral 7 CU6-2 Real-GPU Measurement and Paired Decision Evidence V3\n";
+    stream << "Measurement pass: " << MeasurementPassNameV2(evidence.config.measurementPass) << "\n";
     stream << "Adapter: " << evidence.adapter.description << "\n";
     stream << "Adapter fingerprint: "; AppendDigestText(stream, evidence.adapter.fingerprint); stream << "\n";
     stream << "Timestamp frequency: " << evidence.adapter.timestampFrequency << " Hz\n";
     stream << "Stable power state applied: " << (evidence.adapter.stablePowerStateApplied ? "true" : "false") << "\n";
-    stream << "Grid: 4 patterns x 5 Active counts x 8 Transition counts = 160 cases per run\n";
-    stream << "Runs: " << evidence.config.runCount
-           << ", balanced orders: 6, cycles/order: " << evidence.config.measurementCyclesPerOrder
+    stream << "Cases/run: " << MeasurementCaseCountPerRunV2(evidence.config.measurementPass)
+           << ", runs: " << evidence.config.runCount
+           << ", balanced orders: 6, cycles/order: "
+           << evidence.config.measurementCyclesPerOrder
            << ", iterations/batch: " << evidence.config.iterationsPerBatch << "\n";
     stream << "Accepted blocks: " << analysis.acceptedBlockCount
            << ", rejected attempts: " << analysis.rejectedBlockCount << "\n";
     stream << "Timestamp-resolution-censored samples: "
            << analysis.timestampResolutionCensoredSampleCount
-           << " (one-tick conservative upper bound; zero-dispatch only)\n";
-    stream << "Overall observed winner set: " << WinnerSetText(analysis.overallObservedWinnerSet) << "\n";
-    stream << "Winner changes across Transition count: "
+           << " (zero-dispatch only)\n";
+    stream << "Decision classes: zeroDispatchEquivalent="
+           << analysis.zeroDispatchEquivalentCaseCount
+           << ", stableWinner=" << analysis.stableWinnerCaseCount
+           << ", stableEquivalent=" << analysis.stableEquivalentCaseCount
+           << ", unresolved=" << analysis.unresolvedCaseCount << "\n";
+    stream << "Overall paired authority set: "
+           << WinnerSetText(analysis.overallPairedAuthoritySet) << "\n";
+    stream << "Stable paired-authority changes across Transition count: "
            << (analysis.winnerChangesAcrossTransitionCount ? "true" : "false") << "\n";
-    stream << "Winner changes across Active count: "
+    stream << "Stable paired-authority changes across Active count: "
            << (analysis.winnerChangesAcrossActiveCount ? "true" : "false") << "\n";
-    stream << "Same (A,T) winner depends on pattern: "
+    stream << "Stable paired authority depends on pattern at equal (A,T): "
            << (analysis.sameActiveAndTransitionWinnerDependsOnPattern ? "true" : "false") << "\n\n";
+
+    const auto pairText = [](PairWinnerV1 value)
+    {
+        switch (value)
+        {
+        case PairWinnerV1::Left: return "Left";
+        case PairWinnerV1::Right: return "Right";
+        case PairWinnerV1::NoiseEquivalent: return "NoiseEquivalent";
+        case PairWinnerV1::Unresolved: return "Unresolved";
+        }
+        return "Unknown";
+    };
 
     for (const auto& value : analysis.cases)
     {
@@ -1158,16 +1476,19 @@ std::string BuildDecisionReportV1(
             {value.medianNanosecondsPerIteration[1], CandidateKindV1::CompactDeltaIndexHistoryReuse},
             {value.medianNanosecondsPerIteration[2], CandidateKindV1::AffectedBlockDeltaHistoryReuse}}};
         std::sort(ranking.begin(), ranking.end());
-        stream << "[RANKING] pattern=" << PatternNameV1(value.key.pattern)
+        stream << "[PAIRED] source=" << MeasurementPassNameV2(value.sourcePass)
+               << " pattern=" << PatternNameV1(value.key.pattern)
                << " A=" << value.key.activeCount
                << " T=" << value.key.transitionCount
                << " U=" << value.key.updateCount
                << " C=" << value.key.clearCount
                << " blocks=" << value.key.affectedBlockCount
-               << " winnerSet=" << WinnerSetText(value.observedWinnerSet)
-               << " censored=A:" << value.timestampResolutionCensoredSampleCount[0]
-               << "/B:" << value.timestampResolutionCensoredSampleCount[1]
-               << "/C:" << value.timestampResolutionCensoredSampleCount[2];
+               << " class=" << DecisionClassNameV2(value.decisionClass)
+               << " authority=" << WinnerSetText(value.pairedAuthoritySet)
+               << " medianOnly=" << WinnerSetText(value.descriptiveMedianWinnerSet)
+               << " AB=" << pairText(value.fullVersusCompact.winner)
+               << " BC=" << pairText(value.compactVersusBlock.winner)
+               << " AC=" << pairText(value.fullVersusBlock.winner);
         for (std::size_t index = 0; index < ranking.size(); ++index)
             stream << " " << (index + 1) << "=" << CandidateLetterV1(ranking[index].second)
                    << "(" << std::fixed << std::setprecision(3) << ranking[index].first << " ns)";
@@ -1176,25 +1497,28 @@ std::string BuildDecisionReportV1(
 
     stream << "\n";
     for (const auto& event : analysis.transitionSurfaceEvents)
-        stream << "[CROSSOVER-T] pattern=" << PatternNameV1(event.pattern)
+        stream << "[STABLE-CROSSOVER-T] pattern=" << PatternNameV1(event.pattern)
                << " A=" << event.activeCount
-               << " T=" << event.lowerTransitionCount << "->" << event.upperTransitionCount
-               << " " << WinnerSetText(event.fromWinnerSet) << "->" << WinnerSetText(event.toWinnerSet)
-               << "\n";
+               << " bracket=" << event.lowerTransitionCount << ".." << event.upperTransitionCount
+               << " " << WinnerSetText(event.fromWinnerSet) << "->"
+               << WinnerSetText(event.toWinnerSet) << "\n";
     for (const auto& event : analysis.activeSurfaceEvents)
-        stream << "[CROSSOVER-A] pattern=" << PatternNameV1(event.pattern)
+        stream << "[STABLE-CROSSOVER-A] pattern=" << PatternNameV1(event.pattern)
                << " T=" << event.transitionCount
-               << " A=" << event.lowerActiveCount << "->" << event.upperActiveCount
-               << " " << WinnerSetText(event.fromWinnerSet) << "->" << WinnerSetText(event.toWinnerSet)
-               << "\n";
+               << " bracket=" << event.lowerActiveCount << ".." << event.upperActiveCount
+               << " " << WinnerSetText(event.fromWinnerSet) << "->"
+               << WinnerSetText(event.toWinnerSet) << "\n";
 
-    stream << "\nDecision boundary:\n";
+    stream << "\nDecision authority rules:\n";
+    stream << "MedianRankingAuthority = DescriptiveOnly\n";
+    stream << "CaseWinnerAuthority = PairedAgreementAgainstBothAlternatives\n";
+    stream << "ZeroTransitionClassification = B/C ZeroDispatchEquivalent\n";
+    stream << "ZeroTransitionIncludedInCrossover = false\n";
+    stream << "UnresolvedCaseIncludedInCrossover = false\n";
     stream << "RuntimeCandidatePolicyAuthorization = None\n";
     stream << "MeasurementResultScope = AdapterAndDriverSpecificObservation\n";
     stream << "UniversalWinnerClaim = Forbidden\n";
-    stream << "Spiral7ExperimentStatus = Complete\n";
     stream << "Spiral7Closure = OwnerRequired\n";
-    stream << "NextProgramAfterOwnerClosure = Level4V2CanonicalReconstruction\n";
     return stream.str();
 }
 
@@ -1203,9 +1527,9 @@ std::string BuildDecisionCsvV1(
     const DecisionAnalysisV1& analysis)
 {
     std::ostringstream stream;
-    stream << "pattern,active_count,transition_count,update_count,clear_count,affected_block_count,transition_shape,";
-    stream << "median_A_ns,median_B_ns,median_C_ns,censored_A,censored_B,censored_C,winner_set,paired_observations,";
-    stream << "A_over_B,A_vs_B,B_over_C,B_vs_C,A_over_C,A_vs_C\n";
+    stream << "source_pass,pattern,active_count,transition_count,update_count,clear_count,affected_block_count,transition_shape,";
+    stream << "median_A_ns,median_B_ns,median_C_ns,censored_A,censored_B,censored_C,decision_class,paired_authority_set,median_descriptive_set,paired_observations,";
+    stream << "A_over_B,A_vs_B,A_win_fraction,B_win_fraction,B_over_C,B_vs_C,B_win_fraction_vs_C,C_win_fraction,A_over_C,A_vs_C,A_win_fraction_vs_C,C_win_fraction_vs_A\n";
     const auto pairText = [](PairWinnerV1 value)
     {
         switch (value)
@@ -1219,7 +1543,8 @@ std::string BuildDecisionCsvV1(
     };
     for (const auto& value : analysis.cases)
     {
-        stream << PatternNameV1(value.key.pattern) << ','
+        stream << MeasurementPassNameV2(value.sourcePass) << ','
+               << PatternNameV1(value.key.pattern) << ','
                << value.key.activeCount << ',' << value.key.transitionCount << ','
                << value.key.updateCount << ',' << value.key.clearCount << ','
                << value.key.affectedBlockCount << ','
@@ -1231,24 +1556,103 @@ std::string BuildDecisionCsvV1(
                << value.timestampResolutionCensoredSampleCount[0] << ','
                << value.timestampResolutionCensoredSampleCount[1] << ','
                << value.timestampResolutionCensoredSampleCount[2] << ','
-               << WinnerSetText(value.observedWinnerSet) << ','
+               << DecisionClassNameV2(value.decisionClass) << ','
+               << WinnerSetText(value.pairedAuthoritySet) << ','
+               << WinnerSetText(value.descriptiveMedianWinnerSet) << ','
                << value.pairedObservationCount << ','
                << value.fullVersusCompact.medianLeftOverRight << ','
                << pairText(value.fullVersusCompact.winner) << ','
+               << value.fullVersusCompact.leftWinFraction << ','
+               << value.fullVersusCompact.rightWinFraction << ','
                << value.compactVersusBlock.medianLeftOverRight << ','
                << pairText(value.compactVersusBlock.winner) << ','
+               << value.compactVersusBlock.leftWinFraction << ','
+               << value.compactVersusBlock.rightWinFraction << ','
                << value.fullVersusBlock.medianLeftOverRight << ','
-               << pairText(value.fullVersusBlock.winner) << '\n';
+               << pairText(value.fullVersusBlock.winner) << ','
+               << value.fullVersusBlock.leftWinFraction << ','
+               << value.fullVersusBlock.rightWinFraction << '\n';
     }
     return stream.str();
 }
 
-std::vector<std::byte> BuildSyntheticSelfTestEvidenceV1()
+std::string BuildCombinedDecisionReportV2(
+    const MeasurementEvidenceV1& canonical,
+    const MeasurementEvidenceV1& refinement,
+    const DecisionAnalysisV1& analysis)
+{
+    std::ostringstream stream;
+    stream << "SGE4-5 Spiral 7 CU6-2 Combined Paired Decision Map V3\n";
+    stream << "Adapter: " << canonical.adapter.description << "\n";
+    stream << "Adapter fingerprint: "; AppendDigestText(stream, canonical.adapter.fingerprint); stream << "\n";
+    stream << "Canonical evidence SHA-256: "
+           << base::ToHex(base::Sha256(SerializeMeasurementEvidenceV1(canonical))) << "\n";
+    stream << "Refinement evidence SHA-256: "
+           << base::ToHex(base::Sha256(SerializeMeasurementEvidenceV1(refinement))) << "\n";
+    stream << "Refinement overrides duplicate T=1024 and T=4096 coordinates.\n";
+    stream << "Decision authority: paired agreement; median rankings are descriptive only.\n";
+    stream << "ZeroTransition: B/C ZeroDispatchEquivalent and excluded from crossover.\n";
+    stream << "Decision classes: zeroDispatchEquivalent="
+           << analysis.zeroDispatchEquivalentCaseCount
+           << ", stableWinner=" << analysis.stableWinnerCaseCount
+           << ", stableEquivalent=" << analysis.stableEquivalentCaseCount
+           << ", unresolved=" << analysis.unresolvedCaseCount << "\n";
+    stream << "Overall paired authority set: "
+           << WinnerSetText(analysis.overallPairedAuthoritySet) << "\n\n";
+
+    for (const auto& value : analysis.cases)
+        stream << "[CASE] source=" << MeasurementPassNameV2(value.sourcePass)
+               << " pattern=" << PatternNameV1(value.key.pattern)
+               << " A=" << value.key.activeCount
+               << " T=" << value.key.transitionCount
+               << " blocks=" << value.key.affectedBlockCount
+               << " class=" << DecisionClassNameV2(value.decisionClass)
+               << " authority=" << WinnerSetText(value.pairedAuthoritySet)
+               << " medianOnly=" << WinnerSetText(value.descriptiveMedianWinnerSet)
+               << "\n";
+
+    stream << "\n";
+    for (const auto& event : analysis.transitionSurfaceEvents)
+        stream << "[STABLE-CROSSOVER-T] pattern=" << PatternNameV1(event.pattern)
+               << " A=" << event.activeCount
+               << " bracket=" << event.lowerTransitionCount << ".." << event.upperTransitionCount
+               << " " << WinnerSetText(event.fromWinnerSet) << "->"
+               << WinnerSetText(event.toWinnerSet) << "\n";
+    for (const auto& event : analysis.activeSurfaceEvents)
+        stream << "[STABLE-CROSSOVER-A] pattern=" << PatternNameV1(event.pattern)
+               << " T=" << event.transitionCount
+               << " bracket=" << event.lowerActiveCount << ".." << event.upperActiveCount
+               << " " << WinnerSetText(event.fromWinnerSet) << "->"
+               << WinnerSetText(event.toWinnerSet) << "\n";
+
+    stream << "\nRuntimeCandidatePolicyAuthorization = None\n";
+    stream << "UniversalWinnerClaim = Forbidden\n";
+    stream << "Spiral7ExperimentStatus = Complete\n";
+    stream << "Spiral7Closure = OwnerRequired\n";
+    stream << "NextProgramAfterOwnerClosure = Level4V2CanonicalReconstruction\n";
+    return stream.str();
+}
+
+std::string BuildCombinedDecisionCsvV2(
+    const MeasurementEvidenceV1&,
+    const MeasurementEvidenceV1&,
+    const DecisionAnalysisV1& analysis)
+{
+    MeasurementEvidenceV1 unused;
+    return BuildDecisionCsvV1(unused, analysis);
+}
+
+namespace
+{
+std::vector<std::byte> BuildSyntheticEvidenceForPass(MeasurementPassV2 pass)
 {
     MeasurementEvidenceV1 evidence;
-    evidence.captureUnixNanoseconds = 1;
+    evidence.captureUnixNanoseconds =
+        pass == MeasurementPassV2::CanonicalSurface ? 1u : 2u;
+    evidence.config.measurementPass = pass;
     evidence.config.runCount = 1;
-    evidence.config.measurementCyclesPerOrder = 1;
+    evidence.config.measurementCyclesPerOrder =
+        pass == MeasurementPassV2::CanonicalSurface ? 1u : 3u;
     evidence.config.iterationsPerBatch = 64;
     evidence.config.warmupIterations = 64;
     evidence.config.maximumBlockAttempts = 2;
@@ -1263,7 +1667,7 @@ std::vector<std::byte> BuildSyntheticSelfTestEvidenceV1()
     evidence.semanticIdentity = LabelDigest("synthetic-semantic");
     evidence.verificationContextIdentity = VerificationContextIdentityV1();
     evidence.measurementProfileIdentity = BuildMeasurementProfileIdentityV1(evidence.config);
-    evidence.caseScheduleIdentity = BuildCaseScheduleIdentityV1(evidence.config.runCount);
+    evidence.caseScheduleIdentity = BuildCaseScheduleIdentityV1(evidence.config);
     evidence.candidateOrderIdentity = BuildCandidateOrderIdentityV1();
 
     const auto kinds = CanonicalCandidateKindsV1();
@@ -1292,7 +1696,7 @@ std::vector<std::byte> BuildSyntheticSelfTestEvidenceV1()
         profile.timingShaderBytecodeDigest = LabelDigest("timing-shader" + std::to_string(index));
     }
 
-    const auto schedule = CanonicalCaseScheduleV1(0);
+    const auto schedule = MeasurementCaseScheduleV2(pass, 0);
     const auto orders = CanonicalBalancedOrdersV1();
     for (std::size_t caseOrder = 0; caseOrder < schedule.size(); ++caseOrder)
     {
@@ -1322,53 +1726,73 @@ std::vector<std::byte> BuildSyntheticSelfTestEvidenceV1()
             authority.representationResourceIdentity = LabelDigest("resource:" + suffix);
             authority.outputDigest = LabelDigest("output:" + std::to_string(caseOrder));
         }
-        for (std::size_t orderIndex = 0; orderIndex < orders.size(); ++orderIndex)
+        for (std::uint32_t cycle = 0;
+             cycle < evidence.config.measurementCyclesPerOrder; ++cycle)
         {
-            for (std::size_t position = 0; position < CanonicalCandidateCountV1; ++position)
+            for (std::size_t orderIndex = 0; orderIndex < orders.size(); ++orderIndex)
             {
-                const auto candidateIndex = orders[orderIndex][position];
-                TimingSampleV1 sample;
-                sample.run = 0;
-                sample.caseOrder = static_cast<std::uint32_t>(caseOrder);
-                sample.acceptedAttempt = 0;
-                sample.orderIndex = static_cast<std::uint32_t>(orderIndex);
-                sample.cycle = 0;
-                sample.orderPosition = static_cast<std::uint32_t>(position);
-                sample.candidate = kinds[candidateIndex];
-                sample.expectedDispatchGroupsX = ExpectedDispatchGroups(
-                    sample.candidate, attempt.key);
-                sample.effectiveIterations = evidence.config.iterationsPerBatch;
-                sample.timestampResolutionCensored = sample.expectedDispatchGroupsX == 0;
-                if (sample.timestampResolutionCensored)
+                for (std::size_t position = 0;
+                     position < CanonicalCandidateCountV1; ++position)
                 {
-                    sample.timestampTickCount = 0;
-                }
-                else
-                {
-                    const double jitter = 1.0 +
-                        (static_cast<double>((orderIndex + position) % 3) - 1.0) * 0.002;
-                    const double requestedNanoseconds = times[candidateIndex] * jitter *
+                    const auto candidateIndex = orders[orderIndex][position];
+                    TimingSampleV1 sample;
+                    sample.run = 0;
+                    sample.caseOrder = static_cast<std::uint32_t>(caseOrder);
+                    sample.acceptedAttempt = 0;
+                    sample.orderIndex = static_cast<std::uint32_t>(orderIndex);
+                    sample.cycle = cycle;
+                    sample.orderPosition = static_cast<std::uint32_t>(position);
+                    sample.candidate = kinds[candidateIndex];
+                    sample.expectedDispatchGroupsX = ExpectedDispatchGroups(
+                        sample.candidate, attempt.key);
+                    sample.effectiveIterations = evidence.config.iterationsPerBatch;
+                    sample.timestampResolutionCensored =
+                        sample.expectedDispatchGroupsX == 0;
+                    if (sample.timestampResolutionCensored)
+                    {
+                        sample.timestampTickCount = 0;
+                    }
+                    else
+                    {
+                        const double jitter = 1.0 +
+                            (static_cast<double>((orderIndex + position + cycle) % 3) - 1.0) * 0.002;
+                        const double requestedNanoseconds = times[candidateIndex] * jitter *
+                            static_cast<double>(sample.effectiveIterations);
+                        sample.timestampTickCount = std::max<std::uint64_t>(
+                            1u, static_cast<std::uint64_t>(std::llround(
+                                requestedNanoseconds *
+                                static_cast<double>(evidence.adapter.timestampFrequency) / 1.0e9)));
+                    }
+                    sample.gpuBatchNanoseconds = TimestampTicksToNanoseconds(
+                        std::max<std::uint64_t>(1u, sample.timestampTickCount),
+                        evidence.adapter.timestampFrequency);
+                    sample.gpuNanosecondsPerIteration =
+                        sample.gpuBatchNanoseconds /
                         static_cast<double>(sample.effectiveIterations);
-                    sample.timestampTickCount = std::max<std::uint64_t>(
-                        1u, static_cast<std::uint64_t>(std::llround(
-                            requestedNanoseconds *
-                            static_cast<double>(evidence.adapter.timestampFrequency) / 1.0e9)));
+                    sample.blockControlNanosecondsPerIteration =
+                        attempt.controlReferenceNanosecondsPerIteration;
+                    sample.controlNormalizedTime =
+                        sample.gpuNanosecondsPerIteration /
+                        attempt.controlReferenceNanosecondsPerIteration;
+                    attempt.samples.push_back(sample);
                 }
-                sample.gpuBatchNanoseconds = TimestampTicksToNanoseconds(
-                    std::max<std::uint64_t>(1u, sample.timestampTickCount),
-                    evidence.adapter.timestampFrequency);
-                sample.gpuNanosecondsPerIteration = sample.gpuBatchNanoseconds /
-                    static_cast<double>(sample.effectiveIterations);
-                sample.blockControlNanosecondsPerIteration =
-                    attempt.controlReferenceNanosecondsPerIteration;
-                sample.controlNormalizedTime = sample.gpuNanosecondsPerIteration /
-                    attempt.controlReferenceNanosecondsPerIteration;
-                attempt.samples.push_back(sample);
             }
         }
         evidence.attempts.push_back(std::move(attempt));
     }
     return SerializeMeasurementEvidenceV1(evidence);
+}
+} // namespace
+
+std::vector<std::byte> BuildSyntheticSelfTestEvidenceV1()
+{
+    return BuildSyntheticEvidenceForPass(MeasurementPassV2::CanonicalSurface);
+}
+
+std::vector<std::byte> BuildSyntheticRefinementSelfTestEvidenceV2()
+{
+    return BuildSyntheticEvidenceForPass(
+        MeasurementPassV2::HighTransitionRefinement);
 }
 
 base::Result<void, std::string> RunMeasurementFormatSelfTestV1()
@@ -1376,10 +1800,12 @@ base::Result<void, std::string> RunMeasurementFormatSelfTestV1()
     try
     {
         const auto orders = CanonicalBalancedOrdersV1();
-        Require(orders.size() == CanonicalOrderCountV1, "Balanced order count mismatch.");
+        Require(orders.size() == CanonicalOrderCountV1,
+                "Balanced order count mismatch.");
         std::set<std::array<std::uint32_t, CanonicalCandidateCountV1>> uniqueOrders(
             orders.begin(), orders.end());
-        Require(uniqueOrders.size() == CanonicalOrderCountV1, "Balanced orders are not unique.");
+        Require(uniqueOrders.size() == CanonicalOrderCountV1,
+                "Balanced orders are not unique.");
         for (const auto& order : orders)
         {
             auto sorted = order;
@@ -1388,39 +1814,79 @@ base::Result<void, std::string> RunMeasurementFormatSelfTestV1()
                     "Balanced order is not a permutation of A/B/C.");
         }
 
-        auto bytes = BuildSyntheticSelfTestEvidenceV1();
-        auto parsed = DeserializeMeasurementEvidenceV1(bytes);
-        Require(static_cast<bool>(parsed), "Synthetic evidence did not parse.");
-        auto serializedAgain = SerializeMeasurementEvidenceV1(parsed.Value());
-        Require(bytes == serializedAgain, "Synthetic evidence did not round-trip byte-identically.");
-        const auto analysis = AnalyzeMeasurementEvidenceV1(parsed.Value());
-        Require(analysis.cases.size() == CanonicalCaseCountV1,
-                "Synthetic decision case count mismatch.");
-        Require(!analysis.transitionSurfaceEvents.empty(),
-                "Synthetic evidence failed to produce a Transition crossover.");
-        Require(analysis.sameActiveAndTransitionWinnerDependsOnPattern,
-                "Synthetic evidence failed to produce pattern dependence.");
-        Require(analysis.timestampResolutionCensoredSampleCount > 0,
-                "Synthetic evidence did not exercise zero-dispatch timestamp censoring.");
-        for (const auto& attempt : parsed.Value().attempts)
-        {
+        auto canonicalBytes = BuildSyntheticSelfTestEvidenceV1();
+        auto canonical = DeserializeMeasurementEvidenceV1(canonicalBytes);
+        Require(static_cast<bool>(canonical),
+                "Synthetic canonical evidence did not parse.");
+        Require(canonicalBytes ==
+                    SerializeMeasurementEvidenceV1(canonical.Value()),
+                "Synthetic canonical evidence did not round-trip byte-identically.");
+        const auto canonicalAnalysis =
+            AnalyzeMeasurementEvidenceV1(canonical.Value());
+        Require(canonicalAnalysis.cases.size() == CanonicalCaseCountV1,
+                "Synthetic canonical decision case count mismatch.");
+        Require(canonicalAnalysis.zeroDispatchEquivalentCaseCount ==
+                    CanonicalPatternCountV1 * CanonicalActiveCountCountV1,
+                "T=0 was not classified as B/C ZeroDispatchEquivalent.");
+        for (const auto& value : canonicalAnalysis.cases)
+            if (value.key.transitionCount == 0)
+                Require(value.decisionClass ==
+                            CaseDecisionClassV2::ZeroDispatchEquivalent &&
+                        !value.eligibleForCrossover &&
+                        value.pairedAuthoritySet ==
+                            std::vector<CandidateKindV1>{
+                                CandidateKindV1::CompactDeltaIndexHistoryReuse,
+                                CandidateKindV1::AffectedBlockDeltaHistoryReuse},
+                        "T=0 escaped the zero-dispatch paired-authority boundary.");
+
+        auto refinementBytes = BuildSyntheticRefinementSelfTestEvidenceV2();
+        auto refinement = DeserializeMeasurementEvidenceV1(refinementBytes);
+        Require(static_cast<bool>(refinement),
+                "Synthetic refinement evidence did not parse.");
+        Require(refinementBytes ==
+                    SerializeMeasurementEvidenceV1(refinement.Value()),
+                "Synthetic refinement evidence did not round-trip byte-identically.");
+        const auto refinementAnalysis =
+            AnalyzeMeasurementEvidenceV1(refinement.Value());
+        Require(refinementAnalysis.cases.size() == RefinementCaseCountV2,
+                "Synthetic refinement decision case count mismatch.");
+        Require(refinementAnalysis.stableWinnerCaseCount > 0,
+                "Synthetic refinement evidence has no stable paired winner.");
+
+        const auto combined = AnalyzeCombinedMeasurementEvidenceV2(
+            canonical.Value(), refinement.Value());
+        Require(combined.combinedProfile,
+                "Combined synthetic analysis did not retain combined provenance.");
+        Require(combined.cases.size() ==
+                    CanonicalCaseCountV1 + RefinementCaseCountV2 -
+                    CanonicalPatternCountV1 * CanonicalActiveCountCountV1 * 2u,
+                "Combined synthetic case count mismatch.");
+        Require(!combined.transitionSurfaceEvents.empty(),
+                "Synthetic paired decision map failed to produce a stable Transition bracket.");
+        Require(BuildCombinedDecisionReportV2(
+                    canonical.Value(), refinement.Value(), combined)
+                    .find("MedianRankingAuthority =") == std::string::npos,
+                "Combined report unexpectedly used the single-pass report footer.");
+        Require(BuildCombinedDecisionReportV2(
+                    canonical.Value(), refinement.Value(), combined)
+                    .find("Decision authority: paired agreement") != std::string::npos,
+                "Combined report did not declare paired decision authority.");
+
+        for (const auto& attempt : canonical.Value().attempts)
             for (const auto& sample : attempt.samples)
-            {
                 if (sample.timestampResolutionCensored)
                     Require(sample.expectedDispatchGroupsX == 0 &&
                             sample.timestampTickCount == 0,
                             "Synthetic timestamp censoring escaped the zero-dispatch boundary.");
-            }
-        }
 
-        auto corrupted = bytes;
+        auto corrupted = canonicalBytes;
         corrupted[corrupted.size() / 2] ^= std::byte{1};
         Require(!DeserializeMeasurementEvidenceV1(corrupted),
                 "Corrupted measurement evidence was accepted.");
-        corrupted = bytes;
+        corrupted = refinementBytes;
         corrupted.pop_back();
         Require(!DeserializeMeasurementEvidenceV1(corrupted),
-                "Truncated measurement evidence was accepted.");
+                "Truncated refinement evidence was accepted.");
         return base::Result<void, std::string>::Success();
     }
     catch (const std::exception& error)

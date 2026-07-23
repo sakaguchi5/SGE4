@@ -13,15 +13,18 @@
 
 namespace sge4_5::spiral7::performance
 {
-inline constexpr std::uint32_t MeasurementEvidenceSchemaVersionV2 = 2;
+inline constexpr std::uint32_t MeasurementEvidenceSchemaVersionV3 = 3;
 inline constexpr std::uint32_t MaximumAdaptiveIterationsV2 = 65536;
 inline constexpr std::uint32_t CanonicalCandidateCountV1 = 3;
 inline constexpr std::uint32_t CanonicalPatternCountV1 = 4;
 inline constexpr std::uint32_t CanonicalActiveCountCountV1 = 5;
 inline constexpr std::uint32_t CanonicalTransitionCountCountV1 = 8;
+inline constexpr std::uint32_t RefinementTransitionCountCountV2 = 5;
 inline constexpr std::uint32_t CanonicalOrderCountV1 = 6;
 inline constexpr std::uint32_t CanonicalCaseCountV1 =
     CanonicalPatternCountV1 * CanonicalActiveCountCountV1 * CanonicalTransitionCountCountV1;
+inline constexpr std::uint32_t RefinementCaseCountV2 =
+    CanonicalPatternCountV1 * CanonicalActiveCountCountV1 * RefinementTransitionCountCountV2;
 
 using CandidateKindV1 = family_candidate::DeltaFamilyCandidateKindV1;
 using PatternKindV1 = semantic::SparsePatternKindV1;
@@ -44,8 +47,24 @@ enum class PairWinnerV1 : std::uint32_t
     Unresolved = 4
 };
 
+enum class MeasurementPassV2 : std::uint32_t
+{
+    CanonicalSurface = 1,
+    HighTransitionRefinement = 2
+};
+
+enum class CaseDecisionClassV2 : std::uint32_t
+{
+    ZeroDispatchEquivalent = 1,
+    StableWinner = 2,
+    StableEquivalentSet = 3,
+    Unresolved = 4
+};
+
+
 struct MeasurementConfigV1 final
 {
+    MeasurementPassV2 measurementPass = MeasurementPassV2::CanonicalSurface;
     std::uint32_t runCount = 2;
     std::uint32_t measurementCyclesPerOrder = 1;
     std::uint32_t iterationsPerBatch = 128;
@@ -157,7 +176,7 @@ struct BlockAttemptV1 final
 
 struct MeasurementEvidenceV1 final
 {
-    std::uint32_t schemaVersion = MeasurementEvidenceSchemaVersionV2;
+    std::uint32_t schemaVersion = MeasurementEvidenceSchemaVersionV3;
     std::uint64_t captureUnixNanoseconds = 0;
     MeasurementConfigV1 config{};
     AdapterProfileV1 adapter{};
@@ -186,12 +205,16 @@ struct PairDecisionV1 final
 
 struct CaseDecisionV1 final
 {
+    MeasurementPassV2 sourcePass = MeasurementPassV2::CanonicalSurface;
     MeasurementCaseKeyV1 key{};
     std::array<double, CanonicalCandidateCountV1> medianNanosecondsPerIteration{};
     std::array<double, CanonicalCandidateCountV1> medianControlNormalizedTime{};
     std::array<std::uint32_t, CanonicalCandidateCountV1>
         timestampResolutionCensoredSampleCount{};
-    std::vector<CandidateKindV1> observedWinnerSet;
+    std::vector<CandidateKindV1> descriptiveMedianWinnerSet;
+    std::vector<CandidateKindV1> pairedAuthoritySet;
+    CaseDecisionClassV2 decisionClass = CaseDecisionClassV2::Unresolved;
+    bool eligibleForCrossover = false;
     PairDecisionV1 fullVersusCompact{};
     PairDecisionV1 compactVersusBlock{};
     PairDecisionV1 fullVersusBlock{};
@@ -223,32 +246,45 @@ struct DecisionAnalysisV1 final
     std::vector<CaseDecisionV1> cases;
     std::vector<TransitionSurfaceEventV1> transitionSurfaceEvents;
     std::vector<ActiveSurfaceEventV1> activeSurfaceEvents;
-    std::vector<CandidateKindV1> overallObservedWinnerSet;
+    std::vector<CandidateKindV1> overallPairedAuthoritySet;
+    bool combinedProfile = false;
     bool winnerChangesAcrossTransitionCount = false;
     bool winnerChangesAcrossActiveCount = false;
     bool sameActiveAndTransitionWinnerDependsOnPattern = false;
     std::uint32_t acceptedBlockCount = 0;
     std::uint32_t rejectedBlockCount = 0;
     std::uint32_t timestampResolutionCensoredSampleCount = 0;
+    std::uint32_t zeroDispatchEquivalentCaseCount = 0;
+    std::uint32_t stableWinnerCaseCount = 0;
+    std::uint32_t stableEquivalentCaseCount = 0;
+    std::uint32_t unresolvedCaseCount = 0;
 };
 
 [[nodiscard]] std::string CandidateNameV1(CandidateKindV1 value);
 [[nodiscard]] char CandidateLetterV1(CandidateKindV1 value);
 [[nodiscard]] std::string PatternNameV1(PatternKindV1 value);
 [[nodiscard]] std::string TransitionShapeNameV1(TransitionShapeV1 value);
+[[nodiscard]] std::string MeasurementPassNameV2(MeasurementPassV2 value);
+[[nodiscard]] std::string DecisionClassNameV2(CaseDecisionClassV2 value);
 [[nodiscard]] std::array<CandidateKindV1, CanonicalCandidateCountV1> CanonicalCandidateKindsV1();
 [[nodiscard]] std::array<PatternKindV1, CanonicalPatternCountV1> CanonicalPatternsV1();
 [[nodiscard]] const std::array<std::uint32_t, CanonicalActiveCountCountV1>&
 CanonicalMeasurementActiveCountsV1() noexcept;
 [[nodiscard]] const std::array<std::uint32_t, CanonicalTransitionCountCountV1>&
 CanonicalMeasurementTransitionCountsV1() noexcept;
+[[nodiscard]] const std::array<std::uint32_t, RefinementTransitionCountCountV2>&
+HighTransitionRefinementCountsV2() noexcept;
+[[nodiscard]] std::vector<std::uint32_t>
+MeasurementTransitionCountsV2(MeasurementPassV2 pass);
+[[nodiscard]] std::uint32_t
+MeasurementCaseCountPerRunV2(MeasurementPassV2 pass);
 [[nodiscard]] std::vector<std::array<std::uint32_t, CanonicalCandidateCountV1>>
 CanonicalBalancedOrdersV1();
 [[nodiscard]] std::vector<std::array<std::uint32_t, 3>>
-CanonicalCaseScheduleV1(std::uint32_t run);
+MeasurementCaseScheduleV2(MeasurementPassV2 pass, std::uint32_t run);
 
 [[nodiscard]] base::Digest256 BuildMeasurementProfileIdentityV1(const MeasurementConfigV1& config);
-[[nodiscard]] base::Digest256 BuildCaseScheduleIdentityV1(std::uint32_t runCount);
+[[nodiscard]] base::Digest256 BuildCaseScheduleIdentityV1(const MeasurementConfigV1& config);
 [[nodiscard]] base::Digest256 BuildCandidateOrderIdentityV1();
 [[nodiscard]] base::Digest256 VerificationContextIdentityV1();
 
@@ -261,13 +297,25 @@ DeserializeMeasurementEvidenceV1(const std::vector<std::byte>& bytes);
 [[nodiscard]] base::Result<void, std::string>
 ValidateMeasurementEvidenceV1(const MeasurementEvidenceV1& evidence);
 [[nodiscard]] DecisionAnalysisV1 AnalyzeMeasurementEvidenceV1(const MeasurementEvidenceV1& evidence);
+[[nodiscard]] DecisionAnalysisV1 AnalyzeCombinedMeasurementEvidenceV2(
+    const MeasurementEvidenceV1& canonical,
+    const MeasurementEvidenceV1& refinement);
 [[nodiscard]] std::string BuildDecisionReportV1(
     const MeasurementEvidenceV1& evidence,
     const DecisionAnalysisV1& analysis);
 [[nodiscard]] std::string BuildDecisionCsvV1(
     const MeasurementEvidenceV1& evidence,
     const DecisionAnalysisV1& analysis);
+[[nodiscard]] std::string BuildCombinedDecisionReportV2(
+    const MeasurementEvidenceV1& canonical,
+    const MeasurementEvidenceV1& refinement,
+    const DecisionAnalysisV1& analysis);
+[[nodiscard]] std::string BuildCombinedDecisionCsvV2(
+    const MeasurementEvidenceV1& canonical,
+    const MeasurementEvidenceV1& refinement,
+    const DecisionAnalysisV1& analysis);
 
 [[nodiscard]] std::vector<std::byte> BuildSyntheticSelfTestEvidenceV1();
+[[nodiscard]] std::vector<std::byte> BuildSyntheticRefinementSelfTestEvidenceV2();
 [[nodiscard]] base::Result<void, std::string> RunMeasurementFormatSelfTestV1();
 } // namespace sge4_5::spiral7::performance
