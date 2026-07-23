@@ -1,0 +1,118 @@
+{
+  "schema": "SGE4-5.Spiral7.CU6RealGpuMeasurementManifest.V1",
+  "completionUnit": "CU6",
+  "ownerBaselineCommit": "d0bb0d406fca8beabed2331daff870ea414dd87d",
+  "cu5AcceptedCommit": "c9f0b5a62e2a7f3c9e0355cdaa1c683819c6dcfa",
+  "cu5OwnerRunStatus": "Passed",
+  "cu5ArchitectureEvidenceSha256": "1F1D09B4E52DBC35E961E0D3751B32292B2C30EEDCFA473800C5BB8E8CB5AB73",
+  "cu5ControlledRecoveryEvidenceSha256": "7F0247B193F9BC20F4EDA5FEED590C1DA5722EF36B133640292B1ED616CFF62B",
+  "cu5FreshEvidenceSha256": "091EAEC0D27287FE897F6813043FD75C090D5DA17054461DF314F99B2A6F5A92",
+  "purpose": "ObserveTheAdapterSpecificRelativeWinnerSurfaceWithoutChangingTheCompletedArchitecture",
+  "architectureMutation": "None",
+  "candidateOrder": [
+    "FullActiveDenseRecompute",
+    "CompactDeltaIndexHistoryReuse",
+    "AffectedBlockDeltaHistoryReuse"
+  ],
+  "patterns": [
+    "PrefixControl",
+    "UniformStride",
+    "BlockClusteredPermutation",
+    "HashScatterPermutation"
+  ],
+  "measurementActiveCounts": [
+    64,
+    256,
+    1024,
+    2048,
+    4096
+  ],
+  "measurementTransitionCounts": [
+    0,
+    1,
+    8,
+    32,
+    64,
+    256,
+    1024,
+    4096
+  ],
+  "canonicalCaseCountPerRun": 160,
+  "canonicalTransitionConstructor": {
+    "transitionCountZero": "Hold",
+    "transitionCountAtMostActiveCount": "DirtyOnlyWithExactlyTModifiedSurvivors",
+    "transitionCountGreaterThanActiveCount": "DisjointPreviousActiveReplacementWithUpdateCountAAndClearCountTMinusA",
+    "silentClipping": "Forbidden"
+  },
+  "defaultMeasurementConfig": {
+    "runCount": 2,
+    "measurementCyclesPerOrder": 1,
+    "iterationsPerBatch": 128,
+    "warmupIterations": 1024,
+    "maximumBlockAttempts": 3,
+    "maximumControlRatio": 1.2,
+    "relativeNoiseFloor": 0.02,
+    "minimumPairAgreement": 0.7
+  },
+  "balancedCandidateOrderCount": 6,
+  "primaryMetric": "GpuCandidateBatchNanosecondsPerEffectiveIteration",
+  "secondaryMetric": "ControlNormalizedGpuTime",
+  "blockAcceptance": "FixedCandidateAControlBeforeAfterRatioAtMostMaximumControlRatio",
+  "correctnessBeforeTiming": {
+    "independentVerifiedCandidateValidation": true,
+    "exactWriteAudit": true,
+    "cpuReferenceOutput": true,
+    "inactiveSentinelByteIdentity": true,
+    "retainedHistoryByteIdentity": true,
+    "pairwiseABCFullOutputByteIdentity": true
+  },
+  "timingPipeline": {
+    "timestampSource": "D3D12TimestampQuery",
+    "dispatchMechanism": "ExecuteIndirect",
+    "validationShader": "WriteAuditEnabled",
+    "timingShader": "OutputEquivalentWriteAuditDisabled",
+    "shaderBytecodeDigestsRecorded": true,
+    "realHardwareAdapterRequired": true,
+    "softwareAdapterRejected": true,
+    "zeroDispatchTimestampResolution": "ExplicitlyCensoredAtOneTickUpperBound",
+    "nonzeroDispatchAdaptiveIterationRetry": true
+  },
+  "decisionDimensions": [
+    "ActiveCount",
+    "TransitionCount",
+    "UpdateCount",
+    "ClearCount",
+    "AffectedBlockCount",
+    "SparsePattern"
+  ],
+  "decisionOutputs": [
+    "PerCaseMedianRanking",
+    "PairwisePairedRatioDecision",
+    "TransitionCountCrossoverSurface",
+    "ActiveCountCrossoverSurface",
+    "PatternDependenceAtEqualActiveAndTransition"
+  ],
+  "runtimeCandidatePolicyAuthorization": "None",
+  "universalWinnerClaim": "Forbidden",
+  "measurementResultScope": "AdapterDriverAndMeasurementProfileSpecificObservation",
+  "spiral7ExperimentStatusOnSuccessfulGate": "Complete",
+  "spiral7Closure": "OwnerRequired",
+  "nextProgramAfterOwnerClosure": "Level4V2CanonicalReconstruction",
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None",
+  "binaryEvidenceSchema": "S7M2",
+  "binaryEvidenceSchemaVersion": 2,
+  "timestampResolutionPolicy": {
+    "zeroDispatchZeroTickInterval": "ResolutionCensoredOneTickConservativeUpperBound",
+    "censoringAllowedOnlyWhenExpectedDispatchGroupsXIsZero": true,
+    "nonzeroDispatchZeroTickInterval": "RetryWholeBalancedOrderWithDoubledIterations",
+    "maximumAdaptiveIterations": 65536,
+    "recordedPerSample": [
+      "TimestampTickCount",
+      "EffectiveIterations",
+      "TimestampResolutionCensored"
+    ]
+  }
+}

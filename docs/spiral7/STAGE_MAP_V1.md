@@ -28,7 +28,21 @@ SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE
 
 ## CU6 — Real-GPU Measurement and Decision Evidence
 
-Measure A/B/C across the qualified `(ActiveCount, TransitionCount, TransitionKind, Pattern)` grid with balanced order and block-local paired controls. Generate binary evidence and an Owner-gated relative Decision Map.
+Keep the CU5 Architecture frozen. Measure A/B/C on a real hardware D3D12 Adapter over:
+
+```text
+4 patterns x 5 Active counts x 8 Transition counts
+```
+
+Use exact legal Hold/DirtyOnly/ReplaceAndClear constructors, all six Candidate orders, D3D12 Timestamp Query, output-equivalent audit-free Timing shaders, block-local drift controls and corruption-safe binary evidence.
+
+Generate:
+
+- per-case median ranking,
+- paired A/B, B/C and A/C decisions,
+- Transition-count crossover surface,
+- Active-count crossover surface,
+- Pattern dependence at equal `(A,T)`.
 
 May declare:
 
@@ -36,6 +50,12 @@ May declare:
 SGE4-5 SPIRAL 7 EXPERIMENT COMPLETE
 ```
 
-`SPIRAL 7 CLOSED` remains Owner-gated.
+It may not declare:
 
-After closure, exploratory Spiral growth stops and Level 4 v2 Canonical reconstruction begins.
+```text
+RuntimeCandidatePolicyAuthorization != None
+UniversalWinner
+SPIRAL 7 CLOSED
+```
+
+`SPIRAL 7 CLOSED` remains Owner-gated. After closure, exploratory Spiral growth stops and Level 4 v2 Canonical reconstruction begins.

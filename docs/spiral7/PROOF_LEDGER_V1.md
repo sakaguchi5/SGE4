@@ -18,13 +18,16 @@
 | S7-I14 | Raw Candidate cannot become Verified without the independent Verifier. | CU3 passed |
 | S7-I15 | Planner and Verifier independently derive transition identities. | CU3 passed |
 | S7-I16 | Replay is rejected across Semantic, transition, Candidate, resource, generation, Target and Device epoch identities. | CU3/CU4 and CU5 Runtime-handle gates passed |
-| S7-I17 | Runtime and Backend cannot choose membership, action, Candidate or history policy. | CU1–CU5 boundary retained |
+| S7-I17 | Runtime and Backend cannot choose membership, action, Candidate or history policy. | CU1–CU6 boundary retained |
 | S7-I18 | Device epoch change rejects stale history and forces a full rebuild of `A_t`. | CU5 passed |
 | S7-I19 | Recovery requires explicit external set rebind and deterministic representation rebuild. | CU5 passed with exact `A_t/M_t` and generation reconstruction |
 | S7-I20 | Debug/Release and fresh-process Frozen evidence are deterministic. | CU5 exhaustive audit passed; routine gate enforces accepted SHA-256 values |
-| S7-I21 | Real-GPU evidence is observational and does not authorize a universal winner. | Deferred to CU6 |
-| S7-I22 | Spiral closure and next capability selection remain Owner-gated. | Retained |
+| S7-I21 | Real-GPU evidence is observational and does not authorize a universal winner. | CU6 implementation supplied; Owner real-GPU run pending |
+| S7-I22 | Spiral closure and next program remain Owner-gated. | Retained; CU6 cannot close Spiral 7 automatically |
+| S7-I23 | Every frozen `(ActiveCount,TransitionCount)` measurement coordinate is represented by an exact legal transition without silent clipping. | CU6 canonical Hold/DirtyOnly/ReplaceAndClear constructor supplied |
+| S7-I24 | Candidate timing uses all six A/B/C orders and block-local paired controls. | CU6 supplied |
+| S7-I25 | Decision evidence exposes Transition, Active and Pattern-dependent winner surfaces rather than one scalar winner. | CU6 supplied |
 
-Accepted CU5 exhaustive-audit base commit: `67cb40b5204e1e06ecac576206ba969ec2db02b6`.
+Accepted CU5 commit: `c9f0b5a62e2a7f3c9e0355cdaa1c683819c6dcfa`.
 
-CU5 completes all Architecture invariants through S7-I20 and establishes `SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE`. The routine gate preserves this state through exact accepted-evidence checks; the explicit exhaustive audit remains available for complete Debug/Release requalification. CU6 and Owner closure remain separate.
+CU5 establishes `SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE`. CU6 does not reopen that Architecture. It measures the fixed Candidate family on a real hardware Adapter, binds the output to the CU5 evidence identities, and produces an Owner-gated local relative Decision map. Successful execution may establish `SGE4-5 SPIRAL 7 EXPERIMENT COMPLETE`; `SPIRAL 7 CLOSED` remains a separate Owner action.
