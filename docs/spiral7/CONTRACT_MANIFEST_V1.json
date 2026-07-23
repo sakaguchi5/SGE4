@@ -1,0 +1,226 @@
+{
+  "schema": "SGE4-5.Spiral7.ContractManifest.V1",
+  "completionUnit": "CU1",
+  "baselineCommit": "d0bb0d406fca8beabed2331daff870ea414dd87d",
+  "ownerSelection": "VersionedSparseDeltaFlowVerifiedIncrementalHistoryLowering",
+  "title": "Versioned Sparse Delta Flow and Verified Incremental History Lowering",
+  "japaneseTitle": "世代付き疎差分Flowと増分履歴再利用の検証済みLowering",
+  "ownerOnlyGate": "NextCapabilitySelection",
+  "selectionRecord": "docs/spiral7/NEXT_CAPABILITY_SELECTION_FROM_SPIRAL6.md",
+  "targetAbiBaseline": {
+    "d3d12Schema": 17,
+    "runtime": 17,
+    "spiral4IndirectExtension": "VersionedSidecarIndirectExtensionV1",
+    "spiral5TemporalExtension": "VersionedSidecarTemporalExtensionV1",
+    "spiral6SparseExtension": "VersionedSidecarSparseExtensionV1"
+  },
+  "cu1AbiMutation": "None",
+  "abiExtensionPolicy": "VersionedSparseTemporalDeltaExtensionOnlyAfterCrossCapabilityInsufficiencyProof",
+  "baselineInventory": {
+    "spiral4VerifiedIndirectDispatch": true,
+    "spiral5VerifiedTemporalHistory": true,
+    "spiral6VerifiedExactSparseWorkSet": true,
+    "fixedCapacityOutputBuffer": true,
+    "perInvocationExactActiveSetTimeline": false,
+    "partialHistoryValidityArtifact": false,
+    "sparseDeltaTransitionContract": false,
+    "activationDeactivationAuthority": false,
+    "exactUpdateClearWriteSetAuthority": false,
+    "recoveryForcedSparseHistoryRebuild": false,
+    "runtimeTransitionPolicyDecision": "Forbidden"
+  },
+  "fixedMeaning": {
+    "semantic": "VersionedSparseDeltaPointTransformTimelineV1",
+    "representationPath": "DirectPgaThroughConsumerV1",
+    "boneCount": 8,
+    "globalMotorPaletteGeneration": 0,
+    "workUniverseCount": 4096,
+    "outputCapacity": 4096,
+    "threadsPerGroup": 64,
+    "blockCount": 64,
+    "blockSize": 64,
+    "timelineLength": 128,
+    "historyDepth": 1,
+    "semanticGraphShape": "Fixed",
+    "resourceCapacity": "Fixed",
+    "outputOrder": "UniverseIndexOrder",
+    "inactiveOutputSentinel": "Float4Zero",
+    "activeOutputHomogeneousW": 1,
+    "initialPreviousActiveSet": "Empty",
+    "initialHistoryState": "Invalid",
+    "pointRevisionRule": "CanonicalExactBinaryPointFromUniverseIndexAndPerItemGeneration"
+  },
+  "externalInputs": {
+    "activeSetSymbol": "A_t",
+    "modifiedSurvivorSetSymbol": "M_t",
+    "activeSetAuthority": "ExternalVerifiedInput",
+    "modifiedSurvivorAuthority": "ExternalVerifiedInput",
+    "canonicalEncoding": "StrictlyIncreasingUniqueU32Indices",
+    "modifiedSurvivorConstraint": "M_tSubsetOfIntersectionA_tAndA_tMinus1",
+    "runtimeMayChooseActiveMembership": false,
+    "runtimeMayChooseModifiedMembership": false,
+    "runtimeMayInferGamePolicy": false
+  },
+  "derivedTransitionSets": {
+    "activationSet": {
+      "symbol": "N_t",
+      "rule": "A_tMinusA_tMinus1"
+    },
+    "deactivationSet": {
+      "symbol": "R_t",
+      "rule": "A_tMinus1MinusA_t"
+    },
+    "updateSet": {
+      "symbol": "W_t",
+      "rule": "N_tUnionM_t"
+    },
+    "retainSet": {
+      "symbol": "H_t",
+      "rule": "IntersectionA_tAndA_tMinus1MinusM_t"
+    },
+    "transitionSet": {
+      "symbol": "T_t",
+      "rule": "W_tUnionR_t"
+    },
+    "partitionRule": "W_tH_tR_tPairwiseDisjointAndUnionEqualsA_tUnionA_tMinus1",
+    "firstInvocationRule": "W_0EqualsA_0H_0EmptyR_0Empty",
+    "recoveryRule": "AfterDeviceEpochChangeW_tEqualsA_tAndH_tEmpty"
+  },
+  "candidateKinds": [
+    "FullActiveDenseRecompute",
+    "CompactDeltaIndexHistoryReuse",
+    "AffectedBlockDeltaHistoryReuse"
+  ],
+  "candidateExecutionRules": {
+    "FullActiveDenseRecompute": "DispatchAll4096ThreadsWriteCurrentActiveResultsAndCanonicalSentinelForInactiveRecords",
+    "CompactDeltaIndexHistoryReuse": "DispatchCeilTransitionCountOver64OverCanonicalSortedIndexActionRecordsUpdateWClearRHoldH",
+    "AffectedBlockDeltaHistoryReuse": "DispatchOne64ThreadGroupPerAffectedBlockUsingDisjointUpdateAndClearMasksHoldOtherLanes"
+  },
+  "derivedRepresentations": {
+    "FullActiveDenseRecompute": {
+      "activeMaskBytes": 512,
+      "dispatchGroupsX": 64
+    },
+    "CompactDeltaIndexHistoryReuse": {
+      "record": "UniverseIndexU32ActionU32",
+      "recordStrideBytes": 8,
+      "maximumRecordCount": 4096,
+      "fixedCapacityBytes": 32768,
+      "dispatchRule": "CeilTransitionCountOver64ZeroWhenTransitionEmpty"
+    },
+    "AffectedBlockDeltaHistoryReuse": {
+      "record": "BlockIdU32ReservedU32UpdateMaskU64ClearMaskU64",
+      "recordStrideBytes": 24,
+      "maximumBlockCount": 64,
+      "fixedCapacityBytes": 1536,
+      "maskDisjointness": "Required",
+      "dispatchRule": "OneGroupPerAffectedBlockZeroWhenNoAffectedBlocks"
+    }
+  },
+  "activePatternKinds": [
+    "PrefixControl",
+    "UniformStride",
+    "BlockClusteredPermutation",
+    "HashScatterPermutation"
+  ],
+  "transitionKinds": [
+    "Hold",
+    "DirtyOnly",
+    "ActivateOnly",
+    "DeactivateOnly",
+    "BalancedChurn",
+    "PatternMigration",
+    "FullInvalidation",
+    "EmptyReset"
+  ],
+  "qualificationActiveCounts": [
+    0,
+    1,
+    32,
+    63,
+    64,
+    65,
+    256,
+    1024,
+    2048,
+    4095,
+    4096
+  ],
+  "qualificationTransitionCounts": [
+    0,
+    1,
+    8,
+    31,
+    32,
+    63,
+    64,
+    65,
+    256,
+    1024,
+    4096
+  ],
+  "measurementActiveCounts": [
+    64,
+    256,
+    1024,
+    2048,
+    4096
+  ],
+  "measurementTransitionCounts": [
+    0,
+    1,
+    8,
+    32,
+    64,
+    256,
+    1024,
+    4096
+  ],
+  "outputPolicy": {
+    "initialization": "AllRecordsCanonicalInactiveSentinel",
+    "activeFinalBytes": "CanonicalCurrentGenerationPointTransformResult",
+    "inactiveFinalBytes": "ByteIdenticalCanonicalInactiveSentinel",
+    "retainWritePolicy": "Forbidden",
+    "compactAndBlockCandidateLegalWriteSet": "ExactlyTransitionSetT_t",
+    "fullRecomputeLegalWriteSet": "EntireUniverse",
+    "pairwiseCandidateOutputPerInvocation": "ByteIdentical",
+    "heldBytes": "ByteIdenticalPreviousValidHistory"
+  },
+  "recoveryPolicy": {
+    "unit": "WholeComposition",
+    "deviceEpochBinding": "Required",
+    "oldHistoryAfterEpochChange": "Rejected",
+    "firstPostRecoveryInvocation": "ForcedFullActiveRebuild",
+    "externalActiveAndModifiedSets": "ExplicitRebindRequired"
+  },
+  "level4Policy": "MinimalVersionedSparseTemporalDeltaExtensionOnlyIfRequired",
+  "level5Policy": "IncrementalHistoryMaterializationGranularityIsAVerifiedLoweringChoice",
+  "runtimePolicyAuthorization": "None",
+  "authoritativeSpec": "docs/spiral7/SGE4-5_Spiral7_Completion_Spec_v0.1.md",
+  "amendments": [],
+  "typeSafety": {
+    "deltaDimensions": [
+      "WorkUniverseIndexV1",
+      "ActiveSetIdentityV1",
+      "ModifiedSetIdentityV1",
+      "TransitionSetIdentityV1",
+      "PerItemGenerationV1",
+      "HistoryGenerationV1",
+      "DeviceEpochV1",
+      "DeltaActionV1"
+    ],
+    "rawToVerified": "CompileTimeUnavailable",
+    "sealReplayRejectedAcross": [
+      "ActiveSetIdentity",
+      "ModifiedSetIdentity",
+      "DerivedTransitionIdentity",
+      "CandidateKind",
+      "DerivedRepresentationRole",
+      "TimelineInvocation",
+      "TargetProfile",
+      "OutputResourceIdentity",
+      "HistoryGeneration",
+      "DeviceEpoch"
+    ]
+  }
+}
