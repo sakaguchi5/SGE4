@@ -1,0 +1,120 @@
+{
+  "schema": "SGE4-5.Spiral7.CU5ArchitectureQualificationManifest.V1",
+  "completionUnit": "CU5",
+  "ownerBaselineCommit": "d0bb0d406fca8beabed2331daff870ea414dd87d",
+  "cu4AcceptedCommit": "8f3b17e25d2a500beb2b658e6bc0a1d3f646ec26",
+  "cu4OwnerRunStatus": "Passed",
+  "cu4OwnerRunEvidenceDigest": "NotSuppliedInConversation",
+  "architectureStatusOnSuccessfulGate": "Complete",
+  "timelineInvocationCount": 128,
+  "candidateOrder": [
+    "FullActiveDenseRecompute",
+    "CompactDeltaIndexHistoryReuse",
+    "AffectedBlockDeltaHistoryReuse"
+  ],
+  "candidateExecutionCountPerQualificationRun": 384,
+  "qualificationActiveCounts": [
+    0,
+    1,
+    32,
+    63,
+    64,
+    65,
+    256,
+    1024,
+    2048,
+    4095,
+    4096
+  ],
+  "qualificationTransitionCounts": [
+    0,
+    1,
+    8,
+    31,
+    32,
+    63,
+    64,
+    65,
+    256,
+    1024,
+    4096
+  ],
+  "transitionKinds": [
+    "Hold",
+    "DirtyOnly",
+    "ActivateOnly",
+    "DeactivateOnly",
+    "BalancedChurn",
+    "PatternMigration",
+    "FullInvalidation",
+    "EmptyReset"
+  ],
+  "runtimeAuthority": {
+    "frozenTimelineAuthority": true,
+    "candidateSelection": "None",
+    "membershipSelection": "Forbidden",
+    "modifiedMembershipSelection": "Forbidden",
+    "actionSelection": "Forbidden",
+    "historyPolicySelection": "Forbidden"
+  },
+  "runtimeMaterialization": {
+    "timelineExplicitBindRequired": true,
+    "candidateRepresentationExplicitRebuildRequired": true,
+    "historyHandleDeviceEpochBound": true,
+    "representationHandleDeviceEpochBound": true,
+    "completionTokenDeviceEpochBound": true,
+    "forgedHandleIdentityRejected": true
+  },
+  "controlledRecovery": {
+    "unit": "WholeComposition",
+    "deviceEpochIncrement": 1,
+    "oldEpochHandlesRejected": [
+      "EpochHandle",
+      "RepresentationSetHandle",
+      "HistoryHandle",
+      "CompletionToken"
+    ],
+    "externalInputsExplicitRebind": [
+      "A_t",
+      "M_t"
+    ],
+    "recoveryModifiedSurvivorCountInQualification": 64,
+    "firstPostRecoverySemanticRule": "W_tEqualsA_tAndH_tEmpty",
+    "exactPerItemGenerationRebuild": true,
+    "internalMaterializationSequence": "EmptyInitializationThenForcedExactGenerationRebuild",
+    "staleHistoryRetention": "Forbidden",
+    "frozenAuthorityPreserved": true
+  },
+  "actualRemoval": {
+    "api": "ID3D12Device5.RemoveDevice",
+    "quarantineState": "AwaitingAdapter",
+    "removedAdapterLuidExcludedFromRetry": true,
+    "deviceEpochDoesNotAdvanceWithoutReacquisition": true
+  },
+  "determinism": {
+    "debugReleaseArchitectureEvidence": "ByteIdentical",
+    "debugReleaseControlledRecoveryEvidence": "ByteIdentical",
+    "debugReleaseFreshProcessEvidence": "ByteIdentical"
+  },
+  "legacySchemaMutation": "None",
+  "legacyRuntimeMutation": "None",
+  "legacyBackendMutation": "None",
+  "compositionContractMutation": "None",
+  "runtimeCandidatePolicyDecision": "None",
+  "nextCompletionUnit": "CU6RealGpuMeasurementAndDecisionEvidence",
+  "executionOptimization": {
+    "version": "ReusableBatchedWarpExecutionV2",
+    "semanticAndEvidenceFormatMutation": "None",
+    "candidateDispatchesPerQualificationRun": 384,
+    "commandListSubmissionsPerQualificationRun": 128,
+    "fenceWaitsPerQualificationRun": 128,
+    "candidateDispatchesPerSubmission": 3,
+    "resourceAllocationPolicy": "OneFixedCapacityReusableResourceSetPerExecutionContext",
+    "candidatePayloadBuffers": 3,
+    "candidateOutputBuffers": 3,
+    "candidateAuditBuffers": 3,
+    "progressIntervalInvocations": 16,
+    "cu4EvidenceSerialization": "Unchanged",
+    "committedBufferCountPerExecutionContext": 22
+  }
+}

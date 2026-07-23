@@ -26,6 +26,7 @@
 #include <bit>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
@@ -439,11 +440,74 @@ struct CandidateRun final
     std::vector<std::byte> outputBytes;
 };
 
-CandidateRun ExecuteCandidate(
-    GpuContext& gpu,
+struct ReusableFamilyResourcesV1 final
+{
+    static constexpr std::size_t CandidateCount = 3;
+
+    ComPtr<ID3D12Resource> motorUpload;
+    ComPtr<ID3D12Resource> pointUpload;
+    ComPtr<ID3D12Resource> historyUpload;
+    ComPtr<ID3D12Resource> zeroAuditUpload;
+    std::array<ComPtr<ID3D12Resource>, CandidateCount> payloadUploads;
+    std::array<ComPtr<ID3D12Resource>, CandidateCount> argumentUploads;
+    std::array<ComPtr<ID3D12Resource>, CandidateCount> outputs;
+    std::array<ComPtr<ID3D12Resource>, CandidateCount> audits;
+    std::array<ComPtr<ID3D12Resource>, CandidateCount> outputReadbacks;
+    std::array<ComPtr<ID3D12Resource>, CandidateCount> auditReadbacks;
+    bool outputsAreCopySource = false;
+
+    explicit ReusableFamilyResourcesV1(GpuContext& gpu)
+    {
+        const auto motors = spiral6::semantic::BuildCanonicalGlobalMotorPaletteV1();
+        const auto motorBytes = spiral5::semantic::SerializeMotorRecordsV1(motors);
+        const auto historyBytes = semantic::BuildCanonicalInactiveHistoryBytesV1();
+        const std::vector<std::uint32_t> zeroAudit(semantic::WorkUniverseCountV1, 0u);
+        const auto zeroAuditBytes = std::as_bytes(std::span(zeroAudit));
+        const std::array<std::uint64_t, CandidateCount> payloadCapacities{
+            fc::DenseActiveMaskCapacityBytesV1,
+            fc::CompactDeltaCapacityBytesV1,
+            fc::AffectedBlockCapacityBytesV1};
+
+        motorUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+                                   motorBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
+        pointUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+                                   historyBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
+        historyUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+                                     historyBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
+        zeroAuditUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
+                                       zeroAuditBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
+        UploadBytes(motorUpload.Get(), motorBytes);
+        UploadBytes(zeroAuditUpload.Get(), zeroAuditBytes);
+
+        for (std::size_t index = 0; index < CandidateCount; ++index)
+        {
+            payloadUploads[index] = CreateBuffer(
+                gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD, payloadCapacities[index],
+                D3D12_RESOURCE_STATE_GENERIC_READ);
+            argumentUploads[index] = CreateBuffer(
+                gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD, 12u,
+                D3D12_RESOURCE_STATE_GENERIC_READ);
+            outputs[index] = CreateBuffer(
+                gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, historyBytes.size(),
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+            audits[index] = CreateBuffer(
+                gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, zeroAuditBytes.size(),
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+            outputReadbacks[index] = CreateBuffer(
+                gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, historyBytes.size(),
+                D3D12_RESOURCE_STATE_COPY_DEST);
+            auditReadbacks[index] = CreateBuffer(
+                gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, zeroAuditBytes.size(),
+                D3D12_RESOURCE_STATE_COPY_DEST);
+        }
+    }
+};
+
+void ValidateCandidateBinding(
     const semantic::SparseTemporalDeltaSemanticV1& semanticValue,
     const semantic::SparseDeltaInvocationV1& invocation,
-    std::span<const std::byte> previousHistoryBytes,
     const fc::FrozenDeltaFamilyArtifactV1& artifact,
     const fv::VerifiedDeltaFamilyCandidateV1& verified)
 {
@@ -460,92 +524,18 @@ CandidateRun ExecuteCandidate(
         operation.dispatchGroupsX != artifact.DispatchGroupsX() ||
         operation.fixedCapacityBytes != artifact.FixedCapacityBytes())
         throw std::runtime_error("Verified Delta Family operation does not match artifact.");
+}
 
-    const auto historySize = semantic::BuildCanonicalInactiveHistoryBytesV1().size();
-    if (previousHistoryBytes.size() != historySize)
-        throw std::runtime_error("Previous Family history byte size is not canonical.");
-
-    const auto motors = spiral6::semantic::BuildCanonicalGlobalMotorPaletteV1();
-    const auto motorBytes = spiral5::semantic::SerializeMotorRecordsV1(motors);
-    const auto points = semantic::BuildPointCorpusForInvocationV1(invocation);
-    const auto pointBytes = spiral5::semantic::SerializePointRecordsV1(points);
-    const auto expected = semantic::BuildCpuReferenceOutputV1(invocation);
-    const auto zeroBytes = semantic::BuildCanonicalInactiveHistoryBytesV1();
-    const std::vector<std::uint32_t> zeroAudit(semantic::WorkUniverseCountV1, 0u);
-    const auto zeroAuditBytes = std::as_bytes(std::span(zeroAudit));
-
-    const auto& payloadBytes = artifact.PayloadBytes();
-    auto payloadUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
-                                      payloadBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    auto motorUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
-                                    motorBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    auto pointUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
-                                    pointBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    auto historyUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
-                                      previousHistoryBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    const std::array<std::uint32_t, 3> dispatchArguments{
-        artifact.DispatchGroupsX(), 1u, 1u};
-    const auto dispatchArgumentBytes = std::as_bytes(std::span(dispatchArguments));
-    auto argumentUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
-                                       dispatchArgumentBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    auto auditUpload = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_UPLOAD,
-                                    zeroAuditBytes.size(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    auto output = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, historySize,
-                               D3D12_RESOURCE_STATE_COPY_DEST,
-                               D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    auto audit = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_DEFAULT, zeroAuditBytes.size(),
-                              D3D12_RESOURCE_STATE_COPY_DEST,
-                              D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    auto outputReadback = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, historySize,
-                                       D3D12_RESOURCE_STATE_COPY_DEST);
-    auto auditReadback = CreateBuffer(gpu.device.Get(), D3D12_HEAP_TYPE_READBACK, zeroAuditBytes.size(),
-                                      D3D12_RESOURCE_STATE_COPY_DEST);
-
-    UploadBytes(payloadUpload.Get(), payloadBytes);
-    UploadBytes(motorUpload.Get(), motorBytes);
-    UploadBytes(pointUpload.Get(), pointBytes);
-    UploadBytes(historyUpload.Get(), previousHistoryBytes);
-    UploadBytes(argumentUpload.Get(), dispatchArgumentBytes);
-    UploadBytes(auditUpload.Get(), zeroAuditBytes);
-
-    gpu.Begin();
-    gpu.commandList->CopyBufferRegion(output.Get(), 0, historyUpload.Get(), 0, historySize);
-    gpu.commandList->CopyBufferRegion(audit.Get(), 0, auditUpload.Get(), 0, zeroAuditBytes.size());
-    const std::array<D3D12_RESOURCE_BARRIER, 2> toUav{
-        Transition(output.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
-                   D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-        Transition(audit.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
-                   D3D12_RESOURCE_STATE_UNORDERED_ACCESS)};
-    gpu.commandList->ResourceBarrier(static_cast<UINT>(toUav.size()), toUav.data());
-    gpu.commandList->SetPipelineState(gpu.Pipeline(artifact.Kind()));
-    gpu.commandList->SetComputeRootSignature(gpu.rootSignature.Get());
-    const std::uint32_t rootCount = artifact.Kind() == fc::DeltaFamilyCandidateKindV1::FullActiveDenseRecompute
-        ? semantic::WorkUniverseCountV1
-        : (artifact.Kind() == fc::DeltaFamilyCandidateKindV1::CompactDeltaIndexHistoryReuse
-            ? artifact.TransitionCount() : artifact.AffectedBlockCount());
-    gpu.commandList->SetComputeRoot32BitConstant(0, rootCount, 0);
-    gpu.commandList->SetComputeRootShaderResourceView(1, payloadUpload->GetGPUVirtualAddress());
-    gpu.commandList->SetComputeRootShaderResourceView(2, motorUpload->GetGPUVirtualAddress());
-    gpu.commandList->SetComputeRootShaderResourceView(3, pointUpload->GetGPUVirtualAddress());
-    gpu.commandList->SetComputeRootUnorderedAccessView(4, output->GetGPUVirtualAddress());
-    gpu.commandList->SetComputeRootUnorderedAccessView(5, audit->GetGPUVirtualAddress());
-    gpu.commandList->ExecuteIndirect(
-        gpu.dispatchSignature.Get(), 1, argumentUpload.Get(), 0, nullptr, 0);
-    const std::array<D3D12_RESOURCE_BARRIER, 2> uav{
-        UavBarrier(output.Get()), UavBarrier(audit.Get())};
-    gpu.commandList->ResourceBarrier(static_cast<UINT>(uav.size()), uav.data());
-    const std::array<D3D12_RESOURCE_BARRIER, 2> toCopy{
-        Transition(output.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                   D3D12_RESOURCE_STATE_COPY_SOURCE),
-        Transition(audit.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                   D3D12_RESOURCE_STATE_COPY_SOURCE)};
-    gpu.commandList->ResourceBarrier(static_cast<UINT>(toCopy.size()), toCopy.data());
-    gpu.commandList->CopyBufferRegion(outputReadback.Get(), 0, output.Get(), 0, historySize);
-    gpu.commandList->CopyBufferRegion(auditReadback.Get(), 0, audit.Get(), 0, zeroAuditBytes.size());
-    gpu.SubmitAndWait();
-
-    auto observedBytes = ReadbackBytes(outputReadback.Get(), historySize);
-    const auto auditBytes = ReadbackBytes(auditReadback.Get(), zeroAuditBytes.size());
+CandidateRun EvaluateCandidateObservation(
+    const semantic::SparseDeltaInvocationV1& invocation,
+    std::span<const std::byte> previousHistoryBytes,
+    const fc::FrozenDeltaFamilyArtifactV1& artifact,
+    const fv::VerifiedDeltaFamilyCandidateV1& verified,
+    const std::vector<spiral5::semantic::PointRecordV1>& expected,
+    std::span<const std::byte> zeroBytes,
+    std::vector<std::byte> observedBytes,
+    std::span<const std::byte> auditBytes)
+{
     std::vector<spiral5::semantic::PointRecordV1> observed(semantic::WorkUniverseCountV1);
     std::memcpy(observed.data(), observedBytes.data(), observedBytes.size());
     std::vector<std::uint32_t> observedAudit(semantic::WorkUniverseCountV1);
@@ -629,6 +619,145 @@ CandidateRun ExecuteCandidate(
     result.outputBytes = std::move(observedBytes);
     return result;
 }
+
+std::array<CandidateRun, ReusableFamilyResourcesV1::CandidateCount>
+ExecuteInvocationBatch(
+    GpuContext& gpu,
+    ReusableFamilyResourcesV1& resources,
+    const semantic::SparseTemporalDeltaSemanticV1& semanticValue,
+    const semantic::SparseDeltaInvocationV1& invocation,
+    std::span<const std::byte> previousHistoryBytes,
+    const std::vector<fc::FrozenDeltaFamilyArtifactV1>& artifacts,
+    const std::vector<fv::VerifiedDeltaFamilyCandidateV1>& verifiedCandidates)
+{
+    constexpr std::size_t candidateCount = ReusableFamilyResourcesV1::CandidateCount;
+    if (artifacts.size() != candidateCount || verifiedCandidates.size() != candidateCount)
+        throw std::runtime_error("Delta Family batch must contain exactly A/B/C.");
+
+    const auto zeroBytes = semantic::BuildCanonicalInactiveHistoryBytesV1();
+    const auto historySize = zeroBytes.size();
+    if (previousHistoryBytes.size() != historySize)
+        throw std::runtime_error("Previous Family history byte size is not canonical.");
+    const auto points = semantic::BuildPointCorpusForInvocationV1(invocation);
+    const auto pointBytes = spiral5::semantic::SerializePointRecordsV1(points);
+    const auto expected = semantic::BuildCpuReferenceOutputV1(invocation);
+    const std::size_t auditSize = semantic::WorkUniverseCountV1 * sizeof(std::uint32_t);
+
+    UploadBytes(resources.pointUpload.Get(), pointBytes);
+    UploadBytes(resources.historyUpload.Get(), previousHistoryBytes);
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        ValidateCandidateBinding(semanticValue, invocation,
+                                 artifacts[index], verifiedCandidates[index]);
+        UploadBytes(resources.payloadUploads[index].Get(), artifacts[index].PayloadBytes());
+        const std::array<std::uint32_t, 3> dispatchArguments{
+            artifacts[index].DispatchGroupsX(), 1u, 1u};
+        UploadBytes(resources.argumentUploads[index].Get(),
+                    std::as_bytes(std::span(dispatchArguments)));
+    }
+
+    gpu.Begin();
+    if (resources.outputsAreCopySource)
+    {
+        std::array<D3D12_RESOURCE_BARRIER, candidateCount * 2> toCopyDest{};
+        for (std::size_t index = 0; index < candidateCount; ++index)
+        {
+            toCopyDest[index * 2] = Transition(
+                resources.outputs[index].Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
+                D3D12_RESOURCE_STATE_COPY_DEST);
+            toCopyDest[index * 2 + 1] = Transition(
+                resources.audits[index].Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
+                D3D12_RESOURCE_STATE_COPY_DEST);
+        }
+        gpu.commandList->ResourceBarrier(
+            static_cast<UINT>(toCopyDest.size()), toCopyDest.data());
+    }
+
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        gpu.commandList->CopyBufferRegion(
+            resources.outputs[index].Get(), 0, resources.historyUpload.Get(), 0, historySize);
+        gpu.commandList->CopyBufferRegion(
+            resources.audits[index].Get(), 0, resources.zeroAuditUpload.Get(), 0, auditSize);
+    }
+
+    std::array<D3D12_RESOURCE_BARRIER, candidateCount * 2> toUav{};
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        toUav[index * 2] = Transition(
+            resources.outputs[index].Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        toUav[index * 2 + 1] = Transition(
+            resources.audits[index].Get(), D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    }
+    gpu.commandList->ResourceBarrier(static_cast<UINT>(toUav.size()), toUav.data());
+
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        const auto& artifact = artifacts[index];
+        gpu.commandList->SetPipelineState(gpu.Pipeline(artifact.Kind()));
+        gpu.commandList->SetComputeRootSignature(gpu.rootSignature.Get());
+        const std::uint32_t rootCount =
+            artifact.Kind() == fc::DeltaFamilyCandidateKindV1::FullActiveDenseRecompute
+                ? semantic::WorkUniverseCountV1
+                : (artifact.Kind() == fc::DeltaFamilyCandidateKindV1::CompactDeltaIndexHistoryReuse
+                    ? artifact.TransitionCount() : artifact.AffectedBlockCount());
+        gpu.commandList->SetComputeRoot32BitConstant(0, rootCount, 0);
+        gpu.commandList->SetComputeRootShaderResourceView(
+            1, resources.payloadUploads[index]->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootShaderResourceView(
+            2, resources.motorUpload->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootShaderResourceView(
+            3, resources.pointUpload->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootUnorderedAccessView(
+            4, resources.outputs[index]->GetGPUVirtualAddress());
+        gpu.commandList->SetComputeRootUnorderedAccessView(
+            5, resources.audits[index]->GetGPUVirtualAddress());
+        gpu.commandList->ExecuteIndirect(
+            gpu.dispatchSignature.Get(), 1, resources.argumentUploads[index].Get(), 0, nullptr, 0);
+    }
+
+    std::array<D3D12_RESOURCE_BARRIER, candidateCount * 2> uav{};
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        uav[index * 2] = UavBarrier(resources.outputs[index].Get());
+        uav[index * 2 + 1] = UavBarrier(resources.audits[index].Get());
+    }
+    gpu.commandList->ResourceBarrier(static_cast<UINT>(uav.size()), uav.data());
+
+    std::array<D3D12_RESOURCE_BARRIER, candidateCount * 2> toCopy{};
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        toCopy[index * 2] = Transition(
+            resources.outputs[index].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COPY_SOURCE);
+        toCopy[index * 2 + 1] = Transition(
+            resources.audits[index].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COPY_SOURCE);
+    }
+    gpu.commandList->ResourceBarrier(static_cast<UINT>(toCopy.size()), toCopy.data());
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        gpu.commandList->CopyBufferRegion(
+            resources.outputReadbacks[index].Get(), 0, resources.outputs[index].Get(), 0, historySize);
+        gpu.commandList->CopyBufferRegion(
+            resources.auditReadbacks[index].Get(), 0, resources.audits[index].Get(), 0, auditSize);
+    }
+    gpu.SubmitAndWait();
+    resources.outputsAreCopySource = true;
+
+    std::array<CandidateRun, candidateCount> results;
+    for (std::size_t index = 0; index < candidateCount; ++index)
+    {
+        auto observedBytes = ReadbackBytes(resources.outputReadbacks[index].Get(), historySize);
+        const auto auditBytes = ReadbackBytes(resources.auditReadbacks[index].Get(), auditSize);
+        results[index] = EvaluateCandidateObservation(
+            invocation, previousHistoryBytes, artifacts[index], verifiedCandidates[index],
+            expected, zeroBytes, std::move(observedBytes), auditBytes);
+    }
+    return results;
+}
 #endif
 } // namespace
 
@@ -650,6 +779,7 @@ ExecuteVerifiedDeltaCandidateFamilyV1(
                 Error("execution/corpus", "Delta Candidate Family corpus is empty."));
 
         GpuContext gpu;
+        ReusableFamilyResourcesV1 reusableResources(gpu);
         DeltaFamilyArchitectureReportV1 report;
         report.adapterDescription = gpu.adapterDescription;
         report.semanticIdentity = semantic::SparseTemporalDeltaSemanticIdentityV1(semanticValue);
@@ -690,10 +820,14 @@ ExecuteVerifiedDeltaCandidateFamilyV1(
                 if (testCase.artifacts[i].Kind() != expectedOrder[i] ||
                     testCase.verifiedCandidates[i].Plan().operation.kind != expectedOrder[i])
                     invocationObservation.exactCandidateOrder = false;
-                auto run = ExecuteCandidate(gpu, semanticValue, testCase.invocation,
-                    previousHistory, testCase.artifacts[i], testCase.verifiedCandidates[i]);
-                invocationObservation.candidates.push_back(run.observation);
-                outputs[i] = std::move(run.outputBytes);
+            }
+            auto runs = ExecuteInvocationBatch(
+                gpu, reusableResources, semanticValue, testCase.invocation, previousHistory,
+                testCase.artifacts, testCase.verifiedCandidates);
+            for (std::size_t i = 0; i < expectedOrder.size(); ++i)
+            {
+                invocationObservation.candidates.push_back(runs[i].observation);
+                outputs[i] = std::move(runs[i].outputBytes);
             }
             invocationObservation.pairwiseOutputByteIdentical =
                 outputs[0] == outputs[1] && outputs[0] == outputs[2];
@@ -712,6 +846,13 @@ ExecuteVerifiedDeltaCandidateFamilyV1(
             previousActiveIdentity = testCase.invocation.ActiveSet().Identity();
             havePrevious = true;
             report.invocations.push_back(std::move(invocationObservation));
+            if (cases.size() >= 32 &&
+                (((caseIndex + 1) % 16u) == 0u || caseIndex + 1 == cases.size()))
+            {
+                std::cout << "[WARP-BATCH] invocations=" << (caseIndex + 1) << "/"
+                          << cases.size() << " candidateDispatches=" << ((caseIndex + 1) * 3u)
+                          << " fenceWaits=" << (caseIndex + 1) << '\n';
+            }
         }
         return base::Result<DeltaFamilyArchitectureReportV1, DeltaFamilyExecutionErrorV1>::Success(
             std::move(report));
