@@ -48,6 +48,7 @@ OpaqueFrozenDynamicInvocationV1 FrozenDynamicInvocationBuilderV1::Freeze(
         verified.SealIdentity(),
         decision.dynamicWriteSetIdentity,
         decision.indirectWorkCount,
+        request.mode,
         std::move(history));
 }
 }

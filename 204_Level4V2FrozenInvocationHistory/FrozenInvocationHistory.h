@@ -16,6 +16,7 @@ public:
     [[nodiscard]] const DynamicSealIdentity& SealIdentity() const noexcept { return sealIdentity_; }
     [[nodiscard]] const DynamicWriteSetIdentity& WriteSetIdentity() const noexcept { return dynamicWriteSetIdentity_; }
     [[nodiscard]] canonical::TransitionCount IndirectWorkCount() const noexcept { return indirectWorkCount_; }
+    [[nodiscard]] InvocationModeV1 Mode() const noexcept { return mode_; }
     [[nodiscard]] const VerifiedHistoryStateV1& NextHistory() const noexcept { return nextHistory_; }
 
 private:
@@ -29,11 +30,12 @@ private:
         DynamicSealIdentity sealIdentity,
         DynamicWriteSetIdentity dynamicWriteSetIdentity,
         canonical::TransitionCount indirectWorkCount,
+        InvocationModeV1 mode,
         VerifiedHistoryStateV1 nextHistory) noexcept
         : identity_(std::move(identity)), compositionIdentity_(std::move(compositionIdentity)),
           invocationIdentity_(std::move(invocationIdentity)), decisionIdentity_(std::move(decisionIdentity)),
           sealIdentity_(std::move(sealIdentity)), dynamicWriteSetIdentity_(std::move(dynamicWriteSetIdentity)),
-          indirectWorkCount_(indirectWorkCount), nextHistory_(std::move(nextHistory)) {}
+          indirectWorkCount_(indirectWorkCount), mode_(mode), nextHistory_(std::move(nextHistory)) {}
 
     FrozenDynamicInvocationIdentity identity_;
     composition::FrozenCompositionIdentity compositionIdentity_;
@@ -42,6 +44,7 @@ private:
     DynamicSealIdentity sealIdentity_;
     DynamicWriteSetIdentity dynamicWriteSetIdentity_;
     canonical::TransitionCount indirectWorkCount_;
+    InvocationModeV1 mode_;
     VerifiedHistoryStateV1 nextHistory_;
 };
 

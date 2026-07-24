@@ -8,14 +8,79 @@
   "acceptedR2Commit": "0caa4776077e58df6473e9f5760555b437bc5305",
   "acceptedR3Commit": "09b56250c88bd52b7e02a2510cd6cf2b7e814bde",
   "mode": "ReconstructionNotNewCapability",
-  "preserve": ["SemanticExecutionSeparation","RawPlannerIndependentVerifierFrozenAuthority","VerifiedFiniteBufferDagComposition","ExplicitDynamicInvocationInputs","VerifiedIndirectQuantity","VerifiedTemporalHistory","VerifiedExactSparseMembership","VerifiedSparseTemporalDeltaAuthority","DeviceEpochBoundHistoryAndHandles","ExplicitRecoveryRebindAndFullActiveSeed","DeterministicFrozenEvidence","ObservationalRealGpuDecisionEvidence"],
-  "forbid": ["RuntimePolicyInference","BackendSemanticReinterpretation","HardwareSpecificWinnerInCanonicalAbi","GamePolicyInference","UnprovenTextureCycleConditionalVariantStreamingResidencyMultiDeviceGeneralization","DeletionOfReferenceProjectsBeforeMigrationProof"],
+  "preserve": [
+    "SemanticExecutionSeparation",
+    "RawPlannerIndependentVerifierFrozenAuthority",
+    "VerifiedFiniteBufferDagComposition",
+    "ExplicitDynamicInvocationInputs",
+    "VerifiedIndirectQuantity",
+    "VerifiedTemporalHistory",
+    "VerifiedExactSparseMembership",
+    "VerifiedSparseTemporalDeltaAuthority",
+    "DeviceEpochBoundHistoryAndHandles",
+    "ExplicitRecoveryRebindAndFullActiveSeed",
+    "DeterministicFrozenEvidence",
+    "ObservationalRealGpuDecisionEvidence"
+  ],
+  "forbid": [
+    "RuntimePolicyInference",
+    "BackendSemanticReinterpretation",
+    "HardwareSpecificWinnerInCanonicalAbi",
+    "GamePolicyInference",
+    "UnprovenTextureCycleConditionalVariantStreamingResidencyMultiDeviceGeneralization",
+    "DeletionOfReferenceProjectsBeforeMigrationProof"
+  ],
   "externalEvidenceZipSha256": "9ee852c2a2574a8cb9c163b6e94213b855317bba74319e6443e9aa98c10c24d9",
   "runtimeCandidatePolicyAuthorization": "None",
-  "r0InputFreeze": {"status":"Passed","acceptedCommit":"b8b5b4f675e4186a3ae202d718e091b63c53e264","manifest":"docs/level4v2/R0_INPUT_FREEZE_MANIFEST_V1.json","carriedInvariantCount":40,"sourceFreezeCount":16,"implementationMutation":"None"},
-  "r1CanonicalVocabulary": {"status":"Passed","acceptedCommit":"eee68ce6e9be5537d3041964679e55f4c5d2c448","manifest":"docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json","deterministicEvidenceSha256":"35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf","strongIdentityCount":11,"strongDynamicCount":8},
-  "r2UnifiedAuthority": {"status":"Passed","acceptedCommit":"0caa4776077e58df6473e9f5760555b437bc5305","manifest":"docs/level4v2/R2_UNIFIED_AUTHORITY_MANIFEST_V1.json","deterministicEvidenceSha256":"745429438eb047adf4e8d1e85f69d0d0d2228ebc01fe3ec132fa2b2705ed8a33","mutationReplayRejectionCount":18,"runtimeCapabilityAdded":"None"},
-  "r3CanonicalComposition": {"status":"Passed","acceptedCommit":"09b56250c88bd52b7e02a2510cd6cf2b7e814bde","manifest":"docs/level4v2/R3_CANONICAL_COMPOSITION_MANIFEST_V1.json","deterministicEvidenceSha256":"dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb","migrationScenarioCount":7,"mutationAndContractRejectionCount":24,"runtimeCapabilityAdded":"None"},
-  "r4DynamicInvocationAndHistory": {"status":"CompletePackageSuppliedOwnerGatePending","manifest":"docs/level4v2/R4_DYNAMIC_INVOCATION_HISTORY_MANIFEST_V1.json","acceptedScenarioCount":8,"rejectionCount":27,"runtimeCapabilityAdded":"None"},
-  "nextStage": "R5RuntimeAndRecovery"
+  "r0InputFreeze": {
+    "status": "Passed",
+    "acceptedCommit": "b8b5b4f675e4186a3ae202d718e091b63c53e264",
+    "manifest": "docs/level4v2/R0_INPUT_FREEZE_MANIFEST_V1.json",
+    "carriedInvariantCount": 40,
+    "sourceFreezeCount": 16,
+    "implementationMutation": "None"
+  },
+  "r1CanonicalVocabulary": {
+    "status": "Passed",
+    "acceptedCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
+    "manifest": "docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json",
+    "deterministicEvidenceSha256": "35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf",
+    "strongIdentityCount": 11,
+    "strongDynamicCount": 8
+  },
+  "r2UnifiedAuthority": {
+    "status": "Passed",
+    "acceptedCommit": "0caa4776077e58df6473e9f5760555b437bc5305",
+    "manifest": "docs/level4v2/R2_UNIFIED_AUTHORITY_MANIFEST_V1.json",
+    "deterministicEvidenceSha256": "745429438eb047adf4e8d1e85f69d0d0d2228ebc01fe3ec132fa2b2705ed8a33",
+    "mutationReplayRejectionCount": 18,
+    "runtimeCapabilityAdded": "None"
+  },
+  "r3CanonicalComposition": {
+    "status": "Passed",
+    "acceptedCommit": "09b56250c88bd52b7e02a2510cd6cf2b7e814bde",
+    "manifest": "docs/level4v2/R3_CANONICAL_COMPOSITION_MANIFEST_V1.json",
+    "deterministicEvidenceSha256": "dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb",
+    "migrationScenarioCount": 7,
+    "mutationAndContractRejectionCount": 24,
+    "runtimeCapabilityAdded": "None"
+  },
+  "r4DynamicInvocationAndHistory": {
+    "status": "Passed",
+    "acceptedCommit": "7562b0f51fcd09b3840f36a4725734218b291e52",
+    "manifest": "docs/level4v2/R4_DYNAMIC_INVOCATION_HISTORY_MANIFEST_V1.json",
+    "deterministicEvidenceSha256": "78f16d2fa4185412144205dc54f842f2929e6e269711dfca9ced9967f37cfbe1",
+    "acceptedScenarioCount": 8,
+    "rejectionCount": 27,
+    "runtimeCapabilityAdded": "None"
+  },
+  "nextStage": "R6MigrationCorpus",
+  "acceptedR4Commit": "7562b0f51fcd09b3840f36a4725734218b291e52",
+  "r5RuntimeAndRecovery": {
+    "status": "CompletePackageSuppliedOwnerGatePending",
+    "manifest": "docs/level4v2/R5_RUNTIME_RECOVERY_MANIFEST_V1.json",
+    "canonicalScenarioCount": 10,
+    "canonicalRejectionCount": 12,
+    "windowsQualificationRequired": true
+  }
 }

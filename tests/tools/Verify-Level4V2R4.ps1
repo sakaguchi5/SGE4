@@ -21,7 +21,7 @@ if($Mode -eq 'Applied'){
 $m=Get-Content -Raw -LiteralPath (Join-Path $root 'docs\level4v2\R4_DYNAMIC_INVOCATION_HISTORY_MANIFEST_V1.json') -Encoding UTF8|ConvertFrom-Json
 Require ($m.schema -eq 'SGE4.Level4V2.R4DynamicInvocationHistoryManifest.V1') 'R4 manifest schema mismatch.'
 Require ($m.completionUnit -eq 'R4') 'R4 completion unit mismatch.'
-if($Mode -eq 'Applied'){Require ($m.status -eq 'CompletePackageSuppliedOwnerGatePending') 'R4 supplied status mismatch.'}else{Require ($m.status -eq 'Passed') 'R4 accepted status mismatch.'}
+if($Mode -eq 'Applied'){Require ($m.status -eq 'CompletePackageSuppliedOwnerGatePending') 'R4 supplied status mismatch.'}else{Require ($m.status -eq 'Passed') 'R4 accepted status mismatch.';Require ($m.acceptedCommit -eq '7562b0f51fcd09b3840f36a4725734218b291e52') 'R4 accepted commit mismatch.'}
 Require ($m.baseCommit -eq '09b56250c88bd52b7e02a2510cd6cf2b7e814bde') 'R4 base commit mismatch.'
 Require ($m.r3AcceptedCommit -eq '09b56250c88bd52b7e02a2510cd6cf2b7e814bde') 'R4 accepted R3 commit mismatch.'
 Require ($m.r3DeterministicEvidenceSha256 -eq 'dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb') 'R4 accepted R3 Evidence mismatch.'
@@ -77,6 +77,7 @@ Require ($planner -match 'Difference' -and $planner -match 'Intersection' -and $
 Require ($verifier -match 'ExpectedDifference' -and $verifier -match 'ExpectedIntersection' -and $verifier -match 'ExpectedUnion') 'R4 independent expected-set reconstruction missing.'
 Require ($verifier -notmatch 'DynamicInvocationPlannerV1|DynamicInvocationPlanner.h') 'R4 Verifier trusts or includes Planner.'
 Require ($frozen -match 'Freeze\(const VerifiedDynamicInvocationV1&') 'R4 Frozen builder does not require Verified Dynamic Invocation.'
+Require ($frozen -match 'InvocationModeV1 Mode\(\)' -and $frozen -match 'mode_') 'R4 Frozen invocation does not expose verified mode for R5.'
 Require ($frozen -notmatch 'DynamicInvocationRequestV1|DynamicPlannerProposalV1') 'R4 Frozen public boundary accepts Raw/Planner input.'
 $public=$model+"`n"+(Get-Content -Raw -LiteralPath (Join-Path $root '202_Level4V2DynamicInvocationPlanner\DynamicInvocationPlanner.h') -Encoding UTF8)+"`n"+(Get-Content -Raw -LiteralPath (Join-Path $root '203_Level4V2DynamicInvocationVerifier\DynamicInvocationVerifier.h') -Encoding UTF8)+"`n"+$frozen
 foreach($forbidden in @('D3D12','DXGI','WARP','RTX4070','Game','ApplicationPolicy','TextureFlow','ConditionalRegion','MultiDevice','RuntimeCandidatePolicy')){Require ($public -notmatch [regex]::Escape($forbidden)) "Forbidden public R4 token: $forbidden"}

@@ -1,7 +1,7 @@
 {
   "schema": "SGE4.Level4V2.R4DynamicInvocationHistoryManifest.V1",
   "completionUnit": "R4",
-  "status": "CompletePackageSuppliedOwnerGatePending",
+  "status": "Passed",
   "baseCommit": "09b56250c88bd52b7e02a2510cd6cf2b7e814bde",
   "r3AcceptedCommit": "09b56250c88bd52b7e02a2510cd6cf2b7e814bde",
   "r3DeterministicEvidenceSha256": "dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb",
@@ -158,5 +158,10 @@
     "declarationOrderIdentityInvariant": true,
     "duplicateMemberAccepted": false,
     "outOfRangeMemberAccepted": false
+  },
+  "acceptedCommit": "7562b0f51fcd09b3840f36a4725734218b291e52",
+  "r5AuthorityProjection": {
+    "frozenInvocationModeAccessor": "ReadOnlyVerifiedProjection",
+    "identityMutation": "None"
   }
 }

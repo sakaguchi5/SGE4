@@ -1,0 +1,113 @@
+{
+  "schema": "SGE4.Level4V2.R5RuntimeRecoveryManifest.V1",
+  "completionUnit": "R5",
+  "status": "CompletePackageSuppliedOwnerGatePending",
+  "baseCommit": "7562b0f51fcd09b3840f36a4725734218b291e52",
+  "r4AcceptedCommit": "7562b0f51fcd09b3840f36a4725734218b291e52",
+  "r4DeterministicEvidenceSha256": "78f16d2fa4185412144205dc54f842f2929e6e269711dfca9ced9967f37cfbe1",
+  "mode": "ReconstructionNotNewCapability",
+  "projects": [
+    {
+      "name": "206_Level4V2RuntimeModel",
+      "guid": "{000000CE-0000-5000-8000-0000000000CE}",
+      "role": "BackendNeutralEpochAndHandleContract"
+    },
+    {
+      "name": "207_Level4V2RuntimeMaterialization",
+      "guid": "{000000CF-0000-5000-8000-0000000000CF}",
+      "role": "FrozenCompositionOnlyMaterialization"
+    },
+    {
+      "name": "208_Level4V2RuntimeSubmission",
+      "guid": "{000000D0-0000-5000-8000-0000000000D0}",
+      "role": "FrozenDynamicInvocationOnlySubmission"
+    },
+    {
+      "name": "209_Level4V2RuntimeRecovery",
+      "guid": "{000000D1-0000-5000-8000-0000000000D1}",
+      "role": "WholeCompositionRecoveryCoordinator"
+    },
+    {
+      "name": "210_Level4V2RuntimeRecoveryTests",
+      "guid": "{000000D2-0000-5000-8000-0000000000D2}",
+      "role": "BackendNeutralAuthorityQualification"
+    },
+    {
+      "name": "211_Level4V2RuntimeWindowsQualification",
+      "guid": "{000000D3-0000-5000-8000-0000000000D3}",
+      "role": "AcceptedD3D12WarpRecoveryPrimitiveQualification"
+    }
+  ],
+  "authorityConsumption": {
+    "materializationInput": "R3OpaqueFrozenComposition",
+    "submissionInput": "R4OpaqueFrozenDynamicInvocation",
+    "rawCandidateAccepted": false,
+    "plannerProposalAccepted": false,
+    "runtimeMayCreateCompositionDecision": false,
+    "runtimeMayCreateDynamicDecision": false,
+    "runtimeMaySelectPerformanceCandidate": false
+  },
+  "runtimeStateMachine": [
+    "Uninitialized",
+    "ActiveNeedsExternalRebind",
+    "Active",
+    "Lost",
+    "AwaitingAdapter"
+  ],
+  "epochRules": {
+    "oneEpochForAllLiveHandles": true,
+    "controlledRebuildAdvancesEpoch": true,
+    "forcedRemovalPreservesEpochUntilReacquisition": true,
+    "staleRepresentationHandleAccepted": false,
+    "staleHistoryHandleAccepted": false,
+    "staleInvocationHistoryAccepted": false
+  },
+  "recoveryRules": {
+    "scope": "WholeComposition",
+    "externalRebindAfterEpochChange": "Required",
+    "firstPostRecoveryInvocation": "R4RecoverySeed",
+    "removedAdapterExclusion": "Required",
+    "awaitingAdapterPreservedWhenNoEligibleExplicitCandidate": true,
+    "candidateOrderAuthority": "ExplicitCallerOrder"
+  },
+  "canonicalQualification": {
+    "acceptedScenarioCount": 10,
+    "rejectionCount": 12,
+    "evidenceSchema": "L4V2R5V1",
+    "expectedSha256": "40d78dc35894a55e50b314bd0afcbb60966f92e942ac70856155964cd8e66498",
+    "debugReleaseByteEqualityRequired": true
+  },
+  "windowsQualification": {
+    "required": true,
+    "evidenceSchema": "L4V2R5W1",
+    "expectedSha256": "1e4adaa04dc8d1d235f8f3438f4295b09b36480174f6a7d9fa0fbaba79ea7a9a",
+    "debugReleaseByteEqualityRequired": true,
+    "proves": [
+      "WarpControlledRebuild",
+      "FrozenCompositionRematerialization",
+      "StaleEpochRejection",
+      "ActualRemoveDevice",
+      "RemovedAdapterExclusion",
+      "AwaitingAdapterRetryPreservation"
+    ],
+    "doesNotClaim": "R3ToLegacyFrozenCompositionCorpusEquivalenceIsDeferredToR6"
+  },
+  "r0CarriedInvariantsSatisfiedInR5": [
+    "V2-R0-I018",
+    "V2-R0-I027",
+    "V2-R0-I028",
+    "V2-R0-I029",
+    "V2-R0-I030",
+    "V2-R0-I031",
+    "V2-R0-I035"
+  ],
+  "runtimeCapabilityAdded": "FrozenAuthorityMaterializationSubmissionAndWholeCompositionRecovery",
+  "schema17Mutation": "None",
+  "runtime17Mutation": "None",
+  "backendSemanticPolicyMutation": "None",
+  "compositionDecisionMutation": "None",
+  "referenceProjectDeletion": "None",
+  "runtimeCandidatePolicyAuthorization": "None",
+  "nextStageOnSuccessfulGate": "R6MigrationCorpus",
+  "packageHashEntryCount": 37
+}
