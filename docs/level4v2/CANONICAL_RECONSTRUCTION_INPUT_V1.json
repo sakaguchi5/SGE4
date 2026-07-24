@@ -38,13 +38,18 @@
     "implementationMutation": "None"
   },
   "r1CanonicalVocabulary": {
-    "status": "CompletePackageSuppliedOwnerGatePending",
+    "status": "Passed",
+    "acceptedCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
     "manifest": "docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json",
-    "libraryProject": "189_Level4V2CanonicalVocabulary",
-    "qualificationProject": "190_Level4V2CanonicalVocabularyTests",
+    "deterministicEvidenceSha256": "35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf",
     "strongIdentityCount": 11,
-    "strongDynamicCount": 8,
-    "runtimeCapabilityAdded": "None"
+    "strongDynamicCount": 8
   },
-  "nextStage": "R2UnifiedAuthorityChain"
+  "nextStage": "R3CanonicalComposition",
+  "r2UnifiedAuthority": {
+    "status": "CompletePackageSuppliedOwnerGatePending",
+    "manifest": "docs/level4v2/R2_UNIFIED_AUTHORITY_MANIFEST_V1.json",
+    "mutationReplayRejectionCount": 18,
+    "runtimeCapabilityAdded": "None"
+  }
 }

@@ -1,7 +1,7 @@
 {
   "schema": "SGE4.Level4V2.R1CanonicalVocabularyManifest.V1",
   "completionUnit": "R1",
-  "status": "CompletePackageSuppliedOwnerGatePending",
+  "status": "Passed",
   "baseCommit": "b8b5b4f675e4186a3ae202d718e091b63c53e264",
   "r0InputFreezeStatus": "Passed",
   "r0Manifest": "docs/level4v2/R0_INPUT_FREEZE_MANIFEST_V1.json",
@@ -149,5 +149,7 @@
   "compositionMutation": "None",
   "referenceProjectDeletion": "None",
   "runtimeCandidatePolicyAuthorization": "None",
-  "nextStageOnSuccessfulGate": "R2UnifiedAuthorityChain"
+  "nextStageOnSuccessfulGate": "R2UnifiedAuthorityChain",
+  "acceptedCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
+  "ownerGateStatus": "Passed"
 }

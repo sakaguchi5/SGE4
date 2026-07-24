@@ -372,12 +372,42 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "189_Level4V2CanonicalVocabu
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "190_Level4V2CanonicalVocabularyTests", "190_Level4V2CanonicalVocabularyTests\190_Level4V2CanonicalVocabularyTests.vcxproj", "{000000BE-0000-5000-8000-0000000000BE}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "191_Level4V2AuthorityModel", "191_Level4V2AuthorityModel\191_Level4V2AuthorityModel.vcxproj", "{000000BF-0000-5000-8000-0000000000BF}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "192_Level4V2CandidatePlanner", "192_Level4V2CandidatePlanner\192_Level4V2CandidatePlanner.vcxproj", "{000000C0-0000-5000-8000-0000000000C0}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "193_Level4V2IndependentVerifier", "193_Level4V2IndependentVerifier\193_Level4V2IndependentVerifier.vcxproj", "{000000C1-0000-5000-8000-0000000000C1}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "194_Level4V2FrozenAuthority", "194_Level4V2FrozenAuthority\194_Level4V2FrozenAuthority.vcxproj", "{000000C2-0000-5000-8000-0000000000C2}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "195_Level4V2AuthorityTests", "195_Level4V2AuthorityTests\195_Level4V2AuthorityTests.vcxproj", "{000000C3-0000-5000-8000-0000000000C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{000000BF-0000-5000-8000-0000000000BF}.Debug|x64.ActiveCfg = Debug|x64
+		{000000BF-0000-5000-8000-0000000000BF}.Debug|x64.Build.0 = Debug|x64
+		{000000BF-0000-5000-8000-0000000000BF}.Release|x64.ActiveCfg = Release|x64
+		{000000BF-0000-5000-8000-0000000000BF}.Release|x64.Build.0 = Release|x64
+		{000000C0-0000-5000-8000-0000000000C0}.Debug|x64.ActiveCfg = Debug|x64
+		{000000C0-0000-5000-8000-0000000000C0}.Debug|x64.Build.0 = Debug|x64
+		{000000C0-0000-5000-8000-0000000000C0}.Release|x64.ActiveCfg = Release|x64
+		{000000C0-0000-5000-8000-0000000000C0}.Release|x64.Build.0 = Release|x64
+		{000000C1-0000-5000-8000-0000000000C1}.Debug|x64.ActiveCfg = Debug|x64
+		{000000C1-0000-5000-8000-0000000000C1}.Debug|x64.Build.0 = Debug|x64
+		{000000C1-0000-5000-8000-0000000000C1}.Release|x64.ActiveCfg = Release|x64
+		{000000C1-0000-5000-8000-0000000000C1}.Release|x64.Build.0 = Release|x64
+		{000000C2-0000-5000-8000-0000000000C2}.Debug|x64.ActiveCfg = Debug|x64
+		{000000C2-0000-5000-8000-0000000000C2}.Debug|x64.Build.0 = Debug|x64
+		{000000C2-0000-5000-8000-0000000000C2}.Release|x64.ActiveCfg = Release|x64
+		{000000C2-0000-5000-8000-0000000000C2}.Release|x64.Build.0 = Release|x64
+		{000000C3-0000-5000-8000-0000000000C3}.Debug|x64.ActiveCfg = Debug|x64
+		{000000C3-0000-5000-8000-0000000000C3}.Debug|x64.Build.0 = Debug|x64
+		{000000C3-0000-5000-8000-0000000000C3}.Release|x64.ActiveCfg = Release|x64
+		{000000C3-0000-5000-8000-0000000000C3}.Release|x64.Build.0 = Release|x64
 		{000000BD-0000-5000-8000-0000000000BD}.Debug|x64.ActiveCfg = Debug|x64
 		{000000BD-0000-5000-8000-0000000000BD}.Debug|x64.Build.0 = Debug|x64
 		{000000BD-0000-5000-8000-0000000000BD}.Release|x64.ActiveCfg = Release|x64

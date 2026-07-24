@@ -1,0 +1,118 @@
+{
+  "schema": "SGE4.Level4V2.R2UnifiedAuthorityManifest.V1",
+  "completionUnit": "R2",
+  "status": "CompletePackageSuppliedOwnerGatePending",
+  "baseCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
+  "r1AcceptedCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
+  "r1DeterministicEvidenceSha256": "35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf",
+  "mode": "ReconstructionNotNewCapability",
+  "projects": [
+    {
+      "name": "191_Level4V2AuthorityModel",
+      "guid": "{000000BF-0000-5000-8000-0000000000BF}",
+      "role": "SharedCanonicalAuthorityModel"
+    },
+    {
+      "name": "192_Level4V2CandidatePlanner",
+      "guid": "{000000C0-0000-5000-8000-0000000000C0}",
+      "role": "ProposalConstructionWithoutSealAuthority"
+    },
+    {
+      "name": "193_Level4V2IndependentVerifier",
+      "guid": "{000000C1-0000-5000-8000-0000000000C1}",
+      "role": "PlannerIndependentReconstructionAndOnlyVerifiedPlanMint"
+    },
+    {
+      "name": "194_Level4V2FrozenAuthority",
+      "guid": "{000000C2-0000-5000-8000-0000000000C2}",
+      "role": "VerifiedOnlyFrozenArtifactConstruction"
+    },
+    {
+      "name": "195_Level4V2AuthorityTests",
+      "guid": "{000000C3-0000-5000-8000-0000000000C3}",
+      "role": "MutationReplayAndDeterminismQualification"
+    }
+  ],
+  "authorityChain": [
+    "CanonicalSemanticAndInvocation",
+    "RawCandidateProposal",
+    "CandidatePlanner",
+    "PlannerIndependentVerifier",
+    "OpaqueVerifiedPlan",
+    "OpaqueFrozenArtifact"
+  ],
+  "authorityOperationKinds": [
+    "BindSemantic",
+    "BindInvocation",
+    "BindCandidate",
+    "BindTargetProfile",
+    "BindResourceContract",
+    "BindLegalWriteSet"
+  ],
+  "independence": {
+    "plannerMayConstructVerifiedPlan": false,
+    "verifierProjectDependsOnPlannerProject": false,
+    "verifierReconstructsExpectedOperations": true,
+    "verifierRecomputesSemanticInvocationCandidateTargetResourceAndWriteSetIdentities": true,
+    "frozenBuilderAcceptsRawCandidate": false,
+    "onlyVerifiedAuthorityCanFreeze": true,
+    "r1FrozenArtifactDescriptorAuthority": "VocabularyOnly",
+    "r2FrozenAuthorityType": "OpaqueFrozenArtifactV1"
+  },
+  "singleFactOwnership": {
+    "plannerProposalStatus": "UnverifiedClaimsOnly",
+    "verifiedAuthorityStoresIdentityReferencesNotDuplicatedDescriptions": true,
+    "frozenArtifactStoresVerifiedIdentityReferencesNotMutablePlanCopies": true
+  },
+  "mutationReplayMatrixCount": 18,
+  "requiredRejections": [
+    "SemanticDefinitionMutation",
+    "InvocationSemanticReplay",
+    "InvocationDimensionMutation",
+    "TargetDefinitionMutation",
+    "ResourceDefinitionMutation",
+    "WriteSetDefinitionMutation",
+    "CandidateSemanticReplay",
+    "CandidateInvocationReplay",
+    "TargetProfileReplay",
+    "ResourceContractReplay",
+    "WriteSetReplay",
+    "CandidatePayloadMutation",
+    "OperationCountMutation",
+    "OperationOrdinalMutation",
+    "OperationKindMutation",
+    "OperationSubjectMutation",
+    "PlannerProposalIdentityMutation",
+    "CandidateIdentityMutation"
+  ],
+  "deterministicEvidence": {
+    "schema": "L4V2R2V1",
+    "debugReleaseByteEqualityRequired": true,
+    "expectedAuthorityOperationCount": 6,
+    "expectedMutationReplayRejectionCount": 18,
+    "expectedSha256": "745429438eb047adf4e8d1e85f69d0d0d2228ebc01fe3ec132fa2b2705ed8a33"
+  },
+  "r0CarriedInvariantsSatisfiedInR2": [
+    "V2-R0-I007",
+    "V2-R0-I008",
+    "V2-R0-I009",
+    "V2-R0-I010",
+    "V2-R0-I012",
+    "V2-R0-I013",
+    "V2-R0-I038"
+  ],
+  "r0CarriedInvariantsPreparedForLaterStages": [
+    "V2-R0-I011",
+    "V2-R0-I014",
+    "V2-R0-I039"
+  ],
+  "runtimeCapabilityAdded": "None",
+  "schema17Mutation": "None",
+  "runtime17Mutation": "None",
+  "backendMutation": "None",
+  "compositionMutation": "None",
+  "referenceProjectDeletion": "None",
+  "runtimeCandidatePolicyAuthorization": "None",
+  "nextStageOnSuccessfulGate": "R3CanonicalComposition",
+  "packageHashEntryCount": 33
+}

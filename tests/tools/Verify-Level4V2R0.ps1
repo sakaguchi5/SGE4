@@ -90,7 +90,12 @@ $solution = Get-Content -Raw -LiteralPath (Join-Path $root 'SemanticGpuEngine4-5
 if($Mode -eq 'Regression'){
     Require ($input.r0InputFreeze.status -eq 'Passed') 'R0 regression requires accepted R0 status.'
     Require ($input.acceptedR0Commit -eq 'b8b5b4f675e4186a3ae202d718e091b63c53e264') 'R0 regression accepted commit mismatch.'
-    Require ($input.nextStage -eq 'R2UnifiedAuthorityChain') 'R0 regression does not see R1-to-R2 handoff.'
+    Require ($null -ne $input.r1CanonicalVocabulary) 'R0 regression does not see the accepted R1 record.'
+    Require ($input.r1CanonicalVocabulary.status -eq 'Passed') 'R0 regression requires accepted R1 status.'
+    Require ($input.r1CanonicalVocabulary.acceptedCommit -eq 'eee68ce6e9be5537d3041964679e55f4c5d2c448') 'R0 regression accepted R1 commit mismatch.'
+    Require ($input.r1CanonicalVocabulary.manifest -eq 'docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json') 'R0 regression R1 manifest path mismatch.'
+    $postR1Stages = @('R2UnifiedAuthorityChain','R3CanonicalComposition','R4DynamicInvocationAndHistory','R5RuntimeAndRecovery','R6MigrationCorpus','R7ReferenceRetirement','Complete')
+    Require ($postR1Stages -contains [string]$input.nextStage) 'R0 regression does not see an accepted R1-or-later handoff.'
     Require (Test-Path -LiteralPath (Join-Path $root 'docs\level4v2\R1_CANONICAL_VOCABULARY_MANIFEST_V1.json') -PathType Leaf) 'R0 regression requires the R1 phase marker.'
     foreach($project in @('189_Level4V2CanonicalVocabulary','190_Level4V2CanonicalVocabularyTests')){Require ($solution -match [regex]::Escape($project)) "R0 regression missing later-phase Project: $project"}
 }else{
