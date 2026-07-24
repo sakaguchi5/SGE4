@@ -1,72 +1,50 @@
 # Spiral 7 stage map V1
 
-## CU1 — Research Contract Freeze
+## CU1 — Research Contract Freeze — PASSED
 
-Record Spiral 6 Owner closure, exact sparse-delta temporal meaning, corpus, Candidate family, boundaries and proof ledger. Documents and verification only.
+Freeze the exact sparse-delta temporal meaning, corpus, Candidate family, boundaries and proof ledger.
 
-## CU2 — Sparse Temporal Delta Architecture
+## CU2 — Sparse Temporal Delta Architecture — PASSED
 
-Prove that the separate Spiral 4/5/6 extensions cannot express partial history validity and exact update/clear authority without hidden judgment. Implement the canonical delta Semantic, one `CompactDeltaIndexHistoryReuse` path and the minimal versioned Sparse-Temporal Delta extension.
+Prove the insufficiency of independent Spiral 4/5/6 sidecars for partial-history transition authority. Implement the canonical delta Semantic, Compact Delta History and minimal versioned extension.
 
-## CU3 — Independent Delta Authority
+## CU3 — Independent Delta Authority — PASSED
 
-Split Raw Candidate, Planner and Planner-independent Verifier. Bind Active, Modified, derived Transition, per-item generation, history generation, Programs, Resources, Target and Device epoch. Reject mutation and replay attacks.
+Split Raw Candidate, Planner and Planner-independent Verifier. Bind Semantic, transitions, generations, Programs, Resources, Target and Device epoch. Reject mutation and replay.
 
-## CU4 — Incremental History Candidate Family
+## CU4 — Incremental History Candidate Family — PASSED
 
-Add `FullActiveDenseRecompute` and `AffectedBlockDeltaHistoryReuse`. Prove A/B/C full-output equivalence across every invocation and exact write-set authority for incremental Candidates.
+Add Full Active and Affected Block alternatives. Prove A/B/C full-output equivalence and exact legal write sets.
 
-## CU5 — Architecture Qualification
+## CU5 — Architecture Qualification — PASSED
 
-Run the complete qualification timeline corpus on WARP. Prove hold-byte preservation, activate/update/deactivate behavior, deterministic evidence, Controlled Recovery, actual Device Removal, stale-history rejection and explicit sparse-delta rebind/rebuild.
-
-May declare:
+Qualify the complete WARP timeline, deterministic evidence, Controlled Recovery, actual RemoveDevice, stale-handle rejection and explicit sparse-delta rebind/rebuild.
 
 ```text
 SGE4-5 SPIRAL 7 ARCHITECTURE COMPLETE
 ```
 
-## CU6 — Real-GPU Measurement and Decision Evidence
+## CU6-1 — Canonical Real-GPU Surface — PASSED
 
-Keep the CU5 Architecture frozen. Measure A/B/C on a real hardware D3D12 Adapter over:
+Measure the 160-coordinate canonical surface. The result exposed that per-Candidate medians cannot authorize a winner when paired order agreement disagrees.
 
-```text
-4 patterns x 5 Active counts x 8 Transition counts
-```
+## CU6-2 — Paired Decision Refinement — PASSED
 
-Use exact legal Hold/DirtyOnly/ReplaceAndClear constructors, all six Candidate orders, D3D12 Timestamp Query, output-equivalent audit-free Timing shaders, block-local drift controls and corruption-safe binary evidence.
-
-CU6-1 captures the canonical 160-coordinate surface. CU6-2 corrects the Decision authority without changing the measured Candidate semantics:
-
-- median ranking remains descriptive only,
-- a stable winner must win paired decisions against both alternatives,
-- a stable equivalent set must be pairwise noise-equivalent and beat every outside Candidate,
-- `T=0` is classified as B/C ZeroDispatchEquivalent and excluded from crossover authority,
-- unresolved coordinates cannot create a crossover,
-- a 100-coordinate high-Transition refinement pass measures `T={1024,1536,2048,3072,4096}` with greater repetition,
-- refinement observations replace duplicate canonical coordinates at `T=1024` and `T=4096`.
-
-Generate:
-
-- descriptive per-case median ranking,
-- paired A/B, B/C and A/C decisions,
-- paired-authority classification,
-- resolved Transition-count crossover brackets,
-- resolved Active-count crossover brackets,
-- Pattern dependence at equal `(A,T)`.
-
-May declare:
+Use paired agreement as Decision authority, classify zero Transition separately, exclude unresolved coordinates from crossover and add a 100-coordinate high-Transition refinement pass. Combine the two passes into a 220-coordinate local Decision Map.
 
 ```text
 SGE4-5 SPIRAL 7 EXPERIMENT COMPLETE
 ```
 
-It may not declare:
+## Owner closure — PASSED
+
+The Owner request to organize the completed program before Level 4 v2 is the explicit closure action.
 
 ```text
-RuntimeCandidatePolicyAuthorization != None
-UniversalWinner
-SPIRAL 7 CLOSED
+SGE4-5 SPIRAL 7 CLOSED
+RuntimeCandidatePolicyAuthorization = None
+UniversalWinnerClaim = Forbidden
+NextProgram = Level4V2CanonicalReconstruction
 ```
 
-`SPIRAL 7 CLOSED` remains Owner-gated. After closure, exploratory Spiral growth stops and Level 4 v2 Canonical reconstruction begins.
+Exploratory Spiral growth stops here. The next work is reconstruction, migration and proof preservation, not a new capability experiment.

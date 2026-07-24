@@ -92,6 +92,31 @@
     "combined_paired_decision_cases_v3.csv",
     "combined_paired_decision_report_v3.txt"
   ],
+  "ownerRunResult": {
+    "status": "Passed",
+    "acceptedFinalCommit": "f802c12b162569a869c214da22b80142b3a4a0dd",
+    "adapterDescription": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "adapterFingerprint": "8a7a825e84c0a157b16c6e54f51b833d6d191173e7e1d28d84062a60840a6b3f",
+    "canonicalAcceptedBlockCount": 320,
+    "canonicalRejectedAttemptCount": 0,
+    "refinementAcceptedBlockCount": 300,
+    "refinementRejectedAttemptCount": 1,
+    "timestampResolutionCensoredSampleCount": 190,
+    "nonzeroDispatchCensoredSampleCount": 0,
+    "canonicalEvidenceSha256": "0d7a50c448269cbb346ea80b0ceda09e7f28b10c068ed20a96d6c47621b4802a",
+    "refinementEvidenceSha256": "44fa4dd72e64aab300bec53fc45c6ae2bf7a7012630b0e15a83fe6717c7ff80b",
+    "combinedDecisionCsvSha256": "e07af74f1f5f53143adbaf5e6fbd65d54d83bc4a0d314c6e7d648bf4edcd7bd4",
+    "combinedDecisionReportSha256": "b840cb1425f5e45ccac2f0c84750584313350458062dab98f8552290e8bfda81",
+    "externalEvidenceZipSha256": "9ee852c2a2574a8cb9c163b6e94213b855317bba74319e6443e9aa98c10c24d9",
+    "combinedCoordinateCount": 220,
+    "decisionClassCounts": {
+      "zeroDispatchEquivalent": 20,
+      "stableWinner": 41,
+      "stableEquivalentSet": 61,
+      "unresolved": 98
+    },
+    "stableSingleWinnerSet": ["CompactDeltaIndexHistoryReuse"]
+  },
   "runtimeCandidatePolicyAuthorization": "None",
   "universalWinnerClaim": "Forbidden",
   "measurementResultScope": "AdapterDriverAndMeasurementProfileSpecificObservation",
