@@ -111,7 +111,7 @@ Require ($input.acceptedR0Commit -eq 'b8b5b4f675e4186a3ae202d718e091b63c53e264')
 Require ($input.r0InputFreeze.status -eq 'Passed') 'Canonical input does not record R0 success.'
 Require ($input.r1CanonicalVocabulary.manifest -eq 'docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json') 'Canonical input R1 manifest mismatch.'
 Require ([int]$input.r1CanonicalVocabulary.strongIdentityCount -eq 11 -and [int]$input.r1CanonicalVocabulary.strongDynamicCount -eq 8) 'Canonical input R1 counts mismatch.'
-if($Mode -eq 'Applied'){Require ($input.nextStage -eq 'R2UnifiedAuthorityChain') 'Canonical input does not advance to R2.'}else{Require ($input.nextStage -eq 'R3CanonicalComposition') 'Canonical input does not record the R2/R3 handoff.'}
+if($Mode -eq 'Applied'){Require ($input.nextStage -eq 'R2UnifiedAuthorityChain') 'Canonical input does not advance to R2.'}else{$postR2Stages=@('R3CanonicalComposition','R4DynamicInvocationAndHistory','R5RuntimeAndRecovery','R6MigrationCorpus','R7ReferenceRetirement','Complete');Require ($postR2Stages -contains [string]$input.nextStage) 'Canonical input does not record an accepted R2-or-later handoff.'}
 Require ($input.runtimeCandidatePolicyAuthorization -eq 'None') 'Canonical input authorized Runtime policy.'
 
 $r2 = Get-Content -Raw -LiteralPath (Join-Path $root 'docs\level4v2\R2_UNIFIED_AUTHORITY_ENTRY_CONTRACT_V1.md') -Encoding UTF8

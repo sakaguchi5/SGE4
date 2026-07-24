@@ -1,7 +1,7 @@
 {
   "schema": "SGE4.Level4V2.R2UnifiedAuthorityManifest.V1",
   "completionUnit": "R2",
-  "status": "CompletePackageSuppliedOwnerGatePending",
+  "status": "Passed",
   "baseCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
   "r1AcceptedCommit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
   "r1DeterministicEvidenceSha256": "35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf",
@@ -114,5 +114,7 @@
   "referenceProjectDeletion": "None",
   "runtimeCandidatePolicyAuthorization": "None",
   "nextStageOnSuccessfulGate": "R3CanonicalComposition",
-  "packageHashEntryCount": 33
+  "packageHashEntryCount": 33,
+  "acceptedCommit": "0caa4776077e58df6473e9f5760555b437bc5305",
+  "ownerGateResult": "Passed"
 }

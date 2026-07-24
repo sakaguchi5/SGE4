@@ -4,6 +4,8 @@
   "acceptedSpiral7Commit": "f802c12b162569a869c214da22b80142b3a4a0dd",
   "preparationCommit": "a44b2ee3e5e151eab2f25f94e92d838b7931a4d9",
   "acceptedR0Commit": "b8b5b4f675e4186a3ae202d718e091b63c53e264",
+  "acceptedR1Commit": "eee68ce6e9be5537d3041964679e55f4c5d2c448",
+  "acceptedR2Commit": "0caa4776077e58df6473e9f5760555b437bc5305",
   "mode": "ReconstructionNotNewCapability",
   "preserve": [
     "SemanticExecutionSeparation",
@@ -45,11 +47,20 @@
     "strongIdentityCount": 11,
     "strongDynamicCount": 8
   },
-  "nextStage": "R3CanonicalComposition",
   "r2UnifiedAuthority": {
-    "status": "CompletePackageSuppliedOwnerGatePending",
+    "status": "Passed",
+    "acceptedCommit": "0caa4776077e58df6473e9f5760555b437bc5305",
     "manifest": "docs/level4v2/R2_UNIFIED_AUTHORITY_MANIFEST_V1.json",
+    "deterministicEvidenceSha256": "745429438eb047adf4e8d1e85f69d0d0d2228ebc01fe3ec132fa2b2705ed8a33",
     "mutationReplayRejectionCount": 18,
     "runtimeCapabilityAdded": "None"
-  }
+  },
+  "r3CanonicalComposition": {
+    "status": "CompletePackageSuppliedOwnerGatePending",
+    "manifest": "docs/level4v2/R3_CANONICAL_COMPOSITION_MANIFEST_V1.json",
+    "migrationScenarioCount": 7,
+    "mutationAndContractRejectionCount": 24,
+    "runtimeCapabilityAdded": "None"
+  },
+  "nextStage": "R4DynamicInvocationAndHistory"
 }

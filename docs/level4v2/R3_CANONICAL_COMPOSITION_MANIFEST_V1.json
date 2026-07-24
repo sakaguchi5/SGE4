@@ -1,0 +1,134 @@
+{
+  "schema": "SGE4.Level4V2.R3CanonicalCompositionManifest.V1",
+  "completionUnit": "R3",
+  "status": "CompletePackageSuppliedOwnerGatePending",
+  "baseCommit": "0caa4776077e58df6473e9f5760555b437bc5305",
+  "r2AcceptedCommit": "0caa4776077e58df6473e9f5760555b437bc5305",
+  "r2DeterministicEvidenceSha256": "745429438eb047adf4e8d1e85f69d0d0d2228ebc01fe3ec132fa2b2705ed8a33",
+  "mode": "ReconstructionNotNewCapability",
+  "projects": [
+    {
+      "name": "196_Level4V2CompositionModel",
+      "guid": "{000000C4-0000-5000-8000-0000000000C4}",
+      "role": "CanonicalFiniteBufferDagModel"
+    },
+    {
+      "name": "197_Level4V2CompositionPlanner",
+      "guid": "{000000C5-0000-5000-8000-0000000000C5}",
+      "role": "UnverifiedCompositionPlanProposal"
+    },
+    {
+      "name": "198_Level4V2CompositionVerifier",
+      "guid": "{000000C6-0000-5000-8000-0000000000C6}",
+      "role": "PlannerIndependentCompositionReconstruction"
+    },
+    {
+      "name": "199_Level4V2FrozenComposition",
+      "guid": "{000000C7-0000-5000-8000-0000000000C7}",
+      "role": "VerifiedOnlyFrozenComposition"
+    },
+    {
+      "name": "200_Level4V2CompositionTests",
+      "guid": "{000000C8-0000-5000-8000-0000000000C8}",
+      "role": "ContractMutationAndDeterminismQualification"
+    }
+  ],
+  "provenSubset": {
+    "graph": "FiniteStaticDag",
+    "resourceKind": "BufferOnly",
+    "writerRule": "ExactlyOneWriterPerInternalOrOutputFlow",
+    "presenterRule": "ZeroOrOne",
+    "targetScope": "OneTargetProfileIdentity",
+    "recoveryScope": "WholeComposition"
+  },
+  "authorityChain": [
+    "R2OpaqueFrozenLeafAuthority",
+    "RawCompositionContract",
+    "CompositionPlannerProposal",
+    "PlannerIndependentCompositionVerifier",
+    "OpaqueVerifiedComposition",
+    "OpaqueFrozenComposition"
+  ],
+  "compositionDecisions": [
+    "FlowBinding",
+    "AllocationOwnershipAndSize",
+    "CanonicalTopologicalSchedule",
+    "StateHandoff",
+    "SignalWaitSynchronization",
+    "PresenterBinding",
+    "WholeCompositionRecoverySet"
+  ],
+  "independence": {
+    "compositionModelAcceptsRawR2Candidate": false,
+    "leafAuthorityRequiresR2OpaqueFrozenArtifact": true,
+    "compositionVerifierProjectDependsOnCompositionPlannerProject": false,
+    "compositionVerifierReconstructsExpectedPlan": true,
+    "compositionMayMintR2VerifiedPlan": false,
+    "frozenCompositionAcceptsRawContractOrPlannerProposal": false,
+    "onlyVerifiedCompositionCanFreeze": true
+  },
+  "migrationScenarios": [
+    "Independent",
+    "Linear",
+    "FanOut",
+    "MultiInput",
+    "Diamond",
+    "Headless",
+    "SinglePresenter"
+  ],
+  "declarationOrderIdentityInvariant": true,
+  "mutationAndContractRejectionCount": 24,
+  "requiredRejections": [
+    "DuplicateLeaf",
+    "DuplicateEndpoint",
+    "DuplicateFlow",
+    "UnsupportedResourceKind",
+    "RequiredEndpointUnbound",
+    "MultipleWriters",
+    "InvalidFlowShape",
+    "GraphCycle",
+    "MultiplePresenters",
+    "TargetProfileMismatch",
+    "EndpointBoundMoreThanOnce",
+    "UnknownEndpoint",
+    "FlowIdentityMutation",
+    "ContractIdentityMutation",
+    "AllocationSizeMutation",
+    "AllocationIdentityMutation",
+    "ScheduleMutation",
+    "BindingMutation",
+    "HandoffMutation",
+    "SynchronizationMutation",
+    "PresenterMutation",
+    "RecoverySetMutation",
+    "PlanIdentityMutation",
+    "PlanContractReplay"
+  ],
+  "deterministicEvidence": {
+    "schema": "L4V2R3V1",
+    "debugReleaseByteEqualityRequired": true,
+    "expectedScenarioCount": 7,
+    "expectedRejectionCount": 24,
+    "expectedSha256": "dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb"
+  },
+  "r0CarriedInvariantsSatisfiedInR3": [
+    "V2-R0-I014",
+    "V2-R0-I015",
+    "V2-R0-I016",
+    "V2-R0-I017",
+    "V2-R0-I019"
+  ],
+  "r0CarriedInvariantsPreparedForLaterStages": [
+    "V2-R0-I018",
+    "V2-R0-I037"
+  ],
+  "runtimeCapabilityAdded": "None",
+  "schema17Mutation": "None",
+  "runtime17Mutation": "None",
+  "backendMutation": "None",
+  "runtimeMutation": "None",
+  "referenceProjectDeletion": "None",
+  "runtimeCandidatePolicyAuthorization": "None",
+  "nextStageOnSuccessfulGate": "R4DynamicInvocationAndHistory",
+  "packageHashEntryCount": 34
+}

@@ -6,33 +6,27 @@ Forty carried Invariants, owners, destinations and sixteen source identities are
 
 ## R1 — Canonical vocabulary — PASSED
 
-Neutral strong identities, dynamic concepts, records, opaque Verified vocabulary and deterministic identity material passed in Debug and Release.
+Accepted commit: `eee68ce6e9be5537d3041964679e55f4c5d2c448`.
 
-Accepted commit:
+## R2 — Unified authority chain — PASSED
 
-```text
-eee68ce6e9be5537d3041964679e55f4c5d2c448
-```
+Accepted commit: `0caa4776077e58df6473e9f5760555b437bc5305`.
 
-## R2 — Unified authority chain — PACKAGE SUPPLIED; OWNER GATE PENDING
+The Raw/Planner/independent-Verifier/Verified/Frozen authority chain passed eighteen mutation and replay rejections.
 
-Reconstruct the only legal chain from Canonical inputs through Raw proposal, Planner, Planner-independent Verifier, opaque Verified Plan and Verified-only Frozen artifact.
+## R3 — Canonical composition — PACKAGE SUPPLIED; OWNER GATE PENDING
 
-Completion requires independent operation and identity reconstruction, 18 mutation/replay rejections and byte-identical Debug/Release Evidence.
+The supplied package reconstructs the finite static Buffer DAG subset with explicit flow, allocation, canonical schedule, state handoff, synchronization, Presenter and whole-composition Recovery-set authority.
 
-## R3 — Canonical composition — NEXT AFTER R2 ACCEPTANCE
+Completion requires seven graph scenarios, twenty-four Contract/proposal rejections and byte-identical Debug/Release Evidence.
 
-Reconstruct the proven finite Buffer DAG subset, including explicit flow, allocation, scheduling, state and synchronization authority.
+## R4 — Dynamic invocation and history — NEXT AFTER R3 ACCEPTANCE
 
-Completion: Level 4 v1 corpus and selected compositions migrate without Backend judgment.
-
-## R4 — Dynamic invocation and history
-
-Integrate verified indirect quantity, temporal history, exact sparse sets and versioned delta transitions as explicit dynamic inputs and artifacts.
+Integrate verified indirect quantity, temporal history, exact sparse sets and versioned delta transitions as explicit dynamic inputs and artifacts without changing R3 composition authority.
 
 ## R5 — Runtime and Recovery
 
-Reconstruct materialization, epoch-bound handles, explicit external rebind, full-active Recovery seed and removed-Adapter exclusion.
+Reconstruct materialization, epoch-bound handles, explicit external rebind, full-active Recovery seed and removed-target exclusion.
 
 ## R6 — Migration corpus
 
