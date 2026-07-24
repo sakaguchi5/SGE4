@@ -1,0 +1,652 @@
+{
+  "schema": "SGE4.Level4V2.R0InputFreezeManifest.V1",
+  "completionUnit": "R0",
+  "status": "Complete",
+  "baseCommit": "a44b2ee3e5e151eab2f25f94e92d838b7931a4d9",
+  "acceptedSpiral7FinalCommit": "f802c12b162569a869c214da22b80142b3a4a0dd",
+  "mode": "ReconstructionNotNewCapability",
+  "architectureImplementationMutation": "None",
+  "solutionProjectMutation": "None",
+  "sourceFreeze": [
+    {
+      "path": "docs/level4v1-canonical/RECONSTRUCTION_POLICY.md",
+      "sha256": "b296dba718ed87b76af4f7a06433f9ea8972d2264fa8032a640bfaa66661b56c",
+      "role": "Level4V1ReconstructionPolicy"
+    },
+    {
+      "path": "docs/level4v1-canonical/R3_R5_RUNTIME_RECOVERY_FINAL_QUALIFICATION.md",
+      "sha256": "3d83adeabb73b0e496fbbb78ea9c646abad6f98c36fcffca36da23a53e829a96",
+      "role": "Level4V1RuntimeRecoveryQualification"
+    },
+    {
+      "path": "docs/spiral1/PROOF_LEDGER_V1.md",
+      "sha256": "3c7a687d682200d640892b64e084714cf21105a39330a77b0bb3e4d976e8c4b2",
+      "role": "Spiral1ProofLedger"
+    },
+    {
+      "path": "docs/spiral2/PROOF_LEDGER_V1.md",
+      "sha256": "617f9bf43e9b99154f0212974bfd47dae525751cc42a2d9b3af18054a4fdb083",
+      "role": "Spiral2ProofLedger"
+    },
+    {
+      "path": "docs/spiral3/PROOF_LEDGER_V1.md",
+      "sha256": "f426d7df7a1ed0cd0414b2eb88072e7be970be29eb6fda57ddaed2c91214530f",
+      "role": "Spiral3ProofLedger"
+    },
+    {
+      "path": "docs/spiral4/PROOF_LEDGER_V1.md",
+      "sha256": "fd1ff7ab08dfb5d080ff4abb8db487a4adb18e44e9df08d345f4aec4383b252b",
+      "role": "Spiral4ProofLedger"
+    },
+    {
+      "path": "docs/spiral5/PROOF_LEDGER_V1.md",
+      "sha256": "7816b49fa61641e717d94314c9ce994bb58ba8a5608cb7ca87aca34a5d0fe4fd",
+      "role": "Spiral5ProofLedger"
+    },
+    {
+      "path": "docs/spiral6/PROOF_LEDGER_V1.md",
+      "sha256": "2b86deae0562602ba2d43bb2e34dc4f03d988cf21702f92c7b5ccc425c903c2c",
+      "role": "Spiral6ProofLedger"
+    },
+    {
+      "path": "docs/spiral7/PROOF_LEDGER_V1.md",
+      "sha256": "a91bae148b77f175432b0b6b3a13a869b2cead751c61ec005be344f2332ea175",
+      "role": "Spiral7ProofLedger"
+    },
+    {
+      "path": "docs/spiral7/CLOSURE_MANIFEST_V1.json",
+      "sha256": "c4c7927ea02b0f926f8f54fa4a4482e4d53f550b5c3acf747ef17e42092eaca1",
+      "role": "Spiral7Closure"
+    },
+    {
+      "path": "docs/spiral7/CU5_ARCHITECTURE_QUALIFICATION_MANIFEST_V1.json",
+      "sha256": "4b9db516ba8809d482e039394a9cbb284c0bb4d91600ddb1ac654ab46e652766",
+      "role": "AcceptedArchitectureQualification"
+    },
+    {
+      "path": "docs/spiral7/CU6_REAL_GPU_MEASUREMENT_MANIFEST_V1.json",
+      "sha256": "76aee55429d6c67db5242987f879785a72f5bec142fc59fc363312eae44f747d",
+      "role": "AcceptedObservationalMeasurement"
+    },
+    {
+      "path": "docs/spiral7/SPIRAL7_FINAL_DECISION_SUMMARY.md",
+      "sha256": "97345b8190627308697ec22c7da43232cea07f218918037eccebe0ad534abf5c",
+      "role": "FinalDecisionSummary"
+    },
+    {
+      "path": "docs/level4v2/CANONICAL_RECONSTRUCTION_INPUT_V1.md",
+      "sha256": "80d0d983dd0b9f5120a426b298aac65fefca7684157ad4712ebdd6a4b1bb5110",
+      "role": "CanonicalInputNarrative"
+    },
+    {
+      "path": "docs/level4v2/PROVEN_CAPABILITY_MATRIX_V1.md",
+      "sha256": "c3c06debdda4e555121fb7ba3f13d935b58edb00b15baedb9c38a6b955f31d72",
+      "role": "CapabilityMatrix"
+    },
+    {
+      "path": "docs/level4v2/RETAINED_REFERENCE_LAYOUT_V1.md",
+      "sha256": "a336bf09bed936461ded74c504ce417cdfe73ee301999a2c50ec091d0a928026",
+      "role": "RetainedReferenceLayout"
+    }
+  ],
+  "carriedInvariantCount": 40,
+  "carriedInvariants": [
+    {
+      "id": "V2-R0-I001",
+      "canonicalName": "SemanticExecutionSeparation",
+      "statement": "Semantic meaning remains independent from GPU execution representation.",
+      "owner": "CanonicalSemantic",
+      "destination": "R1CanonicalVocabulary",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Level4V1ReconstructionPolicy",
+        "Spiral1ProofLedger"
+      ],
+      "requiredVerification": "TypeDependencyAndSerializationBoundary"
+    },
+    {
+      "id": "V2-R0-I002",
+      "canonicalName": "ExplicitDynamicInvocationInputs",
+      "statement": "Runtime-varying values are explicit verified inputs and are never inferred by Runtime or Backend.",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral4ProofLedger",
+        "Spiral5ProofLedger",
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "StrongInputTypesAndVerifierReconstruction"
+    },
+    {
+      "id": "V2-R0-I003",
+      "canonicalName": "ExternalMembershipAuthority",
+      "statement": "Active membership and modified-survivor membership remain externally supplied verified inputs.",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "SubsetAndIdentityValidation"
+    },
+    {
+      "id": "V2-R0-I004",
+      "canonicalName": "ExactTransitionAlgebra",
+      "statement": "Activation, deactivation, update, retain and transition sets are exact derived sets with canonical identities.",
+      "owner": "CanonicalSemantic",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "IndependentSetReconstruction"
+    },
+    {
+      "id": "V2-R0-I005",
+      "canonicalName": "FirstInvocationFullActiveRule",
+      "statement": "The first invocation updates all active members and retains no prior history.",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "FirstInvocationCorpus"
+    },
+    {
+      "id": "V2-R0-I006",
+      "canonicalName": "NoGamePolicyInference",
+      "statement": "Final game operations and game-specific membership policy never enter Canonical Semantic or Runtime policy.",
+      "owner": "CanonicalSemantic",
+      "destination": "R1CanonicalVocabulary",
+      "state": "FrozenForMigration",
+      "sources": [
+        "CanonicalInputNarrative",
+        "Spiral7Closure"
+      ],
+      "requiredVerification": "ForbiddenDependencyAndTokenAudit"
+    },
+    {
+      "id": "V2-R0-I007",
+      "canonicalName": "RawCandidateCannotExecute",
+      "statement": "A Raw Candidate cannot execute, freeze itself, or mint verification authority.",
+      "owner": "CandidateProposal",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral3ProofLedger",
+        "Spiral4ProofLedger",
+        "Spiral5ProofLedger",
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "CompileTimeOpaqueBoundary"
+    },
+    {
+      "id": "V2-R0-I008",
+      "canonicalName": "PlannerHasNoSealAuthority",
+      "statement": "Planner output remains a proposal and cannot create a Verified seal.",
+      "owner": "CandidatePlanner",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral4ProofLedger",
+        "Spiral5ProofLedger",
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "PlannerVerifierDependencyBoundary"
+    },
+    {
+      "id": "V2-R0-I009",
+      "canonicalName": "PlannerIndependentVerification",
+      "statement": "Verifier independently reconstructs expected operations, identities, write sets and Target bindings.",
+      "owner": "IndependentVerifier",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral3ProofLedger",
+        "Spiral4ProofLedger",
+        "Spiral5ProofLedger",
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "MutationAndReplayMatrix"
+    },
+    {
+      "id": "V2-R0-I010",
+      "canonicalName": "OpaqueVerifiedPlan",
+      "statement": "Only an opaque Verified Plan may cross into freezing or execution.",
+      "owner": "IndependentVerifier",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral4ProofLedger",
+        "Spiral5ProofLedger",
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "ConstructionAvailabilityAudit"
+    },
+    {
+      "id": "V2-R0-I011",
+      "canonicalName": "DeterministicFrozenIdentity",
+      "statement": "Frozen executable identity excludes process-specific data and is deterministic across qualified builds and fresh processes.",
+      "owner": "FrozenArtifact",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "AcceptedArchitectureQualification",
+        "Level4V1RuntimeRecoveryQualification"
+      ],
+      "requiredVerification": "DebugReleaseFreshIdentity"
+    },
+    {
+      "id": "V2-R0-I012",
+      "canonicalName": "ResourceIdentityBinding",
+      "statement": "Representations, resources and legal write sets are identity-bound to the Verified Plan.",
+      "owner": "FrozenArtifact",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "ResourceReplayRejection"
+    },
+    {
+      "id": "V2-R0-I013",
+      "canonicalName": "TargetBindingAuthority",
+      "statement": "Target profile and execution contract identities are explicitly bound before freezing.",
+      "owner": "IndependentVerifier",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral4ProofLedger",
+        "Spiral5ProofLedger",
+        "Spiral6ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "TargetMutationRejection"
+    },
+    {
+      "id": "V2-R0-I014",
+      "canonicalName": "FiniteBufferDagComposition",
+      "statement": "Canonical composition initially supports only the proven finite Buffer-flow DAG subset.",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Level4V1ReconstructionPolicy",
+        "CapabilityMatrix"
+      ],
+      "requiredVerification": "MigrationCorpusGraphValidation"
+    },
+    {
+      "id": "V2-R0-I015",
+      "canonicalName": "SingleWriterFlow",
+      "statement": "Each represented flow has exactly one writer.",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Level4V1ReconstructionPolicy"
+      ],
+      "requiredVerification": "CompositionVerifierRule"
+    },
+    {
+      "id": "V2-R0-I016",
+      "canonicalName": "OptionalSinglePresenter",
+      "statement": "A composition has zero or one presenter in the proven subset.",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Level4V1ReconstructionPolicy"
+      ],
+      "requiredVerification": "CompositionVerifierRule"
+    },
+    {
+      "id": "V2-R0-I017",
+      "canonicalName": "SingleAdapterScope",
+      "statement": "The initial Canonical reconstruction remains one-Adapter only.",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "state": "FrozenForMigration",
+      "sources": [
+        "CanonicalInputNarrative",
+        "Level4V1ReconstructionPolicy"
+      ],
+      "requiredVerification": "NonGoalGate"
+    },
+    {
+      "id": "V2-R0-I018",
+      "canonicalName": "WholeCompositionRecoveryScope",
+      "statement": "Recovery remains whole-composition in the proven subset.",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Level4V1RuntimeRecoveryQualification"
+      ],
+      "requiredVerification": "RecoveryCorpus"
+    },
+    {
+      "id": "V2-R0-I019",
+      "canonicalName": "NoUnprovenCompositionGeneralization",
+      "statement": "Texture sharing, cycles, conditionals, variants, streaming, residency, partial recovery and multi-device are forbidden until separately proven.",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "state": "FrozenForMigration",
+      "sources": [
+        "CanonicalInputNarrative"
+      ],
+      "requiredVerification": "ForbiddenCapabilityManifest"
+    },
+    {
+      "id": "V2-R0-I020",
+      "canonicalName": "StrongDynamicDimensions",
+      "statement": "ActiveCount, TransitionCount, ReuseCount, UpdateInterval, BatchSize, AffectedBlockCount, TimelineOrdinal and DeviceEpoch are non-substitutable strong concepts.",
+      "owner": "CanonicalVocabulary",
+      "destination": "R1CanonicalVocabulary",
+      "state": "FrozenForMigration",
+      "sources": [
+        "CanonicalInputNarrative",
+        "CapabilityMatrix"
+      ],
+      "requiredVerification": "CompileTimeSubstitutionNegativeTests"
+    },
+    {
+      "id": "V2-R0-I021",
+      "canonicalName": "VerifiedIndirectQuantity",
+      "statement": "Indirect work quantity is an explicit verified execution parameter.",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral4ProofLedger"
+      ],
+      "requiredVerification": "IndirectAuthorityMigrationCorpus"
+    },
+    {
+      "id": "V2-R0-I022",
+      "canonicalName": "ExplicitHistoryValidity",
+      "statement": "History validity is explicit and bound to semantic generation and Device epoch.",
+      "owner": "CanonicalHistory",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral5ProofLedger",
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "HistoryReplayRejection"
+    },
+    {
+      "id": "V2-R0-I023",
+      "canonicalName": "ExactSparseMembership",
+      "statement": "Sparse membership identity is distinct from sparse execution representation.",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral6ProofLedger"
+      ],
+      "requiredVerification": "EquivalentLoweringCorpus"
+    },
+    {
+      "id": "V2-R0-I024",
+      "canonicalName": "SparseTemporalDeltaAuthority",
+      "statement": "Sparse membership, temporal history and indirect work may coexist under one exact delta invocation authority.",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "Spiral7MigrationCorpus"
+    },
+    {
+      "id": "V2-R0-I025",
+      "canonicalName": "ExactIncrementalWriteSet",
+      "statement": "Incremental Candidates may write exactly the transition set and no retained member.",
+      "owner": "IndependentVerifier",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "GpuWriteAuditAndCpuOracle"
+    },
+    {
+      "id": "V2-R0-I026",
+      "canonicalName": "RetainedHistoryByteStability",
+      "statement": "Retained members receive no GPU write and preserve valid prior bytes.",
+      "owner": "CanonicalHistory",
+      "destination": "R4DynamicInvocationAndHistory",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger"
+      ],
+      "requiredVerification": "RetainedByteIdentity"
+    },
+    {
+      "id": "V2-R0-I027",
+      "canonicalName": "EpochBoundRuntimeHandles",
+      "statement": "Representation, history, completion and submission handles are bound to a nonzero exact Device epoch.",
+      "owner": "CanonicalRuntime",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger",
+        "AcceptedArchitectureQualification"
+      ],
+      "requiredVerification": "StaleHandleRejection"
+    },
+    {
+      "id": "V2-R0-I028",
+      "canonicalName": "RecoveryInvalidatesTemporalState",
+      "statement": "Recovery invalidates representations, completion, readback and history state.",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "AcceptedArchitectureQualification",
+        "Level4V1RuntimeRecoveryQualification"
+      ],
+      "requiredVerification": "ControlledRecoveryCorpus"
+    },
+    {
+      "id": "V2-R0-I029",
+      "canonicalName": "ExplicitExternalRecoveryRebind",
+      "statement": "Current external state must be rebound explicitly after Device epoch change.",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger",
+        "AcceptedArchitectureQualification"
+      ],
+      "requiredVerification": "MissingRebindNegativeTest"
+    },
+    {
+      "id": "V2-R0-I030",
+      "canonicalName": "FullActiveRecoverySeed",
+      "statement": "The first post-Recovery materialization performs a verified full-active seed with no stale retention.",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7ProofLedger",
+        "AcceptedArchitectureQualification"
+      ],
+      "requiredVerification": "PostRecoveryOracle"
+    },
+    {
+      "id": "V2-R0-I031",
+      "canonicalName": "RemovedAdapterExclusion",
+      "statement": "A removed Adapter identity is excluded from retry.",
+      "owner": "CanonicalRuntime",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "AcceptedArchitectureQualification"
+      ],
+      "requiredVerification": "ActualRemoveDeviceCorpus"
+    },
+    {
+      "id": "V2-R0-I032",
+      "canonicalName": "CorrectnessMeasurementSeparation",
+      "statement": "WARP correctness qualification and real-hardware performance observation remain separate evidence classes.",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "state": "FrozenForMigration",
+      "sources": [
+        "AcceptedArchitectureQualification",
+        "AcceptedObservationalMeasurement"
+      ],
+      "requiredVerification": "GateSeparation"
+    },
+    {
+      "id": "V2-R0-I033",
+      "canonicalName": "MeasurementIdentityBinding",
+      "statement": "Adapter fingerprint, Driver, Shader digests, profile, schedule and Candidate order bind observational evidence.",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "state": "FrozenForMigration",
+      "sources": [
+        "AcceptedObservationalMeasurement"
+      ],
+      "requiredVerification": "EvidenceDeserializerValidation"
+    },
+    {
+      "id": "V2-R0-I034",
+      "canonicalName": "PairedDecisionAuthority",
+      "statement": "Median ranking is descriptive; stable performance decisions require qualified paired evidence.",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "state": "FrozenForMigration",
+      "sources": [
+        "AcceptedObservationalMeasurement",
+        "FinalDecisionSummary"
+      ],
+      "requiredVerification": "DecisionReportReconstruction"
+    },
+    {
+      "id": "V2-R0-I035",
+      "canonicalName": "NoRuntimePerformancePolicy",
+      "statement": "Performance evidence cannot directly authorize Runtime Candidate selection or a universal winner.",
+      "owner": "CanonicalRuntime",
+      "destination": "R5RuntimeAndRecovery",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7Closure",
+        "FinalDecisionSummary"
+      ],
+      "requiredVerification": "RuntimePolicyAuthorizationEqualsNone"
+    },
+    {
+      "id": "V2-R0-I036",
+      "canonicalName": "ExternalRawEvidenceRetention",
+      "statement": "Large build and measurement outputs remain outside Git while their digests and interpretation stay tracked.",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7Closure"
+      ],
+      "requiredVerification": "ExternalEvidenceIndex"
+    },
+    {
+      "id": "V2-R0-I037",
+      "canonicalName": "ReferenceRetentionUntilMigrationProof",
+      "statement": "Spiral reference projects remain available until v2 migration evidence replaces every carried invariant.",
+      "owner": "MigrationProgram",
+      "destination": "R7ReferenceRetirement",
+      "state": "FrozenForMigration",
+      "sources": [
+        "CanonicalInputNarrative",
+        "RetainedReferenceLayout"
+      ],
+      "requiredVerification": "RetirementManifestGate"
+    },
+    {
+      "id": "V2-R0-I038",
+      "canonicalName": "SingleFactOwnership",
+      "statement": "The same authoritative fact must not be duplicated independently across Semantic, Candidate, Plan, Frozen and Runtime records.",
+      "owner": "CanonicalVocabulary",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "CanonicalInputNarrative"
+      ],
+      "requiredVerification": "OwnershipAndSerializationAudit"
+    },
+    {
+      "id": "V2-R0-I039",
+      "canonicalName": "RepresentationChoiceRemainsVerified",
+      "statement": "Representation and materialization placement remain verified Candidate choices rather than Semantic or Runtime guesses.",
+      "owner": "CandidateProposal",
+      "destination": "R2UnifiedAuthorityChain",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral1ProofLedger",
+        "Spiral2ProofLedger",
+        "Spiral3ProofLedger"
+      ],
+      "requiredVerification": "CandidateEquivalenceMigration"
+    },
+    {
+      "id": "V2-R0-I040",
+      "canonicalName": "NoHardwarePolicyInCanonicalAbi",
+      "statement": "Adapter-specific thresholds and winners never enter the Canonical ABI.",
+      "owner": "CanonicalVocabulary",
+      "destination": "R1CanonicalVocabulary",
+      "state": "FrozenForMigration",
+      "sources": [
+        "Spiral7Closure",
+        "CanonicalInputNarrative"
+      ],
+      "requiredVerification": "PublicTypeAndManifestTokenAudit"
+    }
+  ],
+  "allowedOwners": [
+    "CandidatePlanner",
+    "CandidateProposal",
+    "CanonicalComposition",
+    "CanonicalHistory",
+    "CanonicalInvocation",
+    "CanonicalRecovery",
+    "CanonicalRuntime",
+    "CanonicalSemantic",
+    "CanonicalVocabulary",
+    "FrozenArtifact",
+    "IndependentVerifier",
+    "MigrationProgram",
+    "QualificationEvidence"
+  ],
+  "allowedDestinations": [
+    "R1CanonicalVocabulary",
+    "R2UnifiedAuthorityChain",
+    "R3CanonicalComposition",
+    "R4DynamicInvocationAndHistory",
+    "R5RuntimeAndRecovery",
+    "R6MigrationCorpus",
+    "R7ReferenceRetirement"
+  ],
+  "forbiddenDuringR0": [
+    "NewRuntimeCapability",
+    "CanonicalAbiMutation",
+    "Schema17Mutation",
+    "Runtime17Mutation",
+    "BackendSemanticPolicy",
+    "GamePolicyInference",
+    "HardwareWinnerPolicy",
+    "ReferenceProjectDeletion",
+    "PerformanceThresholdInPublicType"
+  ],
+  "r1EntryContract": "R1CanonicalVocabularyContractV1",
+  "nextStage": "R1CanonicalVocabulary",
+  "runtimeCandidatePolicyAuthorization": "None"
+}

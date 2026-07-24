@@ -1,16 +1,27 @@
 # Level 4 v2 reconstruction roadmap V1
 
-## R0 — Input freeze
+## R0 — Input freeze — COMPLETE
 
-Freeze the Spiral 1–7 closure manifests, accepted evidence digests, proof ledgers and the no-new-capability rule.
+Freeze the Level 4 v1 and Spiral 1–7 closure sources, accepted evidence identities, proof ledgers and the no-new-capability rule.
 
-Completion: every carried invariant has an owner and intended v2 destination.
+Completion evidence:
 
-## R1 — Canonical vocabulary
+```text
+40 carried invariants
+40 explicit owners
+40 intended v2 destinations
+16 frozen source files
+R1 entry contract frozen
+C++/solution mutation: None
+```
+
+Owner execution of the R0 gate is required to accept the supplied package.
+
+## R1 — Canonical vocabulary — NEXT
 
 Define neutral types for Semantic meaning, dynamic invocation inputs, Candidate proposals, verified plans, Frozen artifacts, history validity and Device epoch. Remove Spiral-specific names from the proposed public model.
 
-Completion: strong types prevent count/identity substitution; no D3D12 or game policy enters Semantic records.
+Completion: strong types prevent count/identity substitution; no D3D12, hardware-winner or game policy enters Canonical records.
 
 ## R2 — Unified authority chain
 
@@ -40,7 +51,7 @@ Completion: Controlled Recovery, actual RemoveDevice and fresh-process evidence 
 
 Run representative and adversarial cases from every Spiral. Keep experiment performance suites separate from the Canonical correctness gate.
 
-Completion: all carried invariants have passing migration evidence; unresolved differences are documented rather than hidden.
+Completion: all 40 carried invariants have terminal migration outcomes; unresolved differences are documented rather than hidden.
 
 ## R7 — Reference retirement decision
 
