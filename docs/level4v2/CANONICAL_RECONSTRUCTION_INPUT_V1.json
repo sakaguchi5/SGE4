@@ -3,6 +3,7 @@
   "sourceProgram": "SGE4-5Spirals1Through7",
   "acceptedSpiral7Commit": "f802c12b162569a869c214da22b80142b3a4a0dd",
   "preparationCommit": "a44b2ee3e5e151eab2f25f94e92d838b7931a4d9",
+  "acceptedR0Commit": "b8b5b4f675e4186a3ae202d718e091b63c53e264",
   "mode": "ReconstructionNotNewCapability",
   "preserve": [
     "SemanticExecutionSeparation",
@@ -29,11 +30,21 @@
   "externalEvidenceZipSha256": "9ee852c2a2574a8cb9c163b6e94213b855317bba74319e6443e9aa98c10c24d9",
   "runtimeCandidatePolicyAuthorization": "None",
   "r0InputFreeze": {
-    "status": "CompletePackageSuppliedOwnerGatePending",
+    "status": "Passed",
+    "acceptedCommit": "b8b5b4f675e4186a3ae202d718e091b63c53e264",
     "manifest": "docs/level4v2/R0_INPUT_FREEZE_MANIFEST_V1.json",
     "carriedInvariantCount": 40,
     "sourceFreezeCount": 16,
     "implementationMutation": "None"
   },
-  "nextStage": "R1CanonicalVocabulary"
+  "r1CanonicalVocabulary": {
+    "status": "CompletePackageSuppliedOwnerGatePending",
+    "manifest": "docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json",
+    "libraryProject": "189_Level4V2CanonicalVocabulary",
+    "qualificationProject": "190_Level4V2CanonicalVocabularyTests",
+    "strongIdentityCount": 11,
+    "strongDynamicCount": 8,
+    "runtimeCapabilityAdded": "None"
+  },
+  "nextStage": "R2UnifiedAuthorityChain"
 }

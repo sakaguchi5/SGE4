@@ -1,0 +1,153 @@
+{
+  "schema": "SGE4.Level4V2.R1CanonicalVocabularyManifest.V1",
+  "completionUnit": "R1",
+  "status": "CompletePackageSuppliedOwnerGatePending",
+  "baseCommit": "b8b5b4f675e4186a3ae202d718e091b63c53e264",
+  "r0InputFreezeStatus": "Passed",
+  "r0Manifest": "docs/level4v2/R0_INPUT_FREEZE_MANIFEST_V1.json",
+  "mode": "ReconstructionNotNewCapability",
+  "projects": [
+    {
+      "name": "189_Level4V2CanonicalVocabulary",
+      "path": "189_Level4V2CanonicalVocabulary/189_Level4V2CanonicalVocabulary.vcxproj",
+      "guid": "{000000BD-0000-5000-8000-0000000000BD}",
+      "role": "CanonicalVocabularyStaticLibrary"
+    },
+    {
+      "name": "190_Level4V2CanonicalVocabularyTests",
+      "path": "190_Level4V2CanonicalVocabularyTests/190_Level4V2CanonicalVocabularyTests.vcxproj",
+      "guid": "{000000BE-0000-5000-8000-0000000000BE}",
+      "role": "CanonicalVocabularyQualification"
+    }
+  ],
+  "strongIdentityConcepts": [
+    "SemanticIdentity",
+    "InvocationIdentity",
+    "CandidateIdentity",
+    "VerifiedPlanIdentity",
+    "FrozenArtifactIdentity",
+    "ResourceContractIdentity",
+    "ResourceInstanceIdentity",
+    "WriteSetIdentity",
+    "HistoryValidityIdentity",
+    "TargetProfileIdentity",
+    "ObservationContractIdentity"
+  ],
+  "strongDynamicConcepts": [
+    "ActiveCount",
+    "TransitionCount",
+    "ReuseCount",
+    "UpdateInterval",
+    "BatchSize",
+    "AffectedBlockCount",
+    "TimelineOrdinal",
+    "DeviceEpoch"
+  ],
+  "supportingStrongConcepts": [
+    "SemanticVersion",
+    "HistoryGeneration"
+  ],
+  "neutralRecords": [
+    "SemanticDescriptorV1",
+    "DynamicExecutionDimensionsV1",
+    "InvocationDescriptorV1",
+    "RawCandidateProposalV1",
+    "OpaqueVerifiedPlanV1",
+    "FrozenArtifactDescriptorV1",
+    "HistoryValidityDescriptorV1",
+    "RepresentationHandleV1",
+    "HistoryHandleV1",
+    "CompletionHandleV1",
+    "SubmissionHandleV1"
+  ],
+  "identityConstruction": {
+    "algorithm": "SHA256",
+    "serialization": "LengthPrefixedDomainThenSchemaVersionThenCanonicalPayloadLengthAndBytes",
+    "inputs": [
+      "Domain",
+      "SchemaVersion",
+      "CanonicalPayload"
+    ],
+    "excludedInputs": [
+      "FilesystemPath",
+      "ProcessTimestamp",
+      "RandomUuid",
+      "LiveHandle",
+      "AdapterWinnerPolicy"
+    ]
+  },
+  "opaqueVerifiedBoundary": {
+    "publicDefaultConstruction": "Unavailable",
+    "constructionFromRawCandidate": "CompileTimeUnavailable",
+    "constructionAuthorityReservedFor": "FutureIndependentVerifierAccess",
+    "verifierBehaviorImplementedInR1": false
+  },
+  "epochRules": {
+    "zeroDeviceEpoch": "Rejected",
+    "runtimeHandleKindsAreDistinct": true,
+    "everyRuntimeHandleCarriesDeviceEpoch": true
+  },
+  "publicSourceRestrictions": {
+    "forbiddenTokens": [
+      "Spiral",
+      "CU1",
+      "CU2",
+      "CU3",
+      "CU4",
+      "CU5",
+      "CU6",
+      "RTX4070",
+      "WARP",
+      "D3D12",
+      "Game"
+    ],
+    "universalLimitLiteralsForbidden": [
+      4096,
+      128,
+      64
+    ],
+    "backendHeaderDependency": "None"
+  },
+  "negativeTests": [
+    "CountTypeSubstitutionUnavailable",
+    "IdentityTypeSubstitutionUnavailable",
+    "RawCandidateCannotConstructOpaqueVerifiedPlan",
+    "CanonicalHeaderHasNoBackendDependency",
+    "InvocationRecordHasNoCandidateChoice",
+    "InvocationRecordHasNoApplicationPolicy",
+    "GenericVocabularyHasNoUniversalWorkLimits",
+    "CanonicalIdentityHasNoProcessSpecificInput"
+  ],
+  "deterministicEvidence": {
+    "schema": "L4V2R1V1",
+    "debugReleaseByteEqualityRequired": true,
+    "expectedStrongIdentityCount": 11,
+    "expectedStrongDynamicCount": 8,
+    "expectedSha256": "35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf"
+  },
+  "r0CarriedInvariantsSatisfiedInR1": [
+    "V2-R0-I001",
+    "V2-R0-I006",
+    "V2-R0-I020",
+    "V2-R0-I040"
+  ],
+  "r0CarriedInvariantsPreparedForLaterStages": [
+    "V2-R0-I007",
+    "V2-R0-I010",
+    "V2-R0-I011",
+    "V2-R0-I012",
+    "V2-R0-I013",
+    "V2-R0-I022",
+    "V2-R0-I027",
+    "V2-R0-I038",
+    "V2-R0-I039"
+  ],
+  "runtimeCapabilityAdded": "None",
+  "schema17Mutation": "None",
+  "runtime17Mutation": "None",
+  "backendMutation": "None",
+  "compositionMutation": "None",
+  "referenceProjectDeletion": "None",
+  "runtimeCandidatePolicyAuthorization": "None",
+  "nextStageOnSuccessfulGate": "R2UnifiedAuthorityChain"
+}

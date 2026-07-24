@@ -1,10 +1,10 @@
 # Level 4 v2 reconstruction roadmap V1
 
-## R0 — Input freeze — COMPLETE
+## R0 — Input freeze — PASSED
 
 Freeze the Level 4 v1 and Spiral 1–7 closure sources, accepted evidence identities, proof ledgers and the no-new-capability rule.
 
-Completion evidence:
+Accepted completion evidence:
 
 ```text
 40 carried invariants
@@ -13,17 +13,28 @@ Completion evidence:
 16 frozen source files
 R1 entry contract frozen
 C++/solution mutation: None
+Accepted R0 commit: b8b5b4f675e4186a3ae202d718e091b63c53e264
 ```
 
-Owner execution of the R0 gate is required to accept the supplied package.
+## R1 — Canonical vocabulary — COMPLETE PACKAGE SUPPLIED; OWNER GATE PENDING
 
-## R1 — Canonical vocabulary — NEXT
+Define neutral types for Semantic meaning, dynamic invocation inputs, Candidate proposals, opaque Verified Plans, Frozen artifacts, history validity and Device epoch. Remove staged experiment names from the public model.
 
-Define neutral types for Semantic meaning, dynamic invocation inputs, Candidate proposals, verified plans, Frozen artifacts, history validity and Device epoch. Remove Spiral-specific names from the proposed public model.
+Supplied completion evidence:
 
-Completion: strong types prevent count/identity substitution; no D3D12, hardware-winner or game policy enters Canonical records.
+```text
+11 strong identity concepts
+8 strong dynamic concepts
+Raw Candidate -> opaque Verified Plan construction unavailable
+Canonical public source has no Backend dependency
+Generic vocabulary has no universal qualification limits
+Debug/Release deterministic vocabulary evidence required
+Runtime capability added: None
+```
 
-## R2 — Unified authority chain
+Successful Owner execution advances to R2.
+
+## R2 — Unified authority chain — NEXT
 
 Reconstruct Planner-independent verification and Frozen identity without duplicating the same fact across layers.
 
