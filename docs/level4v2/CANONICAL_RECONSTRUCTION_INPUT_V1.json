@@ -74,13 +74,25 @@
     "rejectionCount": 27,
     "runtimeCapabilityAdded": "None"
   },
-  "nextStage": "R6MigrationCorpus",
+  "nextStage": "R7ReferenceRetirement",
   "acceptedR4Commit": "7562b0f51fcd09b3840f36a4725734218b291e52",
   "r5RuntimeAndRecovery": {
-    "status": "CompletePackageSuppliedOwnerGatePending",
+    "status": "Passed",
+    "acceptedCommit": "527cc0b2ed4c01c76ebfdef5c277f6c39b654024",
     "manifest": "docs/level4v2/R5_RUNTIME_RECOVERY_MANIFEST_V1.json",
+    "canonicalEvidenceSha256": "40d78dc35894a55e50b314bd0afcbb60966f92e942ac70856155964cd8e66498",
+    "windowsEvidenceSha256": "1e4adaa04dc8d1d235f8f3438f4295b09b36480174f6a7d9fa0fbaba79ea7a9a",
     "canonicalScenarioCount": 10,
     "canonicalRejectionCount": 12,
-    "windowsQualificationRequired": true
+    "windowsQualificationPassed": true
+  },
+  "acceptedR5Commit": "527cc0b2ed4c01c76ebfdef5c277f6c39b654024",
+  "r6MigrationCorpus": {
+    "status": "CompletePackageSuppliedOwnerGatePending",
+    "manifest": "docs/level4v2/R6_MIGRATION_CORPUS_MANIFEST_V1.json",
+    "sourceLineageCount": 16,
+    "terminalInvariantOutcomeCount": 40,
+    "migrationCaseCount": 26,
+    "runtimeCapabilityAdded": "None"
   }
 }

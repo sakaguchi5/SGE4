@@ -15,19 +15,19 @@ Finite static Buffer DAG and explicit allocation/schedule/state/synchronization 
 ## R4 — Dynamic invocation and history — PASSED
 Exact sparse membership, History validity, transition algebra, exact write set and verified indirect quantity are qualified.
 
+## R5 — Runtime and Recovery — PASSED
+Frozen-only materialization/submission, epoch-bound handles, explicit rebind, RecoverySeed, whole-composition rebuild, removed-Adapter exclusion and AwaitingAdapter preservation passed.
+
 Accepted commit:
 
 ```text
-7562b0f51fcd09b3840f36a4725734218b291e52
+527cc0b2ed4c01c76ebfdef5c277f6c39b654024
 ```
 
-## R5 — Runtime and Recovery — PACKAGE SUPPLIED; OWNER GATE PENDING
-Materialize and submit only Frozen authority; bind handles and History to Device epoch; require external rebind and RecoverySeed; perform whole-composition rebuild; exclude removed Adapters and preserve AwaitingAdapter.
+## R6 — Migration corpus — PACKAGE SUPPLIED; OWNER GATE PENDING
+Bind all sixteen retained source roles and all forty R0 Invariants to representative/adversarial R1-R5 authority cases. Preserve observational performance Evidence in a separate lane and emit deterministic Migration Evidence.
 
-Completion requires 10 Backend-neutral scenarios, 12 rejection observations, deterministic Canonical Evidence and deterministic Windows WARP controlled/actual-removal Evidence.
+Completion requires 26 Migration cases, 20 certificate rejection cases, 40 terminal Invariant outcomes and byte-identical Debug/Release Evidence.
 
-## R6 — Migration corpus — NEXT AFTER R5 ACCEPTANCE
-Run representative and adversarial cases from every retained source, bind legacy executable artifacts to v2 authorities and assign terminal migration outcomes to all R0 Invariants. Performance Evidence remains separate.
-
-## R7 — Reference retirement decision
-Only after terminal migration outcomes exist for all carried Invariants may old Projects be removed or archived.
+## R7 — Reference retirement decision — NEXT AFTER R6 ACCEPTANCE
+The Owner records one disposition per retained reference family. R6 success makes retirement review permissible; it does not automatically delete or archive anything.

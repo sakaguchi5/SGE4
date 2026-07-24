@@ -1,7 +1,7 @@
 {
   "schema": "SGE4.Level4V2.R5RuntimeRecoveryManifest.V1",
   "completionUnit": "R5",
-  "status": "CompletePackageSuppliedOwnerGatePending",
+  "status": "Passed",
   "baseCommit": "7562b0f51fcd09b3840f36a4725734218b291e52",
   "r4AcceptedCommit": "7562b0f51fcd09b3840f36a4725734218b291e52",
   "r4DeterministicEvidenceSha256": "78f16d2fa4185412144205dc54f842f2929e6e269711dfca9ced9967f37cfbe1",
@@ -109,5 +109,6 @@
   "referenceProjectDeletion": "None",
   "runtimeCandidatePolicyAuthorization": "None",
   "nextStageOnSuccessfulGate": "R6MigrationCorpus",
-  "packageHashEntryCount": 37
+  "packageHashEntryCount": 37,
+  "acceptedCommit": "527cc0b2ed4c01c76ebfdef5c277f6c39b654024"
 }
