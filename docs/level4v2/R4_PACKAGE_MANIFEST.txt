@@ -1,0 +1,10 @@
+Level 4 v2 R4 Dynamic Invocation and History
+Base commit: 09b56250c88bd52b7e02a2510cd6cf2b7e814bde
+Mode: changed/new files only; no Git operations; no build outputs
+Projects: 201 through 205
+Accepted scenarios: 8
+Rejections: 27
+Expected deterministic Evidence SHA-256: 78f16d2fa4185412144205dc54f842f2929e6e269711dfca9ced9967f37cfbe1
+Runtime capability added: None
+Runtime Candidate-policy authorization: None
+Next: R5 Runtime and Recovery

@@ -21,7 +21,7 @@ if($Mode -eq 'Applied'){
 $m=Get-Content -Raw -LiteralPath (Join-Path $root 'docs\level4v2\R3_CANONICAL_COMPOSITION_MANIFEST_V1.json') -Encoding UTF8|ConvertFrom-Json
 Require ($m.schema -eq 'SGE4.Level4V2.R3CanonicalCompositionManifest.V1') 'R3 manifest schema mismatch.'
 Require ($m.completionUnit -eq 'R3') 'R3 completion unit mismatch.'
-if($Mode -eq 'Applied'){Require ($m.status -eq 'CompletePackageSuppliedOwnerGatePending') 'R3 supplied status mismatch.'}else{Require ($m.status -eq 'Passed') 'R3 accepted status mismatch.'}
+if($Mode -eq 'Applied'){Require ($m.status -eq 'CompletePackageSuppliedOwnerGatePending') 'R3 supplied status mismatch.'}else{Require ($m.status -eq 'Passed') 'R3 accepted status mismatch.';Require ($m.acceptedCommit -eq '09b56250c88bd52b7e02a2510cd6cf2b7e814bde') 'R3 accepted commit mismatch.'}
 Require ($m.baseCommit -eq '0caa4776077e58df6473e9f5760555b437bc5305') 'R3 base commit mismatch.'
 Require ($m.r2AcceptedCommit -eq '0caa4776077e58df6473e9f5760555b437bc5305') 'R3 accepted R2 commit mismatch.'
 Require (@($m.projects).Count -eq 5) 'R3 Project count mismatch.'
@@ -38,8 +38,7 @@ Require (@($m.migrationScenarios).Count -eq 7) 'R3 migration scenario count mism
 Require ($m.deterministicEvidence.expectedSha256 -eq 'dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb') 'R3 Evidence identity mismatch.'
 Require ($m.runtimeCapabilityAdded -eq 'None' -and $m.runtimeCandidatePolicyAuthorization -eq 'None') 'R3 added Runtime authority.'
 Require ($m.schema17Mutation -eq 'None' -and $m.runtime17Mutation -eq 'None' -and $m.backendMutation -eq 'None' -and $m.runtimeMutation -eq 'None') 'R3 changed a frozen boundary.'
-Require ($m.nextStageOnSuccessfulGate -eq 'R4DynamicInvocationAndHistory') 'R3 next stage mismatch.'
-
+Require ($m.nextStageOnSuccessfulGate -eq 'R4DynamicInvocationAndHistory') 'R3 historical next stage mismatch.'
 $projectTypeGuid='{BC8A1FFA-BEE3-4634-8014-F334798102B3}'
 $projects=@(
 [pscustomobject]@{Name='196_Level4V2CompositionModel';Path='196_Level4V2CompositionModel\196_Level4V2CompositionModel.vcxproj';Guid='{000000C4-0000-5000-8000-0000000000C4}'},
@@ -48,20 +47,7 @@ $projects=@(
 [pscustomobject]@{Name='199_Level4V2FrozenComposition';Path='199_Level4V2FrozenComposition\199_Level4V2FrozenComposition.vcxproj';Guid='{000000C7-0000-5000-8000-0000000000C7}'},
 [pscustomobject]@{Name='200_Level4V2CompositionTests';Path='200_Level4V2CompositionTests\200_Level4V2CompositionTests.vcxproj';Guid='{000000C8-0000-5000-8000-0000000000C8}'})
 $solutionLines=[IO.File]::ReadAllLines((Join-Path $root 'SemanticGpuEngine4-5.sln'))
-foreach($project in $projects){
-    [xml]$xml=Get-Content -Raw -LiteralPath (Join-Path $root $project.Path) -Encoding UTF8
-    $guid=[string](($xml.Project.PropertyGroup|Where-Object{$_.Label -eq 'Globals'}|Select-Object -First 1).ProjectGuid)
-    Require ($guid.ToUpperInvariant() -eq $project.Guid.ToUpperInvariant()) "R3 Project GUID mismatch: $($project.Path)"
-    $canonicalLine='Project("'+$projectTypeGuid+'") = "'+$project.Name+'", "'+$project.Path+'", "'+$project.Guid+'"'
-    Require (@($solutionLines|Where-Object{$_.Trim() -eq $canonicalLine}).Count -eq 1) "R3 Solution registration mismatch: $($project.Name)"
-    foreach($entry in @(
-        "$($project.Guid).Debug|x64.ActiveCfg = Debug|x64",
-        "$($project.Guid).Debug|x64.Build.0 = Debug|x64",
-        "$($project.Guid).Release|x64.ActiveCfg = Release|x64",
-        "$($project.Guid).Release|x64.Build.0 = Release|x64")){
-        Require (@($solutionLines|Where-Object{$_.Trim() -eq $entry}).Count -eq 1) "R3 Solution configuration mismatch: $entry"
-    }
-}
+foreach($project in $projects){[xml]$xml=Get-Content -Raw -LiteralPath (Join-Path $root $project.Path) -Encoding UTF8;$guid=[string](($xml.Project.PropertyGroup|Where-Object{$_.Label -eq 'Globals'}|Select-Object -First 1).ProjectGuid);Require ($guid.ToUpperInvariant() -eq $project.Guid.ToUpperInvariant()) "R3 Project GUID mismatch: $($project.Path)";$canonicalLine='Project("'+$projectTypeGuid+'") = "'+$project.Name+'", "'+$project.Path+'", "'+$project.Guid+'"';Require (@($solutionLines|Where-Object{$_.Trim() -eq $canonicalLine}).Count -eq 1) "R3 Solution registration mismatch: $($project.Name)";foreach($entry in @("$($project.Guid).Debug|x64.ActiveCfg = Debug|x64","$($project.Guid).Debug|x64.Build.0 = Debug|x64","$($project.Guid).Release|x64.ActiveCfg = Release|x64","$($project.Guid).Release|x64.Build.0 = Release|x64")){Require (@($solutionLines|Where-Object{$_.Trim() -eq $entry}).Count -eq 1) "R3 Solution configuration mismatch: $entry"}}
 $modelProject=Get-Content -Raw -LiteralPath (Join-Path $root '196_Level4V2CompositionModel\196_Level4V2CompositionModel.vcxproj') -Encoding UTF8
 $plannerProject=Get-Content -Raw -LiteralPath (Join-Path $root '197_Level4V2CompositionPlanner\197_Level4V2CompositionPlanner.vcxproj') -Encoding UTF8
 $verifierProject=Get-Content -Raw -LiteralPath (Join-Path $root '198_Level4V2CompositionVerifier\198_Level4V2CompositionVerifier.vcxproj') -Encoding UTF8
@@ -70,7 +56,6 @@ Require ($modelProject -match '194_Level4V2FrozenAuthority') 'R3 model is not R2
 Require ($plannerProject -notmatch 'CompositionVerifier|FrozenComposition') 'R3 Planner has forbidden downstream dependency.'
 Require ($verifierProject -notmatch 'CompositionPlanner|FrozenComposition') 'R3 Verifier has forbidden Planner/Frozen dependency.'
 Require ($frozenProject -notmatch 'CompositionPlanner') 'R3 Frozen builder depends on Planner.'
-
 $model=Get-Content -Raw -LiteralPath (Join-Path $root '196_Level4V2CompositionModel\CompositionModel.h') -Encoding UTF8
 $planner=Get-Content -Raw -LiteralPath (Join-Path $root '197_Level4V2CompositionPlanner\CompositionPlanner.cpp') -Encoding UTF8
 $verifier=Get-Content -Raw -LiteralPath (Join-Path $root '198_Level4V2CompositionVerifier\CompositionVerifier.cpp') -Encoding UTF8
@@ -86,6 +71,13 @@ $public=$model+"`n"+(Get-Content -Raw -LiteralPath (Join-Path $root '197_Level4V
 foreach($forbidden in @('D3D12','DXGI','WARP','RTX4070','TextureFlow','ConditionalRegion','MultiDevice','RuntimeCandidatePolicy')){Require ($public -notmatch [regex]::Escape($forbidden)) "Forbidden public R3 token: $forbidden"}
 $test=Get-Content -Raw -LiteralPath (Join-Path $root '200_Level4V2CompositionTests\main.cpp') -Encoding UTF8
 foreach($token in @('BuildIndependent','BuildLinear','BuildFanOut','BuildMultiInput','BuildDiamond','observed.reserve(24u)','declaration order changed frozen identity','FrozenCompositionBuilderV1::Freeze','!std::is_default_constructible_v<comp::VerifiedCompositionV1>')){Require ($test -match [regex]::Escape($token)) "R3 test token missing: $token"}
+if($Mode -eq 'Regression'){
+    $input=Get-Content -Raw -LiteralPath (Join-Path $root 'docs\level4v2\CANONICAL_RECONSTRUCTION_INPUT_V1.json') -Encoding UTF8|ConvertFrom-Json
+    Require ($input.r3CanonicalComposition.status -eq 'Passed') 'R3 regression requires accepted R3 status.'
+    Require ($input.r3CanonicalComposition.acceptedCommit -eq '09b56250c88bd52b7e02a2510cd6cf2b7e814bde') 'R3 regression accepted commit mismatch.'
+    $postR3Stages=@('R4DynamicInvocationAndHistory','R5RuntimeAndRecovery','R6MigrationCorpus','R7ReferenceRetirement','Complete')
+    Require ($postR3Stages -contains [string]$input.nextStage) 'R3 regression does not see an accepted R3-or-later handoff.'
+}
 Write-Host "Level 4 v2 R3 finite Buffer DAG, independent verification and Frozen authority boundaries passed. Mode: $Mode"
 Write-Host 'Graph scenarios: 7. Contract/proposal rejections: 24.'
 Write-Host 'Runtime capability added: None. Runtime Candidate-policy authorization: None.'

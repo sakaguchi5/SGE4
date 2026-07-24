@@ -1,0 +1,162 @@
+{
+  "schema": "SGE4.Level4V2.R4DynamicInvocationHistoryManifest.V1",
+  "completionUnit": "R4",
+  "status": "CompletePackageSuppliedOwnerGatePending",
+  "baseCommit": "09b56250c88bd52b7e02a2510cd6cf2b7e814bde",
+  "r3AcceptedCommit": "09b56250c88bd52b7e02a2510cd6cf2b7e814bde",
+  "r3DeterministicEvidenceSha256": "dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb",
+  "mode": "ReconstructionNotNewCapability",
+  "projects": [
+    {
+      "name": "201_Level4V2DynamicInvocationModel",
+      "guid": "{000000C9-0000-5000-8000-0000000000C9}",
+      "role": "ExactDynamicInputAndHistoryModel"
+    },
+    {
+      "name": "202_Level4V2DynamicInvocationPlanner",
+      "guid": "{000000CA-0000-5000-8000-0000000000CA}",
+      "role": "UnverifiedDeltaDecisionProposal"
+    },
+    {
+      "name": "203_Level4V2DynamicInvocationVerifier",
+      "guid": "{000000CB-0000-5000-8000-0000000000CB}",
+      "role": "PlannerIndependentSetAndHistoryReconstruction"
+    },
+    {
+      "name": "204_Level4V2FrozenInvocationHistory",
+      "guid": "{000000CC-0000-5000-8000-0000000000CC}",
+      "role": "VerifiedOnlyFrozenInvocationAndNextHistory"
+    },
+    {
+      "name": "205_Level4V2DynamicInvocationTests",
+      "guid": "{000000CD-0000-5000-8000-0000000000CD}",
+      "role": "DynamicAuthorityMutationAndDeterminismQualification"
+    }
+  ],
+  "authorityChain": [
+    "R3OpaqueFrozenCompositionIdentity",
+    "ExplicitDynamicInvocationRequest",
+    "DynamicPlannerProposal",
+    "PlannerIndependentDynamicVerifier",
+    "OpaqueVerifiedDynamicInvocation",
+    "OpaqueFrozenDynamicInvocationAndVerifiedNextHistory"
+  ],
+  "externalInputs": [
+    "R3OpaqueFrozenCompositionAuthority",
+    "SemanticIdentity",
+    "UniverseCount",
+    "CurrentActiveSet",
+    "ModifiedSurvivorSet",
+    "TimelineOrdinal",
+    "DeviceEpoch",
+    "InvocationMode",
+    "OptionalVerifiedPreviousHistory"
+  ],
+  "exactDerivedSets": [
+    "ActivationSet",
+    "DeactivationSet",
+    "UpdateSet",
+    "RetainSet",
+    "TransitionSet"
+  ],
+  "transitionAlgebra": {
+    "activation": "CurrentActiveMinusPreviousActive",
+    "deactivation": "PreviousActiveMinusCurrentActive",
+    "survivors": "PreviousActiveIntersectCurrentActive",
+    "update": "ActivationUnionModifiedSurvivors",
+    "retain": "SurvivorsMinusModifiedSurvivors",
+    "transition": "UpdateUnionDeactivation",
+    "seedRule": "InitialAndRecoverySeedUpdateAllCurrentActiveAndRetainNone",
+    "writeRule": "ExactDynamicWriteSetEqualsTransitionSet",
+    "indirectQuantityRule": "VerifiedIndirectWorkCountEqualsTransitionCount"
+  },
+  "historyAuthority": {
+    "construction": "VerifiedOnly",
+    "validityState": "ExplicitValid",
+    "boundTo": [
+      "FrozenCompositionIdentity",
+      "SemanticIdentity",
+      "SourceInvocationIdentity",
+      "HistoryGeneration",
+      "DeviceEpoch",
+      "ActiveSetIdentity",
+      "GenerationVectorIdentity"
+    ],
+    "staleEpochAccepted": false,
+    "crossSemanticReplayAccepted": false,
+    "crossCompositionReplayAccepted": false,
+    "retainedGenerationRule": "Unchanged",
+    "modifiedSurvivorGenerationRule": "Incremented",
+    "newActivationGenerationRule": "Zero",
+    "inactiveGenerationRule": "InvalidSentinel"
+  },
+  "independence": {
+    "modelRequiresR3OpaqueFrozenComposition": true,
+    "verifierProjectDependsOnPlannerProject": false,
+    "verifierReconstructsMembershipAndTransitionAlgebra": true,
+    "plannerMayConstructVerifiedInvocation": false,
+    "frozenBuilderAcceptsRawRequestOrPlannerProposal": false,
+    "onlyVerifiedInvocationCanFreeze": true,
+    "runtimeMayInferMembership": false,
+    "runtimeMaySelectCandidate": false
+  },
+  "acceptedScenarioCount": 8,
+  "acceptedScenarios": [
+    "InitialFullActiveSeed",
+    "SteadyRetainNoDispatch",
+    "ModifiedSurvivorUpdate",
+    "MixedActivationDeactivationUpdateRetain",
+    "DeactivateAll",
+    "ReactivateFromEmpty",
+    "RecoveryFullActiveSeedAtNewEpoch",
+    "DynamicUniverseHighSparseIndex"
+  ],
+  "rejectionCount": 27,
+  "rejectionClasses": {
+    "exactSetConstruction": 3,
+    "requestAndHistoryAuthority": 12,
+    "plannerProposalMutation": 12
+  },
+  "deterministicEvidence": {
+    "schema": "L4V2R4V1",
+    "debugReleaseByteEqualityRequired": true,
+    "expectedScenarioCount": 8,
+    "expectedRejectionCount": 27,
+    "expectedSha256": "78f16d2fa4185412144205dc54f842f2929e6e269711dfca9ced9967f37cfbe1"
+  },
+  "r0CarriedInvariantsSatisfiedInR4": [
+    "V2-R0-I002",
+    "V2-R0-I003",
+    "V2-R0-I004",
+    "V2-R0-I005",
+    "V2-R0-I021",
+    "V2-R0-I022",
+    "V2-R0-I023",
+    "V2-R0-I024",
+    "V2-R0-I025",
+    "V2-R0-I026"
+  ],
+  "r0CarriedInvariantsPreparedForLaterStages": [
+    "V2-R0-I027",
+    "V2-R0-I028",
+    "V2-R0-I029",
+    "V2-R0-I030"
+  ],
+  "runtimeCapabilityAdded": "None",
+  "schema17Mutation": "None",
+  "runtime17Mutation": "None",
+  "backendMutation": "None",
+  "compositionMutation": "None",
+  "nativeExecutionAdded": "None",
+  "recoveryBehaviorAdded": "None",
+  "referenceProjectDeletion": "None",
+  "runtimeCandidatePolicyAuthorization": "None",
+  "nextStageOnSuccessfulGate": "R5RuntimeAndRecovery",
+  "packageHashEntryCount": 33,
+  "historyReferencedSet": "PreviousActiveSet",
+  "exactSetCanonicalization": {
+    "declarationOrderIdentityInvariant": true,
+    "duplicateMemberAccepted": false,
+    "outOfRangeMemberAccepted": false
+  }
+}
