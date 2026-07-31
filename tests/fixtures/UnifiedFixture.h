@@ -7,6 +7,7 @@
 #include "../../src/dynamic/verifier/DynamicInvocationVerifier.h"
 
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace sge4::tests
@@ -50,13 +51,68 @@ inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string> 
     if (!input)
         return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(input.error());
     auto built = composition::BuildFrozenCompositionPackage(
-        std::move(input).value(), {1, universe});
+        std::move(input).value(),
+        composition::MakeAuthorityOnlyDynamicContractV1(universe));
     if (!built)
         return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
             built.error().stage + "：" + built.error().message);
     return sge4::base::Success<composition::FrozenCompositionPackage, std::string>(
         std::move(built).value());
 }
+
+inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
+BuildVerifiedDynamicUnified(std::uint32_t universe = 4)
+{
+    constexpr std::string_view ExecutorKey = "unified/dynamic/executor";
+    constexpr std::string_view ObserverKey = "unified/dynamic/observer";
+
+    auto leaf = fixture::BuildVerifiedDynamicLeaf(universe);
+    if (!leaf)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            leaf.error());
+    auto observer = fixture::BuildDynamicObservationLeaf(universe);
+    if (!observer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            observer.error());
+
+    contract::ContractBuildInput input;
+    input.leaves = {
+        fixture::VerifiedDynamicDeclaration(std::string(ExecutorKey), leaf.value()),
+        fixture::DynamicObservationDeclaration(std::string(ObserverKey), observer.value())};
+
+    contract::ResourceFlowDeclaration middle;
+    middle.stableKey = "unified/dynamic/materialized";
+    middle.boundary = contract::ResourceBoundary::Internal;
+    middle.producer = fixture::Ref(
+        std::string(ExecutorKey), std::string(fixture::DynamicOutputEndpoint));
+    middle.consumers = {fixture::Ref(
+        std::string(ObserverKey), std::string(fixture::DynamicObservationInputEndpoint))};
+
+    contract::ResourceFlowDeclaration output;
+    output.stableKey = "unified/dynamic/output";
+    output.boundary = contract::ResourceBoundary::CompositionOutput;
+    output.producer = fixture::Ref(
+        std::string(ObserverKey), std::string(fixture::DynamicObservationOutputEndpoint));
+    input.resources = {std::move(middle), std::move(output)};
+
+    // Composition canonicalizes Leaf IDs by stable-key order. Resolve the
+    // execution target from the same identity rule instead of assuming that
+    // authored declaration order survives canonicalization.
+    const auto executorStableKey = composition::ComputeStableLeafKey(ExecutorKey);
+    const auto observerStableKey = composition::ComputeStableLeafKey(ObserverKey);
+    const composition::LeafPackageId executorLeaf{
+        executorStableKey < observerStableKey ? 0u : 1u};
+
+    auto built = composition::BuildFrozenCompositionPackage(
+        std::move(input), composition::MakeVerifiedDenseSlotDynamicContractV1(
+            universe, executorLeaf, 0, 16));
+    if (!built)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            built.error().stage + "：" + built.error().message);
+    return sge4::base::Success<composition::FrozenCompositionPackage, std::string>(
+        std::move(built).value());
+}
+
 inline sge4::base::Expected<dynamic::FrozenDynamicInvocationPackage, std::string>
 BuildFrozenInvocation(
     const composition::FrozenCompositionPackage& composition,

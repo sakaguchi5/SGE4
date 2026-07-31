@@ -85,6 +85,11 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
     InvocationModeV1 mode,
     ExactIndexSetV1 activeSet,
     ExactIndexSetV1 modifiedSurvivorSet,
+    composition::DynamicExecutionModeV1 executionMode,
+    composition::LeafPackageId targetLeaf,
+    std::uint32_t targetDynamicSlot,
+    std::uint32_t memberBytes,
+    std::vector<MemberUpdatePayloadV1> updatePayloads,
     std::optional<VerifiedHistoryStateV1> previousHistory)
 {
     if (activeSet.Universe() != universe || modifiedSurvivorSet.Universe() != universe)
@@ -100,7 +105,16 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
         mode,
         std::move(activeSet),
         std::move(modifiedSurvivorSet),
+        executionMode,
+        targetLeaf,
+        targetDynamicSlot,
+        memberBytes,
+        DynamicExecutionPayloadIdentity::FromDigest({}),
+        std::move(updatePayloads),
         std::move(previousHistory)};
+    request.executionPayloadIdentity = ComputeDynamicExecutionPayloadIdentityV1(
+        request.executionMode, request.targetLeaf, request.targetDynamicSlot,
+        request.memberBytes, request.updatePayloads);
     request.identity = ComputeDynamicInvocationIdentityV1(request);
     return request;
 }
@@ -117,6 +131,11 @@ canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
     AppendU8(payload, static_cast<std::uint8_t>(request.mode));
     AppendDigest(payload, request.activeSet.Identity().Digest());
     AppendDigest(payload, request.modifiedSurvivorSet.Identity().Digest());
+    AppendU32(payload, std::to_underlying(request.executionMode));
+    AppendU32(payload, request.targetLeaf.value);
+    AppendU32(payload, request.targetDynamicSlot);
+    AppendU32(payload, request.memberBytes);
+    AppendDigest(payload, request.executionPayloadIdentity.Digest());
     AppendU8(payload, request.previousHistory.has_value() ? 1u : 0u);
     if (request.previousHistory.has_value())
         AppendDigest(payload, request.previousHistory->Descriptor().identity.Digest());
@@ -160,6 +179,30 @@ DynamicWriteSetIdentity ComputeDynamicWriteSetIdentityV1(
     return MakeIdentity<DynamicWriteSetIdentity>("SGE.V2.Dynamic.ExactWriteSet.V1", payload);
 }
 
+
+DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
+    composition::DynamicExecutionModeV1 executionMode,
+    composition::LeafPackageId targetLeaf,
+    std::uint32_t targetDynamicSlot,
+    std::uint32_t memberBytes,
+    std::span<const MemberUpdatePayloadV1> updatePayloads)
+{
+    std::vector<std::byte> payload;
+    AppendU32(payload, std::to_underlying(executionMode));
+    AppendU32(payload, targetLeaf.value);
+    AppendU32(payload, targetDynamicSlot);
+    AppendU32(payload, memberBytes);
+    AppendU64(payload, static_cast<std::uint64_t>(updatePayloads.size()));
+    for (const auto& update : updatePayloads)
+    {
+        AppendU32(payload, update.member.value());
+        AppendU64(payload, static_cast<std::uint64_t>(update.bytes.size()));
+        payload.insert(payload.end(), update.bytes.begin(), update.bytes.end());
+    }
+    return MakeIdentity<DynamicExecutionPayloadIdentity>(
+        "SGE.V2.Dynamic.ExecutionPayload.V1", payload);
+}
+
 DynamicDecisionIdentity ComputeDynamicDecisionIdentityV1(const DynamicDecisionV1& decision)
 {
     std::vector<std::byte> payload;
@@ -188,6 +231,7 @@ DynamicSealIdentity ComputeDynamicSealIdentityV1(
     AppendDigest(payload, request.identity.Digest());
     AppendDigest(payload, decision.identity.Digest());
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
+    AppendDigest(payload, request.executionPayloadIdentity.Digest());
     return MakeIdentity<DynamicSealIdentity>("SGE.V2.Dynamic.VerificationSeal.V1", payload);
 }
 
@@ -218,7 +262,8 @@ FrozenDynamicInvocationIdentity ComputeFrozenDynamicInvocationIdentityV1(
     DynamicDecisionIdentity decisionIdentity,
     DynamicSealIdentity sealIdentity,
     canonical::HistoryValidityIdentity nextHistoryIdentity,
-    DynamicWriteSetIdentity dynamicWriteSetIdentity)
+    DynamicWriteSetIdentity dynamicWriteSetIdentity,
+    DynamicExecutionPayloadIdentity executionPayloadIdentity)
 {
     std::vector<std::byte> payload;
     AppendDigest(payload, compositionIdentity.Digest());
@@ -227,6 +272,7 @@ FrozenDynamicInvocationIdentity ComputeFrozenDynamicInvocationIdentityV1(
     AppendDigest(payload, sealIdentity.Digest());
     AppendDigest(payload, nextHistoryIdentity.Digest());
     AppendDigest(payload, dynamicWriteSetIdentity.Digest());
+    AppendDigest(payload, executionPayloadIdentity.Digest());
     return MakeIdentity<FrozenDynamicInvocationIdentity>("SGE.V2.Dynamic.FrozenInvocation.V1", payload);
 }
 }

@@ -41,6 +41,8 @@ struct Submission final
     dynamic::FrozenDynamicInvocationPackage dynamicInvocation;
     std::uint64_t deviceEpoch = 0;
     std::uint32_t submittedLeafCount = 0;
+    std::uint32_t verifiedTransitionCount = 0;
+    std::uint64_t verifiedDynamicByteCount = 0;
 };
 
 struct RecoveryReport final

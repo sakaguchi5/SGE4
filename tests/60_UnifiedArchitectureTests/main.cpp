@@ -7,6 +7,7 @@
 #include "../../src/canonical/artifact/SectionedArtifact.h"
 
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -17,6 +18,7 @@ namespace
 namespace tests = sge4::tests;
 namespace composition = sge4::composition;
 namespace dynamic = sge4::dynamic;
+namespace fixture = sge4::qualification::canonical_runtime_fixture;
 
 void Require(bool condition, const char* message)
 {
@@ -50,28 +52,32 @@ int main(int argc, char** argv)
         auto flat = sge4::ReadSectionedArtifact(
             first.value().FileBytes(), composition::artifact::FrozenCompositionAbi2Magic,
             composition::artifact::FrozenCompositionAbi2FormatMajor);
-        Require(flat && flat.value().FormatMinor() == 0 && flat.value().Sections().size() == 8,
-            "SGE4UNI 2.0の平坦Section構造が成立していません。");
+        Require(flat &&
+            flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
+            flat.value().Sections().size() ==
+                composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
+            "SGE4UNI 2.1の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.0の直接Sectionがありません。");
+            "SGE4UNI 2.1の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
         auto legacyBytes = composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
-            std::move(legacyInput).value(), {1, 8});
+            std::move(legacyInput).value(),
+            composition::MakeAuthorityOnlyDynamicContractV1(8));
         Require(static_cast<bool>(legacyBytes), "SGE4UNI 1.1移行Corpusの生成に失敗しました。");
         Require(!composition::ReadFrozenCompositionPackage(legacyBytes.value()),
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.0へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.1へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.0とMigration後ABI 2.0がbyte一致しません。");
+            "直接生成したABI 2.1とMigration後ABI 2.1がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -127,10 +133,49 @@ int main(int argc, char** argv)
         Require(EqualIndices(decision.transitionSet.Indices(), {2, 3, 7}), "入力または内部状態がCanonicalな順序または識別子規則に違反しています。");
         Require(decision.indirectWorkCount.value() == 3, "入力または内部状態がCanonicalな順序または識別子規則に違反しています。");
 
+        auto verifiedDynamic = tests::BuildVerifiedDynamicUnified(4);
+        if (!verifiedDynamic)
+            throw std::runtime_error(
+                "Verified Dynamic Compositionの生成に失敗しました：" +
+                verifiedDynamic.error());
+        dynamic::InvocationInputV1 verifiedSeed;
+        verifiedSeed.timelineOrdinal = 0;
+        verifiedSeed.mode = dynamic::InvocationModeV1::InitialSeed;
+        verifiedSeed.activeMembers = {1, 3};
+        verifiedSeed.updatePayloads = {
+            {1, fixture::Bytes(std::array<float, 4>{1.0f, 2.0f, 3.0f, 4.0f})},
+            {3, fixture::Bytes(std::array<float, 4>{5.0f, 6.0f, 7.0f, 8.0f})}};
+        auto verifiedFrozen = tests::BuildFrozenInvocation(
+            verifiedDynamic.value(), *epoch, std::move(verifiedSeed));
+        Require(static_cast<bool>(verifiedFrozen),
+            "Verified Dynamic Invocationの生成に失敗しました。");
+        Require(verifiedFrozen.value().ExecutionPayload().updates.size() == 2 &&
+            verifiedFrozen.value().Decision().indirectWorkCount.value() == 2,
+            "Verified payloadとexact transition countが一致しません。");
+        auto invocationArtifact = sge4::ReadSectionedArtifact(
+            verifiedFrozen.value().FileBytes(), dynamic::FrozenInvocationMagic,
+            dynamic::FrozenInvocationFormatMajor);
+        Require(invocationArtifact &&
+            invocationArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
+            invocationArtifact.value().Sections().size() ==
+                dynamic::FrozenInvocationSectionKinds.size(),
+            "SGE4INV 1.2のSection構造が成立していません。");
+
+        dynamic::InvocationInputV1 missingPayload;
+        missingPayload.timelineOrdinal = 0;
+        missingPayload.mode = dynamic::InvocationModeV1::InitialSeed;
+        missingPayload.activeMembers = {1, 3};
+        missingPayload.updatePayloads = {
+            {1, fixture::Bytes(std::array<float, 4>{1.0f, 2.0f, 3.0f, 4.0f})}};
+        Require(!tests::BuildFrozenInvocation(
+            verifiedDynamic.value(), *epoch, std::move(missingPayload)),
+            "exact update setを満たさないpayloadが受理されました。");
+
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.0\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.1\n";
+        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.2\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;
     }

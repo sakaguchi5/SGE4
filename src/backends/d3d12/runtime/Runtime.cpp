@@ -93,11 +93,26 @@ base::Expected<Submission, Error> Submit(
     if (!validated)
         return Fail<Submission>(validated.error().stage, validated.error().message);
 
+    auto prepared = loaded.impl_->session.PrepareDynamicExecution(invocation);
+    if (!prepared)
+        return Fail<Submission>(prepared.error().stage, prepared.error().message);
+
     native::StaticCompositionFrameInvocation nativeInvocation;
     nativeInvocation.frameNumber = frame.frameNumber;
-    nativeInvocation.dynamicData.reserve(frame.leafDynamicData.size());
+    nativeInvocation.dynamicData.reserve(
+        frame.leafDynamicData.size() + (prepared.value().hasBinding ? 1u : 0u));
     for (auto& item : frame.leafDynamicData)
+    {
+        if (prepared.value().hasBinding && item.leaf == prepared.value().leaf &&
+            item.slot == prepared.value().slot)
+            return Fail<Submission>("D3D12Runtime/DynamicExecution",
+                "Verified Dynamic SlotをFrameInputから上書きできません。");
         nativeInvocation.dynamicData.push_back({item.leaf, item.slot, std::move(item.bytes)});
+    }
+    if (prepared.value().hasBinding)
+        nativeInvocation.dynamicData.push_back({
+            prepared.value().leaf, prepared.value().slot,
+            prepared.value().denseSlotBytes});
 
     auto nativeSubmission = native::SubmitStaticComposition(
         loaded.impl_->nativeRuntime, nativeInvocation);
@@ -106,9 +121,12 @@ base::Expected<Submission, Error> Submit(
     if (nativeSubmission.value().deviceEpoch != loaded.impl_->session.DeviceEpoch())
         return Fail<Submission>("D3D12Runtime", "Deviceが検証または実行の契約に違反しています。");
 
-    loaded.impl_->session.CommitSubmission(invocation);
+    const auto verifiedTransitionCount = prepared.value().appliedTransitionCount;
+    const auto verifiedDynamicByteCount = prepared.value().denseSlotBytes.size();
+    loaded.impl_->session.CommitSubmission(invocation, std::move(prepared).value());
     Submission result{std::move(invocation), nativeSubmission.value().deviceEpoch,
-        static_cast<std::uint32_t>(nativeSubmission.value().leaves.size())};
+        static_cast<std::uint32_t>(nativeSubmission.value().leaves.size()),
+        verifiedTransitionCount, verifiedDynamicByteCount};
     return base::Success<Submission, Error>(std::move(result));
 }
 

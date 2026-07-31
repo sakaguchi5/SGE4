@@ -46,7 +46,7 @@ Certificateは新たな判断主体ではない。検証済み完全Artifactか�
 ## 4. Frozen hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.0
+SGE4UNI Frozen Composition Package 2.1
   Manifest schema 2
   Leaf Table schema 1
   Embedded complete Schema 17 Leaf Package bytes
@@ -54,22 +54,24 @@ SGE4UNI Frozen Composition Package 2.0
   Verified Decision Data schema 1
   Verification Certificate schema 1
   Authority Ledger schema 2
-  Dynamic Contract schema 1
+  Dynamic Contract schema 2
 ```
 
-内側`SGE4CMP` ContainerはProduction ABIから廃止する。Compositionの全実行事実は`SGE4UNI 2.0`が直接所有し、Leaf Packageだけを独立した下位Frozen Artifactとして保持する。
+内側`SGE4CMP` ContainerはProduction ABIから廃止する。Compositionの全実行事実は`SGE4UNI 2.1`が直接所有し、Leaf Packageだけを独立した下位Frozen Artifactとして保持する。
 
-同一bytesは同一意味を持つ。Compilerなしで読込・検証・実行・Recovery再物質化ができなければならない。Production ReaderはABI 2.0だけを受理し、旧ABI Readerはmigration treeへ隔離する。
+同一bytesは同一意味を持つ。Compilerなしで読込・検証・実行・Recovery再物質化ができなければならない。Production ReaderはABI 2.1だけを受理し、旧ABI Readerはmigration treeへ隔離する。
 
 ## 5. Dynamic execution
 
 Dynamic InvocationはComposition構造を変更しない。Active membership、Modified survivor、History、Device epochを明示入力とし、activation、deactivation、update、retain、transition、write set、indirect quantityをPlannerと独立Verifierが再導出する。
 
-Runtimeへ渡せるのは`FrozenDynamicInvocationPackage`だけである。ContinueHistory成果物は、Verifierが使用した前History identityをFrozen成果物へ保存し、Runtimeが現在受理しているHistory identityと一致しなければならない。Raw requestをRuntime内部でPlan／Verifyすることは禁止する。
+Composition Dynamic Contract schema 2は`AuthorityOnly`または`VerifiedDenseSlot`を固定する。VerifiedDenseSlotでは対象Leaf、Dynamic Slot、member byte幅をCompositionが所有し、SGE4INV 1.2がexact Update payloadとpayload identityを所有する。Update payloadのmember集合はexact Update setと完全一致しなければならない。
+
+Runtimeへ渡せるのは`FrozenDynamicInvocationPackage`だけである。ContinueHistory成果物は、Verifierが使用した前History identityをFrozen成果物へ保存し、Runtimeが現在受理しているHistory identityと一致しなければならない。Raw requestをRuntime内部でPlan／Verifyすることは禁止する。Runtimeはverified Update／Clearだけをprivate dense shadowへ適用し、native submission成功後にHistoryとshadowを同時Commitする。
 
 ## 6. Runtime
 
-RuntimeはPlannerではない。Frozen Composition、Frozen Dynamic Invocation、明示的Leaf dynamic bytesだけを消費する。性能測定から候補を選ばない。
+RuntimeはPlannerではない。Frozen Composition、Frozen Dynamic Invocation、およびAuthorityOnly routeに対する明示的Leaf dynamic bytesだけを消費する。VerifiedDenseSlotのbytesはFrozen Invocationから機械的に構築し、Caller上書きを拒否する。性能測定から候補を選ばない。
 
 Portable `Runtime Session`がepoch、handle、history、external rebind、RecoverySeed authorityを所有する。D3D12 Runtimeはこれをnative object lifetimeへ写像する。
 

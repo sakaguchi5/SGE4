@@ -17,6 +17,10 @@ public:
     [[nodiscard]] const DynamicDecisionIdentity& DecisionIdentity() const noexcept { return decisionIdentity_; }
     [[nodiscard]] const DynamicSealIdentity& SealIdentity() const noexcept { return sealIdentity_; }
     [[nodiscard]] const DynamicWriteSetIdentity& WriteSetIdentity() const noexcept { return dynamicWriteSetIdentity_; }
+    [[nodiscard]] const DynamicExecutionPayloadIdentity& ExecutionPayloadIdentity() const noexcept
+    {
+        return executionPayloadIdentity_;
+    }
     [[nodiscard]] canonical::TransitionCount IndirectWorkCount() const noexcept { return indirectWorkCount_; }
     [[nodiscard]] InvocationModeV1 Mode() const noexcept { return mode_; }
     [[nodiscard]] const std::optional<canonical::HistoryValidityIdentity>& PreviousHistoryIdentity() const noexcept
@@ -35,6 +39,7 @@ private:
         DynamicDecisionIdentity decisionIdentity,
         DynamicSealIdentity sealIdentity,
         DynamicWriteSetIdentity dynamicWriteSetIdentity,
+        DynamicExecutionPayloadIdentity executionPayloadIdentity,
         canonical::TransitionCount indirectWorkCount,
         InvocationModeV1 mode,
         std::optional<canonical::HistoryValidityIdentity> previousHistoryIdentity,
@@ -42,6 +47,7 @@ private:
         : identity_(std::move(identity)), compositionIdentity_(std::move(compositionIdentity)),
           invocationIdentity_(std::move(invocationIdentity)), decisionIdentity_(std::move(decisionIdentity)),
           sealIdentity_(std::move(sealIdentity)), dynamicWriteSetIdentity_(std::move(dynamicWriteSetIdentity)),
+          executionPayloadIdentity_(std::move(executionPayloadIdentity)),
           indirectWorkCount_(indirectWorkCount), mode_(mode),
           previousHistoryIdentity_(std::move(previousHistoryIdentity)), nextHistory_(std::move(nextHistory)) {}
 
@@ -51,6 +57,7 @@ private:
     DynamicDecisionIdentity decisionIdentity_;
     DynamicSealIdentity sealIdentity_;
     DynamicWriteSetIdentity dynamicWriteSetIdentity_;
+    DynamicExecutionPayloadIdentity executionPayloadIdentity_;
     canonical::TransitionCount indirectWorkCount_;
     InvocationModeV1 mode_;
     std::optional<canonical::HistoryValidityIdentity> previousHistoryIdentity_;

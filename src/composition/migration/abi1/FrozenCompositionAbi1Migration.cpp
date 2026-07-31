@@ -51,7 +51,7 @@ template<class T>
     BinaryWriter payload;
     payload.WriteBytes(complete.CoreDigest());
     payload.WriteBytes(certificate.artifactIdentity.Digest());
-    payload.WriteU32(dynamicContract.schemaVersion);
+    payload.WriteU32(1);
     payload.WriteU32(dynamicContract.universeCount);
     return canonical::SemanticIdentity::FromDigest(
         ComputeDomainDigest("sge4.composition.dynamic-semantic", 1, payload.Bytes()));
@@ -96,7 +96,7 @@ template<class T>
     canonical::SemanticIdentity semanticIdentity)
 {
     BinaryWriter writer;
-    writer.WriteU32(dynamicContract.schemaVersion);
+    writer.WriteU32(1);
     writer.WriteU32(dynamicContract.universeCount);
     writer.WriteBytes(semanticIdentity.Digest());
     return std::move(writer).Take();
@@ -191,9 +191,13 @@ BuildFrozenCompositionPackageAbi1ForMigration(
     ContractBuildInput input,
     DynamicContractV1 dynamicContract)
 {
-    if (dynamicContract.schemaVersion != 1 || dynamicContract.universeCount == 0)
+    if (dynamicContract.schemaVersion != 2 || dynamicContract.universeCount == 0 ||
+        dynamicContract.executionMode != DynamicExecutionModeV1::AuthorityOnly ||
+        dynamicContract.targetLeaf.IsValid() ||
+        dynamicContract.targetDynamicSlot != package::InvalidIndex ||
+        dynamicContract.memberBytes != 0)
         return Fail<std::vector<std::byte>>(
-            "abi1/build", "Dynamic ContractがABI 1移行契約に違反しています。");
+            "abi1/build", "ABI 1移行Corpusはauthority-only Dynamic Contractだけを受理します。");
 
     auto contract = BuildCompositionContract(std::move(input));
     if (!contract)
@@ -324,7 +328,7 @@ MigrateFrozenCompositionPackageAbi1ToAbi2(std::span<const std::byte> bytes)
     auto dynamicSchema = dynamic.ReadU32();
     auto dynamicUniverse = dynamic.ReadU32();
     auto encodedDynamicIdentity = ReadDigest(dynamic);
-    DynamicContractV1 dynamicContract{1, universe.value()};
+    auto dynamicContract = MakeAuthorityOnlyDynamicContractV1(universe.value());
     const auto derivedDynamicIdentity = BuildDynamicSemanticIdentity(
         complete.value(), certificate, dynamicContract);
     if (!dynamicSchema || !dynamicUniverse || !encodedDynamicIdentity ||

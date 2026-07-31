@@ -56,6 +56,7 @@ public:
     [[nodiscard]] base::Expected<ResourceId, std::string> AddDynamicBuffer(
         std::string debugName,
         std::uint64_t requiredBytes,
+        std::uint32_t strideBytes,
         std::uint32_t requiredAlignment);
 
     [[nodiscard]] base::Expected<ResourceId, std::string> AddPresentationSurface(

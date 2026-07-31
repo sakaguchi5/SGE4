@@ -1,5 +1,7 @@
 # New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Revision 2.1: Level 4 Generalization 1として`Verified Dynamic Execution`を導入した。Compositionが一つのLeaf Dynamic Slotへのdense member routeを固定し、`SGE4INV 1.2`がexact Update payloadをSealする。Runtimeはverified Update／Clearだけをprivate shadowへ適用し、GPU submit成功後にHistoryとshadowを同時Commitする。Callerによる対象Slotの上書きは禁止する。
+>
 > Revision 2.0: `NewSGE4 v1.5.2 FULL GATE PASSED`を変更不能Oracleとして、Frozen Compositionを平坦な`SGE4UNI 2.0`へ移行した。内側の`SGE4CMP 1.0` ContainerはProduction Artifactから廃止し、Leaf Table、Schema 17 Leaf bytes、Contract、Verified Decision、Verification Certificate、Authority Ledger、Dynamic Contractを外側Containerが直接所有する。Leaf Schema 17と`SGE4INV 1.1`は維持する。
 >
 > Revision 1.5: `v1.4 FULL GATE PASSED`を変更不能Baselineとして、独自Resultを`std::expected`へ移行し、Canonical encodingとSchema検証をC++23で型安全化した。巨大なD3D12実装を責務別Sourceへ分割し、人間向けDiagnosticとQualification表示を日本語化した。Frozen ABI 1.xは変更していない。
@@ -66,7 +68,7 @@ Leaf Compilerは、独立Verifierを通過した完全なSchema 17 Frozen Leaf P
 
 ### 3. Composition authorityを完全Planへ統合
 
-Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.0`へFreezeします。`CompositionCertificate`は、ABI 2.0 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
+Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.1`へFreezeします。`CompositionCertificate`は、ABI 2.1 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
 
 ### 4. RuntimeからPlanner／Verifierを排除
 
@@ -147,7 +149,7 @@ PlannerとVerifierは、Leaf／Composition／Dynamicの各段で別プロジェ�
 ## Frozen artifact hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.0
+SGE4UNI Frozen Composition Package 2.1
   Manifest schema 2
   Leaf Table schema 1
   complete Schema 17 Leaf Package bytes
@@ -155,20 +157,21 @@ SGE4UNI Frozen Composition Package 2.0
   Verified Decision Data schema 1
   Verification Certificate schema 1
   Authority Ledger schema 2
-  Dynamic Contract schema 1
+  Dynamic Contract schema 2
 ```
 
 `CompleteComposition` Sectionと内側`SGE4CMP 1.0`はProduction ABIから廃止しました。Leaf Packageの独立ABIはSchema 17のまま維持し、Leaf bytesを再符号化せず完全に埋め込みます。
 
-Production Readerは`SGE4UNI 2.0`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
+Production Readerは`SGE4UNI 2.1`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
 
-Dynamic Invocationは別の`SGE4INV` major 1／minor 1成果物です。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、Indirect quantityをPlannerと独立Verifierが確定します。Runtimeは、ABI 2.0 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
+Dynamic Invocationは別の`SGE4INV` major 1／minor 2成果物です。Execution Payload Sectionが、Compositionに固定されたLeaf／Dynamic Slot route、member byte幅、exact Update payloadとそのidentityを所有します。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、Indirect quantityをPlannerと独立Verifierが確定します。Runtimeは、ABI 2.1 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
 
 詳細は次を参照してください。
 
 ```text
 docs/FROZEN_COMPOSITION_ABI_2_0.md
 docs/FROZEN_COMPOSITION_ABI_2_0_MIGRATION.md
+docs/LEVEL4_GENERALIZATION1_VERIFIED_DYNAMIC_EXECUTION.md
 ```
 
 ## Build
@@ -192,7 +195,7 @@ Full Gateは次を確認します。
 - Source Manifest
 - Debug／Release build
 - Debug A／Debug B／Release Frozen bytes一致
-- ABI 2.0 flat Section／round-trip／migration／corruption／Dynamic algebra
+- ABI 2.1 flat Section／round-trip／migration／corruption／Dynamic algebra／verified execution payload
 - 40 carried invariants
 - WARP materialization／submission／readback
 - Controlled whole-composition Recovery
@@ -214,6 +217,9 @@ Full Gateは次を確認します。
 - exact sparse membership
 - activation／deactivation／update／retain／transition
 - verified indirect quantity
+- verified dense Dynamic Slot execution
+- exact Update payload／Clear／Retainの実GPU反映
+- submit成功後だけのHistory／shadow同時Commit
 - explicit history validity
 - epoch-bound handles
 - whole-composition recovery
@@ -229,10 +235,11 @@ Full Gateは次を確認します。
 - Partial Recovery
 - Multiple Adapter
 - Runtime candidate／performance policy
+- ExecuteIndirect／可変Dispatchによるwork量自体の省略（Generalization 1では固定Leaf dispatch）
 
 ## Validation boundary
 
-このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.0直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
+このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.1直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
 
 詳細は次を参照してください。
 

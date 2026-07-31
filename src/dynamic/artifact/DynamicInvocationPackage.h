@@ -19,24 +19,32 @@ inline constexpr std::array<std::byte, 8> FrozenInvocationMagic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'4'},
     std::byte{'I'}, std::byte{'N'}, std::byte{'V'}, std::byte{0}};
 inline constexpr std::uint16_t FrozenInvocationFormatMajor = 1;
-inline constexpr std::uint16_t FrozenInvocationFormatMinor = 1;
-inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 2;
+inline constexpr std::uint16_t FrozenInvocationFormatMinor = 2;
+inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 3;
 
 enum class FrozenInvocationSectionKind : std::uint32_t
 {
     Manifest = 1,
     ExactSets = 2,
     TransitionRecords = 3,
-    NextHistory = 4
+    NextHistory = 4,
+    ExecutionPayload = 5
 };
 
 inline constexpr std::array FrozenInvocationSectionKinds = {
     FrozenInvocationSectionKind::Manifest, FrozenInvocationSectionKind::ExactSets,
-    FrozenInvocationSectionKind::TransitionRecords, FrozenInvocationSectionKind::NextHistory};
+    FrozenInvocationSectionKind::TransitionRecords, FrozenInvocationSectionKind::NextHistory,
+    FrozenInvocationSectionKind::ExecutionPayload};
 static_assert(base::ValuesAreUnique(FrozenInvocationSectionKinds,
     [](FrozenInvocationSectionKind value) { return std::to_underlying(value); }));
 static_assert(base::ValuesAreStrictlyIncreasing(FrozenInvocationSectionKinds,
     [](FrozenInvocationSectionKind value) { return std::to_underlying(value); }));
+
+struct MemberUpdateInputV1 final
+{
+    std::uint32_t member = 0;
+    std::vector<std::byte> bytes;
+};
 
 struct InvocationInputV1 final
 {
@@ -44,6 +52,18 @@ struct InvocationInputV1 final
     InvocationModeV1 mode = InvocationModeV1::InitialSeed;
     std::vector<std::uint32_t> activeMembers;
     std::vector<std::uint32_t> modifiedSurvivors;
+    std::vector<MemberUpdateInputV1> updatePayloads;
+};
+
+struct FrozenDynamicExecutionPayloadV1 final
+{
+    composition::DynamicExecutionModeV1 mode =
+        composition::DynamicExecutionModeV1::AuthorityOnly;
+    composition::LeafPackageId targetLeaf;
+    std::uint32_t targetDynamicSlot = package::InvalidIndex;
+    std::uint32_t memberBytes = 0;
+    DynamicExecutionPayloadIdentity identity;
+    std::vector<MemberUpdatePayloadV1> updates;
 };
 
 class FrozenDynamicInvocationPackage final
@@ -64,6 +84,10 @@ public:
         return artifact_.NextHistory();
     }
     [[nodiscard]] const DynamicDecisionV1& Decision() const noexcept { return decision_; }
+    [[nodiscard]] const FrozenDynamicExecutionPayloadV1& ExecutionPayload() const noexcept
+    {
+        return executionPayload_;
+    }
     [[nodiscard]] InvocationModeV1 Mode() const noexcept { return artifact_.Mode(); }
 
 private:
@@ -73,12 +97,15 @@ private:
     FrozenDynamicInvocationPackage(
         std::vector<std::byte> bytes,
         frozen_dynamic_detail::OpaqueFrozenDynamicInvocationV1 artifact,
-        DynamicDecisionV1 decision)
-        : bytes_(std::move(bytes)), artifact_(std::move(artifact)), decision_(std::move(decision)) {}
+        DynamicDecisionV1 decision,
+        FrozenDynamicExecutionPayloadV1 executionPayload)
+        : bytes_(std::move(bytes)), artifact_(std::move(artifact)),
+          decision_(std::move(decision)), executionPayload_(std::move(executionPayload)) {}
 
     std::vector<std::byte> bytes_;
     frozen_dynamic_detail::OpaqueFrozenDynamicInvocationV1 artifact_;
     DynamicDecisionV1 decision_;
+    FrozenDynamicExecutionPayloadV1 executionPayload_;
 };
 
 // Converts user-owned exact membership input into a canonical request. This function

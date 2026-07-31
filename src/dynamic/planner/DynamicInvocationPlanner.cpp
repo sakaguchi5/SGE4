@@ -41,6 +41,47 @@ DynamicPlanningResultV1 Failure(DynamicVerificationErrorV1 error)
 {
     return {error, std::nullopt};
 }
+
+DynamicVerificationErrorV1 ValidateExecutionPayload(
+    const DynamicInvocationRequestV1& request,
+    std::span<const std::uint32_t> update)
+{
+    const auto expectedIdentity = ComputeDynamicExecutionPayloadIdentityV1(
+        request.executionMode, request.targetLeaf, request.targetDynamicSlot,
+        request.memberBytes, request.updatePayloads);
+    if (request.executionPayloadIdentity != expectedIdentity)
+        return DynamicVerificationErrorV1::ExecutionPayloadIdentityMismatch;
+
+    if (request.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
+    {
+        if (request.targetLeaf.IsValid() ||
+            request.targetDynamicSlot != package::InvalidIndex ||
+            request.memberBytes != 0 || !request.updatePayloads.empty())
+            return DynamicVerificationErrorV1::ExecutionContractMismatch;
+        return DynamicVerificationErrorV1::None;
+    }
+
+    if (request.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
+        !request.targetLeaf.IsValid() ||
+        request.targetDynamicSlot == package::InvalidIndex || request.memberBytes == 0)
+        return DynamicVerificationErrorV1::ExecutionContractMismatch;
+    if (request.updatePayloads.size() != update.size())
+        return DynamicVerificationErrorV1::ExecutionPayloadSetMismatch;
+
+    for (std::size_t index = 0; index < request.updatePayloads.size(); ++index)
+    {
+        const auto& payload = request.updatePayloads[index];
+        if (payload.member.value() >= request.universe.value())
+            return DynamicVerificationErrorV1::ExecutionPayloadMemberOutOfRange;
+        if (index > 0 && request.updatePayloads[index - 1].member.value() >= payload.member.value())
+            return DynamicVerificationErrorV1::ExecutionPayloadDuplicateMember;
+        if (payload.bytes.size() != request.memberBytes)
+            return DynamicVerificationErrorV1::ExecutionPayloadSizeMismatch;
+        if (payload.member.value() != update[index])
+            return DynamicVerificationErrorV1::ExecutionPayloadSetMismatch;
+    }
+    return DynamicVerificationErrorV1::None;
+}
 }
 
 DynamicPlanningResultV1 DynamicInvocationPlannerV1::Plan(const DynamicInvocationRequestV1& request)
@@ -127,6 +168,10 @@ DynamicPlanningResultV1 DynamicInvocationPlannerV1::Plan(const DynamicInvocation
         update.assign(activeIndices.begin(), activeIndices.end());
     }
     const auto transition = Union(update, deactivation);
+
+    const auto executionPayloadError = ValidateExecutionPayload(request, update);
+    if (executionPayloadError != DynamicVerificationErrorV1::None)
+        return Failure(executionPayloadError);
 
     std::vector<std::uint64_t> generations(request.universe.value(), InvalidItemGenerationV1);
     for (const auto index : activeIndices)

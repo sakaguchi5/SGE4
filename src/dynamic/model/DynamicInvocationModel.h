@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../composition/model/CompositionIdentity.h"
+#include "../../composition/model/DynamicExecutionContract.h"
 #include "../../canonical/identity/CanonicalVocabulary.h"
 
 #include <compare>
@@ -24,6 +25,7 @@ struct IndexSetIdentityTagV1;
 struct GenerationVectorIdentityTagV1;
 struct TransitionRecordSetIdentityTagV1;
 struct DynamicWriteSetIdentityTagV1;
+struct DynamicExecutionPayloadIdentityTagV1;
 struct DynamicDecisionIdentityTagV1;
 struct DynamicSealIdentityTagV1;
 struct FrozenDynamicInvocationIdentityTagV1;
@@ -32,12 +34,13 @@ using IndexSetIdentity = canonical::CanonicalIdentityV1<IndexSetIdentityTagV1>;
 using GenerationVectorIdentity = canonical::CanonicalIdentityV1<GenerationVectorIdentityTagV1>;
 using TransitionRecordSetIdentity = canonical::CanonicalIdentityV1<TransitionRecordSetIdentityTagV1>;
 using DynamicWriteSetIdentity = canonical::CanonicalIdentityV1<DynamicWriteSetIdentityTagV1>;
+using DynamicExecutionPayloadIdentity = canonical::CanonicalIdentityV1<DynamicExecutionPayloadIdentityTagV1>;
 using DynamicDecisionIdentity = canonical::CanonicalIdentityV1<DynamicDecisionIdentityTagV1>;
 using DynamicSealIdentity = canonical::CanonicalIdentityV1<DynamicSealIdentityTagV1>;
 using FrozenDynamicInvocationIdentity = canonical::CanonicalIdentityV1<FrozenDynamicInvocationIdentityTagV1>;
 
 inline constexpr std::uint64_t InvalidItemGenerationV1 = ~std::uint64_t{0};
-inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 1u;
+inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 2u;
 
 struct ExactIndexSetBuildResultV1;
 
@@ -106,6 +109,12 @@ struct TransitionRecordV1 final
     auto operator<=>(const TransitionRecordV1&) const = default;
 };
 
+struct MemberUpdatePayloadV1 final
+{
+    MemberIndex member;
+    std::vector<std::byte> bytes;
+};
+
 class DynamicInvocationVerifierV1;
 namespace frozen_dynamic_detail { class FrozenDynamicInvocationBuilderV1; }
 
@@ -155,6 +164,12 @@ struct DynamicInvocationRequestV1 final
     InvocationModeV1 mode;
     ExactIndexSetV1 activeSet;
     ExactIndexSetV1 modifiedSurvivorSet;
+    composition::DynamicExecutionModeV1 executionMode;
+    composition::LeafPackageId targetLeaf;
+    std::uint32_t targetDynamicSlot = package::InvalidIndex;
+    std::uint32_t memberBytes = 0;
+    DynamicExecutionPayloadIdentity executionPayloadIdentity;
+    std::vector<MemberUpdatePayloadV1> updatePayloads;
     std::optional<VerifiedHistoryStateV1> previousHistory;
 };
 
@@ -167,6 +182,11 @@ struct DynamicInvocationRequestV1 final
     InvocationModeV1 mode,
     ExactIndexSetV1 activeSet,
     ExactIndexSetV1 modifiedSurvivorSet,
+    composition::DynamicExecutionModeV1 executionMode,
+    composition::LeafPackageId targetLeaf,
+    std::uint32_t targetDynamicSlot,
+    std::uint32_t memberBytes,
+    std::vector<MemberUpdatePayloadV1> updatePayloads,
     std::optional<VerifiedHistoryStateV1> previousHistory = std::nullopt);
 
 [[nodiscard]] canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
@@ -180,6 +200,12 @@ struct DynamicInvocationRequestV1 final
 [[nodiscard]] DynamicWriteSetIdentity ComputeDynamicWriteSetIdentityV1(
     const ExactIndexSetV1& transitionSet,
     TransitionRecordSetIdentity recordSetIdentity);
+[[nodiscard]] DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
+    composition::DynamicExecutionModeV1 executionMode,
+    composition::LeafPackageId targetLeaf,
+    std::uint32_t targetDynamicSlot,
+    std::uint32_t memberBytes,
+    std::span<const MemberUpdatePayloadV1> updatePayloads);
 
 struct DynamicDecisionV1 final
 {
@@ -223,7 +249,8 @@ struct DynamicPlannerProposalV1 final
     DynamicDecisionIdentity decisionIdentity,
     DynamicSealIdentity sealIdentity,
     canonical::HistoryValidityIdentity nextHistoryIdentity,
-    DynamicWriteSetIdentity dynamicWriteSetIdentity);
+    DynamicWriteSetIdentity dynamicWriteSetIdentity,
+    DynamicExecutionPayloadIdentity executionPayloadIdentity);
 
 class VerifiedDynamicInvocationV1 final
 {
@@ -282,6 +309,12 @@ enum class DynamicVerificationErrorV1 : std::uint8_t
     TransitionRecordMismatch,
     IndirectWorkCountMismatch,
     DynamicWriteSetMismatch,
+    ExecutionContractMismatch,
+    ExecutionPayloadMemberOutOfRange,
+    ExecutionPayloadDuplicateMember,
+    ExecutionPayloadSizeMismatch,
+    ExecutionPayloadSetMismatch,
+    ExecutionPayloadIdentityMismatch,
     DecisionIdentityMismatch
 };
 

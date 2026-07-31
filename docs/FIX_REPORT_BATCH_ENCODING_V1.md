@@ -1,6 +1,6 @@
 # v1.5.1 バッチ解析互換性修正
 
-> Historical note: この修正報告はv1.5.xのABI 1.x Baselineに対する記録である。現行Production Frozen CompositionはSGE4UNI 2.0である。
+> Historical note: この修正報告はv1.5.xのABI 1.x Baselineに対する記録である。現行Production Frozen CompositionはSGE4UNI 2.1である。
 ## 症状
 
 PowerShellから `run_new_sge4_full_gate.bat` を起動すると、処理開始直後に次のエラーが発生する環境がありました。

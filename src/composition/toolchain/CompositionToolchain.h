@@ -6,6 +6,7 @@
 #include "../artifact/VerifiedCompositionArtifact.h"
 #include "../artifact/abi2/FrozenCompositionAbi2.h"
 #include "../model/CompositionContract.h"
+#include "../model/DynamicExecutionContract.h"
 #include "../verifier/CompositionVerifier.h"
 
 #include <cstddef>
@@ -17,12 +18,6 @@
 namespace sge4::composition
 {
 namespace core = ::sge4::canonical;
-
-struct DynamicContractV1 final
-{
-    std::uint32_t schemaVersion = 1;
-    std::uint32_t universeCount = 0;
-};
 
 class FrozenCompositionPackage final
 {
@@ -72,7 +67,7 @@ private:
     ContractBuildInput input,
     DynamicContractV1 dynamicContract);
 
-// Plannerを再実行せず、独立Verifierを通過済みのContract／PlanからABI 2.0をFreezeする。
+// Plannerを再実行せず、独立Verifierを通過済みのContract／PlanからABI 2.1をFreezeする。
 [[nodiscard]] base::Expected<FrozenCompositionPackage, Error> FreezeVerifiedCompositionPackage(
     const ValidatedCompositionContract& contract,
     const verification::VerifiedCompositionPlan& verified,

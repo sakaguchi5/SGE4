@@ -26,6 +26,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\composition\model\CompositionContract.h" />
     <ClInclude Include="..\..\src\composition\model\CompositionIdentity.h" />
+    <ClInclude Include="..\..\src\composition\model\DynamicExecutionContract.h" />
     <ClInclude Include="..\..\src\composition\model\plan\CompositionPlan.h" />
   </ItemGroup>
   <ItemGroup>

@@ -51,7 +51,7 @@ ABI 2.0のLeaf Tableが参照するbytesは、Schema 17 Leaf Packageの完全な
 
 ## 3. ProductionとMigrationの境界
 
-Production Readerは`SGE4UNI 2.0`だけを受理する。
+ABI 2.0時点のProduction Readerは`SGE4UNI 2.0`だけを受理した。現行Readerは末尾の2.1 amendmentに従う。
 
 ```text
 ReadFrozenCompositionPackage
@@ -366,3 +366,23 @@ ABI 2.0は現在実証済みのComposition能力だけを表す。
 - Frozen Dynamic Invocationとのidentity binding
 
 Texture Flow、Conditional Region、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。
+
+---
+
+## Production amendment: SGE4UNI 2.1
+
+Level 4 Generalization 1により、Production minorは2.1へ進んだ。2.0の平坦Composition Core、Leaf bytes、Contract、Verified Decision、Certificate、Authority Ledgerは維持する。
+
+変更点はDynamic Contract schema 2だけである。
+
+```text
+executionMode
+  AuthorityOnly
+  VerifiedDenseSlot
+
+targetLeaf
+targetDynamicSlot
+memberBytes
+```
+
+VerifiedDenseSlotでは、埋め込みSchema 17 LeafのDynamic Slot requiredBytesが`universeCount * memberBytes`と一致することをWriter／Readerが検証する。詳細は`LEVEL4_GENERALIZATION1_VERIFIED_DYNAMIC_EXECUTION.md`を参照する。

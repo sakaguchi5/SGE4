@@ -224,9 +224,11 @@ base::Expected<ResourceId, std::string> SemanticBuilder::AddGpuWrittenBuffer(
 base::Expected<ResourceId, std::string> SemanticBuilder::AddDynamicBuffer(
     std::string debugName,
     std::uint64_t requiredBytes,
+    std::uint32_t strideBytes,
     std::uint32_t requiredAlignment)
 {
-    if (requiredBytes == 0) return base::Failure<ResourceId, std::string>("Bufferが検証または実行の契約に違反しています。");
+    if (requiredBytes == 0 || strideBytes == 0 || requiredBytes % strideBytes != 0)
+        return base::Failure<ResourceId, std::string>("Bufferが検証または実行の契約に違反しています。");
     if (!base::IsPowerOfTwo(requiredAlignment))
         return base::Failure<ResourceId, std::string>("Bufferが検証または実行の契約に違反しています。");
 
@@ -239,6 +241,7 @@ base::Expected<ResourceId, std::string> SemanticBuilder::AddDynamicBuffer(
     resource.update = UpdateIntent::DynamicPerFrame;
     resource.visibility = Visibility::Internal;
     resource.buffer.sizeBytes = requiredBytes;
+    resource.buffer.strideBytes = strideBytes;
     resource.dynamicData.requiredBytes = requiredBytes;
     resource.dynamicData.requiredAlignment = requiredAlignment;
     graph_.resources.push_back(std::move(resource));

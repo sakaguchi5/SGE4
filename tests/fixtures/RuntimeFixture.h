@@ -31,6 +31,9 @@ inline constexpr std::string_view InputEndpoint = "runtime/input";
 inline constexpr std::string_view OutputEndpoint = "runtime/output";
 inline constexpr std::string_view InputAEndpoint = "runtime/input/a";
 inline constexpr std::string_view InputBEndpoint = "runtime/input/b";
+inline constexpr std::string_view DynamicOutputEndpoint = "runtime/dynamic/output";
+inline constexpr std::string_view DynamicObservationInputEndpoint = "runtime/dynamic-observation/input";
+inline constexpr std::string_view DynamicObservationOutputEndpoint = "runtime/dynamic-observation/output";
 
 struct CompiledLeaf final
 {
@@ -48,6 +51,128 @@ inline target::D3D12TargetProfile ComputeProfile(std::uint32_t descriptors)
     profile.dsvDescriptorCount = 0;
     profile.shaderDescriptorCount = descriptors;
     return profile;
+}
+
+inline base::Expected<CompiledLeaf, std::string> BuildVerifiedDynamicLeaf(
+    std::uint32_t universe = 4)
+{
+    if (universe == 0)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Dynamic universeが検証または実行の契約に違反しています。");
+
+    constexpr std::uint32_t MemberBytes = 16;
+    const auto totalBytes = static_cast<std::uint64_t>(universe) * MemberBytes;
+    sem::SemanticBuilder builder;
+    auto dynamicValues = builder.AddDynamicBuffer(
+        "L4G1.Dynamic.Values", totalBytes, MemberBytes, MemberBytes);
+    auto output = builder.AddExternalBuffer(
+        "L4G1.Dynamic.Output", totalBytes, MemberBytes);
+    if (!dynamicValues || !output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Bufferが検証または実行の契約に違反しています。");
+
+    auto dynamicUse = builder.AddUse(
+        dynamicValues.value(), sem::Effect::Read, sem::ViewRole::ShaderBuffer);
+    auto outputUse = builder.AddUse(
+        output.value(), sem::Effect::Write, sem::ViewRole::StorageBuffer);
+    if (!dynamicUse || !outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "ResourceUseが検証または実行の契約に違反しています。");
+
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.parameters = {
+        {{0}, "DynamicValues", sem::ProgramParameterKind::ReadOnlyBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1},
+        {{1}, "Output", sem::ProgramParameterKind::UnorderedBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1}};
+    auto program = builder.AddComputeProgram(
+        "L4G1.Dynamic.Program", std::move(interfaceDescription), {R"hlsl(
+StructuredBuffer<float4> DynamicValues : register(t0);
+RWStructuredBuffer<float4> Output : register(u0);
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    Output[id.x] = DynamicValues[id.x];
+}
+)hlsl", {}, {}, "CSMain"});
+    if (!program)
+        return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, dynamicUse.value(), {0}},
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, outputUse.value(), {1}}};
+    auto work = builder.AddComputeWorkGeneric(
+        "L4G1.Dynamic.Work", program.value(), operands, universe, 1, 1);
+    if (!work)
+        return base::Failure<CompiledLeaf, std::string>(work.error());
+
+    auto compiled = sge4::compiler::CompileCanonical(
+        std::move(builder).Build(), ComputeProfile(4));
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
+}
+
+inline base::Expected<CompiledLeaf, std::string> BuildDynamicObservationLeaf(
+    std::uint32_t universe = 4)
+{
+    if (universe == 0)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Dynamic universeが検証または実行の契約に違反しています。");
+
+    constexpr std::uint32_t MemberBytes = 16;
+    const auto totalBytes = static_cast<std::uint64_t>(universe) * MemberBytes;
+    sem::SemanticBuilder builder;
+    auto input = builder.AddExternalBuffer(
+        "L4G1.DynamicObservation.Input", totalBytes, MemberBytes);
+    auto output = builder.AddExternalBuffer(
+        "L4G1.DynamicObservation.Output", totalBytes, MemberBytes);
+    if (!input || !output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Bufferが検証または実行の契約に違反しています。");
+
+    auto inputUse = builder.AddUse(
+        input.value(), sem::Effect::Read, sem::ViewRole::ShaderBuffer);
+    auto outputUse = builder.AddUse(
+        output.value(), sem::Effect::Write, sem::ViewRole::StorageBuffer);
+    if (!inputUse || !outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "ResourceUseが検証または実行の契約に違反しています。");
+
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.parameters = {
+        {{0}, "Input", sem::ProgramParameterKind::ReadOnlyBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1},
+        {{1}, "Output", sem::ProgramParameterKind::UnorderedBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1}};
+    auto program = builder.AddComputeProgram(
+        "L4G1.DynamicObservation.Program", std::move(interfaceDescription), {R"hlsl(
+StructuredBuffer<float4> Input : register(t0);
+RWStructuredBuffer<float4> Output : register(u0);
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    Output[id.x] = Input[id.x];
+}
+)hlsl", {}, {}, "CSMain"});
+    if (!program)
+        return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, inputUse.value(), {0}},
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, outputUse.value(), {1}}};
+    auto work = builder.AddComputeWorkGeneric(
+        "L4G1.DynamicObservation.Work", program.value(), operands, universe, 1, 1);
+    if (!work)
+        return base::Failure<CompiledLeaf, std::string>(work.error());
+
+    auto compiled = sge4::compiler::CompileCanonical(
+        std::move(builder).Build(), ComputeProfile(4));
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
 }
 
 inline base::Expected<CompiledLeaf, std::string> BuildTransformLeaf()
@@ -250,6 +375,19 @@ float4 PSMain(VSOutput input) : SV_TARGET
         {std::move(compiled).value().packageBytes});
 }
 
+inline contract::LeafPackageDeclaration VerifiedDynamicDeclaration(
+    std::string key, const CompiledLeaf& leaf)
+{
+    return {std::move(key), leaf.packageBytes,
+        {{0, std::string(DynamicOutputEndpoint)}}};
+}
+inline contract::LeafPackageDeclaration DynamicObservationDeclaration(
+    std::string key, const CompiledLeaf& leaf)
+{
+    return {std::move(key), leaf.packageBytes,
+        {{0, std::string(DynamicObservationInputEndpoint)},
+         {1, std::string(DynamicObservationOutputEndpoint)}}};
+}
 inline contract::LeafPackageDeclaration TransformDeclaration(std::string key, const CompiledLeaf& leaf)
 {
     return {std::move(key), leaf.packageBytes,
@@ -275,7 +413,7 @@ inline base::Expected<std::vector<std::byte>, std::string>
 Freeze(contract::ContractBuildInput input)
 {
     auto frozen = contract::BuildFrozenCompositionPackage(
-        std::move(input), {1, 1});
+        std::move(input), contract::MakeAuthorityOnlyDynamicContractV1(1));
     if (!frozen)
         return base::Failure<std::vector<std::byte>, std::string>(
             frozen.error().stage + "：" + frozen.error().message);

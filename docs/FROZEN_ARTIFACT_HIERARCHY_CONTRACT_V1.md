@@ -21,10 +21,10 @@ Certificate生成のために第二Planner／Verifierを実行してはならな
 
 ## Frozen Composition
 
-Production Frozen Compositionは平坦な`SGE4UNI 2.0`である。
+Production Frozen Compositionは平坦な`SGE4UNI 2.1`である。
 
 ```text
-SGE4UNI 2.0
+SGE4UNI 2.1
   Manifest
   Leaf Table
   complete Schema 17 Leaf Package bytes

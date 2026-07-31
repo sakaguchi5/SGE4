@@ -2,6 +2,7 @@
 
 #include "../../canonical/base/BinaryIO.h"
 
+#include <algorithm>
 #include <string>
 #include <utility>
 
@@ -43,6 +44,11 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteBytes(frozen.DecisionIdentity().Digest());
     writer.WriteBytes(frozen.SealIdentity().Digest());
     writer.WriteBytes(frozen.WriteSetIdentity().Digest());
+    writer.WriteBytes(frozen.ExecutionPayloadIdentity().Digest());
+    writer.WriteU32(std::to_underlying(verified.Request().executionMode));
+    writer.WriteU32(verified.Request().targetLeaf.value);
+    writer.WriteU32(verified.Request().targetDynamicSlot);
+    writer.WriteU32(verified.Request().memberBytes);
     writer.WriteBytes(frozen.NextHistory().Descriptor().identity.Digest());
     writer.WriteU8(frozen.PreviousHistoryIdentity().has_value() ? 1u : 0u);
     writer.WriteZeroes(7);
@@ -75,6 +81,27 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
         writer.WriteU32(record.member.value());
         writer.WriteU8(static_cast<std::uint8_t>(record.action));
         writer.WriteZeroes(3);
+    }
+    return std::move(writer).Take();
+}
+
+
+[[nodiscard]] std::vector<std::byte> BuildExecutionPayloadBytes(
+    const DynamicInvocationRequestV1& request)
+{
+    BinaryWriter writer;
+    writer.WriteU32(1);
+    writer.WriteU32(std::to_underlying(request.executionMode));
+    writer.WriteU32(request.targetLeaf.value);
+    writer.WriteU32(request.targetDynamicSlot);
+    writer.WriteU32(request.memberBytes);
+    writer.WriteCountU32(request.updatePayloads.size());
+    writer.WriteBytes(request.executionPayloadIdentity.Digest());
+    for (const auto& payload : request.updatePayloads)
+    {
+        writer.WriteU32(payload.member.value());
+        writer.WriteCountU32(payload.bytes.size());
+        writer.WriteBytes(payload.bytes);
     }
     return std::move(writer).Take();
 }
@@ -114,6 +141,27 @@ base::Expected<DynamicInvocationRequestV1, Error> BuildDynamicInvocationRequest(
     if (!modified.Accepted())
         return Fail<DynamicInvocationRequestV1>("DynamicInvocation", "入力または内部状態が無効であるか、契約条件を満たしていません。");
 
+    const auto& execution = composition.DynamicContract();
+    std::sort(input.updatePayloads.begin(), input.updatePayloads.end(),
+        [](const auto& left, const auto& right) { return left.member < right.member; });
+    std::vector<MemberUpdatePayloadV1> payloads;
+    payloads.reserve(input.updatePayloads.size());
+    for (std::size_t index = 0; index < input.updatePayloads.size(); ++index)
+    {
+        auto& payload = input.updatePayloads[index];
+        if (payload.member >= universe.value() ||
+            (index > 0 && input.updatePayloads[index - 1].member == payload.member))
+            return Fail<DynamicInvocationRequestV1>(
+                "DynamicInvocation/Payload", "Dynamic payload memberがCanonicalではありません。");
+        if (execution.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
+            return Fail<DynamicInvocationRequestV1>(
+                "DynamicInvocation/Payload", "Authority-only Invocationへpayloadを渡せません。");
+        if (payload.bytes.size() != execution.memberBytes)
+            return Fail<DynamicInvocationRequestV1>(
+                "DynamicInvocation/Payload", "Dynamic payloadのbyte数が契約と一致しません。");
+        payloads.push_back({MemberIndex(payload.member), std::move(payload.bytes)});
+    }
+
     return base::Success<DynamicInvocationRequestV1, Error>(
         MakeDynamicInvocationRequestV1(
             composition.Certificate().artifactIdentity,
@@ -124,7 +172,9 @@ base::Expected<DynamicInvocationRequestV1, Error> BuildDynamicInvocationRequest(
             input.mode,
             std::move(*active.set),
             std::move(*modified.set),
-            std::move(previousHistory)));
+            execution.executionMode, execution.targetLeaf,
+            execution.targetDynamicSlot, execution.memberBytes,
+            std::move(payloads), std::move(previousHistory)));
 }
 
 base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
@@ -149,6 +199,10 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
         static_cast<std::uint16_t>(SectionFlags::Required) |
             static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
         8, BuildHistoryBytes(frozen.NextHistory())});
+    sections.push_back({static_cast<std::uint32_t>(FrozenInvocationSectionKind::ExecutionPayload), 1,
+        static_cast<std::uint16_t>(SectionFlags::Required) |
+            static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
+        8, BuildExecutionPayloadBytes(verified.Request())});
 
     auto bytes = WriteSectionedArtifact(
         FrozenInvocationMagic, FrozenInvocationFormatMajor, FrozenInvocationFormatMinor,
@@ -156,8 +210,13 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
     if (!bytes)
         return Fail<FrozenDynamicInvocationPackage>(bytes.error().stage, bytes.error().message);
 
+    FrozenDynamicExecutionPayloadV1 executionPayload{
+        verified.Request().executionMode, verified.Request().targetLeaf,
+        verified.Request().targetDynamicSlot, verified.Request().memberBytes,
+        verified.Request().executionPayloadIdentity, verified.Request().updatePayloads};
     return base::Success<FrozenDynamicInvocationPackage, Error>(
         FrozenDynamicInvocationPackage(
-            std::move(bytes).value(), std::move(frozen), verified.Decision()));
+            std::move(bytes).value(), std::move(frozen), verified.Decision(),
+            std::move(executionPayload)));
 }
 }

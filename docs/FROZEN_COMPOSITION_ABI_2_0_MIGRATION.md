@@ -23,7 +23,7 @@ SGE4UNI 1.1 bytes
   -> Independent Composition Verifier
   -> v1 Certificate／Authority／Dynamic binding照合
   -> Verified Contract + Verified Plan
-  -> SGE4UNI 2.0 Freeze
+  -> SGE4UNI 2.1 Freeze
 ```
 
 MigratorはPlannerを再実行しない。旧Artifactに保存されたPlanを独立Verifierで再検証し、そのVerified PlanをABI 2.0へFreezeする。
@@ -60,10 +60,10 @@ ABI 2.0は新しいContainerとDigest階層を持つため、次は一致を要�
 
 ```text
 Production Runtime
-  SGE4UNI 2.0のみ
+  SGE4UNI 2.1のみ
 
 Migration qualification
-  SGE4UNI 1.1 -> SGE4UNI 2.0
+  SGE4UNI 1.1 -> SGE4UNI 2.1
 
 Legacy ABI code
   src/composition/migration/abi1/ のみ
@@ -83,3 +83,8 @@ Runtimeでの自動upgrade、v1互換mode、v1／v2の暗黙判別は行わな�
 - v2 corruption corpusを通過する
 - Debug A／Debug B／Releaseでv2 bytes一致
 - WARP／Controlled Recovery／Actual Removalを通過する
+
+
+## 2.1 note
+
+ABI 1.1はauthority-only Dynamic Contractだけを表現できる。Migratorはこれをschema 2の`AuthorityOnly`へ明示変換し、直接生成したSGE4UNI 2.1とbyte一致させる。VerifiedDenseSlotは旧ABIから推測せず、新規Composition入力からのみ生成する。

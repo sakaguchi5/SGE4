@@ -1,4 +1,46 @@
-# Validation Report — Frozen Composition ABI 2.0
+# Validation Addendum — Level 4 Generalization 1
+
+## Production formats
+
+```text
+Frozen Composition: SGE4UNI 2.1
+Dynamic Contract: schema 2
+Frozen Dynamic Invocation: SGE4INV 1.2
+Invocation Manifest: schema 3
+Execution Payload Section: schema 1
+```
+
+## Implemented evidence
+
+- Composition freezes `AuthorityOnly` or one `VerifiedDenseSlot` route.
+- Writer／Reader decode the target Schema 17 Leaf and prove `slot.requiredBytes == universeCount * memberBytes`.
+- Dynamic Planner and independent Verifier require the execution payload member set to equal the exact Update set.
+- Payload identity is included in Invocation identity, Verifier seal, Frozen Invocation identity, Manifest, and Execution Payload Section.
+- Runtime applies verified Update／Clear records to a private dense shadow and commits shadow／History only after native submission succeeds.
+- Caller collision on the verified Leaf／Slot is rejected.
+- Recovery clears the shadow and requires a full-active RecoverySeed.
+
+## Validation completed in this environment
+
+- `tools/static_audit.py`: passed; 18 projects, 15 product projects, 47 active translation units, 40 carried invariants.
+- C++23 strict syntax checks passed for all modified portable Product sources.
+- C++23 strict syntax checks passed for Architecture tests, ABI corruption tests, D3D12 Runtime facade, and Windows qualification source.
+- Project／filters ownership for the new `DynamicExecutionContract.h` passed.
+
+## Windows qualification still required
+
+The patch has not been claimed as MSVC／HLSL／WARP qualified in this environment. Run:
+
+```bat
+run_new_sge4_full_gate.bat
+```
+
+The updated Windows qualification additionally checks InitialSeed, ContinueHistory Update／Retain／Clear, zero-transition retention, caller collision rejection, payload omission rejection, and RecoverySeed rematerialization against GPU readback.
+
+---
+
+# Historical Validation Report — Frozen Composition ABI 2.0
+
 
 ## Baseline evidence
 

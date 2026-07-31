@@ -2,9 +2,13 @@
 #include "../planner/CompositionPlanner.h"
 
 #include "../../canonical/base/BinaryIO.h"
+#include "../../canonical/base/CheckedMath.h"
+#include "../../leaf/artifact/package/PackageReader.h"
+#include "../../backends/d3d12/artifact/D3D12Encoding.h"
 #include "../model/plan/CompositionPlan.h"
 
 #include <algorithm>
+#include <limits>
 
 namespace sge4::composition
 {
@@ -33,8 +37,12 @@ template<class T>
     payload.WriteBytes(certificate.artifactIdentity.Digest());
     payload.WriteU32(dynamicContract.schemaVersion);
     payload.WriteU32(dynamicContract.universeCount);
+    payload.WriteU32(std::to_underlying(dynamicContract.executionMode));
+    payload.WriteU32(dynamicContract.targetLeaf.value);
+    payload.WriteU32(dynamicContract.targetDynamicSlot);
+    payload.WriteU32(dynamicContract.memberBytes);
     return core::SemanticIdentity::FromDigest(
-        ComputeDomainDigest("sge4.composition.dynamic-semantic", 2, payload.Bytes()));
+        ComputeDomainDigest("sge4.composition.dynamic-semantic", 3, payload.Bytes()));
 }
 
 [[nodiscard]] std::vector<std::byte> BuildAuthorityLedger(
@@ -63,6 +71,10 @@ template<class T>
     BinaryWriter writer;
     writer.WriteU32(dynamicContract.schemaVersion);
     writer.WriteU32(dynamicContract.universeCount);
+    writer.WriteU32(std::to_underlying(dynamicContract.executionMode));
+    writer.WriteU32(dynamicContract.targetLeaf.value);
+    writer.WriteU32(dynamicContract.targetDynamicSlot);
+    writer.WriteU32(dynamicContract.memberBytes);
     writer.WriteBytes(compositionIdentity.Digest());
     writer.WriteBytes(semanticIdentity.Digest());
     return std::move(writer).Take();
@@ -85,19 +97,68 @@ template<class T>
 {
     return left == right.Digest();
 }
+
+[[nodiscard]] base::Expected<void, Error> ValidateDynamicContract(
+    const ValidatedCompositionContract& contract,
+    DynamicContractV1 dynamicContract)
+{
+    if (dynamicContract.schemaVersion != 2 || dynamicContract.universeCount == 0)
+        return Fail<void>(
+            "CompositionToolchain", "Dynamic Contractが検証または実行の契約に違反しています。");
+
+    if (dynamicContract.executionMode == DynamicExecutionModeV1::AuthorityOnly)
+    {
+        if (dynamicContract.targetLeaf.IsValid() ||
+            dynamicContract.targetDynamicSlot != package::InvalidIndex ||
+            dynamicContract.memberBytes != 0)
+            return Fail<void>(
+                "CompositionToolchain", "Authority-only Dynamic Contractに実行routeが混入しています。");
+        return base::Success<void, Error>();
+    }
+
+    if (dynamicContract.executionMode != DynamicExecutionModeV1::VerifiedDenseSlot ||
+        !dynamicContract.targetLeaf.IsValid() ||
+        dynamicContract.targetLeaf.value >= contract.Leaves().size() ||
+        dynamicContract.targetDynamicSlot == package::InvalidIndex ||
+        dynamicContract.memberBytes == 0)
+        return Fail<void>(
+            "CompositionToolchain", "Verified Dynamic Execution routeが無効です。");
+
+    const auto& leaf = contract.Leaves()[dynamicContract.targetLeaf.value];
+    auto frozen = package::PackageReader::Read(leaf.packageBytes);
+    if (!frozen)
+        return Fail<void>("CompositionToolchain/DynamicRoute", frozen.error().message);
+    auto view = package::d3d12_v13::D3D12PackageView::Decode(frozen.value());
+    if (!view)
+        return Fail<void>("CompositionToolchain/DynamicRoute", view.error().message);
+    if (dynamicContract.targetDynamicSlot >= view.value().DynamicSlots().size())
+        return Fail<void>(
+            "CompositionToolchain/DynamicRoute", "Dynamic Slot参照が範囲外です。");
+
+    if (dynamicContract.universeCount >
+        std::numeric_limits<std::uint64_t>::max() / dynamicContract.memberBytes)
+        return Fail<void>(
+            "CompositionToolchain/DynamicRoute", "Dynamic dense slotのbyte数がoverflowします。");
+    const auto requiredBytes = static_cast<std::uint64_t>(dynamicContract.universeCount) *
+        dynamicContract.memberBytes;
+    const auto& slot = view.value().DynamicSlots()[dynamicContract.targetDynamicSlot];
+    if (slot.requiredBytes != requiredBytes)
+        return Fail<void>(
+            "CompositionToolchain/DynamicRoute", "Dynamic SlotのrequiredBytesとmember universeが一致しません。");
+    return base::Success<void, Error>();
+}
 }
 
 base::Expected<FrozenCompositionPackage, Error> BuildFrozenCompositionPackage(
     ContractBuildInput input,
     DynamicContractV1 dynamicContract)
 {
-    if (dynamicContract.schemaVersion != 1 || dynamicContract.universeCount == 0)
-        return Fail<FrozenCompositionPackage>(
-            "CompositionToolchain", "Dynamic Contractが検証または実行の契約に違反しています。");
-
     auto contract = BuildCompositionContract(std::move(input));
     if (!contract)
         return Fail<FrozenCompositionPackage>(contract.error().stage, contract.error().message);
+    auto dynamicValid = ValidateDynamicContract(contract.value(), dynamicContract);
+    if (!dynamicValid)
+        return Fail<FrozenCompositionPackage>(dynamicValid.error().stage, dynamicValid.error().message);
     auto proposal = planning::ProposeCompositionPlan(contract.value());
     if (!proposal)
         return Fail<FrozenCompositionPackage>(proposal.error().stage, proposal.error().message);
@@ -112,9 +173,9 @@ base::Expected<FrozenCompositionPackage, Error> FreezeVerifiedCompositionPackage
     const verification::VerifiedCompositionPlan& verified,
     DynamicContractV1 dynamicContract)
 {
-    if (dynamicContract.schemaVersion != 1 || dynamicContract.universeCount == 0)
-        return Fail<FrozenCompositionPackage>(
-            "CompositionToolchain", "Dynamic Contractが検証または実行の契約に違反しています。");
+    auto dynamicValid = ValidateDynamicContract(contract, dynamicContract);
+    if (!dynamicValid)
+        return Fail<FrozenCompositionPackage>(dynamicValid.error().stage, dynamicValid.error().message);
 
     auto coreResult = artifact::BuildFrozenCompositionAbi2Core(contract, verified);
     if (!coreResult)
@@ -154,7 +215,8 @@ base::Expected<FrozenCompositionPackage, Error> FreezeVerifiedCompositionPackage
         BuildAuthorityLedger(core.coreDigest, certificate)});
     sections.push_back({
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract),
-        1, RequiredExecution, artifact::FrozenCompositionAbi2Alignment,
+        artifact::FrozenCompositionAbi2DynamicContractSchema, RequiredExecution,
+        artifact::FrozenCompositionAbi2Alignment,
         BuildDynamicContractBytes(dynamicContract, dynamicIdentity, certificate.artifactIdentity)});
 
     auto outer = WriteSectionedArtifact(
@@ -199,7 +261,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract));
     if (!manifestSection || !authoritySection || !dynamicSection)
         return Fail<FrozenCompositionPackage>(
-            "CompositionReader", "SGE4UNI 2.0の必須Sectionがありません。");
+            "CompositionReader", "SGE4UNI 2.1の必須Sectionがありません。");
 
     auto manifestResult = artifact::DeserializeFrozenCompositionAbi2Manifest(
         manifestSection->bytes);
@@ -246,16 +308,29 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
     BinaryReader dynamic(dynamicSection->bytes);
     auto dynamicSchema = dynamic.ReadU32();
     auto dynamicUniverse = dynamic.ReadU32();
+    auto dynamicExecutionMode = dynamic.ReadU32();
+    auto dynamicTargetLeaf = dynamic.ReadU32();
+    auto dynamicTargetSlot = dynamic.ReadU32();
+    auto dynamicMemberBytes = dynamic.ReadU32();
     auto dynamicCompositionIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
     auto dynamicSemanticIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
-    if (!dynamicSchema || !dynamicUniverse || !dynamicCompositionIdentity ||
-        !dynamicSemanticIdentity || dynamic.Remaining() != 0 ||
-        dynamicSchema.value() != 1 || dynamicUniverse.value() == 0 ||
+    if (!dynamicSchema || !dynamicUniverse || !dynamicExecutionMode ||
+        !dynamicTargetLeaf || !dynamicTargetSlot || !dynamicMemberBytes ||
+        !dynamicCompositionIdentity || !dynamicSemanticIdentity || dynamic.Remaining() != 0 ||
+        dynamicSchema.value() != 2 || dynamicUniverse.value() == 0 ||
+        dynamicExecutionMode.value() > std::to_underlying(DynamicExecutionModeV1::VerifiedDenseSlot) ||
         !SameIdentity(dynamicCompositionIdentity.value(), certificate.artifactIdentity))
         return Fail<FrozenCompositionPackage>(
             "CompositionReader", "Dynamic ContractがComposition identityと一致しません。");
 
-    DynamicContractV1 dynamicContract{dynamicSchema.value(), dynamicUniverse.value()};
+    DynamicContractV1 dynamicContract{
+        dynamicSchema.value(), dynamicUniverse.value(),
+        static_cast<DynamicExecutionModeV1>(dynamicExecutionMode.value()),
+        LeafPackageId{dynamicTargetLeaf.value()}, dynamicTargetSlot.value(),
+        dynamicMemberBytes.value()};
+    auto dynamicValid = ValidateDynamicContract(verified.ValidatedContract(), dynamicContract);
+    if (!dynamicValid)
+        return Fail<FrozenCompositionPackage>(dynamicValid.error().stage, dynamicValid.error().message);
     const auto derivedDynamicIdentity = BuildDynamicSemanticIdentity(
         verified.CoreDigest(), certificate, dynamicContract);
     if (!SameIdentity(dynamicSemanticIdentity.value(), derivedDynamicIdentity) ||

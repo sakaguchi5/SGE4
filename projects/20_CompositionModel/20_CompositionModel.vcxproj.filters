@@ -11,6 +11,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\composition\model\CompositionContract.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="..\..\src\composition\model\CompositionIdentity.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\model\DynamicExecutionContract.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="..\..\src\composition\model\plan\CompositionPlan.h"><Filter>Header Files</Filter></ClInclude>
   </ItemGroup>
 </Project>

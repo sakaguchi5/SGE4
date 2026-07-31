@@ -4,7 +4,9 @@
 #include "../../dynamic/artifact/DynamicInvocationPackage.h"
 #include "../core/package/PackageRuntime.h"
 
+#include <cstddef>
 #include <optional>
+#include <vector>
 
 namespace sge4::runtime
 {
@@ -13,6 +15,18 @@ struct DynamicPlanningContext final
     canonical::DeviceEpoch deviceEpoch;
     dynamic::InvocationModeV1 requiredMode;
     std::optional<dynamic::VerifiedHistoryStateV1> previousHistory;
+};
+
+// Runtime applies a verified transition stream to a private dense shadow before
+// submitting any GPU work. The shadow is committed only after native submission
+// succeeds, so failed submissions cannot advance the accepted dynamic state.
+struct PreparedDynamicExecutionV1 final
+{
+    bool hasBinding = false;
+    composition::LeafPackageId leaf;
+    std::uint32_t slot = package::InvalidIndex;
+    std::vector<std::byte> denseSlotBytes;
+    std::uint32_t appliedTransitionCount = 0;
 };
 
 class Session final
@@ -39,7 +53,11 @@ public:
     [[nodiscard]] DynamicPlanningContext PlanningContext() const;
     [[nodiscard]] base::Expected<void, Error> ValidateForSubmission(
         const dynamic::FrozenDynamicInvocationPackage& invocation) const;
-    void CommitSubmission(const dynamic::FrozenDynamicInvocationPackage& invocation);
+    [[nodiscard]] base::Expected<PreparedDynamicExecutionV1, Error> PrepareDynamicExecution(
+        const dynamic::FrozenDynamicInvocationPackage& invocation) const;
+    void CommitSubmission(
+        const dynamic::FrozenDynamicInvocationPackage& invocation,
+        PreparedDynamicExecutionV1 prepared);
 
     void ApplyRecoveryState(
         std::uint64_t newDeviceEpoch,
@@ -57,19 +75,23 @@ private:
         composition::FrozenCompositionPackage package,
         canonical::DeviceEpoch deviceEpoch,
         canonical::RepresentationHandleV1 representationHandle,
-        canonical::HistoryHandleV1 historyHandle)
+        canonical::HistoryHandleV1 historyHandle,
+        std::vector<std::byte> dynamicExecutionShadow)
         : package_(std::move(package)), deviceEpoch_(deviceEpoch),
           representationHandle_(std::move(representationHandle)),
-          historyHandle_(std::move(historyHandle)) {}
+          historyHandle_(std::move(historyHandle)),
+          dynamicExecutionShadow_(std::move(dynamicExecutionShadow)) {}
 
     [[nodiscard]] dynamic::InvocationModeV1 RequiredMode() const noexcept;
     void RebuildHandles();
+    void ResetDynamicExecutionShadow();
 
     composition::FrozenCompositionPackage package_;
     canonical::DeviceEpoch deviceEpoch_;
     std::optional<dynamic::VerifiedHistoryStateV1> history_;
     canonical::RepresentationHandleV1 representationHandle_;
     canonical::HistoryHandleV1 historyHandle_;
+    std::vector<std::byte> dynamicExecutionShadow_;
     std::uint64_t runtimeGeneration_ = 1;
     DeviceRuntimeState state_ = DeviceRuntimeState::Active;
     bool externalStateBound_ = true;

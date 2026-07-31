@@ -2,6 +2,9 @@
 #include "../../src/backends/d3d12/runtime/Runtime.h"
 
 #include <array>
+#include <cstring>
+#include <cmath>
+#include <span>
 #include <iostream>
 #include <stdexcept>
 #include <string_view>
@@ -15,6 +18,177 @@ void Require(bool condition, const char* message)
 {
     if (!condition) throw std::runtime_error(message);
 }
+
+[[nodiscard]] sge4::dynamic::MemberUpdateInputV1 UpdatePayload(
+    std::uint32_t member,
+    const std::array<float, 4>& value)
+{
+    return {member, fixture::Bytes(value)};
+}
+
+[[nodiscard]] bool EqualsDense(
+    std::span<const std::byte> bytes,
+    const std::array<std::array<float, 4>, 4>& expected,
+    float tolerance = 0.0001f)
+{
+    if (bytes.size() != sizeof(expected)) return false;
+    std::array<std::array<float, 4>, 4> actual{};
+    std::memcpy(actual.data(), bytes.data(), bytes.size());
+    for (std::size_t member = 0; member < actual.size(); ++member)
+        for (std::size_t component = 0; component < actual[member].size(); ++component)
+            if (std::abs(actual[member][component] - expected[member][component]) > tolerance)
+                return false;
+    return true;
+}
+
+void VerifyDynamicExecutionQualification()
+{
+    constexpr std::uint32_t Universe = 4;
+    const std::array<float, 4> firstOne{1, 2, 3, 4};
+    const std::array<float, 4> firstThree{5, 6, 7, 8};
+    const std::array<float, 4> secondOne{11, 12, 13, 14};
+    const std::array<float, 4> secondTwo{21, 22, 23, 24};
+    const std::array<float, 4> zero{};
+
+    auto package = tests::BuildVerifiedDynamicUnified(Universe);
+    if (!package)
+        throw std::runtime_error(
+            "Verified Dynamic Compositionの生成に失敗しました：" +
+            package.error());
+    const auto outputId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/dynamic/output");
+    Require(outputId.IsValid(),
+        "Verified Dynamic outputの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(
+        package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded),
+        "Verified Dynamic CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 seed;
+    seed.timelineOrdinal = 0;
+    seed.mode = planning.requiredMode;
+    seed.activeMembers = {1, 3};
+    seed.updatePayloads = {
+        UpdatePayload(1, firstOne), UpdatePayload(3, firstThree)};
+    auto frozenSeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(seed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSeed),
+        "Verified Dynamic InitialSeedの生成に失敗しました。");
+    auto submittedSeed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSeed).value(), {0, {}});
+    Require(submittedSeed && submittedSeed.value().verifiedTransitionCount == 2 &&
+        submittedSeed.value().verifiedDynamicByteCount == Universe * 16,
+        "Verified Dynamic InitialSeedが実実行へ接続されませんでした。");
+    auto firstRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    const std::array firstExpected{zero, firstOne, zero, firstThree};
+    Require(firstRead && EqualsDense(firstRead.value().bytes, firstExpected),
+        "Verified Dynamic InitialSeedのGPU観測結果が一致しません。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 next;
+    next.timelineOrdinal = 1;
+    next.mode = planning.requiredMode;
+    next.activeMembers = {1, 2};
+    next.modifiedSurvivors = {1};
+    next.updatePayloads = {
+        UpdatePayload(1, secondOne), UpdatePayload(2, secondTwo)};
+    auto frozenNext = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(next),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenNext),
+        "Verified Dynamic ContinueHistoryの生成に失敗しました。");
+    auto submittedNext = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenNext).value(), {1, {}});
+    Require(submittedNext && submittedNext.value().verifiedTransitionCount == 3,
+        "Update／Activation／Clearがexact transition countへ反映されませんでした。");
+    auto secondRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    const std::array secondExpected{zero, secondOne, secondTwo, zero};
+    Require(secondRead && EqualsDense(secondRead.value().bytes, secondExpected),
+        "Update／Retain／ClearのGPU観測結果が一致しません。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 retain;
+    retain.timelineOrdinal = 2;
+    retain.mode = planning.requiredMode;
+    retain.activeMembers = {1, 2};
+    auto frozenRetain = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(retain),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRetain),
+        "Verified Dynamic Retain Invocationの生成に失敗しました。");
+    auto submittedRetain = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRetain).value(), {2, {}});
+    Require(submittedRetain && submittedRetain.value().verifiedTransitionCount == 0,
+        "Retain-only frameのexact zero transitionが保存されませんでした。");
+    auto retainedRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(retainedRead && EqualsDense(retainedRead.value().bytes, secondExpected),
+        "Retain-only frameでGPU shadowが変化しました。");
+
+    // The verified route owns this slot. A caller cannot inject competing bytes.
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 collision;
+    collision.timelineOrdinal = 3;
+    collision.mode = planning.requiredMode;
+    collision.activeMembers = {1, 2};
+    collision.modifiedSurvivors = {1};
+    collision.updatePayloads = {UpdatePayload(1, secondOne)};
+    auto frozenCollision = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(collision),
+        planning.previousHistory);
+    Require(static_cast<bool>(frozenCollision),
+        "Slot collision negative testのInvocation生成に失敗しました。");
+    sge4::d3d12::FrameInput competingFrame;
+    competingFrame.frameNumber = 3;
+    competingFrame.leafDynamicData.push_back({
+        package.value().DynamicContract().targetLeaf,
+        package.value().DynamicContract().targetDynamicSlot,
+        std::vector<std::byte>(Universe * 16, std::byte{0})});
+    Require(!sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenCollision).value(), std::move(competingFrame)),
+        "Verified Dynamic SlotへのCaller上書きが受理されました。");
+
+    // Missing exact update payload must be rejected before freezing.
+    sge4::dynamic::InvocationInputV1 missing;
+    missing.timelineOrdinal = 3;
+    missing.mode = planning.requiredMode;
+    missing.activeMembers = {1, 2};
+    missing.modifiedSurvivors = {1};
+    Require(!tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(missing),
+        planning.previousHistory),
+        "exact update payloadを欠くInvocationが受理されました。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "Verified Dynamic Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "Verified Dynamic Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 3;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {1, 2};
+    recoverySeed.updatePayloads = {
+        UpdatePayload(1, secondOne), UpdatePayload(2, secondTwo)};
+    auto frozenRecoverySeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecoverySeed),
+        "Verified Dynamic RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecoverySeed).value(), {3, {}});
+    Require(resumed && resumed.value().verifiedTransitionCount == 2,
+        "RecoverySeedがActive全要素を再構築しませんでした。");
+    auto recoveryRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(recoveryRead && EqualsDense(recoveryRead.value().bytes, secondExpected),
+        "RecoverySeed後のGPU観測結果が一致しません。");
+}
 }
 
 int main(int argc, char** argv)
@@ -22,6 +196,7 @@ int main(int argc, char** argv)
     try
     {
         const bool actualRemoval = argc > 1 && std::string_view(argv[1]) == "--actual-removal";
+        VerifyDynamicExecutionQualification();
         auto package = tests::BuildLinearUnified();
         Require(static_cast<bool>(package), "Compositionが検証または実行の契約に違反しています。");
         const auto inputId = fixture::FindResourceFlow(

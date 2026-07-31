@@ -2,6 +2,8 @@
 
 #include "../../canonical/base/BinaryIO.h"
 
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 #include <utility>
@@ -47,6 +49,24 @@ template<class T>
     return canonical::HistoryHandleV1(
         MakeResourceIdentity(package, epoch, generation, "sge4.runtime.history"), epoch);
 }
+
+[[nodiscard]] base::Expected<std::size_t, Error> DenseShadowBytes(
+    const composition::DynamicContractV1& contract)
+{
+    if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
+        return base::Success<std::size_t, Error>(0u);
+    if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
+        contract.universeCount == 0 || contract.memberBytes == 0 ||
+        contract.targetLeaf.value == package::InvalidIndex ||
+        contract.targetDynamicSlot == package::InvalidIndex)
+        return Fail<std::size_t>("RuntimeSession/DynamicExecution",
+            "Dynamic execution contractが検証または実行の契約に違反しています。");
+    if (contract.universeCount > std::numeric_limits<std::size_t>::max() / contract.memberBytes)
+        return Fail<std::size_t>("RuntimeSession/DynamicExecution",
+            "Dynamic execution shadowのbyte数が表現可能範囲を超えています。");
+    return base::Success<std::size_t, Error>(
+        static_cast<std::size_t>(contract.universeCount) * contract.memberBytes);
+}
 }
 
 base::Expected<Session, Error> Session::Create(
@@ -56,11 +76,15 @@ base::Expected<Session, Error> Session::Create(
     const auto epoch = canonical::DeviceEpoch::TryCreate(deviceEpoch);
     if (!epoch)
         return Fail<Session>("RuntimeSession", "Deviceが検証または実行の契約に違反しています。");
+    auto shadowBytes = DenseShadowBytes(package.DynamicContract());
+    if (!shadowBytes)
+        return Fail<Session>(shadowBytes.error().stage, shadowBytes.error().message);
     auto representationHandle = MakeRepresentationHandle(package, *epoch, 1);
     auto historyHandle = MakeHistoryHandle(package, *epoch, 1);
     return base::Success<Session, Error>(Session(
         std::move(package), *epoch,
-        std::move(representationHandle), std::move(historyHandle)));
+        std::move(representationHandle), std::move(historyHandle),
+        std::vector<std::byte>(shadowBytes.value(), std::byte{0})));
 }
 
 std::optional<canonical::HistoryValidityIdentity> Session::AcceptedHistoryIdentity() const noexcept
@@ -100,6 +124,46 @@ base::Expected<void, Error> Session::ValidateForSubmission(
     if (invocation.NextHistory().Universe().value() != package_.DynamicContract().universeCount)
         return Fail<void>("RuntimeSession", "CompositionがCanonicalな順序または識別子規則に違反しています。");
 
+    const auto& contract = package_.DynamicContract();
+    const auto& payload = invocation.ExecutionPayload();
+    if (payload.mode != contract.executionMode || payload.targetLeaf != contract.targetLeaf ||
+        payload.targetDynamicSlot != contract.targetDynamicSlot ||
+        payload.memberBytes != contract.memberBytes)
+        return Fail<void>("RuntimeSession/DynamicExecution",
+            "Frozen Invocationのexecution routeがComposition契約と一致しません。");
+    if (payload.identity != invocation.Artifact().ExecutionPayloadIdentity())
+        return Fail<void>("RuntimeSession/DynamicExecution",
+            "Frozen Invocationのexecution payload identityが一致しません。");
+    const auto computedPayloadIdentity = dynamic::ComputeDynamicExecutionPayloadIdentityV1(
+        payload.mode, payload.targetLeaf, payload.targetDynamicSlot,
+        payload.memberBytes, payload.updates);
+    if (computedPayloadIdentity != payload.identity)
+        return Fail<void>("RuntimeSession/DynamicExecution",
+            "Frozen Invocationのexecution payloadがSealされたidentityと一致しません。");
+    if (invocation.Decision().indirectWorkCount.value() !=
+        invocation.Decision().transitionRecords.size())
+        return Fail<void>("RuntimeSession/DynamicExecution",
+            "Verified transition countがtransition record数と一致しません。");
+
+    if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
+    {
+        if (!payload.updates.empty())
+            return Fail<void>("RuntimeSession/DynamicExecution",
+                "Authority-only Invocationへexecution payloadを適用できません。");
+    }
+    else if (contract.executionMode == composition::DynamicExecutionModeV1::VerifiedDenseSlot)
+    {
+        auto expectedShadowBytes = DenseShadowBytes(contract);
+        if (!expectedShadowBytes || dynamicExecutionShadow_.size() != expectedShadowBytes.value())
+            return Fail<void>("RuntimeSession/DynamicExecution",
+                "Dynamic execution shadowがComposition契約と一致しません。");
+    }
+    else
+    {
+        return Fail<void>("RuntimeSession/DynamicExecution",
+            "未対応のDynamic execution modeです。");
+    }
+
     if (history_)
     {
         if (invocation.Mode() != dynamic::InvocationModeV1::ContinueHistory)
@@ -121,16 +185,91 @@ base::Expected<void, Error> Session::ValidateForSubmission(
     return base::Success<void, Error>();
 }
 
-void Session::CommitSubmission(const dynamic::FrozenDynamicInvocationPackage& invocation)
+base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecution(
+    const dynamic::FrozenDynamicInvocationPackage& invocation) const
+{
+    const auto& contract = package_.DynamicContract();
+    if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
+        return base::Success<PreparedDynamicExecutionV1, Error>({});
+    if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot)
+        return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
+            "未対応のDynamic execution modeです。");
+
+    PreparedDynamicExecutionV1 prepared;
+    prepared.hasBinding = true;
+    prepared.leaf = contract.targetLeaf;
+    prepared.slot = contract.targetDynamicSlot;
+    prepared.denseSlotBytes = dynamicExecutionShadow_;
+
+    const auto& decision = invocation.Decision();
+    const auto& payloads = invocation.ExecutionPayload().updates;
+    std::size_t updateCursor = 0;
+    std::uint32_t previousMember = package::InvalidIndex;
+    bool hasPreviousMember = false;
+
+    for (const auto& record : decision.transitionRecords)
+    {
+        const auto member = record.member.value();
+        if (member >= contract.universeCount ||
+            (hasPreviousMember && member <= previousMember))
+            return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
+                "Transition recordがCanonicalなmember順序に違反しています。");
+        previousMember = member;
+        hasPreviousMember = true;
+
+        const auto offset = static_cast<std::size_t>(member) * contract.memberBytes;
+        auto destination = std::span<std::byte>(prepared.denseSlotBytes).subspan(
+            offset, contract.memberBytes);
+        if (record.action == dynamic::TransitionActionV1::Update)
+        {
+            if (updateCursor >= payloads.size() ||
+                payloads[updateCursor].member.value() != member ||
+                payloads[updateCursor].bytes.size() != contract.memberBytes)
+                return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
+                    "Update transitionとexecution payloadが一対一に対応していません。");
+            std::copy(payloads[updateCursor].bytes.begin(),
+                payloads[updateCursor].bytes.end(), destination.begin());
+            ++updateCursor;
+        }
+        else if (record.action == dynamic::TransitionActionV1::Clear)
+        {
+            std::fill(destination.begin(), destination.end(), std::byte{0});
+        }
+        else
+        {
+            return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
+                "未対応のDynamic transition actionです。");
+        }
+        ++prepared.appliedTransitionCount;
+    }
+
+    if (updateCursor != payloads.size() ||
+        prepared.appliedTransitionCount != decision.indirectWorkCount.value())
+        return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
+            "Verified execution payloadの全要素がexact transitionへ対応していません。");
+
+    return base::Success<PreparedDynamicExecutionV1, Error>(std::move(prepared));
+}
+
+void Session::CommitSubmission(
+    const dynamic::FrozenDynamicInvocationPackage& invocation,
+    PreparedDynamicExecutionV1 prepared)
 {
     history_ = invocation.NextHistory();
     recoverySeedRequired_ = false;
+    if (prepared.hasBinding)
+        dynamicExecutionShadow_ = std::move(prepared.denseSlotBytes);
 }
 
 void Session::RebuildHandles()
 {
     representationHandle_ = MakeRepresentationHandle(package_, deviceEpoch_, runtimeGeneration_);
     historyHandle_ = MakeHistoryHandle(package_, deviceEpoch_, runtimeGeneration_);
+}
+
+void Session::ResetDynamicExecutionShadow()
+{
+    std::fill(dynamicExecutionShadow_.begin(), dynamicExecutionShadow_.end(), std::byte{0});
 }
 
 void Session::ApplyRecoveryState(
@@ -145,6 +284,7 @@ void Session::ApplyRecoveryState(
     state_ = state;
     ++runtimeGeneration_;
     history_.reset();
+    ResetDynamicExecutionShadow();
     externalStateBound_ = false;
     recoverySeedRequired_ = rematerialized || state == DeviceRuntimeState::AwaitingAdapter;
     RebuildHandles();

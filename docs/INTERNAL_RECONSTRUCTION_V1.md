@@ -1,6 +1,6 @@
 # Internal Source Reconstruction v1.4
 
-> Status note: 本文はv1.4時点のSource reconstruction記録である。第9章で別作業として延期したmajor 2平坦化は、Frozen Composition ABI 2.0で完了した。現行Production形式は`SGE4UNI 2.0`であり、詳細は`FROZEN_COMPOSITION_ABI_2_0.md`を参照する。
+> Status note: 本文はv1.4時点のSource reconstruction記録である。第9章で別作業として延期したmajor 2平坦化は、Frozen Composition ABI 2.0で完了した。現行Production形式は`SGE4UNI 2.1`であり、詳細は`FROZEN_COMPOSITION_ABI_2_0.md`を参照する。
 
 ## 1. Baseline
 
@@ -120,7 +120,7 @@ Source reconstructionとABI major更新を同時に行わない。
 - Leaf Package: Schema 17を維持
 - inner Composition:既存完全Composition formatを維持
 - outer Composition: `SGE4UNI` major 1、minor 1
-- Dynamic Invocation: `SGE4INV` major 1／minor 1
+- Dynamic Invocation: `SGE4INV` major 1／minor 2
 
 major 2への平坦化は、新能力ではなくても別のABI migrationとして扱う。
 
