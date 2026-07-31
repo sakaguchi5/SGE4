@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{BB7B984E-0429-549B-859A-BD6EC222931A}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{7168D4EC-A98C-5DE4-8399-94023092C842}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\fixtures\leaf\SemanticBuilder.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\fixtures\RuntimeFixture.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\fixtures\UnifiedFixture.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\fixtures\leaf\SemanticBuilder.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

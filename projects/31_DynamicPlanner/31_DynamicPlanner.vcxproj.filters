@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{35B069A6-E85A-5C83-BCCF-6DDDCD3A0E96}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{6580E0C1-BFFE-5759-A325-A6B7F699B4A9}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\dynamic\planner\DynamicInvocationPlanner.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\dynamic\planner\DynamicInvocationPlanner.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

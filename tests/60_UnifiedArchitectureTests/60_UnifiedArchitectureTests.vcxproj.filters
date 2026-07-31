@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{4DB7D2A0-E3DE-5A05-A512-D39055C48CDC}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{EA81DA5B-7C7F-57CC-9572-FA91E315FD2A}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Abi1GoldenBytes.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\fixtures\leaf\SemanticBuilder.cpp"><Filter>Source Files</Filter></ClCompile>
+  <ClCompile Include="Abi2CorruptionTests.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="Abi2PortableSelfTest.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Abi1GoldenBytes.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\fixtures\RuntimeFixture.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\fixtures\UnifiedFixture.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\fixtures\leaf\SemanticBuilder.h"><Filter>Header Files</Filter></ClInclude>
+  <ClInclude Include="Abi2CorruptionTests.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="Abi2PortableSelfTest.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

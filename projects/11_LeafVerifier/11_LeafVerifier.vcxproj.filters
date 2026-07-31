@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{8BA86F05-C895-588D-A582-21709743BAD4}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{4D4D5AD4-9693-5F13-B30C-026F511CE77A}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\leaf\verifier\ExecutionPlanVerifier.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\leaf\verifier\ExecutionPlanVerifier.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

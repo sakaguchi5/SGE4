@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <LanguageStandard>stdcpplatest</LanguageStandard>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

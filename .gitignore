@@ -1,12 +1,6 @@
-.vs/
-build/
+/build/
+/.vs/
 *.user
 *.suo
 *.VC.db
 *.VC.opendb
-*.sgep
-*.sgedbg
-
-# Qualification logs are intentional, reviewable Git evidence.
-!docs/test-logs/
-!docs/test-logs/*.log

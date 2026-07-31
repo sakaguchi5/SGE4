@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{D1A5F219-0297-5043-8B3A-415AF7FF18F8}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{D1EE74BE-3E9B-58C6-BD28-993AC0577C25}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\runtime\core\package\PackageRuntime.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\runtime\session\RuntimeSession.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\runtime\core\package\PackageRuntime.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\runtime\session\RuntimeSession.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

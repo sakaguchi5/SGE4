@@ -1,0 +1,8 @@
+Base commit: f802c12b162569a869c214da22b80142b3a4a0dd
+Purpose: Close Spiral 7, index external CU6-2 evidence, and establish the sole Level 4 v2 reconstruction entry point.
+Tracked deletions: None.
+Reason: Existing staged Verifiers intentionally bind the historical CU package layout. Physical retirement is deferred until v2 migration proof R7.
+Git operations: None.
+Changed/new file count: 25
+Package file hashes: docs/level4v2/PACKAGE_FILES.sha256
+Application: run_sge4_5_pre_level4v2_prepare.bat, then run_sge4_5_spiral7_reference_gate.bat

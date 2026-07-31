@@ -1,0 +1,573 @@
+{
+  "schema": "SGE4.Level4V2.R6InvariantMigrationLedger.V1",
+  "baseCommit": "527cc0b2ed4c01c76ebfdef5c277f6c39b654024",
+  "sourceInvariantCount": 40,
+  "terminalOutcomeCount": 40,
+  "allowedTerminalOutcomes": [
+    "Reproduced",
+    "VersionedReplacement",
+    "ExplicitlyNotCarriedWithOwnerReason"
+  ],
+  "entries": [
+    {
+      "id": "V2-R0-I001",
+      "canonicalName": "SemanticExecutionSeparation",
+      "owner": "CanonicalSemantic",
+      "destination": "R1CanonicalVocabulary",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R1CanonicalVocabulary",
+      "evidenceIds": [
+        "R1"
+      ],
+      "migrationCases": [
+        "C01-SemanticExecutionSeparation"
+      ]
+    },
+    {
+      "id": "V2-R0-I002",
+      "canonicalName": "ExplicitDynamicInvocationInputs",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C09-ExplicitDynamicInvocation"
+      ]
+    },
+    {
+      "id": "V2-R0-I003",
+      "canonicalName": "ExternalMembershipAuthority",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C10-ExternalMembership"
+      ]
+    },
+    {
+      "id": "V2-R0-I004",
+      "canonicalName": "ExactTransitionAlgebra",
+      "owner": "CanonicalSemantic",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C11-ExactTransitionAlgebra"
+      ]
+    },
+    {
+      "id": "V2-R0-I005",
+      "canonicalName": "FirstInvocationFullActiveRule",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C12-FirstFullActiveSeed"
+      ]
+    },
+    {
+      "id": "V2-R0-I006",
+      "canonicalName": "NoGamePolicyInference",
+      "owner": "CanonicalSemantic",
+      "destination": "R1CanonicalVocabulary",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R1CanonicalVocabulary",
+      "evidenceIds": [
+        "R1"
+      ],
+      "migrationCases": [
+        "C01-SemanticExecutionSeparation"
+      ]
+    },
+    {
+      "id": "V2-R0-I007",
+      "canonicalName": "RawCandidateCannotExecute",
+      "owner": "CandidateProposal",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I008",
+      "canonicalName": "PlannerHasNoSealAuthority",
+      "owner": "CandidatePlanner",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I009",
+      "canonicalName": "PlannerIndependentVerification",
+      "owner": "IndependentVerifier",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I010",
+      "canonicalName": "OpaqueVerifiedPlan",
+      "owner": "IndependentVerifier",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I011",
+      "canonicalName": "DeterministicFrozenIdentity",
+      "owner": "FrozenArtifact",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C04-FrozenIdentityBinding"
+      ]
+    },
+    {
+      "id": "V2-R0-I012",
+      "canonicalName": "ResourceIdentityBinding",
+      "owner": "FrozenArtifact",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C04-FrozenIdentityBinding"
+      ]
+    },
+    {
+      "id": "V2-R0-I013",
+      "canonicalName": "TargetBindingAuthority",
+      "owner": "IndependentVerifier",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I014",
+      "canonicalName": "FiniteBufferDagComposition",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R3CanonicalComposition",
+      "evidenceIds": [
+        "R3"
+      ],
+      "migrationCases": [
+        "C05-FiniteBufferDag"
+      ]
+    },
+    {
+      "id": "V2-R0-I015",
+      "canonicalName": "SingleWriterFlow",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R3CanonicalComposition",
+      "evidenceIds": [
+        "R3"
+      ],
+      "migrationCases": [
+        "C05-FiniteBufferDag"
+      ]
+    },
+    {
+      "id": "V2-R0-I016",
+      "canonicalName": "OptionalSinglePresenter",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R3CanonicalComposition",
+      "evidenceIds": [
+        "R3"
+      ],
+      "migrationCases": [
+        "C06-OptionalPresenter"
+      ]
+    },
+    {
+      "id": "V2-R0-I017",
+      "canonicalName": "SingleAdapterScope",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R3CanonicalComposition",
+      "evidenceIds": [
+        "R3"
+      ],
+      "migrationCases": [
+        "C07-SingleAdapterBoundary"
+      ]
+    },
+    {
+      "id": "V2-R0-I018",
+      "canonicalName": "WholeCompositionRecoveryScope",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C08-WholeCompositionRecovery"
+      ]
+    },
+    {
+      "id": "V2-R0-I019",
+      "canonicalName": "NoUnprovenCompositionGeneralization",
+      "owner": "CanonicalComposition",
+      "destination": "R3CanonicalComposition",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R3CanonicalComposition",
+      "evidenceIds": [
+        "R3"
+      ],
+      "migrationCases": [
+        "C07-SingleAdapterBoundary"
+      ]
+    },
+    {
+      "id": "V2-R0-I020",
+      "canonicalName": "StrongDynamicDimensions",
+      "owner": "CanonicalVocabulary",
+      "destination": "R1CanonicalVocabulary",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R1CanonicalVocabulary",
+      "evidenceIds": [
+        "R1"
+      ],
+      "migrationCases": [
+        "C02-StrongVocabulary"
+      ]
+    },
+    {
+      "id": "V2-R0-I021",
+      "canonicalName": "VerifiedIndirectQuantity",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C13-VerifiedIndirectQuantity"
+      ]
+    },
+    {
+      "id": "V2-R0-I022",
+      "canonicalName": "ExplicitHistoryValidity",
+      "owner": "CanonicalHistory",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C14-ExplicitHistory"
+      ]
+    },
+    {
+      "id": "V2-R0-I023",
+      "canonicalName": "ExactSparseMembership",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C15-ExactSparseMembership"
+      ]
+    },
+    {
+      "id": "V2-R0-I024",
+      "canonicalName": "SparseTemporalDeltaAuthority",
+      "owner": "CanonicalInvocation",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C16-SparseTemporalWriteSet"
+      ]
+    },
+    {
+      "id": "V2-R0-I025",
+      "canonicalName": "ExactIncrementalWriteSet",
+      "owner": "IndependentVerifier",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C16-SparseTemporalWriteSet"
+      ]
+    },
+    {
+      "id": "V2-R0-I026",
+      "canonicalName": "RetainedHistoryByteStability",
+      "owner": "CanonicalHistory",
+      "destination": "R4DynamicInvocationAndHistory",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R4DynamicInvocationAndHistory",
+      "evidenceIds": [
+        "R4"
+      ],
+      "migrationCases": [
+        "C14-ExplicitHistory"
+      ]
+    },
+    {
+      "id": "V2-R0-I027",
+      "canonicalName": "EpochBoundRuntimeHandles",
+      "owner": "CanonicalRuntime",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C17-EpochBoundHandles"
+      ]
+    },
+    {
+      "id": "V2-R0-I028",
+      "canonicalName": "RecoveryInvalidatesTemporalState",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C18-RecoveryInvalidatesTemporalState"
+      ]
+    },
+    {
+      "id": "V2-R0-I029",
+      "canonicalName": "ExplicitExternalRecoveryRebind",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C19-ExplicitExternalRebind"
+      ]
+    },
+    {
+      "id": "V2-R0-I030",
+      "canonicalName": "FullActiveRecoverySeed",
+      "owner": "CanonicalRecovery",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C20-RecoverySeed"
+      ]
+    },
+    {
+      "id": "V2-R0-I031",
+      "canonicalName": "RemovedAdapterExclusion",
+      "owner": "CanonicalRuntime",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C21-RemovedAdapterExclusion"
+      ]
+    },
+    {
+      "id": "V2-R0-I032",
+      "canonicalName": "CorrectnessMeasurementSeparation",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R6MigrationCorpus",
+      "evidenceIds": [
+        "ARCH"
+      ],
+      "migrationCases": [
+        "C22-CorrectnessMeasurementSeparation"
+      ]
+    },
+    {
+      "id": "V2-R0-I033",
+      "canonicalName": "MeasurementIdentityBinding",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R6MigrationCorpus",
+      "evidenceIds": [
+        "OBS-BUNDLE"
+      ],
+      "migrationCases": [
+        "C23-ObservationIdentityAndPairedDecision"
+      ]
+    },
+    {
+      "id": "V2-R0-I034",
+      "canonicalName": "PairedDecisionAuthority",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R6MigrationCorpus",
+      "evidenceIds": [
+        "OBS-BUNDLE"
+      ],
+      "migrationCases": [
+        "C23-ObservationIdentityAndPairedDecision"
+      ]
+    },
+    {
+      "id": "V2-R0-I035",
+      "canonicalName": "NoRuntimePerformancePolicy",
+      "owner": "CanonicalRuntime",
+      "destination": "R5RuntimeAndRecovery",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R5RuntimeAndRecovery",
+      "evidenceIds": [
+        "R5C"
+      ],
+      "migrationCases": [
+        "C24-NoRuntimePerformancePolicy"
+      ]
+    },
+    {
+      "id": "V2-R0-I036",
+      "canonicalName": "ExternalRawEvidenceRetention",
+      "owner": "QualificationEvidence",
+      "destination": "R6MigrationCorpus",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R6MigrationCorpus",
+      "evidenceIds": [
+        "OBS-BUNDLE"
+      ],
+      "migrationCases": [
+        "C25-ExternalRawEvidenceRetention"
+      ]
+    },
+    {
+      "id": "V2-R0-I037",
+      "canonicalName": "ReferenceRetentionUntilMigrationProof",
+      "owner": "MigrationProgram",
+      "destination": "R7ReferenceRetirement",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R6MigrationCorpus",
+      "evidenceIds": [
+        "RETENTION"
+      ],
+      "migrationCases": [
+        "C26-ReferenceRetentionUntilDecision"
+      ]
+    },
+    {
+      "id": "V2-R0-I038",
+      "canonicalName": "SingleFactOwnership",
+      "owner": "CanonicalVocabulary",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I039",
+      "canonicalName": "RepresentationChoiceRemainsVerified",
+      "owner": "CandidateProposal",
+      "destination": "R2UnifiedAuthorityChain",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R2UnifiedAuthorityChain",
+      "evidenceIds": [
+        "R2"
+      ],
+      "migrationCases": [
+        "C03-UnifiedAuthority"
+      ]
+    },
+    {
+      "id": "V2-R0-I040",
+      "canonicalName": "NoHardwarePolicyInCanonicalAbi",
+      "owner": "CanonicalVocabulary",
+      "destination": "R1CanonicalVocabulary",
+      "terminalOutcome": "Reproduced",
+      "terminalAt": "R1CanonicalVocabulary",
+      "evidenceIds": [
+        "R1"
+      ],
+      "migrationCases": [
+        "C01-SemanticExecutionSeparation"
+      ]
+    }
+  ]
+}

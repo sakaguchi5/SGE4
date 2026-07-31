@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{31A420DC-8636-5B0A-B932-989EE82CD2BA}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{1139F6DD-FEA0-53EA-BAF3-AAB6E915C5F8}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\leaf\planner\CandidatePlanner.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\leaf\planner\CandidatePlanner.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

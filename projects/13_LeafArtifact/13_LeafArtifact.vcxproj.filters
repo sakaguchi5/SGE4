@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{6FEA970E-E604-53A8-BC77-8DA69FF315F3}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{93DF541D-EE59-5FED-BCE8-46EA942F83F5}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\backends\d3d12\artifact\D3D12Encoding.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\artifact\LeafCertificate.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\artifact\package\FrozenExecutablePackage.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\artifact\package\PackageDigest.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\artifact\package\PackageReader.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\artifact\package\PackageWriter.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\backends\d3d12\artifact\D3D12Encoding.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\artifact\D3D12Schema.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\artifact\LeafCertificate.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\artifact\package\FrozenExecutablePackage.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\artifact\package\PackageDigest.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\artifact\package\PackageFormat.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\artifact\package\PackageReader.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\artifact\package\PackageWriter.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\backends\d3d12\artifact\detail\EncodingOperationPayloads.inl" />
+    <None Include="..\..\src\backends\d3d12\artifact\detail\EncodingPackageCodec.inl" />
+    <None Include="..\..\src\backends\d3d12\artifact\detail\EncodingRecordDecoders.inl" />
+    <None Include="..\..\src\backends\d3d12\artifact\detail\EncodingSchemaAndTables.inl" />
+    <None Include="..\..\src\backends\d3d12\artifact\detail\EncodingValidation.inl" />
+  </ItemGroup>
+</Project>

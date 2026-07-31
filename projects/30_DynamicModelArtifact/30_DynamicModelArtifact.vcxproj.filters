@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{88E44D6C-FCD4-58DD-B0DF-D957D44252C0}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{1F9EAE0D-7508-5707-8148-5CA5DCDE449D}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\dynamic\artifact\DynamicInvocationPackage.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\dynamic\artifact\FrozenInvocationHistory.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\dynamic\model\DynamicInvocationModel.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\dynamic\artifact\DynamicInvocationPackage.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\dynamic\artifact\FrozenInvocationHistory.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\dynamic\model\DynamicInvocationModel.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

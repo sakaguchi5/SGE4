@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{497F706D-0FAF-5798-9C34-A0CC1CA9440D}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{82E47108-F689-5E21-9305-FA8630DCD29A}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\leaf\model\analysis\SemanticAnalysis.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\model\compilation\CompilationInput.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\model\plan\ExecutionPlanModel.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\leaf\model\semantic\SemanticModel.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\leaf\model\analysis\SemanticAnalysis.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\model\compilation\CompilationInput.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\model\plan\ExecutionPlanModel.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\leaf\model\semantic\SemanticModel.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

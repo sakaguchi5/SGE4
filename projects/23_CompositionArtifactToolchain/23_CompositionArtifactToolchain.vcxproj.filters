@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{77E083FE-D2F4-5923-BB12-7C82049B0E4F}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{98EA0539-FC02-5C15-B128-2A26ABB8BC1B}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\composition\migration\abi1\container\FrozenComposition.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\migration\abi1\container\FrozenCompositionDigest.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\migration\abi1\container\FrozenCompositionReader.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\migration\abi1\container\FrozenCompositionWriter.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\artifact\VerifiedCompositionArtifact.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\artifact\CompositionCertificate.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\toolchain\CompositionToolchain.cpp"><Filter>Source Files</Filter></ClCompile>
+  <ClCompile Include="..\..\src\composition\artifact\abi2\FrozenCompositionAbi2.cpp"><Filter>Source Files</Filter></ClCompile><ClCompile Include="..\..\src\composition\migration\abi1\FrozenCompositionAbi1Migration.cpp"><Filter>Source Files</Filter></ClCompile></ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\composition\migration\abi1\container\FrozenComposition.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\migration\abi1\container\FrozenCompositionDigest.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\migration\abi1\container\FrozenCompositionFormat.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\migration\abi1\container\FrozenCompositionReader.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\migration\abi1\container\FrozenCompositionWriter.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\artifact\VerifiedCompositionArtifact.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\artifact\CompositionCertificate.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\toolchain\CompositionToolchain.h"><Filter>Header Files</Filter></ClInclude>
+  <ClInclude Include="..\..\src\composition\artifact\abi2\FrozenCompositionAbi2.h"><Filter>Header Files</Filter></ClInclude><ClInclude Include="..\..\src\composition\migration\abi1\FrozenCompositionAbi1Migration.h"><Filter>Header Files</Filter></ClInclude></ItemGroup>
+</Project>

@@ -1,0 +1,44 @@
+SGE4 Level 4 v2 R1 Canonical Vocabulary Package
+
+Base commit:
+  b8b5b4f675e4186a3ae202d718e091b63c53e264
+
+Purpose:
+  Implement the R0-frozen neutral Canonical vocabulary and compile-time boundaries.
+
+New files:
+  189_Level4V2CanonicalVocabulary/189_Level4V2CanonicalVocabulary.vcxproj
+  189_Level4V2CanonicalVocabulary/CanonicalVocabulary.cpp
+  189_Level4V2CanonicalVocabulary/CanonicalVocabulary.h
+  190_Level4V2CanonicalVocabularyTests/190_Level4V2CanonicalVocabularyTests.vcxproj
+  190_Level4V2CanonicalVocabularyTests/main.cpp
+  docs/level4v2/APPLY_R1_JA.md
+  docs/level4v2/R1_CANONICAL_VOCABULARY.md
+  docs/level4v2/R1_CANONICAL_VOCABULARY_MANIFEST_V1.json
+  docs/level4v2/R1_CHANGESET.md
+  docs/level4v2/R1_EVIDENCE_LEDGER_V1.md
+  docs/level4v2/R1_NEGATIVE_TEST_MATRIX_V1.md
+  docs/level4v2/R1_PACKAGE_FILES.sha256
+  docs/level4v2/R1_PACKAGE_MANIFEST.txt
+  docs/level4v2/R1_TYPE_OWNERSHIP_V1.md
+  docs/level4v2/R2_UNIFIED_AUTHORITY_ENTRY_CONTRACT_V1.md
+  run_sge4_5_level4v2_r1_canonical_vocabulary.bat
+  run_sge4_5_level4v2_r1_prepare.bat
+  tests/Run-Level4V2R1.ps1
+  tests/tools/Register-Level4V2R1Projects.ps1
+  tests/tools/Verify-Level4V2R1.ps1
+
+Changed files:
+  docs/level4v2/CANONICAL_RECONSTRUCTION_INPUT_V1.json
+  docs/level4v2/README.md
+  docs/level4v2/RECONSTRUCTION_ROADMAP_V1.md
+  tests/tools/Verify-Level4V2R0.ps1
+
+Deleted files:
+  None
+
+Git operations:
+  None
+
+Build outputs:
+  Not included

@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals"><VCProjectVersion>18.0</VCProjectVersion><Keyword>Win32Proj</Keyword><ProjectGuid>{C4676F97-9EEE-5414-A7BB-0A85A42F0233}</ProjectGuid><RootNamespace>60_UnifiedArchitectureTests</RootNamespace><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>true</UseDebugLibraries><PlatformToolset>v145</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration"><ConfigurationType>Application</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>v145</PlatformToolset><WholeProgramOptimization>true</WholeProgramOptimization><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" /><ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets"><Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" /></ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup><OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\</OutDir><IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir><TargetName>$(ProjectName)</TargetName></PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile><WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck><ConformanceMode>true</ConformanceMode><LanguageStandard>stdcpplatest</LanguageStandard><MultiProcessorCompilation>true</MultiProcessorCompilation><FloatingPointModel>Strict</FloatingPointModel><PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions><RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary><AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions></ClCompile>
+      <Link><SubSystem>Console</SubSystem></Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile><WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck><ConformanceMode>true</ConformanceMode><LanguageStandard>stdcpplatest</LanguageStandard><MultiProcessorCompilation>true</MultiProcessorCompilation><FloatingPointModel>Strict</FloatingPointModel><PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions><RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary><FunctionLevelLinking>true</FunctionLevelLinking><IntrinsicFunctions>true</IntrinsicFunctions><AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions></ClCompile>
+      <Link><SubSystem>Console</SubSystem></Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp"><ObjectFileName>$(IntDir)tests_60_UnifiedArchitectureTests_main_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="Abi1GoldenBytes.cpp"><ObjectFileName>$(IntDir)tests_60_UnifiedArchitectureTests_Abi1GoldenBytes_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="..\fixtures\leaf\SemanticBuilder.cpp"><ObjectFileName>$(IntDir)tests_fixtures_leaf_SemanticBuilder_cpp.obj</ObjectFileName></ClCompile>
+  <ClCompile Include="Abi2CorruptionTests.cpp" />
+    <ClCompile Include="Abi2PortableSelfTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Abi1GoldenBytes.h" />
+    <ClInclude Include="..\fixtures\RuntimeFixture.h" />
+    <ClInclude Include="..\fixtures\UnifiedFixture.h" />
+    <ClInclude Include="..\fixtures\leaf\SemanticBuilder.h" />
+  <ClInclude Include="Abi2CorruptionTests.h" />
+    <ClInclude Include="Abi2PortableSelfTest.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\projects\01_CanonicalCore\01_CanonicalCore.vcxproj"><Project>{3A074190-6A50-58EA-8E86-F3D9A9961044}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\10_LeafModel\10_LeafModel.vcxproj"><Project>{CB8BC547-281B-5B59-B0AC-6B69DBDF2EAA}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\11_LeafVerifier\11_LeafVerifier.vcxproj"><Project>{CD3B3996-F609-51B2-B83D-4B513EDB54F2}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\12_LeafPlanner\12_LeafPlanner.vcxproj"><Project>{BE4D2E5F-4F2D-5CB4-866A-0CFFED64BF4C}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\13_LeafArtifact\13_LeafArtifact.vcxproj"><Project>{5F78977B-9960-547A-AEBB-BFCCC158EA82}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\20_CompositionModel\20_CompositionModel.vcxproj"><Project>{411CE66B-5A3B-5B2D-902E-4B84EFC0070D}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\21_CompositionPlanner\21_CompositionPlanner.vcxproj"><Project>{1D6036F3-E05F-5B69-948D-A06A388E61AD}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\22_CompositionVerifier\22_CompositionVerifier.vcxproj"><Project>{FFB9B28A-0F45-5DD5-95F5-DF0C1A379D4E}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\23_CompositionArtifactToolchain\23_CompositionArtifactToolchain.vcxproj"><Project>{C5CC0D49-6224-59DD-B6C4-2D941FD3EF95}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\30_DynamicModelArtifact\30_DynamicModelArtifact.vcxproj"><Project>{30B5DA14-F50E-5914-8DC3-F588CA0788EA}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\31_DynamicPlanner\31_DynamicPlanner.vcxproj"><Project>{B464001E-05DF-55E3-9323-160F080A2B4E}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\32_DynamicVerifier\32_DynamicVerifier.vcxproj"><Project>{B009AD27-36B1-5FEE-A5D7-84E535871E62}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\40_RuntimeCore\40_RuntimeCore.vcxproj"><Project>{0613CA26-493C-57B0-B6E7-0E064E6FAB48}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\50_D3D12Compiler\50_D3D12Compiler.vcxproj"><Project>{5F6B5156-528E-5DD3-8A14-CF4533A4A63A}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\..\projects\51_D3D12Executor\51_D3D12Executor.vcxproj"><Project>{5CEB7F4A-F866-5203-8D51-28A5E872A023}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

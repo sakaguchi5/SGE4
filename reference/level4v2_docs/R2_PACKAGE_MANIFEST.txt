@@ -1,0 +1,13 @@
+Level 4 v2 R2 Unified Authority Chain
+Base commit: eee68ce6e9be5537d3041964679e55f4c5d2c448
+
+Purpose:
+- implement one legal Raw -> Planner -> independent Verifier -> Verified -> Frozen authority chain,
+- reject identity, operation, Target, resource-contract and write-set mutation/replay,
+- preserve Schema 17, Runtime 17, Backend, Composition and Runtime-policy boundaries.
+
+Tracked deletions: none.
+Git operations: none.
+Build outputs included: none.
+
+Package files: 34. Hash-index entries: 33 (the hash index excludes itself).

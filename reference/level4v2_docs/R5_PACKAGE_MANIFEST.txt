@@ -1,0 +1,14 @@
+SGE4 Level 4 v2 R5 Runtime and Recovery package
+Base commit: 7562b0f51fcd09b3840f36a4725734218b291e52
+
+Scope:
+- R4 verified mode projection
+- Backend-neutral Frozen-only materialization and submission
+- Device-epoch handles and stale rejection
+- explicit external rebind
+- whole-composition controlled recovery
+- actual-removal exclusion and AwaitingAdapter
+- Canonical deterministic tests
+- Windows WARP retained-Backend qualification
+
+No Git operation, reference deletion, Schema 17 mutation, Runtime 17 mutation or Runtime Candidate-performance policy is included.

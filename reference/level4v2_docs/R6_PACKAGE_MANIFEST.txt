@@ -1,0 +1,10 @@
+Level 4 v2 R6 Migration Corpus overlay
+Base commit: 527cc0b2ed4c01c76ebfdef5c277f6c39b654024
+Mode: ReconstructionNotNewCapability
+New capability: None
+New Projects: 212-213
+Deleted files: None
+Git operations: None
+Build artifacts included: None
+Runtime Candidate-policy authorization: None
+Reference Project deletion: None

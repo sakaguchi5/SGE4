@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{19B6CD5B-F436-5C3E-AB46-562E5393D045}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{4950E76A-40A2-5D47-AF11-8E2A56B3A4C9}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+</Project>

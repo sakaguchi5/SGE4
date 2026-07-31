@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals"><VCProjectVersion>18.0</VCProjectVersion><Keyword>Win32Proj</Keyword><ProjectGuid>{5CEB7F4A-F866-5203-8D51-28A5E872A023}</ProjectGuid><RootNamespace>51_D3D12Executor</RootNamespace><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration"><ConfigurationType>StaticLibrary</ConfigurationType><UseDebugLibraries>true</UseDebugLibraries><PlatformToolset>v145</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration"><ConfigurationType>StaticLibrary</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries><PlatformToolset>v145</PlatformToolset><WholeProgramOptimization>true</WholeProgramOptimization><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" /><ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets"><Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" /></ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup><OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\</OutDir><IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir><TargetName>$(ProjectName)</TargetName></PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile><WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck><ConformanceMode>true</ConformanceMode><LanguageStandard>stdcpplatest</LanguageStandard><MultiProcessorCompilation>true</MultiProcessorCompilation><FloatingPointModel>Strict</FloatingPointModel><PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions><RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary><AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions></ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile><WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck><ConformanceMode>true</ConformanceMode><LanguageStandard>stdcpplatest</LanguageStandard><MultiProcessorCompilation>true</MultiProcessorCompilation><FloatingPointModel>Strict</FloatingPointModel><PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions><RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary><FunctionLevelLinking>true</FunctionLevelLinking><IntrinsicFunctions>true</IntrinsicFunctions><AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions></ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\backends\d3d12\executor\Executor.cpp"><ObjectFileName>$(IntDir)src_backends_d3d12_executor_Executor_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\Runtime.cpp"><ObjectFileName>$(IntDir)src_backends_d3d12_runtime_Runtime_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\composition\CompositionRuntime.cpp"><ObjectFileName>$(IntDir)src_backends_d3d12_runtime_composition_CompositionRuntime_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\device\CompositionDeviceDomain.cpp"><ObjectFileName>$(IntDir)src_backends_d3d12_runtime_device_CompositionDeviceDomain_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\recovery\CompositionRecovery.cpp"><ObjectFileName>$(IntDir)src_backends_d3d12_runtime_recovery_CompositionRecovery_cpp.obj</ObjectFileName></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\resources\CompositionSharedResources.cpp"><ObjectFileName>$(IntDir)src_backends_d3d12_runtime_resources_CompositionSharedResources_cpp.obj</ObjectFileName></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\backends\d3d12\executor\Executor.h" />
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\Runtime.h" />
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\RuntimeTypes.h" />
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\composition\CompositionRuntime.h" />
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\device\CompositionDeviceDomain.h" />
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\recovery\CompositionRecovery.h" />
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\resources\CompositionSharedResources.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\01_CanonicalCore\01_CanonicalCore.vcxproj"><Project>{3A074190-6A50-58EA-8E86-F3D9A9961044}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\13_LeafArtifact\13_LeafArtifact.vcxproj"><Project>{5F78977B-9960-547A-AEBB-BFCCC158EA82}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\20_CompositionModel\20_CompositionModel.vcxproj"><Project>{411CE66B-5A3B-5B2D-902E-4B84EFC0070D}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\22_CompositionVerifier\22_CompositionVerifier.vcxproj"><Project>{FFB9B28A-0F45-5DD5-95F5-DF0C1A379D4E}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\23_CompositionArtifactToolchain\23_CompositionArtifactToolchain.vcxproj"><Project>{C5CC0D49-6224-59DD-B6C4-2D941FD3EF95}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\30_DynamicModelArtifact\30_DynamicModelArtifact.vcxproj"><Project>{30B5DA14-F50E-5914-8DC3-F588CA0788EA}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+    <ProjectReference Include="..\40_RuntimeCore\40_RuntimeCore.vcxproj"><Project>{0613CA26-493C-57B0-B6E7-0E064E6FAB48}</Project><ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorApi.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorDeviceDomain.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorDiagnostics.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorExternalResources.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorInstance.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

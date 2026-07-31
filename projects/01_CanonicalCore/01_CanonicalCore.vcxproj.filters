@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{CD2F1CAB-9F52-5ECA-9FEA-4CE712A2C979}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{47388222-D3FD-5633-AE20-7321CF0C52A9}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\canonical\artifact\SectionedArtifact.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\canonical\base\BinaryIO.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\canonical\base\FileIO.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\canonical\base\Sha256.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\canonical\identity\CanonicalVocabulary.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\canonical\artifact\SectionedArtifact.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\Base.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\BinaryIO.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\CheckedMath.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\FileIO.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\Expected.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\SchemaValidation.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\Sha256.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\base\StrongId.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\canonical\identity\CanonicalVocabulary.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,109 @@
+﻿current_path,class,target_owner,action,reason
+src/internal/00_Foundation/Base.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/BinaryIO.cpp,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/BinaryIO.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/CheckedMath.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/FileIO.cpp,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/FileIO.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/Result.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/Sha256.cpp,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/Sha256.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/00_Foundation/StrongId.h,B,src/canonical/base,移動・正本化,Result/BinaryIO/FileIO/SHA-256/checked math/StrongIdをCanonical Coreの基盤へ移す。
+src/internal/02_SemanticModel/SemanticModel.cpp,B,src/leaf/model,移動・正本化,Leaf内部Semantic Graphの正本。
+src/internal/02_SemanticModel/SemanticModel.h,B,src/leaf/model,移動・正本化,Leaf内部Semantic Graphの正本。
+src/internal/03_SemanticBuilder/SemanticBuilder.cpp,D,tests/fixtures/leaf,製品経路から分離,現在は製品14プロジェクトに含まれず、試験Fixtureからのみ利用。
+src/internal/03_SemanticBuilder/SemanticBuilder.h,D,tests/fixtures/leaf,製品経路から分離,現在は製品14プロジェクトに含まれず、試験Fixtureからのみ利用。
+src/internal/04_SemanticAnalysis/SemanticAnalysis.cpp,B,src/leaf/model,移動・正本化,Semantic依存・Lifetime解析の正本。
+src/internal/04_SemanticAnalysis/SemanticAnalysis.h,B,src/leaf/model,移動・正本化,Semantic依存・Lifetime解析の正本。
+src/internal/05A_CompilationInput/CompilationInput.cpp,B,src/leaf/model,移動・正本化,SemanticとTargetを結ぶ検証済み入力。
+src/internal/05A_CompilationInput/CompilationInput.h,B,src/leaf/model,移動・正本化,SemanticとTargetを結ぶ検証済み入力。
+src/internal/05_TargetContract/TargetModel.cpp,B,src/backends/d3d12/compiler,移動・改名,D3D12TargetProfileであり、汎用Leaf ModelではなくTarget Compiler契約。
+src/internal/05_TargetContract/TargetModel.h,B,src/backends/d3d12/compiler,移動・改名,D3D12TargetProfileであり、汎用Leaf ModelではなくTarget Compiler契約。
+src/internal/06_ExecutionPlanModel/ExecutionPlanModel.cpp,B,src/leaf/model/plan,移動・分割検討,ExecutionPlanIRとObligationはLeaf側。D3D12PlanningContractはTarget Compiler側へ分離候補。
+src/internal/06_ExecutionPlanModel/ExecutionPlanModel.h,B,src/leaf/model/plan,移動・分割検討,ExecutionPlanIRとObligationはLeaf側。D3D12PlanningContractはTarget Compiler側へ分離候補。
+src/internal/07_ExecutionPlanVerifier/ExecutionPlanVerifier.cpp,A,src/leaf/verifier,移動・正本化,実ExecutionPlanを独立検証しSealする中心正本。
+src/internal/07_ExecutionPlanVerifier/ExecutionPlanVerifier.h,A,src/leaf/verifier,移動・正本化,実ExecutionPlanを独立検証しSealする中心正本。
+src/internal/08_CandidatePlanner/CandidatePlanner.cpp,B,src/leaf/planner,移動・設計修正,候補生成は残すがVerifier呼出しとVerificationReport所有を除去し、Raw Candidateのみ生成する。
+src/internal/08_CandidatePlanner/CandidatePlanner.h,B,src/leaf/planner,移動・設計修正,候補生成は残すがVerifier呼出しとVerificationReport所有を除去し、Raw Candidateのみ生成する。
+src/internal/09_FrozenPackageCore/FrozenExecutablePackage.cpp,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/FrozenExecutablePackage.h,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageDigest.cpp,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageDigest.h,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageFormat.h,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageReader.cpp,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageReader.h,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageWriter.cpp,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/09_FrozenPackageCore/PackageWriter.h,A,src/leaf/artifact,移動・正本化,完全Frozen Leaf PackageのReader/Writer/Format/Digest。
+src/internal/10_D3D12PackageSchema/D3D12Encoding.cpp,B,src/backends/d3d12/artifact,移動・正本化,D3D12固有Frozen schema。Leaf Artifactの汎用領域から分離。
+src/internal/10_D3D12PackageSchema/D3D12Encoding.h,B,src/backends/d3d12/artifact,移動・正本化,D3D12固有Frozen schema。Leaf Artifactの汎用領域から分離。
+src/internal/10_D3D12PackageSchema/D3D12Schema.h,B,src/backends/d3d12/artifact,移動・正本化,D3D12固有Frozen schema。Leaf Artifactの汎用領域から分離。
+src/internal/11_D3D12PackageLowering/D3D12PackageLowering.cpp,B,src/backends/d3d12/compiler,移動・正本化,Verified Leaf PlanからD3D12 PackageへLowering。
+src/internal/11_D3D12PackageLowering/D3D12PackageLowering.h,B,src/backends/d3d12/compiler,移動・正本化,Verified Leaf PlanからD3D12 PackageへLowering。
+src/internal/11_D3D12PackageLowering/D3D12PackageLoweringInternal.h,B,src/backends/d3d12/compiler,移動・正本化,Verified Leaf PlanからD3D12 PackageへLowering。
+src/internal/12_SGE4_5Compiler/SGE4_5Compiler.cpp,C,src/leaf/toolchain,吸収・改名,Leaf Planner/Verifier/Target Loweringを統括する正式LeafCompilerへ吸収。旧Facade名を退役。
+src/internal/12_SGE4_5Compiler/SGE4_5Compiler.h,C,src/leaf/toolchain,吸収・改名,Leaf Planner/Verifier/Target Loweringを統括する正式LeafCompilerへ吸収。旧Facade名を退役。
+src/internal/13_PackageRuntime/PackageRuntime.cpp,A,src/runtime/core,移動・正本化,PortableなPackage Runtime interfaceとLeaf instance lifecycle。
+src/internal/13_PackageRuntime/PackageRuntime.h,A,src/runtime/core,移動・正本化,PortableなPackage Runtime interfaceとLeaf instance lifecycle。
+src/internal/14_D3D12Backend/D3D12Backend.cpp,A,src/backends/d3d12/executor,移動・正本化,実D3D12 Executor。Alias facadeではなく正式入口にする。
+src/internal/14_D3D12Backend/D3D12Backend.h,A,src/backends/d3d12/executor,移動・正本化,実D3D12 Executor。Alias facadeではなく正式入口にする。
+src/internal/16_FrozenCompositionArtifact/FrozenComposition.cpp,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenComposition.h,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionDigest.cpp,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionDigest.h,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionFormat.h,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionReader.cpp,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionReader.h,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionWriter.cpp,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/16_FrozenCompositionArtifact/FrozenCompositionWriter.h,A,src/composition/artifact,移動・正本化,完全Composition ContainerのFormat/Reader/Writer/Digest。
+src/internal/17_CompositionContract/CompositionContract.cpp,A,src/composition/model,移動・正本化,Leaf/Endpoint/Flowの完全契約。D3D12型露出は後段で抽象Interfaceへ整理。
+src/internal/17_CompositionContract/CompositionContract.h,A,src/composition/model,移動・正本化,Leaf/Endpoint/Flowの完全契約。D3D12型露出は後段で抽象Interfaceへ整理。
+src/internal/189_Level4V2CanonicalVocabulary/CanonicalVocabulary.cpp,B,src/canonical/identity,移動・統合,CanonicalIdentity/StrongScalar/DeviceEpoch/Handleを共通正本へ。Digest型重複を解消。
+src/internal/189_Level4V2CanonicalVocabulary/CanonicalVocabulary.h,B,src/canonical/identity,移動・統合,CanonicalIdentity/StrongScalar/DeviceEpoch/Handleを共通正本へ。Digest型重複を解消。
+src/internal/18_CompositionPlan/CompositionPlan.cpp,B,src/composition/model + src/composition/planner,ファイル分割,Plan data/serializationはModel、ProposeCompositionPlanはPlannerへ分離。
+src/internal/18_CompositionPlan/CompositionPlan.h,B,src/composition/model + src/composition/planner,ファイル分割,Plan data/serializationはModel、ProposeCompositionPlanはPlannerへ分離。
+src/internal/191_Level4V2AuthorityModel/AuthorityModel.cpp,C,src/canonical/authority + src/leaf/model,分解・吸収,共通Seal/IdentityはCanonical、Leaf固有Request/ProposalはLeafへ。並列authority pipelineは廃止。
+src/internal/191_Level4V2AuthorityModel/AuthorityModel.h,C,src/canonical/authority + src/leaf/model,分解・吸収,共通Seal/IdentityはCanonical、Leaf固有Request/ProposalはLeafへ。並列authority pipelineは廃止。
+src/internal/192_Level4V2CandidatePlanner/CandidatePlanner.cpp,C,src/leaf/planner,ロジック吸収後削除,実Plan生成後のpost-hoc authority proposalを廃止し、正式Leaf Plannerへ統合。
+src/internal/192_Level4V2CandidatePlanner/CandidatePlanner.h,C,src/leaf/planner,ロジック吸収後削除,実Plan生成後のpost-hoc authority proposalを廃止し、正式Leaf Plannerへ統合。
+src/internal/193_Level4V2IndependentVerifier/IndependentVerifier.cpp,C,src/leaf/verifier + src/leaf/artifact,検査移植後削除,Authority ledger整合性検査を実Plan VerifierとArtifact Readerへ移植。
+src/internal/193_Level4V2IndependentVerifier/IndependentVerifier.h,C,src/leaf/verifier + src/leaf/artifact,検査移植後削除,Authority ledger整合性検査を実Plan VerifierとArtifact Readerへ移植。
+src/internal/194_Level4V2FrozenAuthority/FrozenAuthority.cpp,C,src/leaf/artifact,型吸収後削除,Opaque authority tokenを完全FrozenLeafのCertificate/Manifestへ内包。
+src/internal/194_Level4V2FrozenAuthority/FrozenAuthority.h,C,src/leaf/artifact,型吸収後削除,Opaque authority tokenを完全FrozenLeafのCertificate/Manifestへ内包。
+src/internal/196_Level4V2CompositionModel/CompositionModel.cpp,C,src/composition/model + src/canonical/identity,分解・吸収,backend-neutral identity/invariantを完全Composition Modelへ統合。並列Raw Contractを廃止。
+src/internal/196_Level4V2CompositionModel/CompositionModel.h,C,src/composition/model + src/canonical/identity,分解・吸収,backend-neutral identity/invariantを完全Composition Modelへ統合。並列Raw Contractを廃止。
+src/internal/197_Level4V2CompositionPlanner/CompositionPlanner.cpp,C,src/composition/planner,検査統合後削除,簡略identity Planを実Composition Plan生成へ統合。
+src/internal/197_Level4V2CompositionPlanner/CompositionPlanner.h,C,src/composition/planner,検査統合後削除,簡略identity Planを実Composition Plan生成へ統合。
+src/internal/198_Level4V2CompositionVerifier/CompositionVerifier.cpp,C,src/composition/verifier,検査統合後削除,v2固有拒否条件を完全Composition Verifierへ独立実装として移す。
+src/internal/198_Level4V2CompositionVerifier/CompositionVerifier.h,C,src/composition/verifier,検査統合後削除,v2固有拒否条件を完全Composition Verifierへ独立実装として移す。
+src/internal/199_Level4V2FrozenComposition/FrozenComposition.cpp,C,src/composition/artifact,型吸収後削除,identity-only Frozen Compositionを完全FrozenComposition Certificateへ内包。
+src/internal/199_Level4V2FrozenComposition/FrozenComposition.h,C,src/composition/artifact,型吸収後削除,identity-only Frozen Compositionを完全FrozenComposition Certificateへ内包。
+src/internal/19_CompositionVerifier/CompositionVerifier.cpp,B,src/composition/verifier + src/composition/artifact,ファイル分割,Verify/SealはVerifier、Freeze/ReadVerifiedFrozenCompositionはArtifactへ移す。
+src/internal/19_CompositionVerifier/CompositionVerifier.h,B,src/composition/verifier + src/composition/artifact,ファイル分割,Verify/SealはVerifier、Freeze/ReadVerifiedFrozenCompositionはArtifactへ移す。
+src/internal/201_Level4V2DynamicInvocationModel/DynamicInvocationModel.cpp,A,src/dynamic/model,移動・正本化,Exact set/transition/historyの中心モデル。
+src/internal/201_Level4V2DynamicInvocationModel/DynamicInvocationModel.h,A,src/dynamic/model,移動・正本化,Exact set/transition/historyの中心モデル。
+src/internal/202_Level4V2DynamicInvocationPlanner/DynamicInvocationPlanner.cpp,A,src/dynamic/planner,移動・正本化,Dynamic proposal生成。
+src/internal/202_Level4V2DynamicInvocationPlanner/DynamicInvocationPlanner.h,A,src/dynamic/planner,移動・正本化,Dynamic proposal生成。
+src/internal/203_Level4V2DynamicInvocationVerifier/DynamicInvocationVerifier.cpp,A,src/dynamic/verifier,移動・正本化,独立再導出・検証。
+src/internal/203_Level4V2DynamicInvocationVerifier/DynamicInvocationVerifier.h,A,src/dynamic/verifier,移動・正本化,独立再導出・検証。
+src/internal/204_Level4V2FrozenInvocationHistory/FrozenInvocationHistory.cpp,B,src/dynamic/artifact,移動・正本化,Verified Dynamic Invocation/HistoryのFrozen保持。
+src/internal/204_Level4V2FrozenInvocationHistory/FrozenInvocationHistory.h,B,src/dynamic/artifact,移動・正本化,Verified Dynamic Invocation/HistoryのFrozen保持。
+src/internal/20_CompositionDeviceDomain/CompositionDeviceDomain.cpp,B,src/backends/d3d12/runtime,移動・改名,D3D12Backendを直接所有するためPortable RuntimeではなくD3D12 Runtime実装。
+src/internal/20_CompositionDeviceDomain/CompositionDeviceDomain.h,B,src/backends/d3d12/runtime,移動・改名,D3D12Backendを直接所有するためPortable RuntimeではなくD3D12 Runtime実装。
+src/internal/21_CompositionSharedResources/CompositionSharedResources.cpp,B,src/backends/d3d12/runtime,移動・正本化,D3D12 Shared Resource materialization。
+src/internal/21_CompositionSharedResources/CompositionSharedResources.h,B,src/backends/d3d12/runtime,移動・正本化,D3D12 Shared Resource materialization。
+src/internal/22_CompositionRuntime/CompositionRuntime.cpp,B,src/backends/d3d12/runtime,移動・正本化,実Composition submission。公開APIからlegacy型を隠す。
+src/internal/22_CompositionRuntime/CompositionRuntime.h,B,src/backends/d3d12/runtime,移動・正本化,実Composition submission。公開APIからlegacy型を隠す。
+src/internal/23_CompositionRecovery/CompositionRecovery.cpp,B,src/backends/d3d12/runtime/recovery,移動・正本化,Whole-composition D3D12 recoveryの実装。
+src/internal/23_CompositionRecovery/CompositionRecovery.h,B,src/backends/d3d12/runtime/recovery,移動・正本化,Whole-composition D3D12 recoveryの実装。
+src/00_UnifiedCanonicalCore/UnifiedCore.cpp,C,src/canonical/artifact + src/canonical/diagnostics,分割・吸収,SectionedArtifactはCanonical Artifactへ。Error/Digest alias/IsPowerOfTwo重複を共通基盤へ統合。
+src/00_UnifiedCanonicalCore/UnifiedCore.h,C,src/canonical/artifact + src/canonical/diagnostics,分割・吸収,SectionedArtifactはCanonical Artifactへ。Error/Digest alias/IsPowerOfTwo重複を共通基盤へ統合。
+src/10_LeafToolchain/LeafToolchain.cpp,C,src/leaf/toolchain + src/leaf/artifact,書き直し・吸収,package読込後にv2 authorityを再構築するbridgeを廃止し、実Verified Planから一度だけCertificateを生成。
+src/10_LeafToolchain/LeafToolchain.h,C,src/leaf/toolchain + src/leaf/artifact,書き直し・吸収,package読込後にv2 authorityを再構築するbridgeを廃止し、実Verified Planから一度だけCertificateを生成。
+src/20_CompositionToolchain/CompositionToolchain.cpp,C,src/composition/toolchain + src/composition/artifact,書き直し・吸収,legacy complete planとv2 planを二重実行するbridgeを廃止。単一完全Plan/Verifier/Artifactへ。
+src/20_CompositionToolchain/CompositionToolchain.h,C,src/composition/toolchain + src/composition/artifact,書き直し・吸収,legacy complete planとv2 planを二重実行するbridgeを廃止。単一完全Plan/Verifier/Artifactへ。
+src/30_DynamicInvocation/DynamicInvocation.cpp,B,src/dynamic/artifact + src/dynamic/toolchain,移動・吸収,集合代数は保持。Planner/Verifier/Frozen serializationを正式Dynamic toolchainへ配置。
+src/30_DynamicInvocation/DynamicInvocation.h,B,src/dynamic/artifact + src/dynamic/toolchain,移動・吸収,集合代数は保持。Planner/Verifier/Frozen serializationを正式Dynamic toolchainへ配置。
+src/40_UnifiedRuntime/UnifiedRuntime.cpp,C,src/runtime/core + src/backends/d3d12/runtime,責務分割・公開API再設計,Runtime内でPlannerを呼ばず、FrozenDynamicInvocationだけを消費。NativeRuntime露出を除去。
+src/40_UnifiedRuntime/UnifiedRuntime.h,C,src/runtime/core + src/backends/d3d12/runtime,責務分割・公開API再設計,Runtime内でPlannerを呼ばず、FrozenDynamicInvocationだけを消費。NativeRuntime露出を除去。
+src/50_D3D12Executor/D3D12Executor.cpp,F,削除（実装はsrc/backends/d3d12/executor）,Alias削除,15行の型Aliasのみ。D3D12Backendを正式public executorへ昇格後に不要。
+src/50_D3D12Executor/D3D12Executor.h,F,削除（実装はsrc/backends/d3d12/executor）,Alias削除,15行の型Aliasのみ。D3D12Backendを正式public executorへ昇格後に不要。

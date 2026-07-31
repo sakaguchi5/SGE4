@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{DAF93D86-73DA-5984-9229-35B10CF352A9}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{5140EA55-C7DC-5247-A52C-76B9932DF6E6}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\composition\model\CompositionContract.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\composition\model\plan\CompositionPlan.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\composition\model\CompositionContract.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\model\CompositionIdentity.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\composition\model\plan\CompositionPlan.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+</Project>

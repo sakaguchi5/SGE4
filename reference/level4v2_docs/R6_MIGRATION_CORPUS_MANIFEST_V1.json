@@ -1,0 +1,197 @@
+{
+  "schema": "SGE4.Level4V2.R6MigrationCorpusManifest.V1",
+  "completionUnit": "R6",
+  "status": "CompletePackageSuppliedOwnerGatePending",
+  "baseCommit": "527cc0b2ed4c01c76ebfdef5c277f6c39b654024",
+  "r5AcceptedCommit": "527cc0b2ed4c01c76ebfdef5c277f6c39b654024",
+  "mode": "ReconstructionNotNewCapability",
+  "projects": [
+    {
+      "name": "212_Level4V2MigrationCorpus",
+      "guid": "{000000D4-0000-5000-8000-0000000000D4}",
+      "role": "SourceInvariantEvidenceAndCaseCertificate"
+    },
+    {
+      "name": "213_Level4V2MigrationCorpusTests",
+      "guid": "{000000D5-0000-5000-8000-0000000000D5}",
+      "role": "RepresentativeAdversarialMigrationQualification"
+    }
+  ],
+  "coverage": {
+    "sourceLineageCount": 16,
+    "terminalInvariantOutcomeCount": 40,
+    "migrationCaseCount": 26,
+    "correctnessCaseCount": 24,
+    "observationalPerformanceCaseCount": 2,
+    "certificateRejectionCount": 20,
+    "allR0InvariantsHaveTerminalOutcome": true,
+    "everyFrozenSourceRoleReferenced": true,
+    "correctnessBinding": "V2Authority",
+    "observationalBinding": "RetainedObservationalEvidence"
+  },
+  "sourceLineages": [
+    {
+      "role": "Level4V1ReconstructionPolicy",
+      "path": "docs/level4v1-canonical/RECONSTRUCTION_POLICY.md",
+      "sha256": "b296dba718ed87b76af4f7a06433f9ea8972d2264fa8032a640bfaa66661b56c"
+    },
+    {
+      "role": "Level4V1RuntimeRecoveryQualification",
+      "path": "docs/level4v1-canonical/R3_R5_RUNTIME_RECOVERY_FINAL_QUALIFICATION.md",
+      "sha256": "3d83adeabb73b0e496fbbb78ea9c646abad6f98c36fcffca36da23a53e829a96"
+    },
+    {
+      "role": "Spiral1ProofLedger",
+      "path": "docs/spiral1/PROOF_LEDGER_V1.md",
+      "sha256": "3c7a687d682200d640892b64e084714cf21105a39330a77b0bb3e4d976e8c4b2"
+    },
+    {
+      "role": "Spiral2ProofLedger",
+      "path": "docs/spiral2/PROOF_LEDGER_V1.md",
+      "sha256": "617f9bf43e9b99154f0212974bfd47dae525751cc42a2d9b3af18054a4fdb083"
+    },
+    {
+      "role": "Spiral3ProofLedger",
+      "path": "docs/spiral3/PROOF_LEDGER_V1.md",
+      "sha256": "f426d7df7a1ed0cd0414b2eb88072e7be970be29eb6fda57ddaed2c91214530f"
+    },
+    {
+      "role": "Spiral4ProofLedger",
+      "path": "docs/spiral4/PROOF_LEDGER_V1.md",
+      "sha256": "fd1ff7ab08dfb5d080ff4abb8db487a4adb18e44e9df08d345f4aec4383b252b"
+    },
+    {
+      "role": "Spiral5ProofLedger",
+      "path": "docs/spiral5/PROOF_LEDGER_V1.md",
+      "sha256": "7816b49fa61641e717d94314c9ce994bb58ba8a5608cb7ca87aca34a5d0fe4fd"
+    },
+    {
+      "role": "Spiral6ProofLedger",
+      "path": "docs/spiral6/PROOF_LEDGER_V1.md",
+      "sha256": "2b86deae0562602ba2d43bb2e34dc4f03d988cf21702f92c7b5ccc425c903c2c"
+    },
+    {
+      "role": "Spiral7ProofLedger",
+      "path": "docs/spiral7/PROOF_LEDGER_V1.md",
+      "sha256": "a91bae148b77f175432b0b6b3a13a869b2cead751c61ec005be344f2332ea175"
+    },
+    {
+      "role": "Spiral7Closure",
+      "path": "docs/spiral7/CLOSURE_MANIFEST_V1.json",
+      "sha256": "c4c7927ea02b0f926f8f54fa4a4482e4d53f550b5c3acf747ef17e42092eaca1"
+    },
+    {
+      "role": "AcceptedArchitectureQualification",
+      "path": "docs/spiral7/CU5_ARCHITECTURE_QUALIFICATION_MANIFEST_V1.json",
+      "sha256": "4b9db516ba8809d482e039394a9cbb284c0bb4d91600ddb1ac654ab46e652766"
+    },
+    {
+      "role": "AcceptedObservationalMeasurement",
+      "path": "docs/spiral7/CU6_REAL_GPU_MEASUREMENT_MANIFEST_V1.json",
+      "sha256": "76aee55429d6c67db5242987f879785a72f5bec142fc59fc363312eae44f747d"
+    },
+    {
+      "role": "FinalDecisionSummary",
+      "path": "docs/spiral7/SPIRAL7_FINAL_DECISION_SUMMARY.md",
+      "sha256": "97345b8190627308697ec22c7da43232cea07f218918037eccebe0ad534abf5c"
+    },
+    {
+      "role": "CanonicalInputNarrative",
+      "path": "docs/level4v2/CANONICAL_RECONSTRUCTION_INPUT_V1.md",
+      "sha256": "80d0d983dd0b9f5120a426b298aac65fefca7684157ad4712ebdd6a4b1bb5110"
+    },
+    {
+      "role": "CapabilityMatrix",
+      "path": "docs/level4v2/PROVEN_CAPABILITY_MATRIX_V1.md",
+      "sha256": "c3c06debdda4e555121fb7ba3f13d935b58edb00b15baedb9c38a6b955f31d72"
+    },
+    {
+      "role": "RetainedReferenceLayout",
+      "path": "docs/level4v2/RETAINED_REFERENCE_LAYOUT_V1.md",
+      "sha256": "a336bf09bed936461ded74c504ce417cdfe73ee301999a2c50ec091d0a928026"
+    }
+  ],
+  "stageEvidence": [
+    {
+      "id": "R1",
+      "lane": "Correctness",
+      "sha256": "35e751e131dcf4c88cad1b2da7bbc8e745f497e56d5ba22bd23079c7e2ec2abf"
+    },
+    {
+      "id": "R2",
+      "lane": "Correctness",
+      "sha256": "745429438eb047adf4e8d1e85f69d0d0d2228ebc01fe3ec132fa2b2705ed8a33"
+    },
+    {
+      "id": "R3",
+      "lane": "Correctness",
+      "sha256": "dab306b33d0816b742c61611c28bf054d2df5dbfe2e39179a1fae4c7fb70befb"
+    },
+    {
+      "id": "R4",
+      "lane": "Correctness",
+      "sha256": "78f16d2fa4185412144205dc54f842f2929e6e269711dfca9ced9967f37cfbe1"
+    },
+    {
+      "id": "R5C",
+      "lane": "Correctness",
+      "sha256": "40d78dc35894a55e50b314bd0afcbb60966f92e942ac70856155964cd8e66498"
+    },
+    {
+      "id": "R5W",
+      "lane": "Correctness",
+      "sha256": "1e4adaa04dc8d1d235f8f3438f4295b09b36480174f6a7d9fa0fbaba79ea7a9a"
+    },
+    {
+      "id": "ARCH",
+      "lane": "Correctness",
+      "sha256": "4b9db516ba8809d482e039394a9cbb284c0bb4d91600ddb1ac654ab46e652766"
+    },
+    {
+      "id": "RETENTION",
+      "lane": "Correctness",
+      "sha256": "a336bf09bed936461ded74c504ce417cdfe73ee301999a2c50ec091d0a928026"
+    },
+    {
+      "id": "OBS-BUNDLE",
+      "lane": "ObservationalPerformance",
+      "sha256": "9ee852c2a2574a8cb9c163b6e94213b855317bba74319e6443e9aa98c10c24d9"
+    },
+    {
+      "id": "OBS-DECISION",
+      "lane": "ObservationalPerformance",
+      "sha256": "b840cb1425f5e45ccac2f0c84750584313350458062dab98f8552290e8bfda81"
+    }
+  ],
+  "correctnessPerformanceSeparation": {
+    "correctnessGateConsumesObservationalSamples": false,
+    "observationalEvidenceMayAuthorizeRuntimePolicy": false,
+    "externalBundleTrackedByGit": false,
+    "externalBundleSha256": "9ee852c2a2574a8cb9c163b6e94213b855317bba74319e6443e9aa98c10c24d9",
+    "runtimeCandidatePolicyAuthorization": "None",
+    "correctnessCasesRequireV2AuthorityBinding": true,
+    "observationalCasesRequireRetainedEvidenceBinding": true,
+    "observationalEvidenceMayMintV2Authority": false
+  },
+  "deterministicEvidence": {
+    "schema": "L4V2R6V1",
+    "debugReleaseByteEqualityRequired": true,
+    "expectedSourceLineageCount": 16,
+    "expectedInvariantOutcomeCount": 40,
+    "expectedMigrationCaseCount": 26,
+    "expectedRejectionCount": 20,
+    "expectedSha256": "41d8432bd1019a09f9ee92b384b3ce4f11e52db031fc38862c10ffcec7a91724"
+  },
+  "referenceProjects": {
+    "deletedInR6": false,
+    "retirementDecisionDeferredTo": "R7ReferenceRetirement"
+  },
+  "runtimeCapabilityAdded": "None",
+  "schema17Mutation": "None",
+  "runtime17Mutation": "None",
+  "backendMutation": "None",
+  "canonicalAuthorityMutation": "None",
+  "runtimeCandidatePolicyAuthorization": "None",
+  "nextStageOnSuccessfulGate": "R7ReferenceRetirement",
+  "packageHashEntryCount": 26
+}

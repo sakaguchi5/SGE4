@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{1E6F9E71-D112-5CDA-A3EF-7A827CD4A758}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{3E52FFE0-D477-561E-8030-34377167D9B2}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\backends\d3d12\executor\Executor.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\Runtime.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\composition\CompositionRuntime.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\device\CompositionDeviceDomain.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\recovery\CompositionRecovery.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\src\backends\d3d12\runtime\resources\CompositionSharedResources.cpp"><Filter>Source Files</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\backends\d3d12\executor\Executor.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\Runtime.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\RuntimeTypes.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\composition\CompositionRuntime.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\device\CompositionDeviceDomain.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\recovery\CompositionRecovery.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\src\backends\d3d12\runtime\resources\CompositionSharedResources.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorApi.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorDeviceDomain.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorDiagnostics.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorExternalResources.inl" />
+    <None Include="..\..\src\backends\d3d12\executor\detail\ExecutorInstance.inl" />
+  </ItemGroup>
+</Project>
