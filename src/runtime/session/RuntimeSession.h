@@ -17,15 +17,20 @@ struct DynamicPlanningContext final
     std::optional<dynamic::VerifiedHistoryStateV1> previousHistory;
 };
 
-// Runtime applies a verified transition stream to a private dense shadow before
-// submitting any GPU work. The shadow is committed only after native submission
-// succeeds, so failed submissions cannot advance the accepted dynamic state.
-struct PreparedDynamicExecutionV1 final
+struct PreparedDynamicBindingV1 final
 {
-    bool hasBinding = false;
+    bool enabled = false;
     composition::LeafPackageId leaf;
     std::uint32_t slot = package::InvalidIndex;
     std::vector<std::byte> denseSlotBytes;
+};
+
+// Generalization 6 prepares all route shadows as one atomic candidate.  Native
+// submission receives only enabled bindings, but successful submission commits
+// every prepared shadow together with History.
+struct PreparedDynamicExecutionV1 final
+{
+    std::vector<PreparedDynamicBindingV1> bindings;
     std::vector<composition::LeafPackageId> enabledLeaves;
     bool hasIndirectDispatch = false;
     composition::LeafPackageId indirectLeaf;
@@ -34,8 +39,6 @@ struct PreparedDynamicExecutionV1 final
     std::uint32_t indirectThreadGroupCountX = 0;
     std::uint32_t indirectThreadGroupCountY = 1;
     std::uint32_t indirectThreadGroupCountZ = 1;
-    // exact Transition setの件数。AuthorityOnlyでも保持し、GPU indirect workと
-    // dense shadow適用数を混同しない。
     std::uint32_t verifiedTransitionCount = 0;
     std::uint32_t appliedTransitionCount = 0;
     std::uint32_t conditionalRegionCount = 0;
@@ -88,22 +91,22 @@ private:
         canonical::DeviceEpoch deviceEpoch,
         canonical::RepresentationHandleV1 representationHandle,
         canonical::HistoryHandleV1 historyHandle,
-        std::vector<std::byte> dynamicExecutionShadow)
+        std::vector<std::vector<std::byte>> dynamicExecutionShadows)
         : package_(std::move(package)), deviceEpoch_(deviceEpoch),
           representationHandle_(std::move(representationHandle)),
           historyHandle_(std::move(historyHandle)),
-          dynamicExecutionShadow_(std::move(dynamicExecutionShadow)) {}
+          dynamicExecutionShadows_(std::move(dynamicExecutionShadows)) {}
 
     [[nodiscard]] dynamic::InvocationModeV1 RequiredMode() const noexcept;
     void RebuildHandles();
-    void ResetDynamicExecutionShadow();
+    void ResetDynamicExecutionShadows();
 
     composition::FrozenCompositionPackage package_;
     canonical::DeviceEpoch deviceEpoch_;
     std::optional<dynamic::VerifiedHistoryStateV1> history_;
     canonical::RepresentationHandleV1 representationHandle_;
     canonical::HistoryHandleV1 historyHandle_;
-    std::vector<std::byte> dynamicExecutionShadow_;
+    std::vector<std::vector<std::byte>> dynamicExecutionShadows_;
     std::uint64_t runtimeGeneration_ = 1;
     DeviceRuntimeState state_ = DeviceRuntimeState::Active;
     bool externalStateBound_ = true;

@@ -114,6 +114,62 @@ BuildVerifiedDynamicUnified(std::uint32_t universe = 4)
 }
 
 inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
+BuildMultiTargetVerifiedDynamicUnified(std::uint32_t universe = 4)
+{
+    constexpr std::string_view FirstKey = "unified/multi-dynamic/first";
+    constexpr std::string_view SecondKey = "unified/multi-dynamic/second";
+
+    auto first = fixture::BuildVerifiedDynamicLeaf(universe);
+    if (!first)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            first.error());
+    auto second = fixture::BuildVerifiedDynamicLeaf(universe);
+    if (!second)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            second.error());
+
+    contract::ContractBuildInput input;
+    input.leaves = {
+        fixture::VerifiedDynamicDeclaration(std::string(FirstKey), first.value()),
+        fixture::VerifiedDynamicDeclaration(std::string(SecondKey), second.value())};
+
+    contract::ResourceFlowDeclaration firstOutput;
+    firstOutput.stableKey = "unified/multi-dynamic/output-first";
+    firstOutput.boundary = contract::ResourceBoundary::CompositionOutput;
+    firstOutput.producer = fixture::Ref(
+        std::string(FirstKey), std::string(fixture::DynamicOutputEndpoint));
+
+    contract::ResourceFlowDeclaration secondOutput;
+    secondOutput.stableKey = "unified/multi-dynamic/output-second";
+    secondOutput.boundary = contract::ResourceBoundary::CompositionOutput;
+    secondOutput.producer = fixture::Ref(
+        std::string(SecondKey), std::string(fixture::DynamicOutputEndpoint));
+    input.resources = {std::move(firstOutput), std::move(secondOutput)};
+
+    const auto firstStable = composition::ComputeStableLeafKey(FirstKey);
+    const auto secondStable = composition::ComputeStableLeafKey(SecondKey);
+    const composition::LeafPackageId firstLeaf{firstStable < secondStable ? 0u : 1u};
+    const composition::LeafPackageId secondLeaf{firstStable < secondStable ? 1u : 0u};
+
+    std::vector<composition::DynamicExecutionRouteV1> routes = {
+        composition::MakeDynamicExecutionRouteV1(firstLeaf, 0, 0, 16),
+        composition::MakeDynamicExecutionRouteV1(secondLeaf, 0, 16, 16)};
+    std::sort(routes.begin(), routes.end(), [](const auto& left, const auto& right) {
+        return std::pair{left.targetLeaf.value, left.targetDynamicSlot} <
+            std::pair{right.targetLeaf.value, right.targetDynamicSlot};
+    });
+
+    auto built = composition::BuildFrozenCompositionPackage(
+        std::move(input), composition::MakeVerifiedRoutedSlotsDynamicContractV1(
+            universe, 32, std::move(routes)));
+    if (!built)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            built.error().stage + "：" + built.error().message);
+    return sge4::base::Success<composition::FrozenCompositionPackage, std::string>(
+        std::move(built).value());
+}
+
+inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
 BuildConditionalVerifiedDynamicUnified(std::uint32_t universe = 4)
 {
     constexpr std::string_view ExecutorKey = "unified/conditional/executor";

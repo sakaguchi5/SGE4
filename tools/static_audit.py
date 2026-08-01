@@ -203,20 +203,20 @@ executor_text='\n'.join(x.read_text(encoding='utf-8') for x in (root/'src/backen
 if 'D3D12PackageLowering' in executor_text:
     errors.append('D3D12 Executor depends on target lowering implementation')
 
-# Frozen Composition ABI 2.5 boundary checks.
+# Frozen Composition ABI 2.6 boundary checks.
 abi2_header=(root/'src/composition/artifact/abi2/FrozenCompositionAbi2.h').read_text(encoding='utf-8')
 abi2_source=(root/'src/composition/artifact/abi2/FrozenCompositionAbi2.cpp').read_text(encoding='utf-8')
 production_reader=(root/'src/composition/artifact/VerifiedCompositionArtifact.cpp').read_text(encoding='utf-8')
 toolchain_source=(root/'src/composition/toolchain/CompositionToolchain.cpp').read_text(encoding='utf-8')
 migration_root=root/'src/composition/migration/abi1'
-if 'FrozenCompositionAbi2FormatMajor = 2' not in abi2_header or 'FrozenCompositionAbi2FormatMinor = 5' not in abi2_header:
-    errors.append('Frozen Composition production ABI is not fixed to SGE4UNI 2.5')
+if 'FrozenCompositionAbi2FormatMajor = 2' not in abi2_header or 'FrozenCompositionAbi2FormatMinor = 6' not in abi2_header:
+    errors.append('Frozen Composition production ABI is not fixed to SGE4UNI 2.6')
 for required_kind in ('Manifest','LeafTable','LeafBytes','ContractData','VerifiedDecisionData',
                       'VerificationCertificate','AuthorityLedger','DynamicContract'):
     if required_kind not in abi2_header:
-        errors.append(f'Frozen Composition ABI 2.5 is missing direct section {required_kind}')
+        errors.append(f'Frozen Composition ABI 2.6 is missing direct section {required_kind}')
 if 'CompleteComposition' in abi2_header or 'CompleteComposition' in toolchain_source:
-    errors.append('Production ABI 2.5 reintroduced the nested CompleteComposition section')
+    errors.append('Production ABI 2.6 reintroduced the nested CompleteComposition section')
 if (root/'src/composition/artifact/container').exists():
     errors.append('Legacy SGE4CMP container still resides in the production artifact tree')
 for required in ('FrozenCompositionAbi1Migration.cpp','FrozenCompositionAbi1Migration.h'):
@@ -227,26 +227,29 @@ if not (migration_root/'container/FrozenCompositionReader.cpp').exists():
 if 'FrozenCompositionReader' in production_reader or 'FrozenCompositionWriter' in production_reader:
     errors.append('Production Composition reader directly references the legacy SGE4CMP reader/writer')
 if 'ReadVerifiedFrozenCompositionAbi2' not in production_reader:
-    errors.append('Production Composition reader does not route exclusively to ABI 2.5')
+    errors.append('Production Composition reader does not route exclusively to ABI 2.6')
 if 'FrozenCompositionAbi2EmbeddedSchemaVersion = 17' not in abi2_header or    'FrozenCompositionAbi2EmbeddedRuntimeVersion = 17' not in abi2_header:
-    errors.append('ABI 2.5 does not explicitly preserve embedded Leaf Schema/Runtime 17')
+    errors.append('ABI 2.6 does not explicitly preserve embedded Leaf Schema/Runtime 17')
 dynamic_header=(root/'src/dynamic/artifact/DynamicInvocationPackage.h').read_text(encoding='utf-8')
-if 'FrozenInvocationFormatMajor = 1' not in dynamic_header or 'FrozenInvocationFormatMinor = 4' not in dynamic_header:
-    errors.append('Frozen Dynamic Invocation production ABI is not fixed to SGE4INV 1.4')
+if 'FrozenInvocationFormatMajor = 1' not in dynamic_header or 'FrozenInvocationFormatMinor = 5' not in dynamic_header:
+    errors.append('Frozen Dynamic Invocation production ABI is not fixed to SGE4INV 1.5')
 if ('ExecutionPayload = 5' not in dynamic_header or 'ConditionalExecution = 6' not in dynamic_header or
         'IndirectDispatch = 7' not in dynamic_header or
         'FrozenDynamicExecutionPayloadV1' not in dynamic_header):
-    errors.append('SGE4INV 1.4 does not own verified payload, conditional execution, and indirect dispatch sections')
+    errors.append('SGE4INV 1.5 does not own verified payload, conditional execution, and indirect dispatch sections')
 dynamic_contract_header=(root/'src/composition/model/DynamicExecutionContract.h').read_text(encoding='utf-8')
-if 'VerifiedDenseSlot = 1' not in dynamic_contract_header or 'targetDynamicSlot' not in dynamic_contract_header:
-    errors.append('Composition does not freeze the Verified Dense Slot execution route')
+if ('VerifiedDenseSlot = 1' not in dynamic_contract_header or
+        'DynamicExecutionRouteV1' not in dynamic_contract_header or
+        'canonicalMemberBytes' not in dynamic_contract_header or
+        'executionRoutes' not in dynamic_contract_header):
+    errors.append('Composition does not freeze verified multi-target Dynamic routes')
 if ('ConditionalRegionV1' not in dynamic_contract_header or
         'ConditionalPredicateKindV1' not in dynamic_contract_header or
         'conditionalRegions' not in dynamic_contract_header):
     errors.append('Composition does not freeze non-nested Conditional Region contracts')
 runtime_session=(root/'src/runtime/session/RuntimeSession.cpp').read_text(encoding='utf-8')
-if 'PrepareDynamicExecution' not in runtime_session or 'dynamicExecutionShadow_' not in runtime_session:
-    errors.append('Runtime Session does not apply verified execution payloads to a private shadow')
+if 'PrepareDynamicExecution' not in runtime_session or 'dynamicExecutionShadows_' not in runtime_session:
+    errors.append('Runtime Session does not apply verified routed payloads to private shadows')
 if ('ValidateConditionalExecution' not in runtime_session or
         'conditionalExecutionIdentity' not in runtime_session or
         'enabledLeaves' not in runtime_session):
@@ -273,7 +276,7 @@ if 'Texture2DFlowShape' not in composition_contract or 'Texture2DFlowShape textu
 if 'Texture2DFlowShape texture2D' not in composition_plan:
     errors.append('Composition Plan does not freeze limited Texture2D allocation shape')
 if 'FrozenCompositionAbi2ContractSchema = 2' not in abi2_header or 'FrozenCompositionAbi2DecisionSchema = 2' not in abi2_header:
-    errors.append('SGE4UNI 2.5 does not use Contract/Decision schema 2')
+    errors.append('SGE4UNI 2.6 does not use Contract/Decision schema 2')
 executor_header=(root/'src/backends/d3d12/executor/Executor.h').read_text(encoding='utf-8')
 shared_resources=(root/'src/backends/d3d12/runtime/resources/CompositionSharedResources.cpp').read_text(encoding='utf-8')
 if 'CreateSharedTexture2D' not in executor_header or 'ReadSharedTexture2D' not in executor_header:
@@ -314,8 +317,8 @@ if 'invocation.enabledLeaves' not in composition_runtime or 'if (!enabled[entry.
     errors.append('D3D12 Composition Runtime does not mechanically skip unselected Conditional leaves')
 corruption_test=(root/'tests/60_UnifiedArchitectureTests/Abi2CorruptionTests.cpp')
 portable_test=(root/'tests/60_UnifiedArchitectureTests/Abi2PortableSelfTest.cpp')
-if not corruption_test.exists(): errors.append('ABI 2.5 corruption corpus is missing')
-if not portable_test.exists(): errors.append('ABI 2.5 portable round-trip/migration self-test is missing')
+if not corruption_test.exists(): errors.append('ABI 2.6 corruption corpus is missing')
+if not portable_test.exists(): errors.append('ABI 2.6 portable round-trip/migration self-test is missing')
 
 if errors:
     print('New SGE4静的監査に失敗しました')

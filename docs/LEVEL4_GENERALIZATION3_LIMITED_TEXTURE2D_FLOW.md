@@ -1,4 +1,4 @@
-> Current status: Generalization 5により現行ProductionはSGE4UNI 2.5／SGE4INV 1.4へ進んだ。本書の2.3記述はGeneralization 3完成時点の契約記録であり、限定Texture2D Flowの意味は維持される。
+> Current status: Generalization 6により現行ProductionはSGE4UNI 2.6／SGE4INV 1.5へ進んだ。本書の2.3記述はGeneralization 3完成時点の契約記録であり、限定Texture2D Flowの意味は維持される。
 
 # Level 4 Generalization 3 — Limited Texture2D Flow
 

@@ -51,24 +51,42 @@ DynamicVerificationErrorV1 VerifyExecutionPayload(
     const DynamicInvocationRequestV1& request,
     std::span<const std::uint32_t> update)
 {
-    if (request.executionPayloadIdentity != ComputeDynamicExecutionPayloadIdentityV1(
-        request.executionMode, request.targetLeaf, request.targetDynamicSlot,
-        request.memberBytes, request.updatePayloads))
+    const auto expectedIdentity = ComputeDynamicExecutionPayloadIdentityV1(
+        request.executionMode, request.canonicalMemberBytes,
+        request.executionRoutes, request.updatePayloads);
+    if (request.executionPayloadIdentity != expectedIdentity)
         return DynamicVerificationErrorV1::ExecutionPayloadIdentityMismatch;
 
     if (request.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
     {
-        if (request.targetLeaf.IsValid() ||
-            request.targetDynamicSlot != package::InvalidIndex ||
-            request.memberBytes != 0 || !request.updatePayloads.empty())
+        if (request.canonicalMemberBytes != 0 ||
+            !request.executionRoutes.empty() || !request.updatePayloads.empty())
             return DynamicVerificationErrorV1::ExecutionContractMismatch;
         return DynamicVerificationErrorV1::None;
     }
 
     if (request.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
-        !request.targetLeaf.IsValid() ||
-        request.targetDynamicSlot == package::InvalidIndex || request.memberBytes == 0)
+        request.canonicalMemberBytes == 0 || request.executionRoutes.empty())
         return DynamicVerificationErrorV1::ExecutionContractMismatch;
+
+    std::pair<std::uint32_t, std::uint32_t> previousRoute{};
+    bool hasPreviousRoute = false;
+    for (const auto& route : request.executionRoutes)
+    {
+        const std::pair key{route.targetLeaf.value, route.targetDynamicSlot};
+        if (!route.targetLeaf.IsValid() ||
+            route.targetLeaf.value >= request.compositionLeafCount ||
+            route.targetDynamicSlot == package::InvalidIndex ||
+            route.routeMemberBytes == 0 ||
+            route.sourceByteOffset > request.canonicalMemberBytes ||
+            route.routeMemberBytes >
+                request.canonicalMemberBytes - route.sourceByteOffset ||
+            (hasPreviousRoute && key <= previousRoute))
+            return DynamicVerificationErrorV1::ExecutionContractMismatch;
+        previousRoute = key;
+        hasPreviousRoute = true;
+    }
+
     if (request.updatePayloads.size() != update.size())
         return DynamicVerificationErrorV1::ExecutionPayloadSetMismatch;
     for (std::size_t index = 0; index < request.updatePayloads.size(); ++index)
@@ -76,9 +94,10 @@ DynamicVerificationErrorV1 VerifyExecutionPayload(
         const auto& payload = request.updatePayloads[index];
         if (payload.member.value() >= request.universe.value())
             return DynamicVerificationErrorV1::ExecutionPayloadMemberOutOfRange;
-        if (index > 0 && request.updatePayloads[index - 1].member.value() >= payload.member.value())
+        if (index > 0 &&
+            request.updatePayloads[index - 1].member.value() >= payload.member.value())
             return DynamicVerificationErrorV1::ExecutionPayloadDuplicateMember;
-        if (payload.bytes.size() != request.memberBytes)
+        if (payload.bytes.size() != request.canonicalMemberBytes)
             return DynamicVerificationErrorV1::ExecutionPayloadSizeMismatch;
         if (payload.member.value() != update[index])
             return DynamicVerificationErrorV1::ExecutionPayloadSetMismatch;

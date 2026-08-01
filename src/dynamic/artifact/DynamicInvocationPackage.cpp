@@ -50,9 +50,8 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().conditionalSelections.size()));
     writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().enabledLeaves.size()));
     writer.WriteU32(std::to_underlying(verified.Request().executionMode));
-    writer.WriteU32(verified.Request().targetLeaf.value);
-    writer.WriteU32(verified.Request().targetDynamicSlot);
-    writer.WriteU32(verified.Request().memberBytes);
+    writer.WriteU32(verified.Request().canonicalMemberBytes);
+    writer.WriteCountU32(verified.Request().executionRoutes.size());
     writer.WriteU32(std::to_underlying(verified.Request().indirectDispatchContract.mode));
     writer.WriteU32(verified.Request().indirectDispatchContract.targetLeaf.value);
     writer.WriteU32(verified.Request().indirectDispatchContract.targetComputeCommand);
@@ -98,11 +97,17 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     const DynamicInvocationRequestV1& request)
 {
     BinaryWriter writer;
-    writer.WriteU32(1);
+    writer.WriteU32(2);
     writer.WriteU32(std::to_underlying(request.executionMode));
-    writer.WriteU32(request.targetLeaf.value);
-    writer.WriteU32(request.targetDynamicSlot);
-    writer.WriteU32(request.memberBytes);
+    writer.WriteU32(request.canonicalMemberBytes);
+    writer.WriteCountU32(request.executionRoutes.size());
+    for (const auto& route : request.executionRoutes)
+    {
+        writer.WriteU32(route.targetLeaf.value);
+        writer.WriteU32(route.targetDynamicSlot);
+        writer.WriteU32(route.sourceByteOffset);
+        writer.WriteU32(route.routeMemberBytes);
+    }
     writer.WriteCountU32(request.updatePayloads.size());
     writer.WriteBytes(request.executionPayloadIdentity.Digest());
     for (const auto& payload : request.updatePayloads)
@@ -113,7 +118,6 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     }
     return std::move(writer).Take();
 }
-
 
 [[nodiscard]] std::vector<std::byte> BuildConditionalExecutionBytes(
     const DynamicDecisionV1& decision)
@@ -200,9 +204,9 @@ base::Expected<DynamicInvocationRequestV1, Error> BuildDynamicInvocationRequest(
         if (execution.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
             return Fail<DynamicInvocationRequestV1>(
                 "DynamicInvocation/Payload", "Authority-only Invocationへpayloadを渡せません。");
-        if (payload.bytes.size() != execution.memberBytes)
+        if (payload.bytes.size() != execution.canonicalMemberBytes)
             return Fail<DynamicInvocationRequestV1>(
-                "DynamicInvocation/Payload", "Dynamic payloadのbyte数が契約と一致しません。");
+                "DynamicInvocation/Payload", "Canonical Dynamic payloadのbyte数が契約と一致しません。");
         payloads.push_back({MemberIndex(payload.member), std::move(payload.bytes)});
     }
 
@@ -216,8 +220,8 @@ base::Expected<DynamicInvocationRequestV1, Error> BuildDynamicInvocationRequest(
             input.mode,
             std::move(*active.set),
             std::move(*modified.set),
-            execution.executionMode, execution.targetLeaf,
-            execution.targetDynamicSlot, execution.memberBytes,
+            execution.executionMode, execution.canonicalMemberBytes,
+            execution.executionRoutes,
             composition.Certificate().leafCount, execution.conditionalRegions,
             execution.indirectDispatch, std::move(payloads),
             std::move(previousHistory)));
@@ -245,7 +249,7 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
         static_cast<std::uint16_t>(SectionFlags::Required) |
             static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
         8, BuildHistoryBytes(frozen.NextHistory())});
-    sections.push_back({static_cast<std::uint32_t>(FrozenInvocationSectionKind::ExecutionPayload), 1,
+    sections.push_back({static_cast<std::uint32_t>(FrozenInvocationSectionKind::ExecutionPayload), 2,
         static_cast<std::uint16_t>(SectionFlags::Required) |
             static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
         8, BuildExecutionPayloadBytes(verified.Request())});
@@ -265,9 +269,9 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
         return Fail<FrozenDynamicInvocationPackage>(bytes.error().stage, bytes.error().message);
 
     FrozenDynamicExecutionPayloadV1 executionPayload{
-        verified.Request().executionMode, verified.Request().targetLeaf,
-        verified.Request().targetDynamicSlot, verified.Request().memberBytes,
-        verified.Request().executionPayloadIdentity, verified.Request().updatePayloads};
+        verified.Request().executionMode, verified.Request().canonicalMemberBytes,
+        verified.Request().executionRoutes, verified.Request().executionPayloadIdentity,
+        verified.Request().updatePayloads};
     return base::Success<FrozenDynamicInvocationPackage, Error>(
         FrozenDynamicInvocationPackage(
             std::move(bytes).value(), std::move(frozen), verified.Decision(),

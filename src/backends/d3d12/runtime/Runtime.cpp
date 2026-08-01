@@ -1,5 +1,7 @@
 #include "Runtime.h"
 
+#include <algorithm>
+
 #include "composition/CompositionRuntime.h"
 #include "recovery/CompositionRecovery.h"
 #include "../../../canonical/base/BinaryIO.h"
@@ -100,20 +102,27 @@ base::Expected<Submission, Error> Submit(
     native::StaticCompositionFrameInvocation nativeInvocation;
     nativeInvocation.frameNumber = frame.frameNumber;
     nativeInvocation.enabledLeaves = prepared.value().enabledLeaves;
+    std::size_t enabledRouteCount = 0;
+    for (const auto& binding : prepared.value().bindings)
+        if (binding.enabled) ++enabledRouteCount;
     nativeInvocation.dynamicData.reserve(
-        frame.leafDynamicData.size() + (prepared.value().hasBinding ? 1u : 0u));
+        frame.leafDynamicData.size() + enabledRouteCount);
     for (auto& item : frame.leafDynamicData)
     {
-        if (prepared.value().hasBinding && item.leaf == prepared.value().leaf &&
-            item.slot == prepared.value().slot)
+        const auto owned = std::any_of(
+            prepared.value().bindings.begin(), prepared.value().bindings.end(),
+            [&](const auto& binding) {
+                return item.leaf == binding.leaf && item.slot == binding.slot;
+            });
+        if (owned)
             return Fail<Submission>("D3D12Runtime/DynamicExecution",
-                "Verified Dynamic SlotをFrameInputから上書きできません。");
+                "Verified Dynamic routeをFrameInputから上書きできません。");
         nativeInvocation.dynamicData.push_back({item.leaf, item.slot, std::move(item.bytes)});
     }
-    if (prepared.value().hasBinding)
-        nativeInvocation.dynamicData.push_back({
-            prepared.value().leaf, prepared.value().slot,
-            prepared.value().denseSlotBytes});
+    for (const auto& binding : prepared.value().bindings)
+        if (binding.enabled)
+            nativeInvocation.dynamicData.push_back({
+                binding.leaf, binding.slot, binding.denseSlotBytes});
     if (prepared.value().hasIndirectDispatch)
         nativeInvocation.indirectDispatches.push_back({
             prepared.value().indirectLeaf,
@@ -131,17 +140,23 @@ base::Expected<Submission, Error> Submit(
         return Fail<Submission>("D3D12Runtime", "Deviceが検証または実行の契約に違反しています。");
 
     const auto verifiedTransitionCount = prepared.value().verifiedTransitionCount;
-    const auto verifiedDynamicByteCount = prepared.value().hasBinding
-        ? prepared.value().denseSlotBytes.size() : 0u;
+    std::uint64_t verifiedDynamicByteCount = 0;
+    std::uint32_t verifiedDynamicRouteCount = 0;
+    for (const auto& binding : prepared.value().bindings)
+    {
+        if (!binding.enabled) continue;
+        ++verifiedDynamicRouteCount;
+        verifiedDynamicByteCount += binding.denseSlotBytes.size();
+    }
     const auto verifiedConditionalRegionCount = prepared.value().conditionalRegionCount;
     const auto verifiedIndirectDispatchCount = prepared.value().hasIndirectDispatch ? 1u : 0u;
     const auto verifiedIndirectWorkCount = prepared.value().indirectWorkCount;
     loaded.impl_->session.CommitSubmission(invocation, std::move(prepared).value());
     Submission result{std::move(invocation), nativeSubmission.value().deviceEpoch,
         static_cast<std::uint32_t>(nativeSubmission.value().leaves.size()),
-        verifiedTransitionCount, verifiedDynamicByteCount,
-        verifiedConditionalRegionCount, verifiedIndirectDispatchCount,
-        verifiedIndirectWorkCount};
+        verifiedTransitionCount, verifiedDynamicRouteCount,
+        verifiedDynamicByteCount, verifiedConditionalRegionCount,
+        verifiedIndirectDispatchCount, verifiedIndirectWorkCount};
     return base::Success<Submission, Error>(std::move(result));
 }
 

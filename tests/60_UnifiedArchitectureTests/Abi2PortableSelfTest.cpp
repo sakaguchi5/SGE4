@@ -352,11 +352,11 @@ void VerifyAbi2PortableRoundTrip()
         BuildPortableCompositionInput(leafBytes),
         composition::MakeAuthorityOnlyDynamicContractV1(8));
     Require(static_cast<bool>(first) && static_cast<bool>(second),
-        "Portable SGE4UNI 2.5の生成に失敗しました。");
+        "Portable SGE4UNI 2.6の生成に失敗しました。");
     Require(first.value().FileBytes().size() == second.value().FileBytes().size() &&
         std::equal(first.value().FileBytes().begin(), first.value().FileBytes().end(),
             second.value().FileBytes().begin()),
-        "Portable SGE4UNI 2.5がbyte決定的ではありません。");
+        "Portable SGE4UNI 2.6がbyte決定的ではありません。");
 
     auto outer = ReadSectionedArtifact(
         first.value().FileBytes(), artifact::FrozenCompositionAbi2Magic,
@@ -364,7 +364,7 @@ void VerifyAbi2PortableRoundTrip()
     Require(static_cast<bool>(outer) &&
         outer.value().FormatMinor() == artifact::FrozenCompositionAbi2FormatMinor &&
         outer.value().Sections().size() == artifact::FrozenCompositionAbi2SectionKinds.size(),
-        "Portable SGE4UNI 2.5の平坦Section構造が一致しません。");
+        "Portable SGE4UNI 2.6の平坦Section構造が一致しません。");
 
     const auto leaves = first.value().VerifiedComposition().ValidatedContract().Leaves();
     Require(leaves.size() == 2, "Portable CompositionのLeaf数が一致しません。");
@@ -373,11 +373,11 @@ void VerifyAbi2PortableRoundTrip()
             "ABI 2.0でSchema 17 Leaf Package bytesが保存されませんでした。");
 
     auto roundTrip = composition::ReadFrozenCompositionPackage(first.value().FileBytes());
-    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.5のRound-tripに失敗しました。");
+    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.6のRound-tripに失敗しました。");
     Require(roundTrip.value().FileDigest() == first.value().FileDigest() &&
         roundTrip.value().CompositionCoreDigest() == first.value().CompositionCoreDigest() &&
         roundTrip.value().SemanticDigest() == first.value().SemanticDigest(),
-        "Portable SGE4UNI 2.5のDigestがRound-tripで変化しました。");
+        "Portable SGE4UNI 2.6のDigestがRound-tripで変化しました。");
 
     auto legacyBytes = composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
         BuildPortableCompositionInput(leafBytes),
@@ -388,17 +388,17 @@ void VerifyAbi2PortableRoundTrip()
 
     auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
         legacyBytes.value());
-    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.5へのMigrationに失敗しました。");
+    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.6へのMigrationに失敗しました。");
     Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
         std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
             first.value().FileBytes().begin()),
-        "直接生成とMigration後のPortable SGE4UNI 2.5がbyte一致しません。");
+        "直接生成とMigration後のPortable SGE4UNI 2.6がbyte一致しません。");
     Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
         migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
         migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity &&
         migrated.value().Certificate().scheduleIdentity == first.value().Certificate().scheduleIdentity &&
         migrated.value().Certificate().recoverySetIdentity == first.value().Certificate().recoverySetIdentity,
-        "ABI 1.1から2.5へのMigrationで権威Identityが保存されませんでした。");
+        "ABI 1.1から2.6へのMigrationで権威Identityが保存されませんでした。");
 
     std::vector<composition::ConditionalRegionV1> conditionalRegions;
     conditionalRegions.push_back(composition::MakeConditionalRegionV1(
@@ -470,7 +470,7 @@ void VerifyAbi2PortableRoundTrip()
         textureFirst.value().FileBytes());
     Require(textureRoundTrip &&
         textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-        "Portable限定Texture2D SGE4UNI 2.5のRound-tripに失敗しました。");
+        "Portable限定Texture2D SGE4UNI 2.6のRound-tripに失敗しました。");
     const auto textureUavProducer = BuildPortableTextureLeafPackage(false, 4, 4, true);
     const auto textureFloatConsumer = BuildPortableTextureLeafPackage(true, 4, 4, true);
     auto textureUav = composition::BuildFrozenCompositionPackage(
@@ -496,7 +496,7 @@ void VerifyAbi2PortableRoundTrip()
         textureUav.value().FileBytes());
     Require(textureUavRoundTrip &&
         textureUavRoundTrip.value().SemanticDigest() == textureUav.value().SemanticDigest(),
-        "Portable限定Texture2D UAV SGE4UNI 2.5のRound-tripに失敗しました。");
+        "Portable限定Texture2D UAV SGE4UNI 2.6のRound-tripに失敗しました。");
 
     Require(!composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
         BuildPortableTextureCompositionInput(textureProducer, textureConsumer),

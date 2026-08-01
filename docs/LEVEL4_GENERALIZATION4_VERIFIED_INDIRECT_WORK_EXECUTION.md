@@ -1,3 +1,5 @@
+> Current status: Generalization 6により現行ProductionはSGE4UNI 2.6／SGE4INV 1.5へ進んだ。本書はGeneralization 4完成時点の契約記録である。
+
 # Level 4 Generalization 4 — Verified Indirect Work Execution
 
 ## 1. 目的

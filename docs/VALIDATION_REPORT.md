@@ -3,9 +3,9 @@
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.5
+Frozen Composition: SGE4UNI 2.6
 Dynamic Contract: schema 3
-Frozen Dynamic Invocation: SGE4INV 1.4
+Frozen Dynamic Invocation: SGE4INV 1.5
 Invocation Manifest: schema 4
 Execution Payload Section: schema 1
 ```
@@ -373,3 +373,35 @@ Linux側ではportable SGE4UNI 2.5 direct／migration／round-trip／corruption�
 Windows資格試験で、RGBA32F shared TextureがD3D12 ExecutorのInvocation検証に拒否された。原因はGeneralization 3由来の`rowBytes == width * 4`というBGRA8専用条件が、全External Texture2D formatへ適用されていたことである。
 
 修正後は`requiredFormat`から限定texel byte幅を導出し、BGRA8は`width * 4`、RGBA32Fは`width * 16`としてNative Resourceのpacked rowBytesを検証する。未対応formatは引き続き拒否する。Frozen ABI、Composition authority、UAV物質化、state handoff、readback、Recoveryの意味は変更しない。
+
+## Level 4 Generalization 6 — Multi-target Verified Dynamic Routing
+
+Portable確認:
+
+- SGE4UNI 2.6 direct／ABI 1.1 authority-only migration／round-trip／corruption rejection
+- Dynamic Contract schema 5のCanonical route table
+- SGE4INV 1.5／Manifest schema 6／Execution Payload schema 2
+- route別private shadowへのbyte-slice Update／Clear
+- route順序改竄拒否と全shadow原子的Commit回帰
+- C++23 `-Wall -Wextra -Wpedantic -Werror`構文検査
+- static architecture audit／SOURCE_MANIFEST照合
+
+Windowsで未確認:
+
+- MSVC／HLSL／WARPによる二つのtarget Leafへの実GPU slice配布
+- controlled Recovery後の全route GPU output再構築
+- Actual Device removal
+
+最終合格はWindows上の`run_new_sge4_full_gate.bat`で確定する。
+
+## Level 4 Generalization 6 — Runtime `std::any_of` include fix
+
+Windows Debug buildで、D3D12 Runtime facadeのroute ownership検査に使用する`std::any_of`が未宣言となった。原因は`Runtime.cpp`が`<algorithm>`を直接includeしていなかったことである。
+
+`#include <algorithm>`を追加した。Frozen ABI、Dynamic Planner／Verifier、multi-route shadow、D3D12 submission、Recoveryの意味は変更しない。
+
+## Level 4 Generalization 6 — Indirect Contract schema Gate fix
+
+Windows統合設計試験で、Generalization 4のVerified Indirect Dispatch回帰が旧Dynamic Contract schema 4を要求し、正しいSGE4UNI 2.6 schema 5成果物を拒否した。
+
+Indirect routeはschema 5へ正しく保持されていたため、製品コードは変更せず、G4 Indirect回帰とG6 Multi-target回帰のschema照合を`FrozenCompositionAbi2DynamicContractSchema`へ統一した。SGE4UNI 2.6をschema 4と記載していたauthority map／acceptance matrixもschema 5へ修正した。

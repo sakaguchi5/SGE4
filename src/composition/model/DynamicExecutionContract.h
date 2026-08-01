@@ -2,6 +2,7 @@
 
 #include "CompositionContract.h"
 
+#include <compare>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -14,12 +15,30 @@ using ConditionalRegionId = Id32<ConditionalRegionTag>;
 enum class DynamicExecutionModeV1 : std::uint32_t
 {
     AuthorityOnly = 0,
+    // Schema 5 generalizes the original single dense slot into one or more
+    // independently materialized dense routes.  The historic enum value is
+    // preserved so existing single-route compositions remain source-compatible.
     VerifiedDenseSlot = 1
 };
 
-// Generalization 2 deliberately derives branch selection only from exact sets that
-// are already independently verified by the Dynamic Verifier. Runtime never accepts
-// an unsealed bool and never invents a branch policy.
+struct DynamicExecutionRouteV1 final
+{
+    LeafPackageId targetLeaf;
+    std::uint32_t targetDynamicSlot = package::InvalidIndex;
+    std::uint32_t sourceByteOffset = 0;
+    std::uint32_t routeMemberBytes = 0;
+    auto operator<=>(const DynamicExecutionRouteV1&) const = default;
+};
+
+[[nodiscard]] inline DynamicExecutionRouteV1 MakeDynamicExecutionRouteV1(
+    LeafPackageId targetLeaf,
+    std::uint32_t targetDynamicSlot,
+    std::uint32_t sourceByteOffset,
+    std::uint32_t routeMemberBytes)
+{
+    return {targetLeaf, targetDynamicSlot, sourceByteOffset, routeMemberBytes};
+}
+
 enum class IndirectExecutionModeV1 : std::uint32_t
 {
     None = 0,
@@ -53,10 +72,6 @@ enum class ConditionalPredicateKindV1 : std::uint32_t
     TransitionSetNonEmpty = 6
 };
 
-// Non-nested v1 region. Leaves may belong to at most one region. Unselected leaves
-// are not submitted; their resources and completion tokens retain the last accepted
-// state. Cross-region and conditional-to-unconditional data dependencies are rejected
-// by the Composition Toolchain.
 struct ConditionalRegionV1 final
 {
     ConditionalRegionId id;
@@ -66,18 +81,17 @@ struct ConditionalRegionV1 final
     std::vector<LeafPackageId> falseLeaves;
 };
 
-// Level 4 Generalization 1 keeps the execution route deliberately narrow:
-// one exact dynamic member universe is materialized into one dense Dynamic Slot.
-// Generalization 2 adds a finite set of non-nested Conditional Regions whose
-// predicates are derived from the same verified Dynamic Decision.
+// Generalization 6 keeps one canonical payload per member and maps fixed byte
+// slices into one or more dense Dynamic Slots.  Every route observes the same
+// exact Update/Clear/Retain sets.  Runtime may copy bytes but may not transform
+// or infer them.
 struct DynamicContractV1 final
 {
-    std::uint32_t schemaVersion = 4;
+    std::uint32_t schemaVersion = 5;
     std::uint32_t universeCount = 0;
     DynamicExecutionModeV1 executionMode = DynamicExecutionModeV1::AuthorityOnly;
-    LeafPackageId targetLeaf;
-    std::uint32_t targetDynamicSlot = package::InvalidIndex;
-    std::uint32_t memberBytes = 0;
+    std::uint32_t canonicalMemberBytes = 0;
+    std::vector<DynamicExecutionRouteV1> executionRoutes;
     std::vector<ConditionalRegionV1> conditionalRegions;
     VerifiedIndirectDispatchContractV1 indirectDispatch;
 };
@@ -97,9 +111,8 @@ struct DynamicContractV1 final
     std::vector<ConditionalRegionV1> conditionalRegions = {},
     VerifiedIndirectDispatchContractV1 indirectDispatch = {})
 {
-    return {4, universeCount, DynamicExecutionModeV1::AuthorityOnly,
-        {}, package::InvalidIndex, 0, std::move(conditionalRegions),
-        indirectDispatch};
+    return {5, universeCount, DynamicExecutionModeV1::AuthorityOnly,
+        0, {}, std::move(conditionalRegions), indirectDispatch};
 }
 
 [[nodiscard]] inline DynamicContractV1 MakeVerifiedDenseSlotDynamicContractV1(
@@ -110,8 +123,23 @@ struct DynamicContractV1 final
     std::vector<ConditionalRegionV1> conditionalRegions = {},
     VerifiedIndirectDispatchContractV1 indirectDispatch = {})
 {
-    return {4, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
-        targetLeaf, targetDynamicSlot, memberBytes, std::move(conditionalRegions),
+    std::vector<DynamicExecutionRouteV1> routes;
+    routes.push_back(MakeDynamicExecutionRouteV1(
+        targetLeaf, targetDynamicSlot, 0, memberBytes));
+    return {5, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
+        memberBytes, std::move(routes), std::move(conditionalRegions),
+        indirectDispatch};
+}
+
+[[nodiscard]] inline DynamicContractV1 MakeVerifiedRoutedSlotsDynamicContractV1(
+    std::uint32_t universeCount,
+    std::uint32_t canonicalMemberBytes,
+    std::vector<DynamicExecutionRouteV1> routes,
+    std::vector<ConditionalRegionV1> conditionalRegions = {},
+    VerifiedIndirectDispatchContractV1 indirectDispatch = {})
+{
+    return {5, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
+        canonicalMemberBytes, std::move(routes), std::move(conditionalRegions),
         indirectDispatch};
 }
 }

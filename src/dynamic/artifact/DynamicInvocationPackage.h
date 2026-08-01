@@ -19,8 +19,8 @@ inline constexpr std::array<std::byte, 8> FrozenInvocationMagic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'4'},
     std::byte{'I'}, std::byte{'N'}, std::byte{'V'}, std::byte{0}};
 inline constexpr std::uint16_t FrozenInvocationFormatMajor = 1;
-inline constexpr std::uint16_t FrozenInvocationFormatMinor = 4;
-inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 5;
+inline constexpr std::uint16_t FrozenInvocationFormatMinor = 5;
+inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 6;
 
 enum class FrozenInvocationSectionKind : std::uint32_t
 {
@@ -63,9 +63,8 @@ struct FrozenDynamicExecutionPayloadV1 final
 {
     composition::DynamicExecutionModeV1 mode =
         composition::DynamicExecutionModeV1::AuthorityOnly;
-    composition::LeafPackageId targetLeaf;
-    std::uint32_t targetDynamicSlot = package::InvalidIndex;
-    std::uint32_t memberBytes = 0;
+    std::uint32_t canonicalMemberBytes = 0;
+    std::vector<composition::DynamicExecutionRouteV1> routes;
     DynamicExecutionPayloadIdentity identity;
     std::vector<MemberUpdatePayloadV1> updates;
 };

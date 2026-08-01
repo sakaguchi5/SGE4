@@ -26,6 +26,20 @@ void Require(bool condition, const char* message)
     return {member, fixture::Bytes(value)};
 }
 
+[[nodiscard]] sge4::dynamic::MemberUpdateInputV1 MultiUpdatePayload(
+    std::uint32_t member,
+    const std::array<float, 4>& first,
+    const std::array<float, 4>& second)
+{
+    auto firstBytes = fixture::Bytes(first);
+    auto secondBytes = fixture::Bytes(second);
+    std::vector<std::byte> bytes;
+    bytes.reserve(firstBytes.size() + secondBytes.size());
+    bytes.insert(bytes.end(), firstBytes.begin(), firstBytes.end());
+    bytes.insert(bytes.end(), secondBytes.begin(), secondBytes.end());
+    return {member, std::move(bytes)};
+}
+
 [[nodiscard]] bool EqualsDense(
     std::span<const std::byte> bytes,
     const std::array<std::array<float, 4>, 4>& expected,
@@ -446,6 +460,147 @@ void VerifyConditionalRegionQualification()
         "Conditional RecoverySeed後のGPU観測結果が一致しません。");
 }
 
+void VerifyMultiTargetDynamicRoutingQualification()
+{
+    constexpr std::uint32_t Universe = 4;
+    const std::array<float, 4> zero{};
+    const std::array<float, 4> aOne{1, 2, 3, 4};
+    const std::array<float, 4> bOne{11, 12, 13, 14};
+    const std::array<float, 4> aThree{31, 32, 33, 34};
+    const std::array<float, 4> bThree{41, 42, 43, 44};
+    const std::array<float, 4> aOneNext{101, 102, 103, 104};
+    const std::array<float, 4> bOneNext{111, 112, 113, 114};
+    const std::array<float, 4> aTwo{201, 202, 203, 204};
+    const std::array<float, 4> bTwo{211, 212, 213, 214};
+
+    auto package = tests::BuildMultiTargetVerifiedDynamicUnified(Universe);
+    if (!package)
+        throw std::runtime_error(
+            "Multi-target Dynamic Compositionの生成に失敗しました：" + package.error());
+    const auto firstOutput = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/multi-dynamic/output-first");
+    const auto secondOutput = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/multi-dynamic/output-second");
+    Require(firstOutput.IsValid() && secondOutput.IsValid(),
+        "Multi-target outputの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded),
+        "Multi-target Dynamic CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 seed;
+    seed.timelineOrdinal = 0;
+    seed.mode = planning.requiredMode;
+    seed.activeMembers = {1, 3};
+    seed.updatePayloads = {
+        MultiUpdatePayload(1, aOne, bOne),
+        MultiUpdatePayload(3, aThree, bThree)};
+    auto frozenSeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(seed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSeed),
+        "Multi-target InitialSeedの生成に失敗しました。");
+    auto submittedSeed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSeed).value(), {0, {}});
+    Require(submittedSeed && submittedSeed.value().verifiedTransitionCount == 2 &&
+        submittedSeed.value().verifiedDynamicRouteCount == 2 &&
+        submittedSeed.value().verifiedDynamicByteCount == Universe * 32u,
+        "Multi-target route集合が実GPU submissionへ接続されませんでした。");
+
+    const std::array firstExpected{zero, aOne, zero, aThree};
+    const std::array secondExpected{zero, bOne, zero, bThree};
+    auto firstRead = sge4::d3d12::ReadBuffer(loaded.value(), firstOutput);
+    auto secondRead = sge4::d3d12::ReadBuffer(loaded.value(), secondOutput);
+    Require(firstRead && secondRead &&
+        EqualsDense(firstRead.value().bytes, firstExpected) &&
+        EqualsDense(secondRead.value().bytes, secondExpected),
+        "Canonical member sliceが二つのGPU routeへ正しく配布されませんでした。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 next;
+    next.timelineOrdinal = 1;
+    next.mode = planning.requiredMode;
+    next.activeMembers = {1, 2};
+    next.modifiedSurvivors = {1};
+    next.updatePayloads = {
+        MultiUpdatePayload(1, aOneNext, bOneNext),
+        MultiUpdatePayload(2, aTwo, bTwo)};
+    auto frozenNext = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(next),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenNext),
+        "Multi-target ContinueHistoryの生成に失敗しました。");
+    auto submittedNext = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenNext).value(), {1, {}});
+    Require(submittedNext && submittedNext.value().verifiedTransitionCount == 3 &&
+        submittedNext.value().verifiedDynamicRouteCount == 2,
+        "Multi-target Update／Activation／Clearが一括実行されませんでした。");
+    const std::array firstNextExpected{zero, aOneNext, aTwo, zero};
+    const std::array secondNextExpected{zero, bOneNext, bTwo, zero};
+    firstRead = sge4::d3d12::ReadBuffer(loaded.value(), firstOutput);
+    secondRead = sge4::d3d12::ReadBuffer(loaded.value(), secondOutput);
+    Require(firstRead && secondRead &&
+        EqualsDense(firstRead.value().bytes, firstNextExpected) &&
+        EqualsDense(secondRead.value().bytes, secondNextExpected),
+        "Multi-target route shadowのatomic Commit結果が一致しません。");
+
+    // Every route is Frozen-owned.  Caller collision with either target is rejected.
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 collision;
+    collision.timelineOrdinal = 2;
+    collision.mode = planning.requiredMode;
+    collision.activeMembers = {1, 2};
+    collision.modifiedSurvivors = {1};
+    collision.updatePayloads = {MultiUpdatePayload(1, aOneNext, bOneNext)};
+    auto frozenCollision = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(collision),
+        planning.previousHistory);
+    Require(static_cast<bool>(frozenCollision),
+        "Multi-target collision Invocationの生成に失敗しました。");
+    sge4::d3d12::FrameInput competing;
+    competing.frameNumber = 2;
+    const auto& secondRoute = loaded.value().Package().DynamicContract().executionRoutes[1];
+    competing.leafDynamicData.push_back({secondRoute.targetLeaf,
+        secondRoute.targetDynamicSlot,
+        std::vector<std::byte>(Universe * secondRoute.routeMemberBytes, std::byte{0})});
+    Require(!sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenCollision).value(), std::move(competing)),
+        "Multi-target routeへのCaller上書きが受理されました。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "Multi-target Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "Multi-target Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 2;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {1, 2};
+    recoverySeed.updatePayloads = {
+        MultiUpdatePayload(1, aOneNext, bOneNext),
+        MultiUpdatePayload(2, aTwo, bTwo)};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery),
+        "Multi-target RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {2, {}});
+    Require(resumed && resumed.value().verifiedDynamicRouteCount == 2,
+        "RecoverySeedが全Dynamic routeを再構築しませんでした。");
+    firstRead = sge4::d3d12::ReadBuffer(loaded.value(), firstOutput);
+    secondRead = sge4::d3d12::ReadBuffer(loaded.value(), secondOutput);
+    Require(firstRead && secondRead &&
+        EqualsDense(firstRead.value().bytes, firstNextExpected) &&
+        EqualsDense(secondRead.value().bytes, secondNextExpected),
+        "Multi-target RecoverySeed後のGPU観測結果が一致しません。");
+}
+
 void VerifyDynamicExecutionQualification()
 {
     constexpr std::uint32_t Universe = 4;
@@ -549,8 +704,8 @@ void VerifyDynamicExecutionQualification()
     sge4::d3d12::FrameInput competingFrame;
     competingFrame.frameNumber = 3;
     competingFrame.leafDynamicData.push_back({
-        package.value().DynamicContract().targetLeaf,
-        package.value().DynamicContract().targetDynamicSlot,
+        package.value().DynamicContract().executionRoutes[0].targetLeaf,
+        package.value().DynamicContract().executionRoutes[0].targetDynamicSlot,
         std::vector<std::byte>(Universe * 16, std::byte{0})});
     Require(!sge4::d3d12::Submit(
         loaded.value(), std::move(frozenCollision).value(), std::move(competingFrame)),
@@ -605,6 +760,7 @@ int main(int argc, char** argv)
         VerifyLimitedTexture2DUavFlowQualification();
         VerifyLimitedTexture2DFlowQualification();
         VerifyConditionalRegionQualification();
+        VerifyMultiTargetDynamicRoutingQualification();
         VerifyDynamicExecutionQualification();
         auto package = tests::BuildLinearUnified();
         Require(static_cast<bool>(package), "Compositionが検証または実行の契約に違反しています。");

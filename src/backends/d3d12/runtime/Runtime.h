@@ -42,6 +42,7 @@ struct Submission final
     std::uint64_t deviceEpoch = 0;
     std::uint32_t submittedLeafCount = 0;
     std::uint32_t verifiedTransitionCount = 0;
+    std::uint32_t verifiedDynamicRouteCount = 0;
     std::uint64_t verifiedDynamicByteCount = 0;
     std::uint32_t verifiedConditionalRegionCount = 0;
     std::uint32_t verifiedIndirectDispatchCount = 0;

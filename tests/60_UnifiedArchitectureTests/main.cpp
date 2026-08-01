@@ -57,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.5の平坦Section構造が成立していません。");
+            "SGE4UNI 2.6の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.5の直接Sectionがありません。");
+            "SGE4UNI 2.6の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -74,11 +74,11 @@ int main(int argc, char** argv)
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.5へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.6へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.5とMigration後ABI 2.5がbyte一致しません。");
+            "直接生成したABI 2.6とMigration後ABI 2.6がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
             invocationArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
             invocationArtifact.value().Sections().size() ==
                 dynamic::FrozenInvocationSectionKinds.size(),
-            "SGE4INV 1.4のSection構造が成立していません。");
+            "SGE4INV 1.5のSection構造が成立していません。");
 
         dynamic::InvocationInputV1 missingPayload;
         missingPayload.timelineOrdinal = 0;
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             throw std::runtime_error(
                 "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
         Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
-            "Conditional Region契約がSGE4UNI 2.5へ保存されませんでした。");
+            "Conditional Region契約がSGE4UNI 2.6へ保存されませんでした。");
 
         dynamic::InvocationInputV1 conditionalTrue;
         conditionalTrue.timelineOrdinal = 0;
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
             "改竄されたenabled Leaf集合が独立Verifierに受理されました。");
         auto frozenFalse = dynamic::FreezeVerifiedInvocation(*verifiedFalse.verified);
         Require(frozenFalse && frozenFalse.value().Decision().enabledLeaves.empty(),
-            "Conditional false DecisionをSGE4INV 1.4へFreezeできませんでした。");
+            "Conditional false DecisionをSGE4INV 1.5へFreezeできませんでした。");
 
         // Regression: a zero-Leaf false branch still constitutes a successful
         // verified dynamic submission.  Its Clear/Update effects must be committed
@@ -254,7 +254,7 @@ int main(int argc, char** argv)
             "Conditional shadow commit用InitialSeedの検証に失敗しました。");
         auto preparedRuntimeSeed = conditionalSession.value().PrepareDynamicExecution(
             runtimeSeedFrozen.value());
-        Require(preparedRuntimeSeed && preparedRuntimeSeed.value().hasBinding,
+        Require(preparedRuntimeSeed && preparedRuntimeSeed.value().bindings.size() == 1 && preparedRuntimeSeed.value().bindings[0].enabled,
             "Conditional true branchのDynamic bindingが準備されませんでした。");
         conditionalSession.value().CommitSubmission(
             runtimeSeedFrozen.value(), std::move(preparedRuntimeSeed).value());
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
             "Conditional shadow commit用false Invocationの検証に失敗しました。");
         auto preparedRuntimeDisable = conditionalSession.value().PrepareDynamicExecution(
             runtimeDisableFrozen.value());
-        Require(preparedRuntimeDisable && !preparedRuntimeDisable.value().hasBinding &&
+        Require(preparedRuntimeDisable && preparedRuntimeDisable.value().bindings.size() == 1 && !preparedRuntimeDisable.value().bindings[0].enabled &&
             preparedRuntimeDisable.value().appliedTransitionCount == 1,
             "zero-Leaf false branchのClear transitionが準備されませんでした。");
         conditionalSession.value().CommitSubmission(
@@ -293,14 +293,134 @@ int main(int argc, char** argv)
             "Conditional shadow commit用再有効化Invocationの生成に失敗しました。");
         auto preparedRuntimeReenable = conditionalSession.value().PrepareDynamicExecution(
             runtimeReenableFrozen.value());
-        Require(preparedRuntimeReenable && preparedRuntimeReenable.value().hasBinding,
+        Require(preparedRuntimeReenable && preparedRuntimeReenable.value().bindings.size() == 1 && preparedRuntimeReenable.value().bindings[0].enabled,
             "Conditional shadow commit用再有効化bindingが準備されませんでした。");
         std::vector<std::byte> expectedRuntimeShadow(4u * 16u, std::byte{0});
         const auto valueThreeBytes = fixture::Bytes(runtimeValueThree);
         std::copy(valueThreeBytes.begin(), valueThreeBytes.end(),
             expectedRuntimeShadow.begin() + 3u * 16u);
-        Require(preparedRuntimeReenable.value().denseSlotBytes == expectedRuntimeShadow,
+        Require(preparedRuntimeReenable.value().bindings[0].denseSlotBytes == expectedRuntimeShadow,
             "zero-Leaf false branchでCommitされたClearが再有効化shadowへ反映されませんでした。");
+
+        // Generalization 6: one canonical 32-byte member payload is sliced into
+        // two independently owned dense Dynamic Slots.  Both route shadows advance
+        // from the same exact transition stream and commit atomically.
+        auto multiPackage = tests::BuildMultiTargetVerifiedDynamicUnified(4);
+        Require(static_cast<bool>(multiPackage),
+            "Multi-target Dynamic Compositionの生成に失敗しました。");
+        Require(multiPackage.value().DynamicContract().schemaVersion ==
+            composition::artifact::FrozenCompositionAbi2DynamicContractSchema &&
+            multiPackage.value().DynamicContract().canonicalMemberBytes == 32 &&
+            multiPackage.value().DynamicContract().executionRoutes.size() == 2,
+            "Multi-target Dynamic ContractがSGE4UNI 2.6へ固定されませんでした。");
+        auto multiSession = sge4::runtime::Session::Create(
+            std::move(multiPackage).value(), 1);
+        Require(static_cast<bool>(multiSession),
+            "Multi-target Runtime Sessionの生成に失敗しました。");
+
+        const auto MakeCanonicalPayload = [](const std::array<float, 4>& first,
+                                             const std::array<float, 4>& second) {
+            auto firstBytes = fixture::Bytes(first);
+            auto secondBytes = fixture::Bytes(second);
+            std::vector<std::byte> bytes;
+            bytes.reserve(firstBytes.size() + secondBytes.size());
+            bytes.insert(bytes.end(), firstBytes.begin(), firstBytes.end());
+            bytes.insert(bytes.end(), secondBytes.begin(), secondBytes.end());
+            return bytes;
+        };
+        const std::array<float, 4> multiA1{1, 2, 3, 4};
+        const std::array<float, 4> multiB1{11, 12, 13, 14};
+        const std::array<float, 4> multiA3{31, 32, 33, 34};
+        const std::array<float, 4> multiB3{41, 42, 43, 44};
+
+        auto multiPlanning = multiSession.value().PlanningContext();
+        dynamic::InvocationInputV1 invalidMultiPayload;
+        invalidMultiPayload.timelineOrdinal = 0;
+        invalidMultiPayload.mode = multiPlanning.requiredMode;
+        invalidMultiPayload.activeMembers = {0};
+        invalidMultiPayload.updatePayloads = {
+            {0, std::vector<std::byte>(16, std::byte{0})}};
+        Require(!tests::BuildFrozenInvocation(
+            multiSession.value().Package(), multiPlanning.deviceEpoch,
+            std::move(invalidMultiPayload), multiPlanning.previousHistory),
+            "Canonical member byte幅より短いMulti-target payloadが受理されました。");
+
+        dynamic::InvocationInputV1 multiSeed;
+        multiSeed.timelineOrdinal = 0;
+        multiSeed.mode = multiPlanning.requiredMode;
+        multiSeed.activeMembers = {1, 3};
+        multiSeed.updatePayloads = {
+            {1, MakeCanonicalPayload(multiA1, multiB1)},
+            {3, MakeCanonicalPayload(multiA3, multiB3)}};
+        auto multiSeedFrozen = tests::BuildFrozenInvocation(
+            multiSession.value().Package(), multiPlanning.deviceEpoch,
+            std::move(multiSeed), std::move(multiPlanning.previousHistory));
+        Require(static_cast<bool>(multiSeedFrozen) &&
+            multiSeedFrozen.value().ExecutionPayload().routes.size() == 2 &&
+            multiSeedFrozen.value().ExecutionPayload().canonicalMemberBytes == 32,
+            "Multi-target payloadをSGE4INV 1.5へFreezeできませんでした。");
+        Require(static_cast<bool>(multiSession.value().ValidateForSubmission(
+            multiSeedFrozen.value())),
+            "Multi-target InitialSeedのRuntime検証に失敗しました。");
+        auto multiPrepared = multiSession.value().PrepareDynamicExecution(
+            multiSeedFrozen.value());
+        Require(multiPrepared && multiPrepared.value().bindings.size() == 2 &&
+            multiPrepared.value().appliedTransitionCount == 2,
+            "Multi-target InitialSeedのroute shadowが準備されませんでした。");
+        for (std::size_t routeIndex = 0; routeIndex < 2; ++routeIndex)
+        {
+            const auto& route = multiSession.value().Package().DynamicContract().executionRoutes[routeIndex];
+            std::vector<std::byte> expected(4u * route.routeMemberBytes, std::byte{0});
+            const auto payloadOne = MakeCanonicalPayload(multiA1, multiB1);
+            const auto payloadThree = MakeCanonicalPayload(multiA3, multiB3);
+            std::copy_n(payloadOne.begin() + route.sourceByteOffset,
+                route.routeMemberBytes,
+                expected.begin() + route.routeMemberBytes);
+            std::copy_n(payloadThree.begin() + route.sourceByteOffset,
+                route.routeMemberBytes,
+                expected.begin() + 3u * route.routeMemberBytes);
+            Require(multiPrepared.value().bindings[routeIndex].denseSlotBytes == expected,
+                "Canonical member sliceが対応route shadowへ反映されませんでした。");
+        }
+        multiSession.value().CommitSubmission(
+            multiSeedFrozen.value(), std::move(multiPrepared).value());
+
+        // A malformed route table must be rejected before any Dynamic planning.
+        auto invalidMulti = tests::BuildMultiTargetVerifiedDynamicUnified(4);
+        Require(static_cast<bool>(invalidMulti),
+            "Multi-target negative testの正本生成に失敗しました。");
+        auto invalidContract = invalidMulti.value().DynamicContract();
+        std::swap(invalidContract.executionRoutes[0], invalidContract.executionRoutes[1]);
+        Require(!composition::FreezeVerifiedCompositionPackage(
+            invalidMulti.value().VerifiedComposition().ValidatedContract(),
+            invalidMulti.value().VerifiedComposition().VerifiedPlan(),
+            std::move(invalidContract)),
+            "非Canonical順序のDynamic route集合が受理されました。");
+
+        auto duplicateMulti = tests::BuildMultiTargetVerifiedDynamicUnified(4);
+        Require(static_cast<bool>(duplicateMulti),
+            "Multi-target duplicate negative testの正本生成に失敗しました。");
+        auto duplicateContract = duplicateMulti.value().DynamicContract();
+        duplicateContract.executionRoutes[1].targetLeaf =
+            duplicateContract.executionRoutes[0].targetLeaf;
+        duplicateContract.executionRoutes[1].targetDynamicSlot =
+            duplicateContract.executionRoutes[0].targetDynamicSlot;
+        Require(!composition::FreezeVerifiedCompositionPackage(
+            duplicateMulti.value().VerifiedComposition().ValidatedContract(),
+            duplicateMulti.value().VerifiedComposition().VerifiedPlan(),
+            std::move(duplicateContract)),
+            "同一Leaf／Slotを二重所有するDynamic route集合が受理されました。");
+
+        auto outOfRangeMulti = tests::BuildMultiTargetVerifiedDynamicUnified(4);
+        Require(static_cast<bool>(outOfRangeMulti),
+            "Multi-target slice negative testの正本生成に失敗しました。");
+        auto outOfRangeContract = outOfRangeMulti.value().DynamicContract();
+        outOfRangeContract.executionRoutes[0].sourceByteOffset = 24;
+        Require(!composition::FreezeVerifiedCompositionPackage(
+            outOfRangeMulti.value().VerifiedComposition().ValidatedContract(),
+            outOfRangeMulti.value().VerifiedComposition().VerifiedPlan(),
+            std::move(outOfRangeContract)),
+            "Canonical payload範囲外のDynamic route sliceが受理されました。");
 
         auto overlapInput = tests::BuildLinearInput();
         Require(static_cast<bool>(overlapInput), "Conditional overlap入力の生成に失敗しました。");
@@ -335,12 +455,13 @@ int main(int argc, char** argv)
                 "Verified Indirect Compositionの生成に失敗しました：" +
                 indirectPackage.error());
         const auto& indirectContract = indirectPackage.value().DynamicContract().indirectDispatch;
-        Require(indirectPackage.value().DynamicContract().schemaVersion == 4 &&
+        Require(indirectPackage.value().DynamicContract().schemaVersion ==
+            composition::artifact::FrozenCompositionAbi2DynamicContractSchema &&
             indirectContract.mode == composition::IndirectExecutionModeV1::VerifiedDispatch &&
             indirectContract.targetLeaf.IsValid() &&
             indirectContract.targetComputeCommand == 0 &&
             indirectContract.maxWorkCount == 8,
-            "Verified indirect dispatch契約がSGE4UNI 2.5へ固定されませんでした。");
+            "Verified indirect dispatch契約がSGE4UNI 2.6へ固定されませんでした。");
         Require(!tests::BuildVerifiedIndirectUnified(8, 7),
             "static Compute Commandと異なるmaxWorkCountが受理されました。");
 
@@ -354,7 +475,7 @@ int main(int argc, char** argv)
             indirectZero.value().IndirectDispatch().threadGroupCountX == 0 &&
             indirectZero.value().IndirectDispatch().identity ==
                 indirectZero.value().Artifact().IndirectDispatchIdentityValue(),
-            "zero-work Verified indirect dispatchがSGE4INV 1.4へSealされませんでした。");
+            "zero-work Verified indirect dispatchがSGE4INV 1.5へSealされませんでした。");
 
         dynamic::InvocationInputV1 indirectInput;
         indirectInput.timelineOrdinal = 0;
@@ -382,7 +503,7 @@ int main(int argc, char** argv)
         auto frozenIndirect = dynamic::FreezeVerifiedInvocation(*indirectVerified.verified);
         Require(frozenIndirect &&
             frozenIndirect.value().IndirectDispatch().workCount == 3,
-            "Verified indirect DecisionをSGE4INV 1.4へFreezeできませんでした。");
+            "Verified indirect DecisionをSGE4INV 1.5へFreezeできませんでした。");
         auto indirectArtifact = sge4::ReadSectionedArtifact(
             frozenIndirect.value().FileBytes(), dynamic::FrozenInvocationMagic,
             dynamic::FrozenInvocationFormatMajor);
@@ -391,7 +512,7 @@ int main(int argc, char** argv)
             indirectArtifact.value().Sections().size() == dynamic::FrozenInvocationSectionKinds.size() &&
             indirectArtifact.value().FindSection(
                 std::to_underlying(dynamic::FrozenInvocationSectionKind::IndirectDispatch)) != nullptr,
-            "SGE4INV 1.4のIndirect Dispatch Sectionが成立していません。");
+            "SGE4INV 1.5のIndirect Dispatch Sectionが成立していません。");
 
         auto indirectSession = sge4::runtime::Session::Create(
             std::move(indirectPackage).value(), 1);
@@ -453,7 +574,7 @@ int main(int argc, char** argv)
             textureFirst.value().FileBytes());
         Require(static_cast<bool>(textureRoundTrip) &&
             textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-            "限定Texture2D FlowのSGE4UNI 2.5 round-tripに失敗しました。");
+            "限定Texture2D FlowのSGE4UNI 2.6 round-tripに失敗しました。");
 
         auto mismatchProducer = fixture::BuildTextureProducerLeaf(4, 4);
         auto mismatchConsumer = fixture::BuildTextureConsumerLeaf(2, 2);
@@ -538,7 +659,7 @@ int main(int argc, char** argv)
             textureUavFirst.value().FileBytes());
         Require(textureUavRoundTrip &&
             textureUavRoundTrip.value().SemanticDigest() == textureUavFirst.value().SemanticDigest(),
-            "限定Texture2D UAV FlowのSGE4UNI 2.5 round-tripに失敗しました。");
+            "限定Texture2D UAV FlowのSGE4UNI 2.6 round-tripに失敗しました。");
 
         auto formatMismatchProducer = fixture::BuildTextureUavProducerLeaf(4, 4);
         auto formatMismatchConsumer = fixture::BuildTextureConsumerLeaf(4, 4);
@@ -575,8 +696,8 @@ int main(int argc, char** argv)
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.5\n";
-        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.4\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.6\n";
+        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.5\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;
     }

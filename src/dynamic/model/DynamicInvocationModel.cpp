@@ -86,9 +86,8 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
     ExactIndexSetV1 activeSet,
     ExactIndexSetV1 modifiedSurvivorSet,
     composition::DynamicExecutionModeV1 executionMode,
-    composition::LeafPackageId targetLeaf,
-    std::uint32_t targetDynamicSlot,
-    std::uint32_t memberBytes,
+    std::uint32_t canonicalMemberBytes,
+    std::vector<composition::DynamicExecutionRouteV1> executionRoutes,
     std::uint32_t compositionLeafCount,
     std::vector<composition::ConditionalRegionV1> conditionalRegions,
     composition::VerifiedIndirectDispatchContractV1 indirectDispatchContract,
@@ -109,9 +108,8 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
         std::move(activeSet),
         std::move(modifiedSurvivorSet),
         executionMode,
-        targetLeaf,
-        targetDynamicSlot,
-        memberBytes,
+        canonicalMemberBytes,
+        std::move(executionRoutes),
         compositionLeafCount,
         std::move(conditionalRegions),
         indirectDispatchContract,
@@ -119,8 +117,8 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
         std::move(updatePayloads),
         std::move(previousHistory)};
     request.executionPayloadIdentity = ComputeDynamicExecutionPayloadIdentityV1(
-        request.executionMode, request.targetLeaf, request.targetDynamicSlot,
-        request.memberBytes, request.updatePayloads);
+        request.executionMode, request.canonicalMemberBytes,
+        request.executionRoutes, request.updatePayloads);
     request.identity = ComputeDynamicInvocationIdentityV1(request);
     return request;
 }
@@ -138,9 +136,15 @@ canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
     AppendDigest(payload, request.activeSet.Identity().Digest());
     AppendDigest(payload, request.modifiedSurvivorSet.Identity().Digest());
     AppendU32(payload, std::to_underlying(request.executionMode));
-    AppendU32(payload, request.targetLeaf.value);
-    AppendU32(payload, request.targetDynamicSlot);
-    AppendU32(payload, request.memberBytes);
+    AppendU32(payload, request.canonicalMemberBytes);
+    AppendU64(payload, static_cast<std::uint64_t>(request.executionRoutes.size()));
+    for (const auto& route : request.executionRoutes)
+    {
+        AppendU32(payload, route.targetLeaf.value);
+        AppendU32(payload, route.targetDynamicSlot);
+        AppendU32(payload, route.sourceByteOffset);
+        AppendU32(payload, route.routeMemberBytes);
+    }
     AppendU32(payload, request.compositionLeafCount);
     AppendU64(payload, static_cast<std::uint64_t>(request.conditionalRegions.size()));
     for (const auto& region : request.conditionalRegions)
@@ -160,7 +164,7 @@ canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
     AppendU8(payload, request.previousHistory.has_value() ? 1u : 0u);
     if (request.previousHistory.has_value())
         AppendDigest(payload, request.previousHistory->Descriptor().identity.Digest());
-    return MakeIdentity<canonical::InvocationIdentity>("SGE.V2.Dynamic.InvocationRequest.V1", payload);
+    return MakeIdentity<canonical::InvocationIdentity>("SGE.V2.Dynamic.InvocationRequest.V2", payload);
 }
 
 GenerationVectorIdentity ComputeGenerationVectorIdentityV1(
@@ -203,16 +207,21 @@ DynamicWriteSetIdentity ComputeDynamicWriteSetIdentityV1(
 
 DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
     composition::DynamicExecutionModeV1 executionMode,
-    composition::LeafPackageId targetLeaf,
-    std::uint32_t targetDynamicSlot,
-    std::uint32_t memberBytes,
+    std::uint32_t canonicalMemberBytes,
+    std::span<const composition::DynamicExecutionRouteV1> executionRoutes,
     std::span<const MemberUpdatePayloadV1> updatePayloads)
 {
     std::vector<std::byte> payload;
     AppendU32(payload, std::to_underlying(executionMode));
-    AppendU32(payload, targetLeaf.value);
-    AppendU32(payload, targetDynamicSlot);
-    AppendU32(payload, memberBytes);
+    AppendU32(payload, canonicalMemberBytes);
+    AppendU64(payload, static_cast<std::uint64_t>(executionRoutes.size()));
+    for (const auto& route : executionRoutes)
+    {
+        AppendU32(payload, route.targetLeaf.value);
+        AppendU32(payload, route.targetDynamicSlot);
+        AppendU32(payload, route.sourceByteOffset);
+        AppendU32(payload, route.routeMemberBytes);
+    }
     AppendU64(payload, static_cast<std::uint64_t>(updatePayloads.size()));
     for (const auto& update : updatePayloads)
     {
@@ -221,7 +230,7 @@ DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
         payload.insert(payload.end(), update.bytes.begin(), update.bytes.end());
     }
     return MakeIdentity<DynamicExecutionPayloadIdentity>(
-        "SGE.V2.Dynamic.ExecutionPayload.V1", payload);
+        "SGE.V2.Dynamic.ExecutionPayload.V2", payload);
 }
 
 IndirectDispatchIdentity ComputeIndirectDispatchIdentityV1(

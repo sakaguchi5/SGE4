@@ -44,7 +44,7 @@ using DynamicSealIdentity = canonical::CanonicalIdentityV1<DynamicSealIdentityTa
 using FrozenDynamicInvocationIdentity = canonical::CanonicalIdentityV1<FrozenDynamicInvocationIdentityTagV1>;
 
 inline constexpr std::uint64_t InvalidItemGenerationV1 = ~std::uint64_t{0};
-inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 4u;
+inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 5u;
 
 struct ExactIndexSetBuildResultV1;
 
@@ -191,9 +191,8 @@ struct DynamicInvocationRequestV1 final
     ExactIndexSetV1 activeSet;
     ExactIndexSetV1 modifiedSurvivorSet;
     composition::DynamicExecutionModeV1 executionMode;
-    composition::LeafPackageId targetLeaf;
-    std::uint32_t targetDynamicSlot = package::InvalidIndex;
-    std::uint32_t memberBytes = 0;
+    std::uint32_t canonicalMemberBytes = 0;
+    std::vector<composition::DynamicExecutionRouteV1> executionRoutes;
     std::uint32_t compositionLeafCount = 0;
     std::vector<composition::ConditionalRegionV1> conditionalRegions;
     composition::VerifiedIndirectDispatchContractV1 indirectDispatchContract;
@@ -212,9 +211,8 @@ struct DynamicInvocationRequestV1 final
     ExactIndexSetV1 activeSet,
     ExactIndexSetV1 modifiedSurvivorSet,
     composition::DynamicExecutionModeV1 executionMode,
-    composition::LeafPackageId targetLeaf,
-    std::uint32_t targetDynamicSlot,
-    std::uint32_t memberBytes,
+    std::uint32_t canonicalMemberBytes,
+    std::vector<composition::DynamicExecutionRouteV1> executionRoutes,
     std::uint32_t compositionLeafCount,
     std::vector<composition::ConditionalRegionV1> conditionalRegions,
     composition::VerifiedIndirectDispatchContractV1 indirectDispatchContract,
@@ -234,9 +232,8 @@ struct DynamicInvocationRequestV1 final
     TransitionRecordSetIdentity recordSetIdentity);
 [[nodiscard]] DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
     composition::DynamicExecutionModeV1 executionMode,
-    composition::LeafPackageId targetLeaf,
-    std::uint32_t targetDynamicSlot,
-    std::uint32_t memberBytes,
+    std::uint32_t canonicalMemberBytes,
+    std::span<const composition::DynamicExecutionRouteV1> executionRoutes,
     std::span<const MemberUpdatePayloadV1> updatePayloads);
 [[nodiscard]] IndirectDispatchIdentity ComputeIndirectDispatchIdentityV1(
     const VerifiedIndirectDispatchV1& dispatch);

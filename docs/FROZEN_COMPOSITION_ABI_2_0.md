@@ -354,7 +354,7 @@ Architecture Gateは少なくとも次を拒否する。
 
 ## 16. 現在の能力範囲
 
-ABI 2.5は現在実証済みのComposition能力だけを表す。
+ABI 2.6は現在実証済みのComposition能力だけを表す。
 
 - Bufferおよび限定Texture2Dのfinite static DAG
 - single writer
@@ -421,3 +421,9 @@ Level 4 Generalization 5によりProduction minorを2.5へ進めた。Contract D
 既存Texture2D recordのformatとshape、およびEndpoint／HandoffのResourceStateで、fixed R32G32B32A32_FLOAT Texture2DのUnorderedWrite producerからShaderResource consumerへの経路を表現する。binary record layoutを増やさず、検証済み意味領域だけを拡張する。
 
 BGRA8はRenderTarget writer、RGBA32FはUnorderedAccess writerへ限定する。D3D12 resource flag、UAV descriptor、aligned RowPitchはExecutorの物理写像でありFrozen ABIへ含めない。
+
+## Production amendment: SGE4UNI 2.6
+
+Level 4 Generalization 6によりProduction minorを2.6、Dynamic Contractをschema 5へ進めた。Verified execution contractは単一target fieldsを廃止し、`canonicalMemberBytes`とCanonical `executionRoutes[]`を所有する。各routeはtarget Leaf／Dynamic Slot、source byte offset、route member byte幅を固定する。
+
+対応するFrozen Dynamic InvocationはSGE4INV 1.5、Manifest schema 6である。Execution Payload Section schema 2がCanonical member byte幅、全route、exact Update payload、payload identityを保存する。Contract／Plan schema 2、Leaf Schema 17、Conditional Execution、Indirect Dispatchの意味は維持する。

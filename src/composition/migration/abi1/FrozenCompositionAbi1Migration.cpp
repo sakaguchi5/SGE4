@@ -191,11 +191,11 @@ BuildFrozenCompositionPackageAbi1ForMigration(
     ContractBuildInput input,
     DynamicContractV1 dynamicContract)
 {
-    if (dynamicContract.schemaVersion != 4 || dynamicContract.universeCount == 0 ||
+    if (dynamicContract.schemaVersion != 5 || dynamicContract.universeCount == 0 ||
         dynamicContract.executionMode != DynamicExecutionModeV1::AuthorityOnly ||
-        dynamicContract.targetLeaf.IsValid() ||
-        dynamicContract.targetDynamicSlot != package::InvalidIndex ||
-        dynamicContract.memberBytes != 0 || !dynamicContract.conditionalRegions.empty() ||
+        dynamicContract.canonicalMemberBytes != 0 ||
+        !dynamicContract.executionRoutes.empty() ||
+        !dynamicContract.conditionalRegions.empty() ||
         dynamicContract.indirectDispatch.mode != IndirectExecutionModeV1::None ||
         dynamicContract.indirectDispatch.targetLeaf.IsValid() ||
         dynamicContract.indirectDispatch.targetComputeCommand != package::InvalidIndex ||

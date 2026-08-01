@@ -42,7 +42,7 @@ void Require(bool condition, const char* message)
         artifact::FrozenCompositionAbi2FormatMajor,
         artifact::FrozenCompositionAbi2FormatMinor,
         std::move(sections));
-    Require(static_cast<bool>(result), "ABI 2.5破損Corpusの再符号化に失敗しました。");
+    Require(static_cast<bool>(result), "ABI 2.6破損Corpusの再符号化に失敗しました。");
     return std::move(result).value();
 }
 
@@ -54,7 +54,7 @@ void RequireRejected(std::vector<std::byte> bytes, const char* message)
 void PatchU32(std::vector<std::byte>& bytes, std::size_t offset, std::uint32_t value)
 {
     Require(offset <= bytes.size() && sizeof(value) <= bytes.size() - offset,
-        "ABI 2.5破損CorpusのU32位置が範囲外です。");
+        "ABI 2.6破損CorpusのU32位置が範囲外です。");
     for (std::size_t index = 0; index < sizeof(value); ++index)
         bytes[offset + index] = static_cast<std::byte>((value >> (index * 8u)) & 0xffu);
 }
@@ -62,7 +62,7 @@ void PatchU32(std::vector<std::byte>& bytes, std::size_t offset, std::uint32_t v
 void PatchU64(std::vector<std::byte>& bytes, std::size_t offset, std::uint64_t value)
 {
     Require(offset <= bytes.size() && sizeof(value) <= bytes.size() - offset,
-        "ABI 2.5破損CorpusのU64位置が範囲外です。");
+        "ABI 2.6破損CorpusのU64位置が範囲外です。");
     for (std::size_t index = 0; index < sizeof(value); ++index)
         bytes[offset + index] = static_cast<std::byte>((value >> (index * 8u)) & 0xffu);
 }
@@ -70,7 +70,7 @@ void PatchU64(std::vector<std::byte>& bytes, std::size_t offset, std::uint64_t v
 void RefreshFileDigest(std::vector<std::byte>& bytes)
 {
     Require(bytes.size() >= ArtifactFileDigestOffset + 32,
-        "ABI 2.5破損CorpusのHeaderが短すぎます。");
+        "ABI 2.6破損CorpusのHeaderが短すぎます。");
     std::fill(bytes.begin() + static_cast<std::ptrdiff_t>(ArtifactFileDigestOffset),
         bytes.begin() + static_cast<std::ptrdiff_t>(ArtifactFileDigestOffset + 32),
         std::byte{0});
@@ -85,7 +85,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
     auto decoded = ReadSectionedArtifact(validBytes,
         artifact::FrozenCompositionAbi2Magic,
         artifact::FrozenCompositionAbi2FormatMajor);
-    Require(static_cast<bool>(decoded), "ABI 2.5破損Corpusの正本を読めません。");
+    Require(static_cast<bool>(decoded), "ABI 2.6破損Corpusの正本を読めません。");
 
     // 必須Section欠落。
     {
@@ -95,7 +95,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
                 artifact::FrozenCompositionAbi2SectionKind::DynamicContract);
         }), sections.end());
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが必須Section欠落を受理しました。");
+            "ABI 2.6 Readerが必須Section欠落を受理しました。");
     }
 
     // 未知のRequired Section追加。
@@ -106,7 +106,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
                 static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
             8, {std::byte{0}}});
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが未知のRequired Sectionを受理しました。");
+            "ABI 2.6 Readerが未知のRequired Sectionを受理しました。");
     }
 
     // Section Schema不一致。
@@ -114,7 +114,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         auto sections = CopySections(decoded.value());
         sections.front().schemaVersion = 3;
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 ReaderがManifest Schema不一致を受理しました。");
+            "ABI 2.6 ReaderがManifest Schema不一致を受理しました。");
     }
 
     // Leaf Tableのdense IDを壊し、外側Digestは正しく再計算する。
@@ -124,7 +124,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(table.size() >= 4, "Leaf Tableが短すぎます。");
         PatchU32(table, 0, 1);
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが非dense Leaf IDを受理しました。");
+            "ABI 2.6 Readerが非dense Leaf IDを受理しました。");
     }
 
     // Leaf Tableの先頭offsetをCanonical位置からずらす。
@@ -134,7 +134,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(table.size() >= 48, "Leaf Tableが短すぎます。");
         PatchU64(table, 40, 8);
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが非Canonical Leaf offsetを受理しました。");
+            "ABI 2.6 Readerが非Canonical Leaf offsetを受理しました。");
     }
 
     // 二つ目のLeaf直前に存在するzero paddingを破壊する。
@@ -158,7 +158,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
             Require(secondOffset <= leafBytes.size(), "Leaf padding位置が範囲外です。");
             leafBytes[static_cast<std::size_t>(firstOffset + firstSize)] = std::byte{0x01};
             RequireRejected(Rewrite(std::move(sections)),
-                "ABI 2.5 Readerが非zero Leaf paddingを受理しました。");
+                "ABI 2.6 Readerが非zero Leaf paddingを受理しました。");
         }
     }
 
@@ -169,7 +169,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(!leafBytes.empty(), "Leaf bytesが空です。");
         leafBytes[leafBytes.size() / 2] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが破損したLeaf Packageを受理しました。");
+            "ABI 2.6 Readerが破損したLeaf Packageを受理しました。");
     }
 
     // Contract bytesを壊す。
@@ -179,7 +179,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(!contract.empty(), "Contract Sectionが空です。");
         contract[contract.size() / 2] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが破損したContractを受理しました。");
+            "ABI 2.6 Readerが破損したContractを受理しました。");
     }
 
     // Verified Decision bytesを壊す。
@@ -189,7 +189,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(!decision.empty(), "Verified Decision Sectionが空です。");
         decision[decision.size() / 2] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが破損したVerified Decisionを受理しました。");
+            "ABI 2.6 Readerが破損したVerified Decisionを受理しました。");
     }
 
     // Verification Certificate bytesを壊す。
@@ -199,7 +199,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(!certificate.empty(), "Verification Certificate Sectionが空です。");
         certificate[certificate.size() / 2] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが破損したVerification Certificateを受理しました。");
+            "ABI 2.6 Readerが破損したVerification Certificateを受理しました。");
     }
 
     // ManifestのComposition Core digestを壊す。
@@ -209,7 +209,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(manifest.size() > 56, "Manifestが短すぎます。");
         manifest[56] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが不一致Composition Core digestを受理しました。");
+            "ABI 2.6 Readerが不一致Composition Core digestを受理しました。");
     }
 
     // ManifestのFrozen Composition identityを壊す。
@@ -219,7 +219,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(manifest.size() > 88, "Manifestが短すぎます。");
         manifest[88] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが不一致Frozen Composition identityを受理しました。");
+            "ABI 2.6 Readerが不一致Frozen Composition identityを受理しました。");
     }
 
     // Authority Ledgerだけを書き換え、Composition Coreは維持する。
@@ -229,7 +229,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(ledger.size() > 40, "Authority Ledgerが短すぎます。");
         ledger[40] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが不一致Authority Ledgerを受理しました。");
+            "ABI 2.6 Readerが不一致Authority Ledgerを受理しました。");
     }
 
     // Dynamic identityを壊す。
@@ -239,7 +239,7 @@ void VerifyAbi2CorruptionRejection(std::span<const std::byte> validBytes)
         Require(dynamic.size() > 56, "Dynamic Contractが短すぎます。");
         dynamic[56] ^= std::byte{0x01};
         RequireRejected(Rewrite(std::move(sections)),
-            "ABI 2.5 Readerが不一致Dynamic identityを受理しました。");
+            "ABI 2.6 Readerが不一致Dynamic identityを受理しました。");
     }
 
     // 重複SectionはWriter境界でも拒否する。

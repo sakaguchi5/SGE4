@@ -136,6 +136,47 @@ template<class T>
     return base::Success<void, Error>();
 }
 
+
+void WriteDynamicRoutes(
+    BinaryWriter& writer,
+    std::span<const DynamicExecutionRouteV1> routes)
+{
+    writer.WriteCountU32(routes.size());
+    for (const auto& route : routes)
+    {
+        writer.WriteU32(route.targetLeaf.value);
+        writer.WriteU32(route.targetDynamicSlot);
+        writer.WriteU32(route.sourceByteOffset);
+        writer.WriteU32(route.routeMemberBytes);
+    }
+}
+
+[[nodiscard]] base::Expected<std::vector<DynamicExecutionRouteV1>, Error>
+ReadDynamicRoutes(BinaryReader& reader, std::uint32_t leafCount)
+{
+    auto routeCount = reader.ReadU32();
+    if (!routeCount || static_cast<std::uint64_t>(routeCount.value()) >
+        static_cast<std::uint64_t>(leafCount) * 64u)
+        return Fail<std::vector<DynamicExecutionRouteV1>>(
+            "CompositionReader/DynamicContract", "Dynamic route数が無効です。");
+
+    std::vector<DynamicExecutionRouteV1> routes;
+    routes.reserve(routeCount.value());
+    for (std::uint32_t index = 0; index < routeCount.value(); ++index)
+    {
+        auto leaf = reader.ReadU32();
+        auto slot = reader.ReadU32();
+        auto sourceOffset = reader.ReadU32();
+        auto memberBytes = reader.ReadU32();
+        if (!leaf || !slot || !sourceOffset || !memberBytes)
+            return Fail<std::vector<DynamicExecutionRouteV1>>(
+                "CompositionReader/DynamicContract", "Dynamic route headerが無効です。");
+        routes.push_back({LeafPackageId{leaf.value()}, slot.value(),
+            sourceOffset.value(), memberBytes.value()});
+    }
+    return base::Success<std::vector<DynamicExecutionRouteV1>, Error>(std::move(routes));
+}
+
 void WriteConditionalRegions(
     BinaryWriter& writer,
     std::span<const ConditionalRegionV1> regions)
@@ -211,16 +252,15 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     payload.WriteU32(dynamicContract.schemaVersion);
     payload.WriteU32(dynamicContract.universeCount);
     payload.WriteU32(std::to_underlying(dynamicContract.executionMode));
-    payload.WriteU32(dynamicContract.targetLeaf.value);
-    payload.WriteU32(dynamicContract.targetDynamicSlot);
-    payload.WriteU32(dynamicContract.memberBytes);
+    payload.WriteU32(dynamicContract.canonicalMemberBytes);
+    WriteDynamicRoutes(payload, dynamicContract.executionRoutes);
     WriteConditionalRegions(payload, dynamicContract.conditionalRegions);
     payload.WriteU32(std::to_underlying(dynamicContract.indirectDispatch.mode));
     payload.WriteU32(dynamicContract.indirectDispatch.targetLeaf.value);
     payload.WriteU32(dynamicContract.indirectDispatch.targetComputeCommand);
     payload.WriteU32(dynamicContract.indirectDispatch.maxWorkCount);
     return core::SemanticIdentity::FromDigest(
-        ComputeDomainDigest("sge4.composition.dynamic-semantic", 4, payload.Bytes()));
+        ComputeDomainDigest("sge4.composition.dynamic-semantic", 5, payload.Bytes()));
 }
 
 [[nodiscard]] std::vector<std::byte> BuildAuthorityLedger(
@@ -250,9 +290,8 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     writer.WriteU32(dynamicContract.schemaVersion);
     writer.WriteU32(dynamicContract.universeCount);
     writer.WriteU32(std::to_underlying(dynamicContract.executionMode));
-    writer.WriteU32(dynamicContract.targetLeaf.value);
-    writer.WriteU32(dynamicContract.targetDynamicSlot);
-    writer.WriteU32(dynamicContract.memberBytes);
+    writer.WriteU32(dynamicContract.canonicalMemberBytes);
+    WriteDynamicRoutes(writer, dynamicContract.executionRoutes);
     WriteConditionalRegions(writer, dynamicContract.conditionalRegions);
     writer.WriteU32(std::to_underlying(dynamicContract.indirectDispatch.mode));
     writer.WriteU32(dynamicContract.indirectDispatch.targetLeaf.value);
@@ -286,7 +325,7 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     const DynamicContractV1& dynamicContract)
 {
     const auto& contract = validated.Contract();
-    if (dynamicContract.schemaVersion != 4 || dynamicContract.universeCount == 0)
+    if (dynamicContract.schemaVersion != 5 || dynamicContract.universeCount == 0)
         return Fail<void>(
             "CompositionToolchain", "Dynamic Contractが検証または実行の契約に違反しています。");
 
@@ -297,42 +336,61 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
 
     if (dynamicContract.executionMode == DynamicExecutionModeV1::AuthorityOnly)
     {
-        if (dynamicContract.targetLeaf.IsValid() ||
-            dynamicContract.targetDynamicSlot != package::InvalidIndex ||
-            dynamicContract.memberBytes != 0)
+        if (dynamicContract.canonicalMemberBytes != 0 ||
+            !dynamicContract.executionRoutes.empty())
             return Fail<void>(
                 "CompositionToolchain", "Authority-only Dynamic Contractに実行routeが混入しています。");
     }
     else if (dynamicContract.executionMode == DynamicExecutionModeV1::VerifiedDenseSlot)
     {
-        if (!dynamicContract.targetLeaf.IsValid() ||
-            dynamicContract.targetLeaf.value >= validated.Leaves().size() ||
-            dynamicContract.targetDynamicSlot == package::InvalidIndex ||
-            dynamicContract.memberBytes == 0)
+        if (dynamicContract.canonicalMemberBytes == 0 ||
+            dynamicContract.executionRoutes.empty())
             return Fail<void>(
                 "CompositionToolchain", "Verified Dynamic Execution routeが無効です。");
 
-        const auto& leaf = validated.Leaves()[dynamicContract.targetLeaf.value];
-        auto frozen = package::PackageReader::Read(leaf.packageBytes);
-        if (!frozen)
-            return Fail<void>("CompositionToolchain/DynamicRoute", frozen.error().message);
-        auto view = package::d3d12_v13::D3D12PackageView::Decode(frozen.value());
-        if (!view)
-            return Fail<void>("CompositionToolchain/DynamicRoute", view.error().message);
-        if (dynamicContract.targetDynamicSlot >= view.value().DynamicSlots().size())
-            return Fail<void>(
-                "CompositionToolchain/DynamicRoute", "Dynamic Slot参照が範囲外です。");
+        std::pair<std::uint32_t, std::uint32_t> previous{};
+        bool hasPrevious = false;
+        for (const auto& route : dynamicContract.executionRoutes)
+        {
+            const std::pair key{route.targetLeaf.value, route.targetDynamicSlot};
+            if (!route.targetLeaf.IsValid() ||
+                route.targetLeaf.value >= validated.Leaves().size() ||
+                route.targetDynamicSlot == package::InvalidIndex ||
+                route.routeMemberBytes == 0 ||
+                route.sourceByteOffset > dynamicContract.canonicalMemberBytes ||
+                route.routeMemberBytes >
+                    dynamicContract.canonicalMemberBytes - route.sourceByteOffset ||
+                (hasPrevious && key <= previous))
+                return Fail<void>(
+                    "CompositionToolchain/DynamicRoute",
+                    "Dynamic routeがCanonicalな対象順序またはsource slice契約に違反しています。");
+            previous = key;
+            hasPrevious = true;
 
-        if (dynamicContract.universeCount >
-            std::numeric_limits<std::uint64_t>::max() / dynamicContract.memberBytes)
-            return Fail<void>(
-                "CompositionToolchain/DynamicRoute", "Dynamic dense slotのbyte数がoverflowします。");
-        const auto requiredBytes = static_cast<std::uint64_t>(dynamicContract.universeCount) *
-            dynamicContract.memberBytes;
-        const auto& slot = view.value().DynamicSlots()[dynamicContract.targetDynamicSlot];
-        if (slot.requiredBytes != requiredBytes)
-            return Fail<void>(
-                "CompositionToolchain/DynamicRoute", "Dynamic SlotのrequiredBytesとmember universeが一致しません。");
+            const auto& leaf = validated.Leaves()[route.targetLeaf.value];
+            auto frozen = package::PackageReader::Read(leaf.packageBytes);
+            if (!frozen)
+                return Fail<void>("CompositionToolchain/DynamicRoute", frozen.error().message);
+            auto view = package::d3d12_v13::D3D12PackageView::Decode(frozen.value());
+            if (!view)
+                return Fail<void>("CompositionToolchain/DynamicRoute", view.error().message);
+            if (route.targetDynamicSlot >= view.value().DynamicSlots().size())
+                return Fail<void>(
+                    "CompositionToolchain/DynamicRoute", "Dynamic Slot参照が範囲外です。");
+
+            if (dynamicContract.universeCount >
+                std::numeric_limits<std::uint64_t>::max() / route.routeMemberBytes)
+                return Fail<void>(
+                    "CompositionToolchain/DynamicRoute", "Dynamic dense slotのbyte数がoverflowします。");
+            const auto requiredBytes =
+                static_cast<std::uint64_t>(dynamicContract.universeCount) *
+                route.routeMemberBytes;
+            const auto& slot = view.value().DynamicSlots()[route.targetDynamicSlot];
+            if (slot.requiredBytes != requiredBytes)
+                return Fail<void>(
+                    "CompositionToolchain/DynamicRoute",
+                    "Dynamic SlotのrequiredBytesとroute member universeが一致しません。");
+        }
     }
     else
     {
@@ -357,15 +415,20 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
         indirect.maxWorkCount == 0 ||
         indirect.maxWorkCount != dynamicContract.universeCount)
         return Fail<void>("CompositionToolchain/IndirectDispatch",
-            "Verified Indirect Dispatch routeが無効です。");
+            "Verified Indirect Dispatch契約が無効です。");
 
     for (const auto& region : dynamicContract.conditionalRegions)
-        if (std::binary_search(region.trueLeaves.begin(), region.trueLeaves.end(), indirect.targetLeaf,
-                [](const auto& left, const auto& right) { return left.value < right.value; }) ||
-            std::binary_search(region.falseLeaves.begin(), region.falseLeaves.end(), indirect.targetLeaf,
-                [](const auto& left, const auto& right) { return left.value < right.value; }))
+    {
+        const auto inTrue = std::binary_search(
+            region.trueLeaves.begin(), region.trueLeaves.end(), indirect.targetLeaf,
+            [](const auto& left, const auto& right) { return left.value < right.value; });
+        const auto inFalse = std::binary_search(
+            region.falseLeaves.begin(), region.falseLeaves.end(), indirect.targetLeaf,
+            [](const auto& left, const auto& right) { return left.value < right.value; });
+        if (inTrue || inFalse)
             return Fail<void>("CompositionToolchain/IndirectDispatch",
-                "Generalization 4のIndirect target Leafはunconditionalでなければなりません。");
+                "Generalization 4のIndirect targetはConditional Leafにできません。");
+    }
 
     const auto& indirectLeaf = validated.Leaves()[indirect.targetLeaf.value];
     auto indirectFrozen = package::PackageReader::Read(indirectLeaf.packageBytes);
@@ -376,14 +439,14 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
         return Fail<void>("CompositionToolchain/IndirectDispatch", indirectView.error().message);
     if (indirect.targetComputeCommand >= indirectView.value().ComputeCommands().size())
         return Fail<void>("CompositionToolchain/IndirectDispatch",
-            "Compute Command参照が範囲外です。");
+            "Indirect target Compute Commandが範囲外です。");
     const auto& command = indirectView.value().ComputeCommands()[indirect.targetComputeCommand];
     if (command.id.value != indirect.targetComputeCommand ||
         command.threadGroupCountX != indirect.maxWorkCount ||
         command.threadGroupCountY != 1 || command.threadGroupCountZ != 1 ||
         command.flags != 0)
         return Fail<void>("CompositionToolchain/IndirectDispatch",
-            "対象Compute Commandが限定Verified Dispatch契約と一致しません。");
+            "Indirect target Compute Commandが固定上限契約と一致しません。");
 
     std::uint32_t executeCount = 0;
     for (const auto& operation : indirectView.value().FrameOperations())
@@ -393,11 +456,12 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
         auto payload = package::d3d12_v13::DecodeExecuteCompute(operation.payload);
         if (!payload)
             return Fail<void>("CompositionToolchain/IndirectDispatch", payload.error().message);
-        if (payload.value().command.value == indirect.targetComputeCommand) ++executeCount;
+        if (payload.value().command.value == indirect.targetComputeCommand)
+            ++executeCount;
     }
     if (executeCount != 1)
         return Fail<void>("CompositionToolchain/IndirectDispatch",
-            "対象Compute CommandはFrame streamでちょうど一度だけ実行されなければなりません。");
+            "Indirect target Compute CommandはFrame Operation内で一度だけ実行される必要があります。");
     return base::Success<void, Error>();
 }
 }
@@ -514,7 +578,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract));
     if (!manifestSection || !authoritySection || !dynamicSection)
         return Fail<FrozenCompositionPackage>(
-            "CompositionReader", "SGE4UNI 2.5の必須Sectionがありません。");
+            "CompositionReader", "SGE4UNI 2.6の必須Sectionがありません。");
 
     auto manifestResult = artifact::DeserializeFrozenCompositionAbi2Manifest(
         manifestSection->bytes);
@@ -562,17 +626,18 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
     auto dynamicSchema = dynamic.ReadU32();
     auto dynamicUniverse = dynamic.ReadU32();
     auto dynamicExecutionMode = dynamic.ReadU32();
-    auto dynamicTargetLeaf = dynamic.ReadU32();
-    auto dynamicTargetSlot = dynamic.ReadU32();
-    auto dynamicMemberBytes = dynamic.ReadU32();
+    auto dynamicCanonicalMemberBytes = dynamic.ReadU32();
     if (!dynamicSchema || !dynamicUniverse || !dynamicExecutionMode ||
-        !dynamicTargetLeaf || !dynamicTargetSlot || !dynamicMemberBytes ||
-        dynamicSchema.value() != 4 || dynamicUniverse.value() == 0 ||
-        dynamicExecutionMode.value() >
+        !dynamicCanonicalMemberBytes || dynamicSchema.value() != 5 ||
+        dynamicUniverse.value() == 0 || dynamicExecutionMode.value() >
             std::to_underlying(DynamicExecutionModeV1::VerifiedDenseSlot))
         return Fail<FrozenCompositionPackage>(
             "CompositionReader", "Dynamic Contract headerが無効です。");
 
+    auto executionRoutes = ReadDynamicRoutes(dynamic, certificate.leafCount);
+    if (!executionRoutes)
+        return Fail<FrozenCompositionPackage>(
+            executionRoutes.error().stage, executionRoutes.error().message);
     auto conditionalRegions = ReadConditionalRegions(dynamic, certificate.leafCount);
     if (!conditionalRegions)
         return Fail<FrozenCompositionPackage>(
@@ -596,8 +661,8 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
     DynamicContractV1 dynamicContract{
         dynamicSchema.value(), dynamicUniverse.value(),
         static_cast<DynamicExecutionModeV1>(dynamicExecutionMode.value()),
-        LeafPackageId{dynamicTargetLeaf.value()}, dynamicTargetSlot.value(),
-        dynamicMemberBytes.value(), std::move(conditionalRegions).value(),
+        dynamicCanonicalMemberBytes.value(), std::move(executionRoutes).value(),
+        std::move(conditionalRegions).value(),
         {static_cast<IndirectExecutionModeV1>(indirectMode.value()),
             LeafPackageId{indirectTargetLeaf.value()}, indirectTargetCommand.value(),
             indirectMaxWorkCount.value()}};

@@ -50,22 +50,39 @@ template<class T>
         MakeResourceIdentity(package, epoch, generation, "sge4.runtime.history"), epoch);
 }
 
-[[nodiscard]] base::Expected<std::size_t, Error> DenseShadowBytes(
-    const composition::DynamicContractV1& contract)
+[[nodiscard]] base::Expected<std::vector<std::vector<std::byte>>, Error>
+BuildInitialShadows(const composition::DynamicContractV1& contract)
 {
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
-        return base::Success<std::size_t, Error>(0u);
+    {
+        if (contract.canonicalMemberBytes != 0 || !contract.executionRoutes.empty())
+            return Fail<std::vector<std::vector<std::byte>>>(
+                "RuntimeSession/DynamicExecution",
+                "Authority-only execution contractへrouteが混入しています。");
+        return base::Success<std::vector<std::vector<std::byte>>, Error>({});
+    }
     if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
-        contract.universeCount == 0 || contract.memberBytes == 0 ||
-        contract.targetLeaf.value == package::InvalidIndex ||
-        contract.targetDynamicSlot == package::InvalidIndex)
-        return Fail<std::size_t>("RuntimeSession/DynamicExecution",
+        contract.universeCount == 0 || contract.canonicalMemberBytes == 0 ||
+        contract.executionRoutes.empty())
+        return Fail<std::vector<std::vector<std::byte>>>(
+            "RuntimeSession/DynamicExecution",
             "Dynamic execution contractが検証または実行の契約に違反しています。");
-    if (contract.universeCount > std::numeric_limits<std::size_t>::max() / contract.memberBytes)
-        return Fail<std::size_t>("RuntimeSession/DynamicExecution",
-            "Dynamic execution shadowのbyte数が表現可能範囲を超えています。");
-    return base::Success<std::size_t, Error>(
-        static_cast<std::size_t>(contract.universeCount) * contract.memberBytes);
+
+    std::vector<std::vector<std::byte>> shadows;
+    shadows.reserve(contract.executionRoutes.size());
+    for (const auto& route : contract.executionRoutes)
+    {
+        if (route.routeMemberBytes == 0 ||
+            contract.universeCount >
+                std::numeric_limits<std::size_t>::max() / route.routeMemberBytes)
+            return Fail<std::vector<std::vector<std::byte>>>(
+                "RuntimeSession/DynamicExecution",
+                "Dynamic execution shadowのbyte数が表現可能範囲を超えています。");
+        shadows.emplace_back(
+            static_cast<std::size_t>(contract.universeCount) * route.routeMemberBytes,
+            std::byte{0});
+    }
+    return base::Success<std::vector<std::vector<std::byte>>, Error>(std::move(shadows));
 }
 
 [[nodiscard]] base::Expected<void, Error> ValidateIndirectDispatch(
@@ -184,15 +201,15 @@ base::Expected<Session, Error> Session::Create(
     const auto epoch = canonical::DeviceEpoch::TryCreate(deviceEpoch);
     if (!epoch)
         return Fail<Session>("RuntimeSession", "Deviceが検証または実行の契約に違反しています。");
-    auto shadowBytes = DenseShadowBytes(package.DynamicContract());
-    if (!shadowBytes)
-        return Fail<Session>(shadowBytes.error().stage, shadowBytes.error().message);
+    auto shadows = BuildInitialShadows(package.DynamicContract());
+    if (!shadows)
+        return Fail<Session>(shadows.error().stage, shadows.error().message);
     auto representationHandle = MakeRepresentationHandle(package, *epoch, 1);
     auto historyHandle = MakeHistoryHandle(package, *epoch, 1);
     return base::Success<Session, Error>(Session(
         std::move(package), *epoch,
         std::move(representationHandle), std::move(historyHandle),
-        std::vector<std::byte>(shadowBytes.value(), std::byte{0})));
+        std::move(shadows).value()));
 }
 
 std::optional<canonical::HistoryValidityIdentity> Session::AcceptedHistoryIdentity() const noexcept
@@ -234,17 +251,16 @@ base::Expected<void, Error> Session::ValidateForSubmission(
 
     const auto& contract = package_.DynamicContract();
     const auto& payload = invocation.ExecutionPayload();
-    if (payload.mode != contract.executionMode || payload.targetLeaf != contract.targetLeaf ||
-        payload.targetDynamicSlot != contract.targetDynamicSlot ||
-        payload.memberBytes != contract.memberBytes)
+    if (payload.mode != contract.executionMode ||
+        payload.canonicalMemberBytes != contract.canonicalMemberBytes ||
+        payload.routes != contract.executionRoutes)
         return Fail<void>("RuntimeSession/DynamicExecution",
-            "Frozen Invocationのexecution routeがComposition契約と一致しません。");
+            "Frozen Invocationのexecution routesがComposition契約と一致しません。");
     if (payload.identity != invocation.Artifact().ExecutionPayloadIdentity())
         return Fail<void>("RuntimeSession/DynamicExecution",
             "Frozen Invocationのexecution payload identityが一致しません。");
     const auto computedPayloadIdentity = dynamic::ComputeDynamicExecutionPayloadIdentityV1(
-        payload.mode, payload.targetLeaf, payload.targetDynamicSlot,
-        payload.memberBytes, payload.updates);
+        payload.mode, payload.canonicalMemberBytes, payload.routes, payload.updates);
     if (computedPayloadIdentity != payload.identity)
         return Fail<void>("RuntimeSession/DynamicExecution",
             "Frozen Invocationのexecution payloadがSealされたidentityと一致しません。");
@@ -268,10 +284,15 @@ base::Expected<void, Error> Session::ValidateForSubmission(
     }
     else if (contract.executionMode == composition::DynamicExecutionModeV1::VerifiedDenseSlot)
     {
-        auto expectedShadowBytes = DenseShadowBytes(contract);
-        if (!expectedShadowBytes || dynamicExecutionShadow_.size() != expectedShadowBytes.value())
+        auto expectedShadows = BuildInitialShadows(contract);
+        if (!expectedShadows ||
+            dynamicExecutionShadows_.size() != expectedShadows.value().size())
             return Fail<void>("RuntimeSession/DynamicExecution",
-                "Dynamic execution shadowがComposition契約と一致しません。");
+                "Dynamic execution shadow集合がComposition契約と一致しません。");
+        for (std::size_t index = 0; index < dynamicExecutionShadows_.size(); ++index)
+            if (dynamicExecutionShadows_[index].size() != expectedShadows.value()[index].size())
+                return Fail<void>("RuntimeSession/DynamicExecution",
+                    "Dynamic execution shadow byte数がroute契約と一致しません。");
     }
     else
     {
@@ -313,8 +334,7 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
     prepared.enabledLeaves = std::move(enabledLeaves).value();
     prepared.conditionalRegionCount = static_cast<std::uint32_t>(
         contract.conditionalRegions.size());
-    prepared.verifiedTransitionCount =
-        invocation.Decision().indirectWorkCount.value();
+    prepared.verifiedTransitionCount = invocation.Decision().indirectWorkCount.value();
 
     const auto& indirect = invocation.IndirectDispatch();
     if (indirect.mode == composition::IndirectExecutionModeV1::VerifiedDispatch)
@@ -330,16 +350,24 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
 
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
         return base::Success<PreparedDynamicExecutionV1, Error>(std::move(prepared));
-    if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot)
+    if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
+        dynamicExecutionShadows_.size() != contract.executionRoutes.size())
         return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
-            "未対応のDynamic execution modeです。");
+            "未対応または不整合なDynamic execution route集合です。");
 
-    prepared.leaf = contract.targetLeaf;
-    prepared.slot = contract.targetDynamicSlot;
-    prepared.denseSlotBytes = dynamicExecutionShadow_;
-    prepared.hasBinding = std::binary_search(
-        prepared.enabledLeaves.begin(), prepared.enabledLeaves.end(), contract.targetLeaf,
-        [](const auto& left, const auto& right) { return left.value < right.value; });
+    prepared.bindings.reserve(contract.executionRoutes.size());
+    for (std::size_t index = 0; index < contract.executionRoutes.size(); ++index)
+    {
+        const auto& route = contract.executionRoutes[index];
+        PreparedDynamicBindingV1 binding;
+        binding.leaf = route.targetLeaf;
+        binding.slot = route.targetDynamicSlot;
+        binding.denseSlotBytes = dynamicExecutionShadows_[index];
+        binding.enabled = std::binary_search(
+            prepared.enabledLeaves.begin(), prepared.enabledLeaves.end(), route.targetLeaf,
+            [](const auto& left, const auto& right) { return left.value < right.value; });
+        prepared.bindings.push_back(std::move(binding));
+    }
 
     const auto& decision = invocation.Decision();
     const auto& payloads = invocation.ExecutionPayload().updates;
@@ -357,28 +385,41 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
         previousMember = member;
         hasPreviousMember = true;
 
-        const auto offset = static_cast<std::size_t>(member) * contract.memberBytes;
-        auto destination = std::span<std::byte>(prepared.denseSlotBytes).subspan(
-            offset, contract.memberBytes);
+        const dynamic::MemberUpdatePayloadV1* updatePayload = nullptr;
         if (record.action == dynamic::TransitionActionV1::Update)
         {
             if (updateCursor >= payloads.size() ||
                 payloads[updateCursor].member.value() != member ||
-                payloads[updateCursor].bytes.size() != contract.memberBytes)
+                payloads[updateCursor].bytes.size() != contract.canonicalMemberBytes)
                 return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
-                    "Update transitionとexecution payloadが一対一に対応していません。");
-            std::copy(payloads[updateCursor].bytes.begin(),
-                payloads[updateCursor].bytes.end(), destination.begin());
-            ++updateCursor;
+                    "Update transitionとCanonical execution payloadが一対一に対応していません。");
+            updatePayload = &payloads[updateCursor++];
         }
-        else if (record.action == dynamic::TransitionActionV1::Clear)
-        {
-            std::fill(destination.begin(), destination.end(), std::byte{0});
-        }
-        else
+        else if (record.action != dynamic::TransitionActionV1::Clear)
         {
             return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
                 "未対応のDynamic transition actionです。");
+        }
+
+        for (std::size_t routeIndex = 0;
+            routeIndex < contract.executionRoutes.size(); ++routeIndex)
+        {
+            const auto& route = contract.executionRoutes[routeIndex];
+            const auto destinationOffset =
+                static_cast<std::size_t>(member) * route.routeMemberBytes;
+            auto destination = std::span<std::byte>(
+                prepared.bindings[routeIndex].denseSlotBytes).subspan(
+                    destinationOffset, route.routeMemberBytes);
+            if (updatePayload)
+            {
+                const auto source = std::span<const std::byte>(updatePayload->bytes).subspan(
+                    route.sourceByteOffset, route.routeMemberBytes);
+                std::copy(source.begin(), source.end(), destination.begin());
+            }
+            else
+            {
+                std::fill(destination.begin(), destination.end(), std::byte{0});
+            }
         }
         ++prepared.appliedTransitionCount;
     }
@@ -386,7 +427,7 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
     if (updateCursor != payloads.size() ||
         prepared.appliedTransitionCount != decision.indirectWorkCount.value())
         return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
-            "Verified execution payloadの全要素がexact transitionへ対応していません。");
+            "Verified routed payloadの全要素がexact transitionへ対応していません。");
 
     return base::Success<PreparedDynamicExecutionV1, Error>(std::move(prepared));
 }
@@ -398,15 +439,14 @@ void Session::CommitSubmission(
     history_ = invocation.NextHistory();
     recoverySeedRequired_ = false;
 
-    // hasBinding means only that the target Leaf was selected for this native
-    // submission.  It must not decide whether verified Update/Clear effects are
-    // accepted into the private shadow.  A false Conditional branch can execute
-    // zero Leaves while still advancing exact dynamic History; after that native
-    // submission succeeds, the prepared shadow must be committed together with
-    // History so a later re-enabled branch observes the accepted state.
     if (package_.DynamicContract().executionMode ==
         composition::DynamicExecutionModeV1::VerifiedDenseSlot)
-        dynamicExecutionShadow_ = std::move(prepared.denseSlotBytes);
+    {
+        dynamicExecutionShadows_.clear();
+        dynamicExecutionShadows_.reserve(prepared.bindings.size());
+        for (auto& binding : prepared.bindings)
+            dynamicExecutionShadows_.push_back(std::move(binding.denseSlotBytes));
+    }
 }
 
 void Session::RebuildHandles()
@@ -415,9 +455,10 @@ void Session::RebuildHandles()
     historyHandle_ = MakeHistoryHandle(package_, deviceEpoch_, runtimeGeneration_);
 }
 
-void Session::ResetDynamicExecutionShadow()
+void Session::ResetDynamicExecutionShadows()
 {
-    std::fill(dynamicExecutionShadow_.begin(), dynamicExecutionShadow_.end(), std::byte{0});
+    for (auto& shadow : dynamicExecutionShadows_)
+        std::fill(shadow.begin(), shadow.end(), std::byte{0});
 }
 
 void Session::ApplyRecoveryState(
@@ -432,7 +473,7 @@ void Session::ApplyRecoveryState(
     state_ = state;
     ++runtimeGeneration_;
     history_.reset();
-    ResetDynamicExecutionShadow();
+    ResetDynamicExecutionShadows();
     externalStateBound_ = false;
     recoverySeedRequired_ = rematerialized || state == DeviceRuntimeState::AwaitingAdapter;
     RebuildHandles();
