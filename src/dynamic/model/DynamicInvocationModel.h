@@ -26,6 +26,7 @@ struct GenerationVectorIdentityTagV1;
 struct TransitionRecordSetIdentityTagV1;
 struct DynamicWriteSetIdentityTagV1;
 struct DynamicExecutionPayloadIdentityTagV1;
+struct ConditionalExecutionIdentityTagV1;
 struct DynamicDecisionIdentityTagV1;
 struct DynamicSealIdentityTagV1;
 struct FrozenDynamicInvocationIdentityTagV1;
@@ -35,12 +36,13 @@ using GenerationVectorIdentity = canonical::CanonicalIdentityV1<GenerationVector
 using TransitionRecordSetIdentity = canonical::CanonicalIdentityV1<TransitionRecordSetIdentityTagV1>;
 using DynamicWriteSetIdentity = canonical::CanonicalIdentityV1<DynamicWriteSetIdentityTagV1>;
 using DynamicExecutionPayloadIdentity = canonical::CanonicalIdentityV1<DynamicExecutionPayloadIdentityTagV1>;
+using ConditionalExecutionIdentity = canonical::CanonicalIdentityV1<ConditionalExecutionIdentityTagV1>;
 using DynamicDecisionIdentity = canonical::CanonicalIdentityV1<DynamicDecisionIdentityTagV1>;
 using DynamicSealIdentity = canonical::CanonicalIdentityV1<DynamicSealIdentityTagV1>;
 using FrozenDynamicInvocationIdentity = canonical::CanonicalIdentityV1<FrozenDynamicInvocationIdentityTagV1>;
 
 inline constexpr std::uint64_t InvalidItemGenerationV1 = ~std::uint64_t{0};
-inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 2u;
+inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 3u;
 
 struct ExactIndexSetBuildResultV1;
 
@@ -115,6 +117,13 @@ struct MemberUpdatePayloadV1 final
     std::vector<std::byte> bytes;
 };
 
+struct ConditionalRegionSelectionV1 final
+{
+    composition::ConditionalRegionId region;
+    bool predicateValue = false;
+    auto operator<=>(const ConditionalRegionSelectionV1&) const = default;
+};
+
 class DynamicInvocationVerifierV1;
 namespace frozen_dynamic_detail { class FrozenDynamicInvocationBuilderV1; }
 
@@ -168,6 +177,8 @@ struct DynamicInvocationRequestV1 final
     composition::LeafPackageId targetLeaf;
     std::uint32_t targetDynamicSlot = package::InvalidIndex;
     std::uint32_t memberBytes = 0;
+    std::uint32_t compositionLeafCount = 0;
+    std::vector<composition::ConditionalRegionV1> conditionalRegions;
     DynamicExecutionPayloadIdentity executionPayloadIdentity;
     std::vector<MemberUpdatePayloadV1> updatePayloads;
     std::optional<VerifiedHistoryStateV1> previousHistory;
@@ -186,6 +197,8 @@ struct DynamicInvocationRequestV1 final
     composition::LeafPackageId targetLeaf,
     std::uint32_t targetDynamicSlot,
     std::uint32_t memberBytes,
+    std::uint32_t compositionLeafCount,
+    std::vector<composition::ConditionalRegionV1> conditionalRegions,
     std::vector<MemberUpdatePayloadV1> updatePayloads,
     std::optional<VerifiedHistoryStateV1> previousHistory = std::nullopt);
 
@@ -206,6 +219,10 @@ struct DynamicInvocationRequestV1 final
     std::uint32_t targetDynamicSlot,
     std::uint32_t memberBytes,
     std::span<const MemberUpdatePayloadV1> updatePayloads);
+[[nodiscard]] ConditionalExecutionIdentity ComputeConditionalExecutionIdentityV1(
+    std::uint32_t compositionLeafCount,
+    std::span<const ConditionalRegionSelectionV1> selections,
+    std::span<const composition::LeafPackageId> enabledLeaves);
 
 struct DynamicDecisionV1 final
 {
@@ -223,6 +240,9 @@ struct DynamicDecisionV1 final
     std::vector<TransitionRecordV1> transitionRecords;
     canonical::TransitionCount indirectWorkCount;
     DynamicWriteSetIdentity dynamicWriteSetIdentity;
+    ConditionalExecutionIdentity conditionalExecutionIdentity;
+    std::vector<ConditionalRegionSelectionV1> conditionalSelections;
+    std::vector<composition::LeafPackageId> enabledLeaves;
     canonical::HistoryGeneration nextHistoryGeneration;
 };
 
@@ -315,6 +335,10 @@ enum class DynamicVerificationErrorV1 : std::uint8_t
     ExecutionPayloadSizeMismatch,
     ExecutionPayloadSetMismatch,
     ExecutionPayloadIdentityMismatch,
+    ConditionalContractMismatch,
+    ConditionalSelectionMismatch,
+    EnabledLeafSetMismatch,
+    ConditionalExecutionIdentityMismatch,
     DecisionIdentityMismatch
 };
 

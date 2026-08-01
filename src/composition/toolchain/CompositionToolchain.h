@@ -50,7 +50,7 @@ private:
         Digest256 fileDigest)
         : outerBytes_(std::move(outerBytes)), verifiedComposition_(std::move(verifiedComposition)),
           certificate_(std::move(certificate)), dynamicSemanticIdentity_(std::move(dynamicSemanticIdentity)),
-          dynamicContract_(dynamicContract), compositionCoreDigest_(compositionCoreDigest),
+          dynamicContract_(std::move(dynamicContract)), compositionCoreDigest_(compositionCoreDigest),
           semanticDigest_(semanticDigest), fileDigest_(fileDigest) {}
 
     std::vector<std::byte> outerBytes_;
@@ -67,7 +67,7 @@ private:
     ContractBuildInput input,
     DynamicContractV1 dynamicContract);
 
-// Plannerを再実行せず、独立Verifierを通過済みのContract／PlanからABI 2.1をFreezeする。
+// Plannerを再実行せず、独立Verifierを通過済みのContract／PlanからABI 2.2をFreezeする。
 [[nodiscard]] base::Expected<FrozenCompositionPackage, Error> FreezeVerifiedCompositionPackage(
     const ValidatedCompositionContract& contract,
     const verification::VerifiedCompositionPlan& verified,

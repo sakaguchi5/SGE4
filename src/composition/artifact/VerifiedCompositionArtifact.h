@@ -69,7 +69,7 @@ CreateVerifiedFrozenComposition(
     std::vector<std::byte> verifiedDecisionBytes,
     std::vector<std::byte> verificationCertificateBytes);
 
-// Production経路は平坦なSGE4UNI 2.1だけを受理する。
+// Production経路は平坦なSGE4UNI 2.2だけを受理する。
 // ABI 1.1／SGE4CMP 1.0のReaderはmigration/abi1内へ隔離する。
 [[nodiscard]] base::Expected<VerifiedFrozenComposition, verification::VerificationError>
 ReadVerifiedFrozenComposition(std::span<const std::byte> bytes);

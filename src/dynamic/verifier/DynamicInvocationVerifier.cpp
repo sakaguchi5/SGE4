@@ -85,6 +85,150 @@ DynamicVerificationErrorV1 VerifyExecutionPayload(
     }
     return DynamicVerificationErrorV1::None;
 }
+
+bool IsSupportedPredicate(composition::ConditionalPredicateKindV1 predicate) noexcept
+{
+    switch (predicate)
+    {
+    case composition::ConditionalPredicateKindV1::ActiveSetNonEmpty:
+    case composition::ConditionalPredicateKindV1::ActivationSetNonEmpty:
+    case composition::ConditionalPredicateKindV1::DeactivationSetNonEmpty:
+    case composition::ConditionalPredicateKindV1::UpdateSetNonEmpty:
+    case composition::ConditionalPredicateKindV1::RetainSetNonEmpty:
+    case composition::ConditionalPredicateKindV1::TransitionSetNonEmpty:
+        return true;
+    }
+    return false;
+}
+
+bool CanonicalLeafSequence(
+    std::span<const composition::LeafPackageId> leaves,
+    std::uint32_t leafCount) noexcept
+{
+    for (std::size_t index = 0; index < leaves.size(); ++index)
+    {
+        if (!leaves[index].IsValid() || leaves[index].value >= leafCount ||
+            (index > 0 && leaves[index - 1].value >= leaves[index].value))
+            return false;
+    }
+    return true;
+}
+
+DynamicVerificationErrorV1 VerifyConditionalContractShape(
+    const DynamicInvocationRequestV1& request)
+{
+    if (request.compositionLeafCount == 0 ||
+        request.conditionalRegions.size() > request.compositionLeafCount)
+        return DynamicVerificationErrorV1::ConditionalContractMismatch;
+    std::vector<std::uint8_t> ownership(request.compositionLeafCount, 0u);
+    for (std::size_t index = 0; index < request.conditionalRegions.size(); ++index)
+    {
+        const auto& region = request.conditionalRegions[index];
+        if (!region.id.IsValid() || region.id.value != index ||
+            !IsSupportedPredicate(region.predicate) ||
+            (region.trueLeaves.empty() && region.falseLeaves.empty()) ||
+            !CanonicalLeafSequence(region.trueLeaves, request.compositionLeafCount) ||
+            !CanonicalLeafSequence(region.falseLeaves, request.compositionLeafCount))
+            return DynamicVerificationErrorV1::ConditionalContractMismatch;
+        for (const auto leaf : region.trueLeaves)
+        {
+            if (ownership[leaf.value] != 0u)
+                return DynamicVerificationErrorV1::ConditionalContractMismatch;
+            ownership[leaf.value] = 1u;
+        }
+        for (const auto leaf : region.falseLeaves)
+        {
+            if (ownership[leaf.value] != 0u)
+                return DynamicVerificationErrorV1::ConditionalContractMismatch;
+            ownership[leaf.value] = 2u;
+        }
+    }
+    return DynamicVerificationErrorV1::None;
+}
+
+bool ExpectedPredicateValue(
+    composition::ConditionalPredicateKindV1 predicate,
+    const std::vector<std::uint32_t>& active,
+    const std::vector<std::uint32_t>& activation,
+    const std::vector<std::uint32_t>& deactivation,
+    const std::vector<std::uint32_t>& update,
+    const std::vector<std::uint32_t>& retain,
+    const std::vector<std::uint32_t>& transition)
+{
+    switch (predicate)
+    {
+    case composition::ConditionalPredicateKindV1::ActiveSetNonEmpty:
+        return !active.empty();
+    case composition::ConditionalPredicateKindV1::ActivationSetNonEmpty:
+        return !activation.empty();
+    case composition::ConditionalPredicateKindV1::DeactivationSetNonEmpty:
+        return !deactivation.empty();
+    case composition::ConditionalPredicateKindV1::UpdateSetNonEmpty:
+        return !update.empty();
+    case composition::ConditionalPredicateKindV1::RetainSetNonEmpty:
+        return !retain.empty();
+    case composition::ConditionalPredicateKindV1::TransitionSetNonEmpty:
+        return !transition.empty();
+    }
+    throw std::runtime_error("Conditional predicateが検証または実行の契約に違反しています。");
+}
+
+struct ExpectedConditionalExecution final
+{
+    ConditionalExecutionIdentity identity;
+    std::vector<ConditionalRegionSelectionV1> selections;
+    std::vector<composition::LeafPackageId> enabledLeaves;
+};
+
+ExpectedConditionalExecution DeriveConditionalExecution(
+    const DynamicInvocationRequestV1& request,
+    const std::vector<std::uint32_t>& active,
+    const std::vector<std::uint32_t>& activation,
+    const std::vector<std::uint32_t>& deactivation,
+    const std::vector<std::uint32_t>& update,
+    const std::vector<std::uint32_t>& retain,
+    const std::vector<std::uint32_t>& transition)
+{
+    std::vector<bool> enabled(request.compositionLeafCount, true);
+    std::vector<ConditionalRegionSelectionV1> selections;
+    selections.reserve(request.conditionalRegions.size());
+    for (const auto& region : request.conditionalRegions)
+    {
+        for (const auto leaf : region.trueLeaves) enabled[leaf.value] = false;
+        for (const auto leaf : region.falseLeaves) enabled[leaf.value] = false;
+        const bool predicateValue = ExpectedPredicateValue(
+            region.predicate, active, activation, deactivation, update, retain, transition);
+        selections.push_back({region.id, predicateValue});
+        const auto& selected = predicateValue ? region.trueLeaves : region.falseLeaves;
+        for (const auto leaf : selected) enabled[leaf.value] = true;
+    }
+    std::vector<composition::LeafPackageId> leaves;
+    for (std::uint32_t leaf = 0; leaf < request.compositionLeafCount; ++leaf)
+    {
+        if (enabled[leaf]) leaves.push_back(composition::LeafPackageId{leaf});
+    }
+    auto identity = ComputeConditionalExecutionIdentityV1(
+        request.compositionLeafCount, selections, leaves);
+    return {std::move(identity), std::move(selections), std::move(leaves)};
+}
+
+bool SameSelections(
+    std::span<const ConditionalRegionSelectionV1> left,
+    std::span<const ConditionalRegionSelectionV1> right)
+{
+    return left.size() == right.size() &&
+        std::equal(left.begin(), left.end(), right.begin(), right.end());
+}
+
+bool SameLeaves(
+    std::span<const composition::LeafPackageId> left,
+    std::span<const composition::LeafPackageId> right)
+{
+    return left.size() == right.size() &&
+        std::equal(left.begin(), left.end(), right.begin(), right.end(),
+            [](const auto a, const auto b) { return a.value == b.value; });
+}
+
 }
 
 DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
@@ -97,6 +241,9 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         return Failure(DynamicVerificationErrorV1::ActiveUniverseMismatch);
     if (request.modifiedSurvivorSet.Identity() != ComputeIndexSetIdentityV1(request.modifiedSurvivorSet) || request.modifiedSurvivorSet.Universe() != request.universe)
         return Failure(DynamicVerificationErrorV1::ModifiedUniverseMismatch);
+    const auto conditionalContractError = VerifyConditionalContractShape(request);
+    if (conditionalContractError != DynamicVerificationErrorV1::None)
+        return Failure(conditionalContractError);
 
     if (request.mode != InvocationModeV1::ContinueHistory && request.modifiedSurvivorSet.Count() != 0u)
         return Failure(DynamicVerificationErrorV1::SeedModifiedSetNotEmpty);
@@ -216,6 +363,8 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
     auto expectedGenerationIdentity = ComputeGenerationVectorIdentityV1(request.universe, generations);
     auto expectedRecordIdentity = ComputeTransitionRecordSetIdentityV1(request.universe, records);
     auto expectedWriteSetIdentity = ComputeDynamicWriteSetIdentityV1(expectedTransition, expectedRecordIdentity);
+    auto expectedConditional = DeriveConditionalExecution(
+        request, active, activation, deactivation, update, retain, transition);
 
     const auto& actual = proposal.decision;
     if (actual.requestIdentity != request.identity)
@@ -241,13 +390,20 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         return Failure(DynamicVerificationErrorV1::IndirectWorkCountMismatch);
     if (actual.dynamicWriteSetIdentity != expectedWriteSetIdentity)
         return Failure(DynamicVerificationErrorV1::DynamicWriteSetMismatch);
+    if (!SameSelections(actual.conditionalSelections, expectedConditional.selections))
+        return Failure(DynamicVerificationErrorV1::ConditionalSelectionMismatch);
+    if (!SameLeaves(actual.enabledLeaves, expectedConditional.enabledLeaves))
+        return Failure(DynamicVerificationErrorV1::EnabledLeafSetMismatch);
+    if (actual.conditionalExecutionIdentity != expectedConditional.identity)
+        return Failure(DynamicVerificationErrorV1::ConditionalExecutionIdentityMismatch);
 
     DynamicDecisionV1 expectedDecision{
         DynamicDecisionIdentity::FromDigest({}), request.identity, std::move(expectedPrevious), std::move(expectedActivation),
         std::move(expectedDeactivation), std::move(expectedUpdate), std::move(expectedRetain), std::move(expectedTransition),
         expectedGenerationIdentity, std::move(generations), expectedRecordIdentity, std::move(records),
         canonical::TransitionCount(static_cast<std::uint32_t>(transition.size())), expectedWriteSetIdentity,
-        nextHistoryGeneration};
+        std::move(expectedConditional.identity), std::move(expectedConditional.selections),
+        std::move(expectedConditional.enabledLeaves), nextHistoryGeneration};
     expectedDecision.identity = ComputeDynamicDecisionIdentityV1(expectedDecision);
     if (actual.identity != expectedDecision.identity)
         return Failure(DynamicVerificationErrorV1::DecisionIdentityMismatch);

@@ -5,6 +5,7 @@
 #include "../../src/composition/migration/abi1/FrozenCompositionAbi1Migration.h"
 #include "../../src/composition/artifact/abi2/FrozenCompositionAbi2.h"
 #include "../../src/canonical/artifact/SectionedArtifact.h"
+#include "../../src/runtime/session/RuntimeSession.h"
 
 #include <algorithm>
 #include <array>
@@ -56,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.1の平坦Section構造が成立していません。");
+            "SGE4UNI 2.2の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.1の直接Sectionがありません。");
+            "SGE4UNI 2.2の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -73,11 +74,11 @@ int main(int argc, char** argv)
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.1へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.2へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.1とMigration後ABI 2.1がbyte一致しません。");
+            "直接生成したABI 2.2とMigration後ABI 2.2がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -159,7 +160,7 @@ int main(int argc, char** argv)
             invocationArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
             invocationArtifact.value().Sections().size() ==
                 dynamic::FrozenInvocationSectionKinds.size(),
-            "SGE4INV 1.2のSection構造が成立していません。");
+            "SGE4INV 1.3のSection構造が成立していません。");
 
         dynamic::InvocationInputV1 missingPayload;
         missingPayload.timelineOrdinal = 0;
@@ -171,11 +172,162 @@ int main(int argc, char** argv)
             verifiedDynamic.value(), *epoch, std::move(missingPayload)),
             "exact update setを満たさないpayloadが受理されました。");
 
+        auto conditional = tests::BuildConditionalVerifiedDynamicUnified(4);
+        if (!conditional)
+            throw std::runtime_error(
+                "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
+        Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
+            "Conditional Region契約がSGE4UNI 2.2へ保存されませんでした。");
+
+        dynamic::InvocationInputV1 conditionalTrue;
+        conditionalTrue.timelineOrdinal = 0;
+        conditionalTrue.mode = dynamic::InvocationModeV1::InitialSeed;
+        conditionalTrue.activeMembers = {1};
+        conditionalTrue.updatePayloads = {
+            {1, fixture::Bytes(std::array<float, 4>{1.0f, 2.0f, 3.0f, 4.0f})}};
+        auto frozenTrue = tests::BuildFrozenInvocation(
+            conditional.value(), *epoch, std::move(conditionalTrue));
+        Require(frozenTrue && frozenTrue.value().Decision().conditionalSelections.size() == 1 &&
+            frozenTrue.value().Decision().conditionalSelections[0].predicateValue &&
+            frozenTrue.value().Decision().enabledLeaves ==
+                std::vector<composition::LeafPackageId>{{0}, {1}},
+            "ActiveSetNonEmptyのTrue branchが独立検証されませんでした。");
+
+        dynamic::InvocationInputV1 conditionalFalse;
+        conditionalFalse.timelineOrdinal = 0;
+        conditionalFalse.mode = dynamic::InvocationModeV1::InitialSeed;
+        auto requestFalse = dynamic::BuildDynamicInvocationRequest(
+            conditional.value(), *epoch, std::move(conditionalFalse));
+        Require(static_cast<bool>(requestFalse),
+            "Conditional false requestの生成に失敗しました。");
+        auto proposalFalse = dynamic::DynamicInvocationPlannerV1::Plan(requestFalse.value());
+        Require(proposalFalse.Planned() &&
+            proposalFalse.proposal->decision.conditionalSelections.size() == 1 &&
+            !proposalFalse.proposal->decision.conditionalSelections[0].predicateValue &&
+            proposalFalse.proposal->decision.enabledLeaves.empty(),
+            "ActiveSetNonEmptyのFalse branchが導出されませんでした。");
+        auto verifiedFalse = dynamic::DynamicInvocationVerifierV1::Verify(
+            requestFalse.value(), *proposalFalse.proposal);
+        Require(verifiedFalse.Accepted(),
+            "Conditional false Decisionが独立Verifierに拒否されました。");
+        auto tamperedProposal = *proposalFalse.proposal;
+        tamperedProposal.decision.enabledLeaves = {{0}, {1}};
+        Require(!dynamic::DynamicInvocationVerifierV1::Verify(
+            requestFalse.value(), tamperedProposal).Accepted(),
+            "改竄されたenabled Leaf集合が独立Verifierに受理されました。");
+        auto frozenFalse = dynamic::FreezeVerifiedInvocation(*verifiedFalse.verified);
+        Require(frozenFalse && frozenFalse.value().Decision().enabledLeaves.empty(),
+            "Conditional false DecisionをSGE4INV 1.3へFreezeできませんでした。");
+
+        // Regression: a zero-Leaf false branch still constitutes a successful
+        // verified dynamic submission.  Its Clear/Update effects must be committed
+        // to the private dense shadow together with History, even though no Dynamic
+        // Slot binding was emitted to the native runtime in that frame.
+        auto conditionalRuntimePackage = tests::BuildConditionalVerifiedDynamicUnified(4);
+        Require(static_cast<bool>(conditionalRuntimePackage),
+            "Conditional shadow commit用Compositionの生成に失敗しました。");
+        auto conditionalSession = sge4::runtime::Session::Create(
+            std::move(conditionalRuntimePackage).value(), 1);
+        Require(static_cast<bool>(conditionalSession),
+            "Conditional shadow commit用Runtime Sessionの生成に失敗しました。");
+
+        auto runtimePlanning = conditionalSession.value().PlanningContext();
+        dynamic::InvocationInputV1 runtimeSeed;
+        runtimeSeed.timelineOrdinal = 0;
+        runtimeSeed.mode = runtimePlanning.requiredMode;
+        runtimeSeed.activeMembers = {1};
+        runtimeSeed.updatePayloads = {
+            {1, fixture::Bytes(std::array<float, 4>{1.0f, 2.0f, 3.0f, 4.0f})}};
+        auto runtimeSeedFrozen = tests::BuildFrozenInvocation(
+            conditionalSession.value().Package(), runtimePlanning.deviceEpoch,
+            std::move(runtimeSeed), std::move(runtimePlanning.previousHistory));
+        Require(static_cast<bool>(runtimeSeedFrozen),
+            "Conditional shadow commit用InitialSeedの生成に失敗しました。");
+        Require(static_cast<bool>(conditionalSession.value().ValidateForSubmission(
+            runtimeSeedFrozen.value())),
+            "Conditional shadow commit用InitialSeedの検証に失敗しました。");
+        auto preparedRuntimeSeed = conditionalSession.value().PrepareDynamicExecution(
+            runtimeSeedFrozen.value());
+        Require(preparedRuntimeSeed && preparedRuntimeSeed.value().hasBinding,
+            "Conditional true branchのDynamic bindingが準備されませんでした。");
+        conditionalSession.value().CommitSubmission(
+            runtimeSeedFrozen.value(), std::move(preparedRuntimeSeed).value());
+
+        runtimePlanning = conditionalSession.value().PlanningContext();
+        dynamic::InvocationInputV1 runtimeDisable;
+        runtimeDisable.timelineOrdinal = 1;
+        runtimeDisable.mode = runtimePlanning.requiredMode;
+        auto runtimeDisableFrozen = tests::BuildFrozenInvocation(
+            conditionalSession.value().Package(), runtimePlanning.deviceEpoch,
+            std::move(runtimeDisable), std::move(runtimePlanning.previousHistory));
+        Require(static_cast<bool>(runtimeDisableFrozen),
+            "Conditional shadow commit用false Invocationの生成に失敗しました。");
+        Require(static_cast<bool>(conditionalSession.value().ValidateForSubmission(
+            runtimeDisableFrozen.value())),
+            "Conditional shadow commit用false Invocationの検証に失敗しました。");
+        auto preparedRuntimeDisable = conditionalSession.value().PrepareDynamicExecution(
+            runtimeDisableFrozen.value());
+        Require(preparedRuntimeDisable && !preparedRuntimeDisable.value().hasBinding &&
+            preparedRuntimeDisable.value().appliedTransitionCount == 1,
+            "zero-Leaf false branchのClear transitionが準備されませんでした。");
+        conditionalSession.value().CommitSubmission(
+            runtimeDisableFrozen.value(), std::move(preparedRuntimeDisable).value());
+
+        runtimePlanning = conditionalSession.value().PlanningContext();
+        dynamic::InvocationInputV1 runtimeReenable;
+        runtimeReenable.timelineOrdinal = 2;
+        runtimeReenable.mode = runtimePlanning.requiredMode;
+        runtimeReenable.activeMembers = {3};
+        const std::array<float, 4> runtimeValueThree{31.0f, 32.0f, 33.0f, 34.0f};
+        runtimeReenable.updatePayloads = {{3, fixture::Bytes(runtimeValueThree)}};
+        auto runtimeReenableFrozen = tests::BuildFrozenInvocation(
+            conditionalSession.value().Package(), runtimePlanning.deviceEpoch,
+            std::move(runtimeReenable), std::move(runtimePlanning.previousHistory));
+        Require(static_cast<bool>(runtimeReenableFrozen),
+            "Conditional shadow commit用再有効化Invocationの生成に失敗しました。");
+        auto preparedRuntimeReenable = conditionalSession.value().PrepareDynamicExecution(
+            runtimeReenableFrozen.value());
+        Require(preparedRuntimeReenable && preparedRuntimeReenable.value().hasBinding,
+            "Conditional shadow commit用再有効化bindingが準備されませんでした。");
+        std::vector<std::byte> expectedRuntimeShadow(4u * 16u, std::byte{0});
+        const auto valueThreeBytes = fixture::Bytes(runtimeValueThree);
+        std::copy(valueThreeBytes.begin(), valueThreeBytes.end(),
+            expectedRuntimeShadow.begin() + 3u * 16u);
+        Require(preparedRuntimeReenable.value().denseSlotBytes == expectedRuntimeShadow,
+            "zero-Leaf false branchでCommitされたClearが再有効化shadowへ反映されませんでした。");
+
+        auto overlapInput = tests::BuildLinearInput();
+        Require(static_cast<bool>(overlapInput), "Conditional overlap入力の生成に失敗しました。");
+        std::vector<composition::ConditionalRegionV1> overlapRegions;
+        overlapRegions.push_back(composition::MakeConditionalRegionV1(
+            0, composition::ConditionalPredicateKindV1::ActiveSetNonEmpty, {{0}}));
+        overlapRegions.push_back(composition::MakeConditionalRegionV1(
+            1, composition::ConditionalPredicateKindV1::TransitionSetNonEmpty, {{0}}));
+        Require(!composition::BuildFrozenCompositionPackage(
+            std::move(overlapInput).value(),
+            composition::MakeAuthorityOnlyDynamicContractV1(8, std::move(overlapRegions))),
+            "同一Leafを複数Regionへ所属させるContractが受理されました。");
+
+        auto crossBranchInput = tests::BuildLinearInput();
+        Require(static_cast<bool>(crossBranchInput), "Conditional branch入力の生成に失敗しました。");
+        const auto firstKey = composition::ComputeStableLeafKey("unified/linear/first");
+        const auto secondKey = composition::ComputeStableLeafKey("unified/linear/second");
+        const composition::LeafPackageId firstLeaf{firstKey < secondKey ? 0u : 1u};
+        const composition::LeafPackageId secondLeaf{firstLeaf.value == 0u ? 1u : 0u};
+        std::vector<composition::ConditionalRegionV1> crossRegions;
+        crossRegions.push_back(composition::MakeConditionalRegionV1(
+            0, composition::ConditionalPredicateKindV1::ActiveSetNonEmpty,
+            {firstLeaf}, {secondLeaf}));
+        Require(!composition::BuildFrozenCompositionPackage(
+            std::move(crossBranchInput).value(),
+            composition::MakeAuthorityOnlyDynamicContractV1(8, std::move(crossRegions))),
+            "異なるConditional branchを跨ぐResource Flowが受理されました。");
+
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.1\n";
-        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.2\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.2\n";
+        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.3\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;
     }

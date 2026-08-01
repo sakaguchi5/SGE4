@@ -45,6 +45,9 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteBytes(frozen.SealIdentity().Digest());
     writer.WriteBytes(frozen.WriteSetIdentity().Digest());
     writer.WriteBytes(frozen.ExecutionPayloadIdentity().Digest());
+    writer.WriteBytes(verified.Decision().conditionalExecutionIdentity.Digest());
+    writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().conditionalSelections.size()));
+    writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().enabledLeaves.size()));
     writer.WriteU32(std::to_underlying(verified.Request().executionMode));
     writer.WriteU32(verified.Request().targetLeaf.value);
     writer.WriteU32(verified.Request().targetDynamicSlot);
@@ -103,6 +106,25 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
         writer.WriteCountU32(payload.bytes.size());
         writer.WriteBytes(payload.bytes);
     }
+    return std::move(writer).Take();
+}
+
+
+[[nodiscard]] std::vector<std::byte> BuildConditionalExecutionBytes(
+    const DynamicDecisionV1& decision)
+{
+    BinaryWriter writer;
+    writer.WriteU32(1);
+    writer.WriteBytes(decision.conditionalExecutionIdentity.Digest());
+    writer.WriteCountU32(decision.conditionalSelections.size());
+    for (const auto& selection : decision.conditionalSelections)
+    {
+        writer.WriteU32(selection.region.value);
+        writer.WriteU8(selection.predicateValue ? 1u : 0u);
+        writer.WriteZeroes(3);
+    }
+    writer.WriteCountU32(decision.enabledLeaves.size());
+    for (const auto leaf : decision.enabledLeaves) writer.WriteU32(leaf.value);
     return std::move(writer).Take();
 }
 
@@ -174,6 +196,7 @@ base::Expected<DynamicInvocationRequestV1, Error> BuildDynamicInvocationRequest(
             std::move(*modified.set),
             execution.executionMode, execution.targetLeaf,
             execution.targetDynamicSlot, execution.memberBytes,
+            composition.Certificate().leafCount, execution.conditionalRegions,
             std::move(payloads), std::move(previousHistory)));
 }
 
@@ -203,6 +226,10 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
         static_cast<std::uint16_t>(SectionFlags::Required) |
             static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
         8, BuildExecutionPayloadBytes(verified.Request())});
+    sections.push_back({static_cast<std::uint32_t>(FrozenInvocationSectionKind::ConditionalExecution), 1,
+        static_cast<std::uint16_t>(SectionFlags::Required) |
+            static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
+        8, BuildConditionalExecutionBytes(verified.Decision())});
 
     auto bytes = WriteSectionedArtifact(
         FrozenInvocationMagic, FrozenInvocationFormatMajor, FrozenInvocationFormatMinor,

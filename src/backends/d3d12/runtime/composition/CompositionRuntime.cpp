@@ -161,11 +161,30 @@ SubmitStaticComposition(
     const auto& contract = artifact.ValidatedContract().Contract();
     const auto& plan = artifact.VerifiedPlan().Plan();
 
+    if (invocation.enabledLeaves.size() > contract.leaves.size())
+        return Failure<StaticCompositionSubmission>(
+            "static-runtime/conditional-region", "enabled Leaf集合が範囲外です。");
+    std::vector<bool> enabled(contract.leaves.size(), false);
+    std::uint32_t previousEnabled = package::InvalidIndex;
+    bool hasPreviousEnabled = false;
+    for (const auto leaf : invocation.enabledLeaves)
+    {
+        if (!leaf.IsValid() || leaf.value >= contract.leaves.size() ||
+            (hasPreviousEnabled && leaf.value <= previousEnabled))
+            return Failure<StaticCompositionSubmission>(
+                "static-runtime/conditional-region",
+                "enabled Leaf集合がCanonicalな順序または識別子規則に違反しています。");
+        enabled[leaf.value] = true;
+        previousEnabled = leaf.value;
+        hasPreviousEnabled = true;
+    }
+
     std::vector<std::vector<::sge4::runtime::DynamicDataBinding>> dynamics(contract.leaves.size());
     std::set<std::pair<std::uint32_t, std::uint32_t>> dynamicKeys;
     for (const auto& value : invocation.dynamicData)
     {
         if (value.leaf.value >= contract.leaves.size() ||
+            !enabled[value.leaf.value] ||
             value.slot == package::InvalidIndex ||
             !dynamicKeys.emplace(value.leaf.value, value.slot).second)
             return Failure<StaticCompositionSubmission>(
@@ -182,15 +201,17 @@ SubmitStaticComposition(
 
     StaticCompositionSubmission result;
     result.deviceEpoch = loaded.domain_->DeviceEpoch();
-    result.executionOrder.reserve(plan.schedule.size());
-    result.leaves.reserve(plan.schedule.size());
+    result.executionOrder.reserve(invocation.enabledLeaves.size());
+    result.leaves.reserve(invocation.enabledLeaves.size());
 
-    for (const auto& entry : plan.schedule)
+    for (std::size_t scheduleIndex = 0; scheduleIndex < plan.schedule.size(); ++scheduleIndex)
     {
+        const auto& entry = plan.schedule[scheduleIndex];
         if (entry.leaf.value >= contract.leaves.size() ||
-            entry.ordinal != result.executionOrder.size())
+            entry.ordinal != scheduleIndex)
             return Failure<StaticCompositionSubmission>(
                 "static-runtime/schedule", "ScheduleがCanonicalな順序または識別子規則に違反しています。");
+        if (!enabled[entry.leaf.value]) continue;
         auto* instance = loaded.domain_->Instance(entry.leaf);
         if (!instance)
             return Failure<StaticCompositionSubmission>(

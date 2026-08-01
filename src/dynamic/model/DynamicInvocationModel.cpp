@@ -89,6 +89,8 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
     composition::LeafPackageId targetLeaf,
     std::uint32_t targetDynamicSlot,
     std::uint32_t memberBytes,
+    std::uint32_t compositionLeafCount,
+    std::vector<composition::ConditionalRegionV1> conditionalRegions,
     std::vector<MemberUpdatePayloadV1> updatePayloads,
     std::optional<VerifiedHistoryStateV1> previousHistory)
 {
@@ -109,6 +111,8 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
         targetLeaf,
         targetDynamicSlot,
         memberBytes,
+        compositionLeafCount,
+        std::move(conditionalRegions),
         DynamicExecutionPayloadIdentity::FromDigest({}),
         std::move(updatePayloads),
         std::move(previousHistory)};
@@ -135,6 +139,17 @@ canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
     AppendU32(payload, request.targetLeaf.value);
     AppendU32(payload, request.targetDynamicSlot);
     AppendU32(payload, request.memberBytes);
+    AppendU32(payload, request.compositionLeafCount);
+    AppendU64(payload, static_cast<std::uint64_t>(request.conditionalRegions.size()));
+    for (const auto& region : request.conditionalRegions)
+    {
+        AppendU32(payload, region.id.value);
+        AppendU32(payload, std::to_underlying(region.predicate));
+        AppendU64(payload, static_cast<std::uint64_t>(region.trueLeaves.size()));
+        for (const auto leaf : region.trueLeaves) AppendU32(payload, leaf.value);
+        AppendU64(payload, static_cast<std::uint64_t>(region.falseLeaves.size()));
+        for (const auto leaf : region.falseLeaves) AppendU32(payload, leaf.value);
+    }
     AppendDigest(payload, request.executionPayloadIdentity.Digest());
     AppendU8(payload, request.previousHistory.has_value() ? 1u : 0u);
     if (request.previousHistory.has_value())
@@ -203,6 +218,25 @@ DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
         "SGE.V2.Dynamic.ExecutionPayload.V1", payload);
 }
 
+ConditionalExecutionIdentity ComputeConditionalExecutionIdentityV1(
+    std::uint32_t compositionLeafCount,
+    std::span<const ConditionalRegionSelectionV1> selections,
+    std::span<const composition::LeafPackageId> enabledLeaves)
+{
+    std::vector<std::byte> payload;
+    AppendU32(payload, compositionLeafCount);
+    AppendU64(payload, static_cast<std::uint64_t>(selections.size()));
+    for (const auto& selection : selections)
+    {
+        AppendU32(payload, selection.region.value);
+        AppendU8(payload, selection.predicateValue ? 1u : 0u);
+    }
+    AppendU64(payload, static_cast<std::uint64_t>(enabledLeaves.size()));
+    for (const auto leaf : enabledLeaves) AppendU32(payload, leaf.value);
+    return MakeIdentity<ConditionalExecutionIdentity>(
+        "SGE.V2.Dynamic.ConditionalExecution.V1", payload);
+}
+
 DynamicDecisionIdentity ComputeDynamicDecisionIdentityV1(const DynamicDecisionV1& decision)
 {
     std::vector<std::byte> payload;
@@ -217,6 +251,7 @@ DynamicDecisionIdentity ComputeDynamicDecisionIdentityV1(const DynamicDecisionV1
     AppendDigest(payload, decision.transitionRecordSetIdentity.Digest());
     AppendU32(payload, decision.indirectWorkCount.value());
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
+    AppendDigest(payload, decision.conditionalExecutionIdentity.Digest());
     AppendU64(payload, decision.nextHistoryGeneration.value());
     return MakeIdentity<DynamicDecisionIdentity>("SGE.V2.Dynamic.Decision.V1", payload);
 }
@@ -232,6 +267,7 @@ DynamicSealIdentity ComputeDynamicSealIdentityV1(
     AppendDigest(payload, decision.identity.Digest());
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
     AppendDigest(payload, request.executionPayloadIdentity.Digest());
+    AppendDigest(payload, decision.conditionalExecutionIdentity.Digest());
     return MakeIdentity<DynamicSealIdentity>("SGE.V2.Dynamic.VerificationSeal.V1", payload);
 }
 

@@ -67,6 +67,63 @@ template<class T>
     return base::Success<std::size_t, Error>(
         static_cast<std::size_t>(contract.universeCount) * contract.memberBytes);
 }
+
+[[nodiscard]] base::Expected<std::vector<composition::LeafPackageId>, Error>
+ValidateConditionalExecution(
+    const composition::FrozenCompositionPackage& package,
+    const dynamic::DynamicDecisionV1& decision)
+{
+    const auto& regions = package.DynamicContract().conditionalRegions;
+    const auto leafCount = package.Certificate().leafCount;
+    if (decision.conditionalSelections.size() != regions.size())
+        return Fail<std::vector<composition::LeafPackageId>>(
+            "RuntimeSession/ConditionalRegion",
+            "Frozen InvocationのConditional selection数がComposition契約と一致しません。");
+
+    std::vector<bool> enabled(leafCount, true);
+    for (std::size_t index = 0; index < regions.size(); ++index)
+    {
+        const auto& region = regions[index];
+        const auto& selection = decision.conditionalSelections[index];
+        if (selection.region != region.id)
+            return Fail<std::vector<composition::LeafPackageId>>(
+                "RuntimeSession/ConditionalRegion",
+                "Conditional Region identityがComposition契約と一致しません。");
+        for (const auto leaf : region.trueLeaves)
+        {
+            if (leaf.value >= leafCount)
+                return Fail<std::vector<composition::LeafPackageId>>(
+                    "RuntimeSession/ConditionalRegion", "Conditional leafが範囲外です。");
+            enabled[leaf.value] = false;
+        }
+        for (const auto leaf : region.falseLeaves)
+        {
+            if (leaf.value >= leafCount)
+                return Fail<std::vector<composition::LeafPackageId>>(
+                    "RuntimeSession/ConditionalRegion", "Conditional leafが範囲外です。");
+            enabled[leaf.value] = false;
+        }
+        const auto& selected = selection.predicateValue ? region.trueLeaves : region.falseLeaves;
+        for (const auto leaf : selected) enabled[leaf.value] = true;
+    }
+
+    std::vector<composition::LeafPackageId> expected;
+    expected.reserve(leafCount);
+    for (std::uint32_t leaf = 0; leaf < leafCount; ++leaf)
+        if (enabled[leaf]) expected.push_back(composition::LeafPackageId{leaf});
+
+    if (expected != decision.enabledLeaves)
+        return Fail<std::vector<composition::LeafPackageId>>(
+            "RuntimeSession/ConditionalRegion",
+            "Seal済みenabled Leaf集合がComposition契約の選択結果と一致しません。");
+    const auto identity = dynamic::ComputeConditionalExecutionIdentityV1(
+        leafCount, decision.conditionalSelections, expected);
+    if (identity != decision.conditionalExecutionIdentity)
+        return Fail<std::vector<composition::LeafPackageId>>(
+            "RuntimeSession/ConditionalRegion",
+            "Conditional execution identityがSeal済みDecisionと一致しません。");
+    return base::Success<std::vector<composition::LeafPackageId>, Error>(std::move(expected));
+}
 }
 
 base::Expected<Session, Error> Session::Create(
@@ -144,6 +201,9 @@ base::Expected<void, Error> Session::ValidateForSubmission(
         invocation.Decision().transitionRecords.size())
         return Fail<void>("RuntimeSession/DynamicExecution",
             "Verified transition countがtransition record数と一致しません。");
+    auto enabledLeaves = ValidateConditionalExecution(package_, invocation.Decision());
+    if (!enabledLeaves)
+        return Fail<void>(enabledLeaves.error().stage, enabledLeaves.error().message);
 
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
     {
@@ -189,17 +249,27 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
     const dynamic::FrozenDynamicInvocationPackage& invocation) const
 {
     const auto& contract = package_.DynamicContract();
+    auto enabledLeaves = ValidateConditionalExecution(package_, invocation.Decision());
+    if (!enabledLeaves)
+        return Fail<PreparedDynamicExecutionV1>(
+            enabledLeaves.error().stage, enabledLeaves.error().message);
+
+    PreparedDynamicExecutionV1 prepared;
+    prepared.enabledLeaves = std::move(enabledLeaves).value();
+    prepared.conditionalRegionCount = static_cast<std::uint32_t>(
+        contract.conditionalRegions.size());
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
-        return base::Success<PreparedDynamicExecutionV1, Error>({});
+        return base::Success<PreparedDynamicExecutionV1, Error>(std::move(prepared));
     if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot)
         return Fail<PreparedDynamicExecutionV1>("RuntimeSession/DynamicExecution",
             "未対応のDynamic execution modeです。");
 
-    PreparedDynamicExecutionV1 prepared;
-    prepared.hasBinding = true;
     prepared.leaf = contract.targetLeaf;
     prepared.slot = contract.targetDynamicSlot;
     prepared.denseSlotBytes = dynamicExecutionShadow_;
+    prepared.hasBinding = std::binary_search(
+        prepared.enabledLeaves.begin(), prepared.enabledLeaves.end(), contract.targetLeaf,
+        [](const auto& left, const auto& right) { return left.value < right.value; });
 
     const auto& decision = invocation.Decision();
     const auto& payloads = invocation.ExecutionPayload().updates;
@@ -257,7 +327,15 @@ void Session::CommitSubmission(
 {
     history_ = invocation.NextHistory();
     recoverySeedRequired_ = false;
-    if (prepared.hasBinding)
+
+    // hasBinding means only that the target Leaf was selected for this native
+    // submission.  It must not decide whether verified Update/Clear effects are
+    // accepted into the private shadow.  A false Conditional branch can execute
+    // zero Leaves while still advancing exact dynamic History; after that native
+    // submission succeeds, the prepared shadow must be committed together with
+    // History so a later re-enabled branch observes the accepted state.
+    if (package_.DynamicContract().executionMode ==
+        composition::DynamicExecutionModeV1::VerifiedDenseSlot)
         dynamicExecutionShadow_ = std::move(prepared.denseSlotBytes);
 }
 

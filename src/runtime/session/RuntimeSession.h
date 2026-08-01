@@ -26,7 +26,9 @@ struct PreparedDynamicExecutionV1 final
     composition::LeafPackageId leaf;
     std::uint32_t slot = package::InvalidIndex;
     std::vector<std::byte> denseSlotBytes;
+    std::vector<composition::LeafPackageId> enabledLeaves;
     std::uint32_t appliedTransitionCount = 0;
+    std::uint32_t conditionalRegionCount = 0;
 };
 
 class Session final

@@ -99,6 +99,7 @@ base::Expected<Submission, Error> Submit(
 
     native::StaticCompositionFrameInvocation nativeInvocation;
     nativeInvocation.frameNumber = frame.frameNumber;
+    nativeInvocation.enabledLeaves = prepared.value().enabledLeaves;
     nativeInvocation.dynamicData.reserve(
         frame.leafDynamicData.size() + (prepared.value().hasBinding ? 1u : 0u));
     for (auto& item : frame.leafDynamicData)
@@ -122,11 +123,14 @@ base::Expected<Submission, Error> Submit(
         return Fail<Submission>("D3D12Runtime", "Deviceが検証または実行の契約に違反しています。");
 
     const auto verifiedTransitionCount = prepared.value().appliedTransitionCount;
-    const auto verifiedDynamicByteCount = prepared.value().denseSlotBytes.size();
+    const auto verifiedDynamicByteCount = prepared.value().hasBinding
+        ? prepared.value().denseSlotBytes.size() : 0u;
+    const auto verifiedConditionalRegionCount = prepared.value().conditionalRegionCount;
     loaded.impl_->session.CommitSubmission(invocation, std::move(prepared).value());
     Submission result{std::move(invocation), nativeSubmission.value().deviceEpoch,
         static_cast<std::uint32_t>(nativeSubmission.value().leaves.size()),
-        verifiedTransitionCount, verifiedDynamicByteCount};
+        verifiedTransitionCount, verifiedDynamicByteCount,
+        verifiedConditionalRegionCount};
     return base::Success<Submission, Error>(std::move(result));
 }
 

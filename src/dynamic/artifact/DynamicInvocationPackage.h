@@ -19,8 +19,8 @@ inline constexpr std::array<std::byte, 8> FrozenInvocationMagic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'4'},
     std::byte{'I'}, std::byte{'N'}, std::byte{'V'}, std::byte{0}};
 inline constexpr std::uint16_t FrozenInvocationFormatMajor = 1;
-inline constexpr std::uint16_t FrozenInvocationFormatMinor = 2;
-inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 3;
+inline constexpr std::uint16_t FrozenInvocationFormatMinor = 3;
+inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 4;
 
 enum class FrozenInvocationSectionKind : std::uint32_t
 {
@@ -28,13 +28,15 @@ enum class FrozenInvocationSectionKind : std::uint32_t
     ExactSets = 2,
     TransitionRecords = 3,
     NextHistory = 4,
-    ExecutionPayload = 5
+    ExecutionPayload = 5,
+    ConditionalExecution = 6
 };
 
 inline constexpr std::array FrozenInvocationSectionKinds = {
     FrozenInvocationSectionKind::Manifest, FrozenInvocationSectionKind::ExactSets,
     FrozenInvocationSectionKind::TransitionRecords, FrozenInvocationSectionKind::NextHistory,
-    FrozenInvocationSectionKind::ExecutionPayload};
+    FrozenInvocationSectionKind::ExecutionPayload,
+    FrozenInvocationSectionKind::ConditionalExecution};
 static_assert(base::ValuesAreUnique(FrozenInvocationSectionKinds,
     [](FrozenInvocationSectionKind value) { return std::to_underlying(value); }));
 static_assert(base::ValuesAreStrictlyIncreasing(FrozenInvocationSectionKinds,

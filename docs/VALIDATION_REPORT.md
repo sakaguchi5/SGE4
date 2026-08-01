@@ -1,12 +1,12 @@
-# Validation Addendum — Level 4 Generalization 1
+# Validation Addendum — Level 4 Generalization 2
 
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.1
-Dynamic Contract: schema 2
-Frozen Dynamic Invocation: SGE4INV 1.2
-Invocation Manifest: schema 3
+Frozen Composition: SGE4UNI 2.2
+Dynamic Contract: schema 3
+Frozen Dynamic Invocation: SGE4INV 1.3
+Invocation Manifest: schema 4
 Execution Payload Section: schema 1
 ```
 
@@ -26,6 +26,14 @@ Execution Payload Section: schema 1
 - C++23 strict syntax checks passed for all modified portable Product sources.
 - C++23 strict syntax checks passed for Architecture tests, ABI corruption tests, D3D12 Runtime facade, and Windows qualification source.
 - Project／filters ownership for the new `DynamicExecutionContract.h` passed.
+
+## Conditional shadow commit correction
+
+- Windows qualification detected that zero-Leaf false branch advanced History without committing the prepared verified dense shadow.
+- `hasBinding` is now used only for native Dynamic Slot injection.
+- A successful `VerifiedDenseSlot` submission commits prepared shadow and History together even when zero Leaves execute.
+- Architecture regression covers InitialSeed -> zero-Leaf Clear -> re-enable and checks that only the newly active member remains in the prepared dense shadow.
+- Frozen ABI, Planner, Verifier, and Conditional Region identities are unchanged.
 
 ## Windows qualification still required
 
@@ -258,3 +266,15 @@ run_new_sge4_full_gate.bat
 - Gate終了後のMSBuild node終了
 
 このLinux環境では、上記Windows固有結果を通過済みとは記録しない。
+
+## Level 4 Generalization 2 validation target
+
+- SGE4UNI 2.2／Dynamic Contract schema 3
+- SGE4INV 1.3／Conditional Execution Section
+- True／False branchの独立再導出
+- enabled Leaf集合改竄拒否
+- zero-Leaf submissionとResource状態保持
+- 再有効化時のCommit済みshadow反映
+- Controlled Recovery後のRecoverySeed再構築
+
+Linux側ではC++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL、WARP、Actual Device removalの最終合格はWindows Full Gateで確定する。

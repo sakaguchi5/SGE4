@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <set>
 
 namespace sge4::composition
 {
@@ -27,10 +28,182 @@ template<class T>
     return base::Failure<T, Error>({std::move(stage), std::move(message)});
 }
 
+[[nodiscard]] bool IsValidPredicate(ConditionalPredicateKindV1 predicate) noexcept
+{
+    const auto value = std::to_underlying(predicate);
+    return value >= std::to_underlying(ConditionalPredicateKindV1::ActiveSetNonEmpty) &&
+        value <= std::to_underlying(ConditionalPredicateKindV1::TransitionSetNonEmpty);
+}
+
+[[nodiscard]] bool IsStrictlyIncreasingLeafList(
+    std::span<const LeafPackageId> leaves,
+    std::size_t leafCount) noexcept
+{
+    std::uint32_t previous = package::InvalidIndex;
+    bool hasPrevious = false;
+    for (const auto leaf : leaves)
+    {
+        if (!leaf.IsValid() || leaf.value >= leafCount ||
+            (hasPrevious && leaf.value <= previous))
+            return false;
+        previous = leaf.value;
+        hasPrevious = true;
+    }
+    return true;
+}
+
+// Generalization 2 is deliberately non-nested. A conditional producer may feed only
+// consumers in the same region and same branch. An unconditional producer may feed
+// either branch. This guarantees that every selected branch has all same-frame inputs
+// without Runtime rediscovering graph validity.
+[[nodiscard]] base::Expected<void, Error> ValidateConditionalRegions(
+    const PackageCompositionContract& contract,
+    std::span<const ConditionalRegionV1> regions)
+{
+    if (regions.size() > contract.leaves.size())
+        return Fail<void>("CompositionToolchain/ConditionalRegion",
+            "Conditional Region数がLeaf数を超えています。");
+
+    // -1 = unconditional, otherwise region * 2 + branch (0=false, 1=true).
+    std::vector<std::int64_t> membership(contract.leaves.size(), -1);
+    for (std::size_t index = 0; index < regions.size(); ++index)
+    {
+        const auto& region = regions[index];
+        if (!region.id.IsValid() || region.id.value != index ||
+            !IsValidPredicate(region.predicate) ||
+            (region.trueLeaves.empty() && region.falseLeaves.empty()) ||
+            !IsStrictlyIncreasingLeafList(region.trueLeaves, contract.leaves.size()) ||
+            !IsStrictlyIncreasingLeafList(region.falseLeaves, contract.leaves.size()))
+            return Fail<void>("CompositionToolchain/ConditionalRegion",
+                "Conditional RegionがCanonicalなID、predicateまたはLeaf集合に違反しています。");
+
+        for (const auto leaf : region.falseLeaves)
+        {
+            if (membership[leaf.value] != -1)
+                return Fail<void>("CompositionToolchain/ConditionalRegion",
+                    "Leafを複数のConditional branchへ所属させることはできません。");
+            membership[leaf.value] = static_cast<std::int64_t>(index * 2u);
+        }
+        for (const auto leaf : region.trueLeaves)
+        {
+            if (membership[leaf.value] != -1)
+                return Fail<void>("CompositionToolchain/ConditionalRegion",
+                    "Leafを複数のConditional branchへ所属させることはできません。");
+            membership[leaf.value] = static_cast<std::int64_t>(index * 2u + 1u);
+        }
+    }
+
+    if (contract.presenterLeaf.IsValid() &&
+        contract.presenterLeaf.value < membership.size() &&
+        membership[contract.presenterLeaf.value] != -1)
+        return Fail<void>("CompositionToolchain/ConditionalRegion",
+            "Presenter LeafはGeneralization 2でConditionalにできません。");
+
+    for (const auto& resource : contract.resources)
+    {
+        if (!resource.producer.IsValid())
+            continue;
+        if (resource.producer.value >= contract.endpoints.size())
+            return Fail<void>("CompositionToolchain/ConditionalRegion",
+                "Conditional flowのproducer Endpointが範囲外です。");
+        const auto producerLeaf = contract.endpoints[resource.producer.value].leaf;
+        if (!producerLeaf.IsValid() || producerLeaf.value >= membership.size())
+            return Fail<void>("CompositionToolchain/ConditionalRegion",
+                "Conditional flowのproducer Leafが範囲外です。");
+        const auto producerMembership = membership[producerLeaf.value];
+
+        for (const auto consumerEndpoint : resource.consumers)
+        {
+            if (!consumerEndpoint.IsValid() ||
+                consumerEndpoint.value >= contract.endpoints.size())
+                return Fail<void>("CompositionToolchain/ConditionalRegion",
+                    "Conditional flowのconsumer Endpointが範囲外です。");
+            const auto consumerLeaf = contract.endpoints[consumerEndpoint.value].leaf;
+            if (!consumerLeaf.IsValid() || consumerLeaf.value >= membership.size())
+                return Fail<void>("CompositionToolchain/ConditionalRegion",
+                    "Conditional flowのconsumer Leafが範囲外です。");
+            const auto consumerMembership = membership[consumerLeaf.value];
+
+            if (producerMembership != -1 && consumerMembership == -1)
+                return Fail<void>("CompositionToolchain/ConditionalRegion",
+                    "Unconditional LeafはConditional producerへ依存できません。");
+            if (producerMembership != -1 && consumerMembership != -1 &&
+                producerMembership != consumerMembership)
+                return Fail<void>("CompositionToolchain/ConditionalRegion",
+                    "Conditional branchを跨ぐResource Flowは許可されません。");
+        }
+    }
+    return base::Success<void, Error>();
+}
+
+void WriteConditionalRegions(
+    BinaryWriter& writer,
+    std::span<const ConditionalRegionV1> regions)
+{
+    writer.WriteCountU32(regions.size());
+    for (const auto& region : regions)
+    {
+        writer.WriteU32(region.id.value);
+        writer.WriteU32(std::to_underlying(region.predicate));
+        writer.WriteCountU32(region.trueLeaves.size());
+        writer.WriteCountU32(region.falseLeaves.size());
+        for (const auto leaf : region.trueLeaves) writer.WriteU32(leaf.value);
+        for (const auto leaf : region.falseLeaves) writer.WriteU32(leaf.value);
+    }
+}
+
+[[nodiscard]] base::Expected<std::vector<ConditionalRegionV1>, Error>
+ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
+{
+    auto regionCount = reader.ReadU32();
+    if (!regionCount || regionCount.value() > leafCount)
+        return Fail<std::vector<ConditionalRegionV1>>(
+            "CompositionReader/DynamicContract", "Conditional Region数が無効です。");
+
+    std::vector<ConditionalRegionV1> regions;
+    regions.reserve(regionCount.value());
+    for (std::uint32_t index = 0; index < regionCount.value(); ++index)
+    {
+        auto id = reader.ReadU32();
+        auto predicate = reader.ReadU32();
+        auto trueCount = reader.ReadU32();
+        auto falseCount = reader.ReadU32();
+        if (!id || !predicate || !trueCount || !falseCount ||
+            trueCount.value() > leafCount || falseCount.value() > leafCount ||
+            static_cast<std::uint64_t>(trueCount.value()) + falseCount.value() > leafCount)
+            return Fail<std::vector<ConditionalRegionV1>>(
+                "CompositionReader/DynamicContract", "Conditional Region headerが無効です。");
+
+        ConditionalRegionV1 region;
+        region.id = ConditionalRegionId{id.value()};
+        region.predicate = static_cast<ConditionalPredicateKindV1>(predicate.value());
+        region.trueLeaves.reserve(trueCount.value());
+        region.falseLeaves.reserve(falseCount.value());
+        for (std::uint32_t leafIndex = 0; leafIndex < trueCount.value(); ++leafIndex)
+        {
+            auto leaf = reader.ReadU32();
+            if (!leaf)
+                return Fail<std::vector<ConditionalRegionV1>>(
+                    "CompositionReader/DynamicContract", leaf.error());
+            region.trueLeaves.push_back(LeafPackageId{leaf.value()});
+        }
+        for (std::uint32_t leafIndex = 0; leafIndex < falseCount.value(); ++leafIndex)
+        {
+            auto leaf = reader.ReadU32();
+            if (!leaf)
+                return Fail<std::vector<ConditionalRegionV1>>(
+                    "CompositionReader/DynamicContract", leaf.error());
+            region.falseLeaves.push_back(LeafPackageId{leaf.value()});
+        }
+        regions.push_back(std::move(region));
+    }
+    return base::Success<std::vector<ConditionalRegionV1>, Error>(std::move(regions));
+}
+
 [[nodiscard]] core::SemanticIdentity BuildDynamicSemanticIdentity(
     const Digest256& compositionCoreDigest,
     const CompositionCertificate& certificate,
-    DynamicContractV1 dynamicContract)
+    const DynamicContractV1& dynamicContract)
 {
     BinaryWriter payload;
     payload.WriteBytes(compositionCoreDigest);
@@ -41,8 +214,9 @@ template<class T>
     payload.WriteU32(dynamicContract.targetLeaf.value);
     payload.WriteU32(dynamicContract.targetDynamicSlot);
     payload.WriteU32(dynamicContract.memberBytes);
+    WriteConditionalRegions(payload, dynamicContract.conditionalRegions);
     return core::SemanticIdentity::FromDigest(
-        ComputeDomainDigest("sge4.composition.dynamic-semantic", 3, payload.Bytes()));
+        ComputeDomainDigest("sge4.composition.dynamic-semantic", 4, payload.Bytes()));
 }
 
 [[nodiscard]] std::vector<std::byte> BuildAuthorityLedger(
@@ -64,7 +238,7 @@ template<class T>
 }
 
 [[nodiscard]] std::vector<std::byte> BuildDynamicContractBytes(
-    DynamicContractV1 dynamicContract,
+    const DynamicContractV1& dynamicContract,
     core::SemanticIdentity semanticIdentity,
     FrozenCompositionIdentity compositionIdentity)
 {
@@ -75,6 +249,7 @@ template<class T>
     writer.WriteU32(dynamicContract.targetLeaf.value);
     writer.WriteU32(dynamicContract.targetDynamicSlot);
     writer.WriteU32(dynamicContract.memberBytes);
+    WriteConditionalRegions(writer, dynamicContract.conditionalRegions);
     writer.WriteBytes(compositionIdentity.Digest());
     writer.WriteBytes(semanticIdentity.Digest());
     return std::move(writer).Take();
@@ -99,12 +274,18 @@ template<class T>
 }
 
 [[nodiscard]] base::Expected<void, Error> ValidateDynamicContract(
-    const ValidatedCompositionContract& contract,
-    DynamicContractV1 dynamicContract)
+    const ValidatedCompositionContract& validated,
+    const DynamicContractV1& dynamicContract)
 {
-    if (dynamicContract.schemaVersion != 2 || dynamicContract.universeCount == 0)
+    const auto& contract = validated.Contract();
+    if (dynamicContract.schemaVersion != 3 || dynamicContract.universeCount == 0)
         return Fail<void>(
             "CompositionToolchain", "Dynamic Contractが検証または実行の契約に違反しています。");
+
+    auto conditionalValid = ValidateConditionalRegions(
+        contract, dynamicContract.conditionalRegions);
+    if (!conditionalValid)
+        return conditionalValid;
 
     if (dynamicContract.executionMode == DynamicExecutionModeV1::AuthorityOnly)
     {
@@ -118,13 +299,13 @@ template<class T>
 
     if (dynamicContract.executionMode != DynamicExecutionModeV1::VerifiedDenseSlot ||
         !dynamicContract.targetLeaf.IsValid() ||
-        dynamicContract.targetLeaf.value >= contract.Leaves().size() ||
+        dynamicContract.targetLeaf.value >= validated.Leaves().size() ||
         dynamicContract.targetDynamicSlot == package::InvalidIndex ||
         dynamicContract.memberBytes == 0)
         return Fail<void>(
             "CompositionToolchain", "Verified Dynamic Execution routeが無効です。");
 
-    const auto& leaf = contract.Leaves()[dynamicContract.targetLeaf.value];
+    const auto& leaf = validated.Leaves()[dynamicContract.targetLeaf.value];
     auto frozen = package::PackageReader::Read(leaf.packageBytes);
     if (!frozen)
         return Fail<void>("CompositionToolchain/DynamicRoute", frozen.error().message);
@@ -165,7 +346,7 @@ base::Expected<FrozenCompositionPackage, Error> BuildFrozenCompositionPackage(
     auto verified = verification::VerifyAndSeal(contract.value(), proposal.value());
     if (!verified)
         return Fail<FrozenCompositionPackage>(verified.error().stage, verified.error().message);
-    return FreezeVerifiedCompositionPackage(contract.value(), verified.value(), dynamicContract);
+    return FreezeVerifiedCompositionPackage(contract.value(), verified.value(), std::move(dynamicContract));
 }
 
 base::Expected<FrozenCompositionPackage, Error> FreezeVerifiedCompositionPackage(
@@ -261,7 +442,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract));
     if (!manifestSection || !authoritySection || !dynamicSection)
         return Fail<FrozenCompositionPackage>(
-            "CompositionReader", "SGE4UNI 2.1の必須Sectionがありません。");
+            "CompositionReader", "SGE4UNI 2.2の必須Sectionがありません。");
 
     auto manifestResult = artifact::DeserializeFrozenCompositionAbi2Manifest(
         manifestSection->bytes);
@@ -312,13 +493,21 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
     auto dynamicTargetLeaf = dynamic.ReadU32();
     auto dynamicTargetSlot = dynamic.ReadU32();
     auto dynamicMemberBytes = dynamic.ReadU32();
-    auto dynamicCompositionIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
-    auto dynamicSemanticIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
     if (!dynamicSchema || !dynamicUniverse || !dynamicExecutionMode ||
         !dynamicTargetLeaf || !dynamicTargetSlot || !dynamicMemberBytes ||
-        !dynamicCompositionIdentity || !dynamicSemanticIdentity || dynamic.Remaining() != 0 ||
-        dynamicSchema.value() != 2 || dynamicUniverse.value() == 0 ||
-        dynamicExecutionMode.value() > std::to_underlying(DynamicExecutionModeV1::VerifiedDenseSlot) ||
+        dynamicSchema.value() != 3 || dynamicUniverse.value() == 0 ||
+        dynamicExecutionMode.value() >
+            std::to_underlying(DynamicExecutionModeV1::VerifiedDenseSlot))
+        return Fail<FrozenCompositionPackage>(
+            "CompositionReader", "Dynamic Contract headerが無効です。");
+
+    auto conditionalRegions = ReadConditionalRegions(dynamic, certificate.leafCount);
+    if (!conditionalRegions)
+        return Fail<FrozenCompositionPackage>(
+            conditionalRegions.error().stage, conditionalRegions.error().message);
+    auto dynamicCompositionIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
+    auto dynamicSemanticIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
+    if (!dynamicCompositionIdentity || !dynamicSemanticIdentity || dynamic.Remaining() != 0 ||
         !SameIdentity(dynamicCompositionIdentity.value(), certificate.artifactIdentity))
         return Fail<FrozenCompositionPackage>(
             "CompositionReader", "Dynamic ContractがComposition identityと一致しません。");
@@ -327,7 +516,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         dynamicSchema.value(), dynamicUniverse.value(),
         static_cast<DynamicExecutionModeV1>(dynamicExecutionMode.value()),
         LeafPackageId{dynamicTargetLeaf.value()}, dynamicTargetSlot.value(),
-        dynamicMemberBytes.value()};
+        dynamicMemberBytes.value(), std::move(conditionalRegions).value()};
     auto dynamicValid = ValidateDynamicContract(verified.ValidatedContract(), dynamicContract);
     if (!dynamicValid)
         return Fail<FrozenCompositionPackage>(dynamicValid.error().stage, dynamicValid.error().message);
@@ -341,7 +530,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
 
     return base::Success<FrozenCompositionPackage, Error>(FrozenCompositionPackage(
         std::move(bytes), std::move(verified), certificate, derivedDynamicIdentity,
-        dynamicContract, manifest.compositionCoreDigest,
+        std::move(dynamicContract), manifest.compositionCoreDigest,
         outer.value().SemanticDigest(), outer.value().FileDigest()));
 }
 }

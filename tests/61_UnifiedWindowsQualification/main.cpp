@@ -41,6 +41,108 @@ void Require(bool condition, const char* message)
     return true;
 }
 
+void VerifyConditionalRegionQualification()
+{
+    constexpr std::uint32_t Universe = 4;
+    const std::array<float, 4> valueOne{31, 32, 33, 34};
+    const std::array<float, 4> valueThree{41, 42, 43, 44};
+    const std::array<float, 4> zero{};
+
+    auto package = tests::BuildConditionalVerifiedDynamicUnified(Universe);
+    if (!package)
+        throw std::runtime_error(
+            "Conditional Region Compositionの生成に失敗しました：" + package.error());
+    const auto outputId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/conditional/output");
+    Require(outputId.IsValid(), "Conditional Region outputの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded), "Conditional Region CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 seed;
+    seed.timelineOrdinal = 0;
+    seed.mode = planning.requiredMode;
+    seed.activeMembers = {1};
+    seed.updatePayloads = {UpdatePayload(1, valueOne)};
+    auto frozenSeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(seed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSeed), "Conditional true seedの生成に失敗しました。");
+    auto submittedSeed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSeed).value(), {0, {}});
+    Require(submittedSeed && submittedSeed.value().submittedLeafCount == 2 &&
+        submittedSeed.value().verifiedConditionalRegionCount == 1,
+        "Conditional true branchが実行されませんでした。");
+    const std::array seedExpected{zero, valueOne, zero, zero};
+    auto seedRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(seedRead && EqualsDense(seedRead.value().bytes, seedExpected),
+        "Conditional true branchのGPU観測結果が一致しません。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 disable;
+    disable.timelineOrdinal = 1;
+    disable.mode = planning.requiredMode;
+    auto frozenDisable = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(disable),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenDisable), "Conditional false Invocationの生成に失敗しました。");
+    auto submittedDisable = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenDisable).value(), {1, {}});
+    Require(submittedDisable && submittedDisable.value().submittedLeafCount == 0 &&
+        submittedDisable.value().verifiedTransitionCount == 1 &&
+        submittedDisable.value().verifiedConditionalRegionCount == 1,
+        "Conditional false branchがzero-Leaf submissionになりませんでした。");
+    auto retainedRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(retainedRead && EqualsDense(retainedRead.value().bytes, seedExpected),
+        "未選択RegionのComposition outputが直前の受理状態を保持しませんでした。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 reenable;
+    reenable.timelineOrdinal = 2;
+    reenable.mode = planning.requiredMode;
+    reenable.activeMembers = {3};
+    reenable.updatePayloads = {UpdatePayload(3, valueThree)};
+    auto frozenReenable = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(reenable),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenReenable), "Conditional re-enable Invocationの生成に失敗しました。");
+    auto submittedReenable = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenReenable).value(), {2, {}});
+    Require(submittedReenable && submittedReenable.value().submittedLeafCount == 2,
+        "Conditional Regionの再有効化に失敗しました。");
+    const std::array reenabledExpected{zero, zero, zero, valueThree};
+    auto reenabledRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(reenabledRead && EqualsDense(reenabledRead.value().bytes, reenabledExpected),
+        "再有効化時にCommit済みDynamic shadowがGPUへ反映されませんでした。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "Conditional Region Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "Conditional Region Compositionの外部再bind確認に失敗しました。");
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 3;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {3};
+    recoverySeed.updatePayloads = {UpdatePayload(3, valueThree)};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery), "Conditional RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {3, {}});
+    Require(resumed && resumed.value().submittedLeafCount == 2 &&
+        resumed.value().verifiedConditionalRegionCount == 1,
+        "RecoverySeed後にConditional true branchを再構築できませんでした。");
+    auto recoveryRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(recoveryRead && EqualsDense(recoveryRead.value().bytes, reenabledExpected),
+        "Conditional RecoverySeed後のGPU観測結果が一致しません。");
+}
+
 void VerifyDynamicExecutionQualification()
 {
     constexpr std::uint32_t Universe = 4;
@@ -196,6 +298,7 @@ int main(int argc, char** argv)
     try
     {
         const bool actualRemoval = argc > 1 && std::string_view(argv[1]) == "--actual-removal";
+        VerifyConditionalRegionQualification();
         VerifyDynamicExecutionQualification();
         auto package = tests::BuildLinearUnified();
         Require(static_cast<bool>(package), "Compositionが検証または実行の契約に違反しています。");

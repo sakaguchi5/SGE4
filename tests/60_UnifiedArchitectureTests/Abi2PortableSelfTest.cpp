@@ -192,11 +192,11 @@ void VerifyAbi2PortableRoundTrip()
         BuildPortableCompositionInput(leafBytes),
         composition::MakeAuthorityOnlyDynamicContractV1(8));
     Require(static_cast<bool>(first) && static_cast<bool>(second),
-        "Portable SGE4UNI 2.1の生成に失敗しました。");
+        "Portable SGE4UNI 2.2の生成に失敗しました。");
     Require(first.value().FileBytes().size() == second.value().FileBytes().size() &&
         std::equal(first.value().FileBytes().begin(), first.value().FileBytes().end(),
             second.value().FileBytes().begin()),
-        "Portable SGE4UNI 2.1がbyte決定的ではありません。");
+        "Portable SGE4UNI 2.2がbyte決定的ではありません。");
 
     auto outer = ReadSectionedArtifact(
         first.value().FileBytes(), artifact::FrozenCompositionAbi2Magic,
@@ -204,7 +204,7 @@ void VerifyAbi2PortableRoundTrip()
     Require(static_cast<bool>(outer) &&
         outer.value().FormatMinor() == artifact::FrozenCompositionAbi2FormatMinor &&
         outer.value().Sections().size() == artifact::FrozenCompositionAbi2SectionKinds.size(),
-        "Portable SGE4UNI 2.1の平坦Section構造が一致しません。");
+        "Portable SGE4UNI 2.2の平坦Section構造が一致しません。");
 
     const auto leaves = first.value().VerifiedComposition().ValidatedContract().Leaves();
     Require(leaves.size() == 2, "Portable CompositionのLeaf数が一致しません。");
@@ -213,11 +213,11 @@ void VerifyAbi2PortableRoundTrip()
             "ABI 2.0でSchema 17 Leaf Package bytesが保存されませんでした。");
 
     auto roundTrip = composition::ReadFrozenCompositionPackage(first.value().FileBytes());
-    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.1のRound-tripに失敗しました。");
+    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.2のRound-tripに失敗しました。");
     Require(roundTrip.value().FileDigest() == first.value().FileDigest() &&
         roundTrip.value().CompositionCoreDigest() == first.value().CompositionCoreDigest() &&
         roundTrip.value().SemanticDigest() == first.value().SemanticDigest(),
-        "Portable SGE4UNI 2.1のDigestがRound-tripで変化しました。");
+        "Portable SGE4UNI 2.2のDigestがRound-tripで変化しました。");
 
     auto legacyBytes = composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
         BuildPortableCompositionInput(leafBytes),
@@ -228,17 +228,48 @@ void VerifyAbi2PortableRoundTrip()
 
     auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
         legacyBytes.value());
-    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.1へのMigrationに失敗しました。");
+    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.2へのMigrationに失敗しました。");
     Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
         std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
             first.value().FileBytes().begin()),
-        "直接生成とMigration後のPortable SGE4UNI 2.1がbyte一致しません。");
+        "直接生成とMigration後のPortable SGE4UNI 2.2がbyte一致しません。");
     Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
         migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
         migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity &&
         migrated.value().Certificate().scheduleIdentity == first.value().Certificate().scheduleIdentity &&
         migrated.value().Certificate().recoverySetIdentity == first.value().Certificate().recoverySetIdentity,
-        "ABI 1.1から2.1へのMigrationで権威Identityが保存されませんでした。");
+        "ABI 1.1から2.2へのMigrationで権威Identityが保存されませんでした。");
+
+    std::vector<composition::ConditionalRegionV1> conditionalRegions;
+    conditionalRegions.push_back(composition::MakeConditionalRegionV1(
+        0, composition::ConditionalPredicateKindV1::ActiveSetNonEmpty,
+        {{0}, {1}}));
+    auto conditional = composition::BuildFrozenCompositionPackage(
+        BuildPortableCompositionInput(leafBytes),
+        composition::MakeAuthorityOnlyDynamicContractV1(
+            8, std::move(conditionalRegions)));
+    Require(static_cast<bool>(conditional),
+        "Portable Conditional Region Compositionの生成に失敗しました。");
+    auto conditionalRoundTrip = composition::ReadFrozenCompositionPackage(
+        conditional.value().FileBytes());
+    Require(conditionalRoundTrip &&
+        conditionalRoundTrip.value().DynamicContract().conditionalRegions.size() == 1 &&
+        conditionalRoundTrip.value().DynamicContract().conditionalRegions[0].trueLeaves ==
+            std::vector<composition::LeafPackageId>{{0}, {1}},
+        "Portable Conditional Region契約のRound-tripに失敗しました。");
+
+    const auto firstKey = composition::ComputeStableLeafKey("portable/first");
+    const auto secondKey = composition::ComputeStableLeafKey("portable/second");
+    const composition::LeafPackageId firstLeaf{firstKey < secondKey ? 0u : 1u};
+    const composition::LeafPackageId secondLeaf{firstLeaf.value == 0u ? 1u : 0u};
+    std::vector<composition::ConditionalRegionV1> crossBranch;
+    crossBranch.push_back(composition::MakeConditionalRegionV1(
+        0, composition::ConditionalPredicateKindV1::ActiveSetNonEmpty,
+        {firstLeaf}, {secondLeaf}));
+    Require(!composition::BuildFrozenCompositionPackage(
+        BuildPortableCompositionInput(leafBytes),
+        composition::MakeAuthorityOnlyDynamicContractV1(8, std::move(crossBranch))),
+        "Portable Conditional branchを跨ぐFlowが受理されました。");
 
     VerifyAbi2CorruptionRejection(first.value().FileBytes());
 }

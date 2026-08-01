@@ -21,10 +21,10 @@ Certificate生成のために第二Planner／Verifierを実行してはならな
 
 ## Frozen Composition
 
-Production Frozen Compositionは平坦な`SGE4UNI 2.1`である。
+Production Frozen Compositionは平坦な`SGE4UNI 2.2`である。
 
 ```text
-SGE4UNI 2.1
+SGE4UNI 2.2
   Manifest
   Leaf Table
   complete Schema 17 Leaf Package bytes
@@ -51,7 +51,7 @@ ABI 1.1／SGE4CMP 1.0はmigration資格試験に限定し、Production Readerか
 
 ## Frozen Dynamic Invocation
 
-`SGE4INV` major 1／minor 1は、正確な集合、Transition record、前History identity、次History、Sealとidentityを保存する。RuntimeがCountだけからMembershipを推測すること、および受理済みHistoryとは異なるHistoryから作られたContinueHistory成果物をSubmitすることを禁止する。
+`SGE4INV` major 1／minor 3は、正確な集合、Transition record、前History identity、次History、Sealとidentityを保存する。RuntimeがCountだけからMembershipを推測すること、および受理済みHistoryとは異なるHistoryから作られたContinueHistory成果物をSubmitすることを禁止する。
 
 生成経路は一つである。
 

@@ -43,6 +43,7 @@ struct Submission final
     std::uint32_t submittedLeafCount = 0;
     std::uint32_t verifiedTransitionCount = 0;
     std::uint64_t verifiedDynamicByteCount = 0;
+    std::uint32_t verifiedConditionalRegionCount = 0;
 };
 
 struct RecoveryReport final

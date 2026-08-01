@@ -386,3 +386,9 @@ memberBytes
 ```
 
 VerifiedDenseSlotでは、埋め込みSchema 17 LeafのDynamic Slot requiredBytesが`universeCount * memberBytes`と一致することをWriter／Readerが検証する。詳細は`LEVEL4_GENERALIZATION1_VERIFIED_DYNAMIC_EXECUTION.md`を参照する。
+
+## Production amendment: SGE4UNI 2.2
+
+Level 4 Generalization 2によりProduction minorを2.2へ進め、Dynamic Contractをschema 3へ更新した。schema 3はGeneralization 1のVerifiedDenseSlot routeに加え、非ネスト型Conditional Regionのdense ID、exact-set predicate、True／False Leaf集合をCanonical encodingする。Composition Coreおよび埋込みSchema 17 Leaf bytesは2.1から変更しない。
+
+対応するFrozen Dynamic InvocationはSGE4INV 1.3、Manifest schema 4である。必須Conditional Execution Section schema 1が、独立VerifierにSealされたRegion selection、enabled Leaf集合、Conditional Execution identityを保存する。Runtimeはpredicateを再評価しない。

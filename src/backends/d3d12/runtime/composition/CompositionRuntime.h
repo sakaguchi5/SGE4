@@ -32,6 +32,7 @@ struct StaticCompositionFrameInvocation final
 {
     std::uint64_t frameNumber = 0;
     std::vector<LeafDynamicData> dynamicData;
+    std::vector<LeafPackageId> enabledLeaves;
 };
 struct StaticCompositionSubmission final
 {

@@ -1,3 +1,5 @@
+> Current status: Generalization 2により現行ProductionはSGE4UNI 2.2／SGE4INV 1.3へ進んだ。本書の2.1／1.2記述はGeneralization 1完成時点の契約記録である。
+
 # Level 4 Generalization 1 — Verified Dynamic Execution
 
 ## 1. 目的

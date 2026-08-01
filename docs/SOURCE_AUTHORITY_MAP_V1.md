@@ -4,9 +4,9 @@
 |---|---|---|---|---|---|
 | Leaf semantic graph | `LeafModel` | candidateを提案 | semantic／plan整合を独立再導出 | `LeafArtifact` | 再解釈しない |
 | Leaf execution decision | `LeafModel` plan types | `LeafPlanner` | `LeafVerifier` | Schema 17 Package + `LeafCertificate` | Package通りに物質化 |
-| Composition contract／flow | `CompositionModel` | schedule等を提案 | DAG、single writer、presenter等を独立検証 | flat `SGE4UNI 2.1` Composition Core + `CompositionCertificate` | scheduleを再計画しない |
-| Dynamic membership／delta | `DynamicModelArtifact` input/history types | exact setを導出 | exact setを独立再導出 | `SGE4INV 1.2` | Frozen Invocationだけを消費 |
-| Verified Dynamic payload route | `CompositionModel` Dynamic Contract | exact Update payloadをproposalへbind | payload set／identityを独立再導出 | `SGE4UNI 2.1` route + `SGE4INV 1.2` Execution Payload | verified Update／Clearをprivate shadowへ機械適用 |
+| Composition contract／flow | `CompositionModel` | schedule等を提案 | DAG、single writer、presenter等を独立検証 | flat `SGE4UNI 2.2` Composition Core + `CompositionCertificate` | scheduleを再計画しない |
+| Dynamic membership／delta | `DynamicModelArtifact` input/history types | exact setを導出 | exact setを独立再導出 | `SGE4INV 1.3` | Frozen Invocationだけを消費 |
+| Verified Dynamic payload route | `CompositionModel` Dynamic Contract | exact Update payloadをproposalへbind | payload set／identityを独立再導出 | `SGE4UNI 2.2` route + `SGE4INV 1.3` Execution Payload | verified Update／Clearをprivate shadowへ機械適用 |
 | Device epoch／handles | `RuntimeCore` | なし | Runtime validation | Runtime Session state | D3D12 object lifetimeへ写像 |
 | D3D12 target lowering | `D3D12Compiler` | Leaf compileのTarget stage | Package reader／runtime validation | Schema 17 sections | Executorは再loweringしない |
 | D3D12 execution／recovery | `D3D12Executor` | なし | なし | Frozen Artifact／Runtime Sessionを参照 | mechanical execution／whole-composition recovery |
@@ -22,3 +22,10 @@
 6. Backendは上流判断を推測・再計画しない。
 
 7. Verified Dynamic SlotはCompositionとFrozen Invocationが所有し、Callerは同一Slotを上書きできない。
+
+## Generalization 2 authority
+
+| 事実 | Author | Planner | Independent Verifier | Frozen owner | Runtime |
+|---|---|---|---|---|---|
+| Conditional predicate／branch membership | Composition Dynamic Contract | 変更しない | graph closureとCanonical性を検査 | SGE4UNI 2.2 schema 3 | 再解釈しない |
+| Region selection／enabled Leaf集合 | 直接指定不可 | exact setから導出 | exact setから独立再導出 | SGE4INV 1.3 Conditional Execution | Seal済み集合を機械適用 |

@@ -3,9 +3,9 @@
 | Gate | Requirement | Executable／Audit |
 |---|---|---|
 | U1 | complete Leaf bytes and Leaf Certificate correspond | `60_UnifiedArchitectureTests` |
-| U2 | flat SGE4UNI 2.1 Composition Core and Composition Certificate correspond | `60_UnifiedArchitectureTests` |
-| U3 | Debug A／Debug B／Release SGE4UNI 2.1 bytes match | `run_new_sge4_full_gate.bat` |
-| U4 | ABI 2.1 Section／Core／Authority／embedded Leaf corruption is rejected | `60_UnifiedArchitectureTests` |
+| U2 | flat SGE4UNI 2.2 Composition Core and Composition Certificate correspond | `60_UnifiedArchitectureTests` |
+| U3 | Debug A／Debug B／Release SGE4UNI 2.2 bytes match | `run_new_sge4_full_gate.bat` |
+| U4 | ABI 2.2 Section／Core／Authority／embedded Leaf corruption is rejected | `60_UnifiedArchitectureTests` |
 | U5 | exact initial／continue／recovery delta algebra | `60_UnifiedArchitectureTests` |
 | U6 | all 40 carried invariants have a final owner | `62_UnifiedMigrationAcceptance` |
 | U7 | Runtime Core has no Dynamic Planner／Verifier dependency | `tools/static_audit.py` |
@@ -23,3 +23,13 @@
 | U14 | actual Device removal and removed-adapter exclusion | `run_new_sge4_actual_removal_qualification.bat` |
 
 New capabilityはVerified Dynamic Execution。Texture Flow、Variant、Partial Recovery、Multiple AdapterはこのMatrixの対象外である。
+
+## Level 4 Generalization 2
+
+| ID | Acceptance | Gate |
+|---|---|---|
+| G2-1 | Conditional Region contract is canonical, non-nested and graph-closed | `60_UnifiedArchitectureTests` |
+| G2-2 | Planner and independent Verifier derive identical selections and enabled Leaves | `60_UnifiedArchitectureTests` |
+| G2-3 | Tampered enabled Leaf set is rejected | `60_UnifiedArchitectureTests` |
+| G2-4 | True, zero-Leaf False, re-enable and RecoverySeed observations pass | `61_UnifiedWindowsQualification` |
+| G2-5 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.2 | `run_new_sge4_full_gate.bat` |
