@@ -35,3 +35,6 @@
 
 - Generalization 7のTemporal Bufferはfixed size、history depth 1、Previous／Current二物理世代、single unconditional writer、unconditional readers、明示的full-size seedに限定する。全Leafのnative submit成功後だけ世代を回転し、途中失敗ではaccepted Previousを維持する。
 - Temporal Texture、history depth 2以上、Conditional Temporal writer／reader、writer未選択時policy、部分range history、partial temporal recoveryは含まない。
+
+- Level 5 Vertical Experiment 1はprefix Active集合だけを比較する。Verified DispatchIndirectのwork ordinalとmember indexを一致させるための実験限定であり、任意疎index scatterの性能や正しさを証明しない。
+- Level 5測定分類はEvidenceでありProduction Runtime policyではない。Candidate採用は`DeferredByOwner`のままで、Frozen Variant Setや自動選択を追加していない。

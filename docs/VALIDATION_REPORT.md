@@ -430,3 +430,22 @@ Windowsで最終確認する事項:
 - Actual Device removal
 
 最終合格はWindows上の`run_new_sge4_full_gate.bat`で確定する。
+
+---
+
+# Validation Addendum — Level 5 Vertical Experiment 1
+
+- Product ABIは`SGE4UNI 2.7`／`SGE4INV 1.5`のまま変更しない。
+- 19番目のSolution projectとして`63_Level5VerticalExperiment`を追加した。Product projectは15のままである。
+- Dense DirectとVerified Sparse Indirectは同じ4個のSchema 17 Leaf Packageと同じResource graphを持ち、Dynamic ContractのIndirect routeだけが異なる。
+- 32-byte Canonical member payloadをState BufferとRGBA32F Textureへ2 routeで配布する。
+- State Observationはcurrent StateとPrevious Temporal Aggregateから導出する。RGBA32F Textureはpacked readbackのdigest／x総和で別途観測し、State／Temporal／Textureの候補同値確認後だけtimestamp sampleを受理する。
+- Observation Buffer、accepted Temporal Aggregate、Texture Outputをすべてreadbackして全4 Leafのcompletionを待った後にtimestampを回収する。timestampはExecutorのexperiment-only機能であり、Package bytes、authority、schedule、state handoffを変更しない。
+- CSV Evidenceは各Kのraw GPU timestamp、command-recording値、A-B／B-A実行順、case median、Dense／Sparse比を保存する。
+- Portable C++23 strict syntaxはExperiment main／fixtureで実施する。MSVC、HLSL、WARP、実GPU timestampの最終結果はWindows Runnerで確定する。
+
+実行入口：
+
+```bat
+run_sge4_level5_vertical_experiment.bat
+```

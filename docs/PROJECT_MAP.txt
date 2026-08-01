@@ -16,3 +16,4 @@
 {C4676F97-9EEE-5414-A7BB-0A85A42F0233} tests/60_UnifiedArchitectureTests/60_UnifiedArchitectureTests.vcxproj
 {1F048B97-E9E7-5F9D-8A84-566190BB3D1F} tests/61_UnifiedWindowsQualification/61_UnifiedWindowsQualification.vcxproj
 {E5562769-6357-5B6A-BBBD-E33EA6E4F45E} tests/62_UnifiedMigrationAcceptance/62_UnifiedMigrationAcceptance.vcxproj
+{8DF35A80-ED87-56C0-8A2F-930E890E89B0} experiments/63_Level5VerticalExperiment/63_Level5VerticalExperiment.vcxproj

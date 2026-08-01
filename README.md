@@ -1,5 +1,7 @@
 # New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Level 5 Vertical Experiment 1: `SGE4UNI 2.7`を変更せず、Multi-target Dynamic routing、Verified DispatchIndirect、RGBA32F Texture UAV／packed readback、Temporal Bufferを一つのCompositionへ接続した。Dense DirectとVerified Sparse IndirectのState／Temporal／Texture観測同値を先に検証し、State WriterのGPU timestampをK別に測定する。Owner decisionは自動化せず`DeferredByOwner`とする。
+>
 > Revision 2.7: Level 4 Generalization 7として`Verified Temporal Buffer Flow`を導入した。固定size Buffer、history depth 1、Previous／Current二世代、single unconditional writerをComposition ContractとPlanへ固定し、全LeafのSubmit成功後だけ世代を原子的に回転する。明示的seed、packed readback、whole-composition Recoveryを資格化した。
 >
 > Revision 2.6: Level 4 Generalization 6として`Multi-target Verified Dynamic Routing`を導入した。一つのCanonical member payloadをComposition固定のbyte sliceで複数Leaf／複数Dynamic Slotへ配布し、`SGE4INV 1.5`がCanonical payloadとroute tableをSealする。Runtimeは全routeのUpdate／Clearをprivate shadowsへ一括適用し、native submit成功後にHistoryと全shadowを原子的にCommitする。
@@ -190,6 +192,7 @@ docs/LEVEL4_GENERALIZATION4_VERIFIED_INDIRECT_WORK_EXECUTION.md
 docs/LEVEL4_GENERALIZATION5_LIMITED_TEXTURE2D_UAV_COMPUTE_FLOW.md
 docs/LEVEL4_GENERALIZATION6_MULTI_TARGET_VERIFIED_DYNAMIC_ROUTING.md
 docs/LEVEL4_GENERALIZATION7_VERIFIED_TEMPORAL_BUFFER_FLOW.md
+docs/LEVEL5_VERTICAL_EXPERIMENT1_SPARSE_INDIRECT_TEMPORAL_IMAGE.md
 ```
 
 ## Build
@@ -198,6 +201,12 @@ Visual Studio 2026、MSVC v145、Windows SDK 10が必要です。
 
 ```bat
 build_new_sge4.bat
+```
+
+Level 5垂直実験はFull Gateとは別のEvidence Runnerで実行します。
+
+```bat
+run_sge4_level5_vertical_experiment.bat
 ```
 
 ## Full Gate

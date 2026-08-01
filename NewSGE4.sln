@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.0.0
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -37,6 +37,8 @@ EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "61_UnifiedWindowsQualification", "tests\61_UnifiedWindowsQualification\61_UnifiedWindowsQualification.vcxproj", "{1F048B97-E9E7-5F9D-8A84-566190BB3D1F}"
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "62_UnifiedMigrationAcceptance", "tests\62_UnifiedMigrationAcceptance\62_UnifiedMigrationAcceptance.vcxproj", "{E5562769-6357-5B6A-BBBD-E33EA6E4F45E}"
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "63_Level5VerticalExperiment", "experiments\63_Level5VerticalExperiment\63_Level5VerticalExperiment.vcxproj", "{8DF35A80-ED87-56C0-8A2F-930E890E89B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -116,6 +118,10 @@ Global
 		{E5562769-6357-5B6A-BBBD-E33EA6E4F45E}.Debug|x64.Build.0 = Debug|x64
 		{E5562769-6357-5B6A-BBBD-E33EA6E4F45E}.Release|x64.ActiveCfg = Release|x64
 		{E5562769-6357-5B6A-BBBD-E33EA6E4F45E}.Release|x64.Build.0 = Release|x64
+		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Debug|x64.ActiveCfg = Debug|x64
+		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Debug|x64.Build.0 = Debug|x64
+		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Release|x64.ActiveCfg = Release|x64
+		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

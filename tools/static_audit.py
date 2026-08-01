@@ -52,7 +52,7 @@ for p in projects:
         if target_guid is not None and declared is not None and target_guid.text.upper()!=declared.text.upper():
             errors.append(f'Reference GUID mismatch: {p.relative_to(root)} -> {target.relative_to(root)}')
 
-if len(projects)!=18: errors.append(f'Expected 18 projects, found {len(projects)}')
+if len(projects)!=19: errors.append(f'Expected 19 projects, found {len(projects)}')
 if len(product_projects)!=15: errors.append(f'Expected 15 product projects, found {len(product_projects)}')
 if (root/'legacy').exists(): errors.append('legacy/ still exists')
 if (root/'src/internal').exists(): errors.append('src/internal/ still exists')
@@ -345,6 +345,24 @@ if 'BuildPortableTemporalCompositionInput' not in portable_test.read_text(encodi
     errors.append('Portable ABI self-test does not cover Temporal Buffer round-trip/rejection')
 if not (root/'docs/LEVEL4_GENERALIZATION7_VERIFIED_TEMPORAL_BUFFER_FLOW.md').exists():
     errors.append('Missing Generalization 7 design contract')
+
+
+# Level 5 Vertical Experiment 1 is an experiment-only consumer of the frozen Level 4 product.
+level5_project=root/'experiments/63_Level5VerticalExperiment/63_Level5VerticalExperiment.vcxproj'
+level5_main=root/'experiments/63_Level5VerticalExperiment/main.cpp'
+level5_fixture=root/'experiments/63_Level5VerticalExperiment/VerticalExperimentFixture.h'
+level5_runner=root/'run_sge4_level5_vertical_experiment.bat'
+level5_doc=root/'docs/LEVEL5_VERTICAL_EXPERIMENT1_SPARSE_INDIRECT_TEMPORAL_IMAGE.md'
+for required_path in (level5_project, level5_main, level5_fixture, level5_runner, level5_doc):
+    if not required_path.exists(): errors.append(f'Missing Level 5 Vertical Experiment file: {required_path.relative_to(root)}')
+if level5_main.exists():
+    level5_text=level5_main.read_text(encoding='utf-8')
+    for token in ('Dense Direct','Verified Sparse Indirect','DeferredByOwner','ConsumeTimestampProfileSamples','VerifyControlledRecovery'):
+        if token not in level5_text: errors.append(f'Level 5 Vertical Experiment is missing {token}')
+if level5_fixture.exists():
+    level5_fixture_text=level5_fixture.read_text(encoding='utf-8')
+    for token in ('MakeVerifiedRoutedSlotsDynamicContractV1','MakeVerifiedIndirectDispatchContractV1','TemporalHistory','StorageTexture2D'):
+        if token not in level5_fixture_text: errors.append(f'Level 5 Vertical Fixture is missing {token}')
 
 if errors:
     print('New SGE4静的監査に失敗しました')

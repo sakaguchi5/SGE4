@@ -14,6 +14,7 @@
 | D3D12 target lowering | `D3D12Compiler` | Leaf compileのTarget stage | Package reader／runtime validation | Schema 17 sections | Executorは再loweringしない |
 | D3D12 execution／recovery | `D3D12Executor` | なし | なし | Frozen Artifact／Runtime Sessionを参照 | mechanical execution／whole-composition recovery |
 | Performance observations | Qualification evidence | Authorityなし | Correctness sealを発行しない | reference evidence | Runtime policyに使わない |
+| Level 5 candidate observations | Experiment input + two independently Frozen `SGE4UNI 2.7` candidates | Candidateを生成するがProduction planを変更しない | 各候補は通常のLeaf／Composition／Dynamic Verifierを通過 | CSV evidence（authorityなし） | timestampを観測しOwner decisionを`DeferredByOwner`として残す |
 
 ## Single-fact ownership rules
 
@@ -51,3 +52,11 @@
 | exact work count | exact Transition set | countとX／Y／Zを提案 | exact setから独立再導出 | SGE4INV 1.5 Indirect Dispatch | 再計算／clampしない |
 | native indirect argument bytes | Seal済みDispatch引数 | なし | Runtime identity／上限検査 | Frozen引数から導出 | frame-slot Bufferへ機械的に書込み |
 | dispatch operation substitution | Schema 17 ExecuteCompute target | なし | targetが一意であることをComposition境界で検査 | Composition route + Leaf operation | 対象だけExecuteIndirectへ置換 |
+
+## Level 5 Vertical Experiment 1 authority
+
+- Dense DirectとVerified Sparse Indirectは別々のFrozen Composition identityを持つ。
+- 両候補のComposition Contract、Leaf Package集合、Resource graphは同一で、差はDynamic ContractのVerified Indirect routeだけである。
+- Experiment timestampと分類はCanonical ABIへ書き戻さない。
+- `SparseIndirectStableAdvantage`、`DenseDirectStableAdvantage`、`Crossover`は観測分類であり、候補選択authorityではない。
+- 最終選択は常に`DeferredByOwner`である。

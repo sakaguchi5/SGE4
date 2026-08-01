@@ -92,3 +92,15 @@
 | G7-5 | WARP observes seed→11, accepted Current→20, next-frame→21 | `61_UnifiedWindowsQualification` |
 | G7-6 | Controlled Recovery invalidates temporal history and rebuilds Previous from explicit seed | `61_UnifiedWindowsQualification` |
 | G7-7 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.7 | `run_new_sge4_full_gate.bat` |
+
+
+## Level 5 Vertical Experiment 1
+
+| ID | Acceptance | Gate |
+|---|---|---|
+| L5V1-1 | Dense／Sparse candidates contain identical Schema 17 Leaf set and Composition Contract | `63_Level5VerticalExperiment` |
+| L5V1-2 | one 32-byte Canonical payload is routed to State Buffer and RGBA32F Texture paths | `63_Level5VerticalExperiment` |
+| L5V1-3 | State Observation、accepted Temporal Aggregate、packed RGBA32F Texture digestが候補間で一致してからtiming sampleを受理する | `63_Level5VerticalExperiment --warp` |
+| L5V1-4 | Previous Temporal Aggregate equals the prior successful frame and resets after Controlled Recovery | `63_Level5VerticalExperiment --warp` |
+| L5V1-5 | State writer GPU timestamps are recorded in balanced A/B order for four K values | `run_sge4_level5_vertical_experiment.bat` |
+| L5V1-6 | classification is evidence only and Owner decision remains DeferredByOwner | CSV evidence |
