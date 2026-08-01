@@ -32,6 +32,7 @@ struct ResourceAllocationPlan final
     package::d3d12_v13::ResourceKind kind = package::d3d12_v13::ResourceKind::Buffer;
     package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t sizeBytes = 0;
+    Texture2DFlowShape texture2D;
 };
 
 struct LeafScheduleEntry final

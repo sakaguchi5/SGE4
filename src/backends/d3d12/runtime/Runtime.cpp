@@ -183,6 +183,22 @@ base::Expected<BufferReadback, Error> ReadBuffer(
     return base::Success<BufferReadback, Error>(std::move(result));
 }
 
+base::Expected<Texture2DReadback, Error> ReadTexture2D(
+    LoadedComposition& loaded,
+    composition::ResourceFlowId resource)
+{
+    auto readback = native::ReadStaticCompositionTexture2D(loaded.impl_->nativeRuntime, resource);
+    if (!readback)
+        return Fail<Texture2DReadback>(readback.error().stage, readback.error().message);
+    Texture2DReadback result;
+    result.bytes = std::move(readback.value().bytes);
+    result.width = readback.value().width;
+    result.height = readback.value().height;
+    result.rowBytes = readback.value().rowBytes;
+    result.format = readback.value().format;
+    return base::Success<Texture2DReadback, Error>(std::move(result));
+}
+
 bool ValidateHandleEpoch(
     const LoadedComposition& loaded,
     const canonical::RepresentationHandleV1& handle) noexcept

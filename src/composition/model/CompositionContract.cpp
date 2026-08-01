@@ -6,6 +6,7 @@
 #include "../../backends/d3d12/artifact/D3D12Encoding.h"
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <set>
 #include <tuple>
@@ -99,6 +100,50 @@ base::Expected<pkg::ResourceState, ContractError> ReadState(base::BinaryReader& 
     return base::Success<pkg::ResourceState, ContractError>(state);
 }
 
+void WriteTexture2DShape(base::BinaryWriter& writer, const Texture2DFlowShape& value)
+{
+    writer.WriteU32(value.width);
+    writer.WriteU32(value.height);
+    writer.WriteU32(value.rowBytes);
+    writer.WriteU16(value.mipLevels);
+    writer.WriteU16(value.arrayLayers);
+    writer.WriteU16(value.sampleCount);
+    writer.WriteU16(value.planeCount);
+}
+
+base::Expected<Texture2DFlowShape, ContractError> ReadTexture2DShape(base::BinaryReader& reader)
+{
+    auto width = reader.ReadU32();
+    auto height = reader.ReadU32();
+    auto rowBytes = reader.ReadU32();
+    auto mipLevels = reader.ReadU16();
+    auto arrayLayers = reader.ReadU16();
+    auto sampleCount = reader.ReadU16();
+    auto planeCount = reader.ReadU16();
+    if (!width || !height || !rowBytes || !mipLevels || !arrayLayers ||
+        !sampleCount || !planeCount)
+        return Failure<Texture2DFlowShape>(
+            "contract/read", "Textureが検証または実行の契約に違反しています。");
+    return base::Success<Texture2DFlowShape, ContractError>({
+        width.value(), height.value(), rowBytes.value(), mipLevels.value(),
+        arrayLayers.value(), sampleCount.value(), planeCount.value()});
+}
+
+bool IsZeroTextureShape(const Texture2DFlowShape& value) noexcept
+{
+    return value == Texture2DFlowShape{};
+}
+
+bool IsLimitedTexture2DShape(const Texture2DFlowShape& value, pkg::Format format) noexcept
+{
+    return format == pkg::Format::B8G8R8A8Unorm && value.width > 0 &&
+        value.height > 0 &&
+        static_cast<std::uint64_t>(value.rowBytes) ==
+            static_cast<std::uint64_t>(value.width) * 4u &&
+        value.mipLevels == 1 && value.arrayLayers == 1 &&
+        value.sampleCount == 1 && value.planeCount == 1;
+}
+
 struct DerivedEndpoint final
 {
     std::uint32_t localExternalSlot = InvalidIndex;
@@ -108,6 +153,7 @@ struct DerivedEndpoint final
     EndpointAccess access = EndpointAccess::ReadOnly;
     pkg::Format format = pkg::Format::Unknown;
     std::uint64_t minimumBytes = 0;
+    Texture2DFlowShape texture2D;
     pkg::ResourceState requiredIncomingState;
     pkg::ResourceState guaranteedOutgoingState;
     pkg::ExternalSynchronizationContract synchronization =
@@ -130,10 +176,9 @@ base::Expected<EndpointAccess, ContractError> DeriveAccess(
         return Failure<EndpointAccess>("contract/leaf-interface", "Resourceが検証または実行の契約に違反しています。");
     const auto& resource = view.Resources()[slot.resource.value];
     const auto end = static_cast<std::uint64_t>(resource.firstView) + resource.viewCount;
-    if (resource.origin != pkg::ResourceOrigin::External ||
-        resource.resourceKind != pkg::ResourceKind::Buffer ||
-        resource.viewCount == 0 || end > view.Views().size())
-        return Failure<EndpointAccess>("contract/leaf-interface", "Bufferが検証または実行の契約に違反しています。");
+    if (resource.origin != pkg::ResourceOrigin::External || resource.viewCount == 0 ||
+        end > view.Views().size() || resource.resourceKind != slot.requiredKind)
+        return Failure<EndpointAccess>("contract/leaf-interface", "Resourceが検証または実行の契約に違反しています。");
 
     bool sawRead = false;
     bool sawWrite = false;
@@ -142,23 +187,27 @@ base::Expected<EndpointAccess, ContractError> DeriveAccess(
         const auto& resourceView = view.Views()[index];
         if (resourceView.resource != slot.resource)
             return Failure<EndpointAccess>("contract/leaf-interface", "検証または実行の契約に違反しています。");
-        if (resourceView.viewClass == pkg::ViewClass::ShaderResource) sawRead = true;
-        else if (resourceView.viewClass == pkg::ViewClass::UnorderedAccess) sawWrite = true;
+        if (resource.resourceKind == pkg::ResourceKind::Buffer)
+        {
+            if (resourceView.viewClass == pkg::ViewClass::ShaderResource) sawRead = true;
+            else if (resourceView.viewClass == pkg::ViewClass::UnorderedAccess) sawWrite = true;
+            else return Failure<EndpointAccess>("contract/leaf-interface", "Bufferが検証または実行の契約に違反しています。");
+        }
+        else if (resource.resourceKind == pkg::ResourceKind::Texture2D)
+        {
+            if (resourceView.viewClass == pkg::ViewClass::ShaderResource) sawRead = true;
+            else if (resourceView.viewClass == pkg::ViewClass::RenderTarget) sawWrite = true;
+            else return Failure<EndpointAccess>("contract/leaf-interface", "Textureが検証または実行の契約に違反しています。");
+        }
         else
-            return Failure<EndpointAccess>(
-                "contract/leaf-interface",
-                "検証または実行の契約に違反しています。");
+            return Failure<EndpointAccess>("contract/leaf-interface", "Resourceが検証または実行の契約に違反しています。");
     }
     if (sawRead == sawWrite)
-        return Failure<EndpointAccess>(
-            "contract/leaf-interface",
-            "Compositionが検証または実行の契約に違反しています。");
+        return Failure<EndpointAccess>("contract/leaf-interface", "Compositionが検証または実行の契約に違反しています。");
     if (sawRead)
     {
         if (slot.requiredIncomingState != slot.guaranteedOutgoingState)
-            return Failure<EndpointAccess>(
-                "contract/leaf-interface",
-                "Resourceが検証または実行の契約に違反しています。");
+            return Failure<EndpointAccess>("contract/leaf-interface", "Resourceが検証または実行の契約に違反しています。");
         return base::Success<EndpointAccess, ContractError>(EndpointAccess::ReadOnly);
     }
     return base::Success<EndpointAccess, ContractError>(EndpointAccess::WriteOnly);
@@ -239,12 +288,28 @@ base::Expected<DecodedLeaf, ContractError> DecodeLeafWithDeclarations(
         endpoint.access = access.value();
         endpoint.format = slot.requiredFormat;
         endpoint.minimumBytes = slot.minimumBytes;
+        const auto& sourceResource = view.value().Resources()[slot.resource.value];
+        if (sourceResource.resourceKind == pkg::ResourceKind::Texture2D)
+        {
+            if (sourceResource.width > std::numeric_limits<std::uint32_t>::max() / 4u)
+                return Failure<DecodedLeaf>(
+                    "contract/leaf-interface", "Textureのrow pitchが表現範囲を超えています。");
+            endpoint.texture2D = {sourceResource.width, sourceResource.height,
+                sourceResource.width * 4u, sourceResource.mipLevels,
+                sourceResource.depthOrArraySize, sourceResource.sampleCount,
+                sourceResource.planeCount};
+        }
         endpoint.requiredIncomingState = slot.requiredIncomingState;
         endpoint.guaranteedOutgoingState = slot.guaranteedOutgoingState;
         endpoint.synchronization = slot.synchronizationContract;
         endpoint.flags = slot.flags;
-        if (endpoint.kind != pkg::ResourceKind::Buffer ||
-            endpoint.format != pkg::Format::Unknown || endpoint.minimumBytes == 0 ||
+        const bool validBuffer = endpoint.kind == pkg::ResourceKind::Buffer &&
+            endpoint.format == pkg::Format::Unknown && endpoint.minimumBytes > 0 &&
+            IsZeroTextureShape(endpoint.texture2D);
+        const bool validTexture = endpoint.kind == pkg::ResourceKind::Texture2D &&
+            endpoint.minimumBytes == 0 &&
+            IsLimitedTexture2DShape(endpoint.texture2D, endpoint.format);
+        if ((!validBuffer && !validTexture) ||
             endpoint.synchronization != pkg::ExternalSynchronizationContract::CompletionTokenRequired ||
             endpoint.flags != static_cast<std::uint32_t>(pkg::ExternalSlotFlags::Required))
             return Failure<DecodedLeaf>(
@@ -306,6 +371,17 @@ DecodeLeafForValidation(const CanonicalLeafPackage& leaf)
         endpoint.access = access.value();
         endpoint.format = slot.requiredFormat;
         endpoint.minimumBytes = slot.minimumBytes;
+        const auto& sourceResource = view.value().Resources()[slot.resource.value];
+        if (sourceResource.resourceKind == pkg::ResourceKind::Texture2D)
+        {
+            if (sourceResource.width > std::numeric_limits<std::uint32_t>::max() / 4u)
+                return Failure<std::pair<LeafPackageContract, std::vector<DerivedEndpoint>>>(
+                    "contract/leaf-interface", "Textureのrow pitchが表現範囲を超えています。");
+            endpoint.texture2D = {sourceResource.width, sourceResource.height,
+                sourceResource.width * 4u, sourceResource.mipLevels,
+                sourceResource.depthOrArraySize, sourceResource.sampleCount,
+                sourceResource.planeCount};
+        }
         endpoint.requiredIncomingState = slot.requiredIncomingState;
         endpoint.guaranteedOutgoingState = slot.guaranteedOutgoingState;
         endpoint.synchronization = slot.synchronizationContract;
@@ -320,7 +396,8 @@ bool EndpointShapeMatches(
     const CompositionEndpointContract& left,
     const CompositionEndpointContract& right) noexcept
 {
-    return left.kind == right.kind && left.format == right.format;
+    return left.kind == right.kind && left.format == right.format &&
+        left.texture2D == right.texture2D;
 }
 
 using EndpointLookupKey = std::pair<StableKey, StableKey>;
@@ -380,6 +457,8 @@ std::vector<std::byte> SerializeBody(const PackageCompositionContract& contract)
         writer.WriteU16(static_cast<std::uint16_t>(endpoint.access));
         writer.WriteU32(static_cast<std::uint32_t>(endpoint.format));
         writer.WriteU64(endpoint.minimumBytes);
+        if (endpoint.kind == pkg::ResourceKind::Texture2D)
+            WriteTexture2DShape(writer, endpoint.texture2D);
         WriteState(writer, endpoint.requiredIncomingState);
         WriteState(writer, endpoint.guaranteedOutgoingState);
         writer.WriteU32(static_cast<std::uint32_t>(endpoint.synchronization));
@@ -393,6 +472,8 @@ std::vector<std::byte> SerializeBody(const PackageCompositionContract& contract)
         writer.WriteU16(static_cast<std::uint16_t>(resource.kind));
         writer.WriteU32(static_cast<std::uint32_t>(resource.format));
         writer.WriteU64(resource.sizeBytes);
+        if (resource.kind == pkg::ResourceKind::Texture2D)
+            WriteTexture2DShape(writer, resource.texture2D);
         writer.WriteU32(resource.producer.value);
         writer.WriteCountU32(resource.consumers.size());
         for (const auto consumer : resource.consumers) writer.WriteU32(consumer.value);
@@ -447,8 +528,14 @@ base::Expected<void, ContractError> ValidateShapeInternal(
                 endpoint.localExternalSlot == InvalidIndex || ZeroKey(endpoint.stableKey) ||
                 !localSlots.insert(endpoint.localExternalSlot).second ||
                 (havePrevious && !(previousEndpointKey < endpoint.stableKey)) ||
-                endpoint.kind != pkg::ResourceKind::Buffer || endpoint.format != pkg::Format::Unknown ||
-                endpoint.minimumBytes == 0 ||
+                ((endpoint.kind == pkg::ResourceKind::Buffer &&
+                  (endpoint.format != pkg::Format::Unknown || endpoint.minimumBytes == 0 ||
+                   !IsZeroTextureShape(endpoint.texture2D))) ||
+                 (endpoint.kind == pkg::ResourceKind::Texture2D &&
+                  (endpoint.minimumBytes != 0 ||
+                   !IsLimitedTexture2DShape(endpoint.texture2D, endpoint.format))) ||
+                 (endpoint.kind != pkg::ResourceKind::Buffer &&
+                  endpoint.kind != pkg::ResourceKind::Texture2D)) ||
                 (endpoint.access != EndpointAccess::ReadOnly &&
                  endpoint.access != EndpointAccess::WriteOnly) ||
                 endpoint.synchronization != pkg::ExternalSynchronizationContract::CompletionTokenRequired ||
@@ -486,7 +573,14 @@ base::Expected<void, ContractError> ValidateShapeInternal(
         if ((requiresProducer && !resource.producer.IsValid()) ||
             (!requiresProducer && resource.producer.IsValid()) ||
             (requiresConsumers && resource.consumers.empty()) ||
-            (!requiresConsumers && !resource.consumers.empty()) || resource.sizeBytes == 0)
+            (!requiresConsumers && !resource.consumers.empty()) ||
+            (resource.kind == pkg::ResourceKind::Buffer &&
+             (resource.sizeBytes == 0 || !IsZeroTextureShape(resource.texture2D))) ||
+            (resource.kind == pkg::ResourceKind::Texture2D &&
+             (resource.sizeBytes != 0 ||
+              !IsLimitedTexture2DShape(resource.texture2D, resource.format))) ||
+            (resource.kind != pkg::ResourceKind::Buffer &&
+             resource.kind != pkg::ResourceKind::Texture2D))
             return base::Failure<void, ContractError>(
                 Error("contract/validate-resource", "Resource Flowが検証または実行の契約に違反しています。"));
 
@@ -526,8 +620,9 @@ base::Expected<void, ContractError> ValidateShapeInternal(
             requiredBytes = std::max(requiredBytes, endpoint.minimumBytes);
             bound[endpointId.value] = true;
         }
+        const auto expectedBytes = resource.kind == pkg::ResourceKind::Buffer ? requiredBytes : 0;
         if (resource.kind != first.kind || resource.format != first.format ||
-            resource.sizeBytes != requiredBytes)
+            resource.sizeBytes != expectedBytes || resource.texture2D != first.texture2D)
             return base::Failure<void, ContractError>(
                 Error("contract/validate-shape", "Resourceが検証または実行の契約に違反しています。"));
     }
@@ -630,6 +725,7 @@ BuildCompositionContract(ContractBuildInput input)
             endpoint.access = source.access;
             endpoint.format = source.format;
             endpoint.minimumBytes = source.minimumBytes;
+            endpoint.texture2D = source.texture2D;
             endpoint.requiredIncomingState = source.requiredIncomingState;
             endpoint.guaranteedOutgoingState = source.guaranteedOutgoingState;
             endpoint.synchronization = source.synchronization;
@@ -715,6 +811,7 @@ BuildCompositionContract(ContractBuildInput input)
         const auto& first = contract.endpoints[members.front().value];
         resource.kind = first.kind;
         resource.format = first.format;
+        resource.texture2D = first.texture2D;
         for (const auto endpointId : members)
         {
             if (bound[endpointId.value])
@@ -724,7 +821,8 @@ BuildCompositionContract(ContractBuildInput input)
             if (!EndpointShapeMatches(first, endpoint))
                 return Failure<ValidatedCompositionContract>(
                     "contract/shape", "検証または実行の契約に違反しています。");
-            resource.sizeBytes = std::max(resource.sizeBytes, endpoint.minimumBytes);
+            if (resource.kind == pkg::ResourceKind::Buffer)
+                resource.sizeBytes = std::max(resource.sizeBytes, endpoint.minimumBytes);
             bound[endpointId.value] = true;
         }
         contract.resources.push_back(std::move(resource));
@@ -809,6 +907,7 @@ ValidateCompositionContractAgainstLeaves(
             if (endpoint.resource != source.resource || endpoint.kind != source.kind ||
                 endpoint.access != source.access || endpoint.format != source.format ||
                 endpoint.minimumBytes != source.minimumBytes ||
+                endpoint.texture2D != source.texture2D ||
                 endpoint.requiredIncomingState != source.requiredIncomingState ||
                 endpoint.guaranteedOutgoingState != source.guaranteedOutgoingState ||
                 endpoint.synchronization != source.synchronization || endpoint.flags != source.flags)
@@ -919,12 +1018,16 @@ DeserializeCompositionContract(std::span<const std::byte> bytes)
         auto access = reader.ReadU16();
         auto format = reader.ReadU32();
         auto size = reader.ReadU64();
+        base::Expected<Texture2DFlowShape, ContractError> texture2D =
+            base::Success<Texture2DFlowShape, ContractError>({});
+        if (kind && static_cast<pkg::ResourceKind>(kind.value()) == pkg::ResourceKind::Texture2D)
+            texture2D = ReadTexture2DShape(reader);
         auto incoming = ReadState(reader);
         auto outgoing = ReadState(reader);
         auto synchronization = reader.ReadU32();
         auto flags = reader.ReadU32();
         if (!id || !leaf || !slot || !resource || !stableKey || !kind || !access ||
-            !format || !size || !incoming || !outgoing || !synchronization || !flags)
+            !format || !size || !texture2D || !incoming || !outgoing || !synchronization || !flags)
             return Failure<PackageCompositionContract>("contract/read", "Endpointが検証または実行の契約に違反しています。");
         endpoint.id = {id.value()};
         endpoint.leaf = {leaf.value()};
@@ -935,6 +1038,7 @@ DeserializeCompositionContract(std::span<const std::byte> bytes)
         endpoint.access = static_cast<EndpointAccess>(access.value());
         endpoint.format = static_cast<pkg::Format>(format.value());
         endpoint.minimumBytes = size.value();
+        endpoint.texture2D = texture2D.value();
         endpoint.requiredIncomingState = incoming.value();
         endpoint.guaranteedOutgoingState = outgoing.value();
         endpoint.synchronization = static_cast<pkg::ExternalSynchronizationContract>(synchronization.value());
@@ -950,9 +1054,13 @@ DeserializeCompositionContract(std::span<const std::byte> bytes)
         auto kind = reader.ReadU16();
         auto format = reader.ReadU32();
         auto size = reader.ReadU64();
+        base::Expected<Texture2DFlowShape, ContractError> texture2D =
+            base::Success<Texture2DFlowShape, ContractError>({});
+        if (kind && static_cast<pkg::ResourceKind>(kind.value()) == pkg::ResourceKind::Texture2D)
+            texture2D = ReadTexture2DShape(reader);
         auto producer = reader.ReadU32();
         auto consumers = reader.ReadU32();
-        if (!id || !stableKey || !boundary || !kind || !format || !size || !producer ||
+        if (!id || !stableKey || !boundary || !kind || !format || !size || !texture2D || !producer ||
             !consumers || consumers.value() > MaximumRecords)
             return Failure<PackageCompositionContract>("contract/read", "Resource Flowが検証または実行の契約に違反しています。");
         resource.id = {id.value()};
@@ -961,6 +1069,7 @@ DeserializeCompositionContract(std::span<const std::byte> bytes)
         resource.kind = static_cast<pkg::ResourceKind>(kind.value());
         resource.format = static_cast<pkg::Format>(format.value());
         resource.sizeBytes = size.value();
+        resource.texture2D = texture2D.value();
         resource.producer = {producer.value()};
         for (std::uint32_t consumerIndex = 0; consumerIndex < consumers.value(); ++consumerIndex)
         {

@@ -176,6 +176,17 @@ void ValidateResource(const Resource& resource, std::uint32_t source,
                  resource.lifetime != LifetimeIntent::FrameLocal))
                 Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
         }
+        else if (resource.update == UpdateIntent::External)
+        {
+            const auto minimumRowBytes = static_cast<std::uint64_t>(resource.texture2D.width) * 4u;
+            if (resource.lifetime != LifetimeIntent::External ||
+                resource.visibility != Visibility::Published ||
+                resource.texture2D.extentMeaning != TextureExtentMeaning::Fixed ||
+                resource.texture2D.formatMeaning != FormatMeaning::Bgra8Unorm ||
+                resource.texture2D.rowBytes != minimumRowBytes ||
+                resource.texture2D.mipLevels != 1 || !resource.initialContent.empty())
+                Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
+        }
         else
         {
             Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
@@ -328,9 +339,19 @@ void ValidateResourceUse(const ResourceUse& use, const Resource& resource,
             Push(diagnostics, "Bufferが検証または実行の契約に違反しています。", source);
         break;
     case ViewRole::ColorAttachment:
-        if (resource.kind != ResourceKind::SurfaceImage || !write)
-            Push(diagnostics, "Surfaceが検証または実行の契約に違反しています。", source);
+    {
+        const bool surface = resource.kind == ResourceKind::SurfaceImage;
+        const bool limitedExternalTexture =
+            resource.kind == ResourceKind::Texture2D &&
+            resource.lifetime == LifetimeIntent::External &&
+            resource.update == UpdateIntent::External &&
+            resource.texture2D.extentMeaning == TextureExtentMeaning::Fixed &&
+            resource.texture2D.formatMeaning == FormatMeaning::Bgra8Unorm &&
+            resource.texture2D.mipLevels == 1;
+        if ((!surface && !limitedExternalTexture) || !write)
+            Push(diagnostics, "RenderTargetが検証または実行の契約に違反しています。", source);
         break;
+    }
     case ViewRole::DepthAttachment:
         if (resource.kind != ResourceKind::Texture2D ||
             resource.texture2D.formatMeaning != FormatMeaning::Depth32Float || !write)
@@ -511,10 +532,30 @@ void ValidateWorkInterface(const Work& work, const Program* program,
     {
         if (program == nullptr || program->kind != ProgramKind::Raster || work.raster.vertexCount == 0)
             Push(diagnostics, "Contractが検証または実行の契約に違反しています。", source);
-        if (vertex != 1 || color != 1 || depth > 1 || present != 1 || copySource != 0 || copyDestination != 0)
+        if (vertex != 1 || color != 1 || depth > 1 || present > 1 || copySource != 0 || copyDestination != 0)
             Push(diagnostics, "Workが検証または実行の契約に違反しています。", source);
-        if (colorUse != nullptr && presentUse != nullptr && colorUse->resource != presentUse->resource)
-            Push(diagnostics, "Surfaceが検証または実行の契約に違反しています。", source);
+        if (colorUse != nullptr)
+        {
+            const auto colorResource = resources.find(colorUse->resource.value);
+            if (colorResource != resources.end())
+            {
+                if (colorResource->second->kind == ResourceKind::SurfaceImage)
+                {
+                    if (present != 1 || presentUse == nullptr ||
+                        colorUse->resource != presentUse->resource)
+                        Push(diagnostics, "Surfaceが検証または実行の契約に違反しています。", source);
+                }
+                else if (colorResource->second->kind == ResourceKind::Texture2D)
+                {
+                    if (present != 0 || presentUse != nullptr)
+                        Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
+                }
+                else
+                {
+                    Push(diagnostics, "RenderTargetが検証または実行の契約に違反しています。", source);
+                }
+            }
+        }
         if (program != nullptr && vertexUse != nullptr)
         {
             const auto resource = resources.find(vertexUse->resource.value);

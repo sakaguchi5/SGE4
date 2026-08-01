@@ -25,7 +25,10 @@ struct SharedResourceRecord final
 {
     ResourceFlowId id;
     planning::AllocationOwnership ownership = planning::AllocationOwnership::CompositionOwned;
+    package::d3d12_v13::ResourceKind kind = package::d3d12_v13::ResourceKind::Buffer;
+    package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t sizeBytes = 0;
+    Texture2DFlowShape texture2D;
     package::d3d12_v13::ResourceState currentState;
     std::shared_ptr<::sge4::runtime::IExternalResource> resource;
     std::shared_ptr<::sge4::runtime::ICompletionToken> availableAfter;
@@ -61,6 +64,8 @@ private:
         SharedDeviceDomain&, std::span<const SharedResourceInitialData>);
     friend base::Expected<d3d12::ExternalBufferReadback, SharedResourceError> ReadSharedResource(
         SharedResourceTable&, ResourceFlowId);
+    friend base::Expected<d3d12::ExternalTexture2DReadback, SharedResourceError> ReadSharedTexture2DResource(
+        SharedResourceTable&, ResourceFlowId);
 
     SharedDeviceDomain* domain_ = nullptr;
     std::vector<SharedResourceRecord> records_;
@@ -72,6 +77,10 @@ private:
     std::span<const SharedResourceInitialData> initialData = {});
 
 [[nodiscard]] base::Expected<d3d12::ExternalBufferReadback, SharedResourceError> ReadSharedResource(
+    SharedResourceTable& table,
+    ResourceFlowId resource);
+
+[[nodiscard]] base::Expected<d3d12::ExternalTexture2DReadback, SharedResourceError> ReadSharedTexture2DResource(
     SharedResourceTable& table,
     ResourceFlowId resource);
 }

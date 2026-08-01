@@ -65,6 +65,51 @@ ReadState(base::BinaryReader& reader)
     return base::Success<package::d3d12_v13::ResourceState, PlanError>(state);
 }
 
+void WriteTexture2DShape(base::BinaryWriter& writer, const Texture2DFlowShape& value)
+{
+    writer.WriteU32(value.width);
+    writer.WriteU32(value.height);
+    writer.WriteU32(value.rowBytes);
+    writer.WriteU16(value.mipLevels);
+    writer.WriteU16(value.arrayLayers);
+    writer.WriteU16(value.sampleCount);
+    writer.WriteU16(value.planeCount);
+}
+
+base::Expected<Texture2DFlowShape, PlanError> ReadTexture2DShape(base::BinaryReader& reader)
+{
+    auto width = reader.ReadU32();
+    auto height = reader.ReadU32();
+    auto rowBytes = reader.ReadU32();
+    auto mipLevels = reader.ReadU16();
+    auto arrayLayers = reader.ReadU16();
+    auto sampleCount = reader.ReadU16();
+    auto planeCount = reader.ReadU16();
+    if (!width || !height || !rowBytes || !mipLevels || !arrayLayers || !sampleCount || !planeCount)
+        return Failure<Texture2DFlowShape>("plan/read", "Textureが検証または実行の契約に違反しています。");
+    Texture2DFlowShape result;
+    result.width = width.value(); result.height = height.value(); result.rowBytes = rowBytes.value();
+    result.mipLevels = mipLevels.value(); result.arrayLayers = arrayLayers.value();
+    result.sampleCount = sampleCount.value(); result.planeCount = planeCount.value();
+    return base::Success<Texture2DFlowShape, PlanError>(result);
+}
+
+bool ValidAllocationShape(const ResourceAllocationPlan& value) noexcept
+{
+    if (value.kind == package::d3d12_v13::ResourceKind::Buffer)
+        return value.sizeBytes > 0 && value.texture2D == Texture2DFlowShape{} &&
+            value.format == package::d3d12_v13::Format::Unknown;
+    if (value.kind == package::d3d12_v13::ResourceKind::Texture2D)
+        return value.format == package::d3d12_v13::Format::B8G8R8A8Unorm &&
+            value.texture2D.width > 0 && value.texture2D.height > 0 &&
+            static_cast<std::uint64_t>(value.texture2D.rowBytes) ==
+                static_cast<std::uint64_t>(value.texture2D.width) * 4u &&
+            value.texture2D.mipLevels == 1 && value.texture2D.arrayLayers == 1 &&
+            value.texture2D.sampleCount == 1 && value.texture2D.planeCount == 1 &&
+            value.sizeBytes == static_cast<std::uint64_t>(value.texture2D.rowBytes) * value.texture2D.height;
+    return false;
+}
+
 std::vector<std::byte> SerializeBody(const RawCompositionPlan& plan)
 {
     base::BinaryWriter writer;
@@ -85,6 +130,8 @@ std::vector<std::byte> SerializeBody(const RawCompositionPlan& plan)
         writer.WriteU16(static_cast<std::uint16_t>(allocation.kind));
         writer.WriteU32(static_cast<std::uint32_t>(allocation.format));
         writer.WriteU64(allocation.sizeBytes);
+        if (allocation.kind == package::d3d12_v13::ResourceKind::Texture2D)
+            WriteTexture2DShape(writer, allocation.texture2D);
     }
     for (const auto& entry : plan.schedule)
     {
@@ -151,7 +198,7 @@ ValidateRawCompositionPlanShape(const RawCompositionPlan& plan)
     for (std::uint32_t index = 0; index < plan.allocations.size(); ++index)
     {
         const auto& value = plan.allocations[index];
-        if (value.resource.value != index || value.sizeBytes == 0 ||
+        if (value.resource.value != index || !ValidAllocationShape(value) ||
             (value.ownership != AllocationOwnership::CompositionOwned &&
              value.ownership != AllocationOwnership::ExternalInput &&
              value.ownership != AllocationOwnership::ExternalOutput))
@@ -268,12 +315,18 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         auto kind = reader.ReadU16();
         auto format = reader.ReadU32();
         auto size = reader.ReadU64();
-        if (!resource || !ownership || !kind || !format || !size)
+        base::Expected<Texture2DFlowShape, PlanError> texture2D =
+            base::Success<Texture2DFlowShape, PlanError>({});
+        if (kind && static_cast<package::d3d12_v13::ResourceKind>(kind.value()) ==
+                package::d3d12_v13::ResourceKind::Texture2D)
+            texture2D = ReadTexture2DShape(reader);
+        if (!resource || !ownership || !kind || !format || !size || !texture2D)
             return Failure<RawCompositionPlan>("plan/read", "Allocationが検証または実行の契約に違反しています。");
         plan.allocations.push_back({
             {resource.value()}, static_cast<AllocationOwnership>(ownership.value()),
             static_cast<package::d3d12_v13::ResourceKind>(kind.value()),
-            static_cast<package::d3d12_v13::Format>(format.value()), size.value()});
+            static_cast<package::d3d12_v13::Format>(format.value()), size.value(),
+            texture2D.value()});
     }
     for (std::uint32_t i = 0; i < scheduleCount.value(); ++i)
     {

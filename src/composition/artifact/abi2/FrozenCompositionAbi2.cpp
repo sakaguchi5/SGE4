@@ -211,7 +211,7 @@ BuildFrozenCompositionAbi2Core(
         validated.Leaves().size() > std::numeric_limits<std::uint32_t>::max() ||
         contract.resources.size() > std::numeric_limits<std::uint32_t>::max())
         return Fail<FrozenCompositionAbi2Core>(
-            "abi2/build", "CompositionのLeafまたはFlow数がABI 2.2の範囲外です。");
+            "abi2/build", "CompositionのLeafまたはFlow数がABI 2.3の範囲外です。");
 
     BinaryWriter leafBytes;
     BinaryWriter leafTable;
@@ -270,10 +270,10 @@ BuildFrozenCompositionAbi2Core(
         std::to_underlying(FrozenCompositionAbi2SectionKind::LeafBytes), 1,
         RequiredExecution, FrozenCompositionAbi2Alignment, std::move(leafBytes).Take()});
     core.sections.push_back({
-        std::to_underlying(FrozenCompositionAbi2SectionKind::ContractData), 1,
+        std::to_underlying(FrozenCompositionAbi2SectionKind::ContractData), FrozenCompositionAbi2ContractSchema,
         RequiredExecution, FrozenCompositionAbi2Alignment, std::move(contractBytes)});
     core.sections.push_back({
-        std::to_underlying(FrozenCompositionAbi2SectionKind::VerifiedDecisionData), 1,
+        std::to_underlying(FrozenCompositionAbi2SectionKind::VerifiedDecisionData), FrozenCompositionAbi2DecisionSchema,
         RequiredExecution, FrozenCompositionAbi2Alignment, std::move(decisionBytes)});
     core.sections.push_back({
         std::to_underlying(FrozenCompositionAbi2SectionKind::VerificationCertificate), 1,
@@ -351,7 +351,7 @@ DeserializeFrozenCompositionAbi2Manifest(std::span<const std::byte> bytes)
         IsZeroDigest(manifest.compositionArtifactIdentity) ||
         IsZeroDigest(manifest.dynamicSemanticIdentity))
         return Fail<FrozenCompositionAbi2Manifest>(
-            "abi2/manifest", "ManifestがABI 2.2契約に違反しています。");
+            "abi2/manifest", "ManifestがABI 2.3契約に違反しています。");
     return base::Success<FrozenCompositionAbi2Manifest, VerificationError>(manifest);
 }
 
@@ -365,7 +365,7 @@ ReadVerifiedFrozenCompositionAbi2(std::vector<std::byte> bytes)
     if (outer.value().FormatMinor() != FrozenCompositionAbi2FormatMinor ||
         outer.value().Sections().size() != FrozenCompositionAbi2SectionKinds.size())
         return Fail<VerifiedFrozenComposition>(
-            "abi2/header", "SGE4UNI 2.2のVersionまたはSection数が一致しません。");
+            "abi2/header", "SGE4UNI 2.3のVersionまたはSection数が一致しません。");
 
     for (std::size_t index = 0; index < FrozenCompositionAbi2SectionKinds.size(); ++index)
     {
@@ -376,7 +376,7 @@ ReadVerifiedFrozenCompositionAbi2(std::vector<std::byte> bytes)
             section.alignment != FrozenCompositionAbi2Alignment)
             return Fail<VerifiedFrozenComposition>(
                 "abi2/section-table",
-                "Sectionの順序、Schema、FlagsまたはAlignmentがABI 2.2契約に違反しています。");
+                "Sectionの順序、Schema、FlagsまたはAlignmentがABI 2.3契約に違反しています。");
     }
 
     const auto* manifestSection = outer.value().FindSection(

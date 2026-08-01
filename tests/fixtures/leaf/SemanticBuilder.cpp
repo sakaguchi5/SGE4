@@ -126,6 +126,37 @@ base::Expected<ResourceId, std::string> SemanticBuilder::AddImmutableTexture2D(
     return base::Success<ResourceId, std::string>(id);
 }
 
+base::Expected<ResourceId, std::string> SemanticBuilder::AddExternalTexture2D(
+    std::string debugName,
+    std::uint32_t width,
+    std::uint32_t height,
+    FormatMeaning formatMeaning,
+    std::uint32_t rowBytes)
+{
+    if (width == 0 || height == 0 ||
+        width > std::numeric_limits<std::uint32_t>::max() / 4u ||
+        formatMeaning != FormatMeaning::Bgra8Unorm ||
+        static_cast<std::uint64_t>(rowBytes) != static_cast<std::uint64_t>(width) * 4u)
+        return base::Failure<ResourceId, std::string>(
+            "Textureが検証または実行の契約に違反しています。");
+    const auto id = NextId<ResourceId>(graph_.resources.size());
+    Resource resource;
+    resource.id = id;
+    resource.debugName = std::move(debugName);
+    resource.kind = ResourceKind::Texture2D;
+    resource.lifetime = LifetimeIntent::External;
+    resource.update = UpdateIntent::External;
+    resource.visibility = Visibility::Published;
+    resource.texture2D.extentMeaning = TextureExtentMeaning::Fixed;
+    resource.texture2D.width = width;
+    resource.texture2D.height = height;
+    resource.texture2D.formatMeaning = formatMeaning;
+    resource.texture2D.rowBytes = rowBytes;
+    resource.texture2D.mipLevels = 1;
+    graph_.resources.push_back(std::move(resource));
+    return base::Success<ResourceId, std::string>(id);
+}
+
 base::Expected<ResourceId, std::string> SemanticBuilder::AddDepthAttachmentTexture2D(
     std::string debugName,
     FormatMeaning formatMeaning)

@@ -132,6 +132,159 @@ void Require(bool condition, const char* message)
     return std::move(bytes).value();
 }
 
+[[nodiscard]] std::vector<std::byte> BuildPortableTextureLeafPackage(
+    bool consumer,
+    std::uint32_t width = 4,
+    std::uint32_t height = 4)
+{
+    d3d::D3D12PackageDescription description;
+    description.profile.shaderModelMajor = 5;
+    description.profile.shaderModelMinor = 1;
+    description.profile.rootSignatureMajor = 1;
+    description.profile.rootSignatureMinor = 0;
+    description.profile.framesInFlight = 1;
+    description.profile.directQueueCount = 1;
+    description.profile.surfaceImageCount = 0;
+    description.profile.rtvDescriptorCount = 1;
+    description.profile.shaderDescriptorCount = consumer ? 1u : 0u;
+
+    const std::uint32_t resourceCount = consumer ? 2u : 1u;
+    for (std::uint32_t index = 0; index < resourceCount; ++index)
+    {
+        const bool read = consumer && index == 0;
+        d3d::ResourceArtifact resource;
+        resource.id = d3d::ResourceId{index};
+        resource.resourceKind = d3d::ResourceKind::Texture2D;
+        resource.origin = d3d::ResourceOrigin::External;
+        resource.rebuildPolicy = d3d::RebuildPolicy::RequireExternalRebind;
+        resource.extentMode = d3d::ExtentMode::Fixed;
+        resource.physicalInstanceCount = 1;
+        resource.format = d3d::Format::B8G8R8A8Unorm;
+        resource.width = width;
+        resource.height = height;
+        resource.depthOrArraySize = 1;
+        resource.mipLevels = 1;
+        resource.sampleCount = 1;
+        resource.planeCount = 1;
+        resource.firstView = index;
+        resource.viewCount = 1;
+        resource.initialState = {
+            d3d::StateClass::Explicit, 0,
+            read ? std::to_underlying(d3d::ExplicitStateBits::PixelShaderRead)
+                 : std::to_underlying(d3d::ExplicitStateBits::RenderTarget)};
+        description.resources.push_back(resource);
+
+        d3d::ResourceViewArtifact view;
+        view.id = d3d::ViewId{index};
+        view.resource = d3d::ResourceId{index};
+        view.viewClass = read ? d3d::ViewClass::ShaderResource : d3d::ViewClass::RenderTarget;
+        view.format = d3d::Format::B8G8R8A8Unorm;
+        view.firstMip = 0;
+        view.mipCount = 1;
+        view.firstArrayLayer = 0;
+        view.arrayLayerCount = 1;
+        view.firstPlane = 0;
+        view.planeCount = 1;
+        view.descriptorHeapClass = read ? 2u : 1u;
+        view.descriptorIndex = read ? 0u : 0u;
+        description.views.push_back(view);
+
+        d3d::ExternalResourceSlotArtifact slot;
+        slot.id = d3d::ExternalSlotId{index};
+        slot.resource = d3d::ResourceId{index};
+        slot.requiredKind = d3d::ResourceKind::Texture2D;
+        slot.requiredFormat = d3d::Format::B8G8R8A8Unorm;
+        slot.minimumBytes = 0;
+        slot.requiredIncomingState = resource.initialState;
+        slot.guaranteedOutgoingState = resource.initialState;
+        description.externalSlots.push_back(slot);
+    }
+
+    description.operationStreams.push_back({d3d::OperationStreamKind::Load, 0, 1, 0});
+    const std::uint32_t frameOperationCount = resourceCount * 3u + 1u;
+    description.operationStreams.push_back({d3d::OperationStreamKind::Frame, 1, frameOperationCount, 0});
+    description.operations.push_back(MakeOperation(d3d::D3D12OperationCode::CreateDescriptorHeaps));
+    for (std::uint32_t index = 0; index < resourceCount; ++index)
+    {
+        description.operations.push_back(MakeOperation(
+            d3d::D3D12OperationCode::AcquireExternal, {},
+            d3d::Encode(d3d::AcquireExternalPayload{d3d::ExternalSlotId{index}})));
+        description.operations.push_back(MakeOperation(
+            d3d::D3D12OperationCode::WaitExternal, d3d::QueueId{0},
+            d3d::Encode(d3d::WaitExternalPayload{d3d::ExternalSlotId{index}})));
+    }
+    description.operations.push_back(MakeOperation(
+        d3d::D3D12OperationCode::SignalQueue, d3d::QueueId{0},
+        d3d::Encode(d3d::SignalQueuePayload{d3d::SignalPointId{0}})));
+    for (std::uint32_t index = 0; index < resourceCount; ++index)
+        description.operations.push_back(MakeOperation(
+            d3d::D3D12OperationCode::ReleaseExternal, {},
+            d3d::Encode(d3d::ReleaseExternalPayload{
+                d3d::ExternalSlotId{index}, d3d::SignalPointId{0}})));
+    description.provenance = {std::byte{3}};
+
+    auto bytes = d3d::BuildFrozenPackage(description);
+    Require(static_cast<bool>(bytes), "Portable Texture Leaf Packageの生成に失敗しました。");
+    auto package = package::PackageReader::Read(bytes.value());
+    Require(static_cast<bool>(package), "Portable Texture Leaf Packageの読込に失敗しました。");
+    auto decoded = d3d::D3D12PackageView::Decode(package.value());
+    if (!decoded)
+        throw std::runtime_error("Portable Texture Leaf PackageのSchema検証に失敗しました: " +
+            decoded.error().message + " code=" + std::to_string(static_cast<int>(decoded.error().code)) +
+            " record=" + std::to_string(decoded.error().recordIndex) +
+            " operation=" + std::to_string(decoded.error().operationIndex));
+    Require(decoded.value().ExternalSlots().size() == resourceCount,
+        "Portable Texture Leaf PackageのEndpoint数が一致しません。");
+    return std::move(bytes).value();
+}
+
+[[nodiscard]] composition::LeafPackageDeclaration MakeTextureProducerLeaf(
+    std::string stableKey,
+    const std::vector<std::byte>& packageBytes)
+{
+    composition::LeafPackageDeclaration leaf;
+    leaf.stableKey = std::move(stableKey);
+    leaf.packageBytes = packageBytes;
+    leaf.endpoints = {{0, "portable/texture/output"}};
+    return leaf;
+}
+
+[[nodiscard]] composition::LeafPackageDeclaration MakeTextureConsumerLeaf(
+    std::string stableKey,
+    const std::vector<std::byte>& packageBytes)
+{
+    composition::LeafPackageDeclaration leaf;
+    leaf.stableKey = std::move(stableKey);
+    leaf.packageBytes = packageBytes;
+    leaf.endpoints = {
+        {0, "portable/texture/input"},
+        {1, "portable/texture/output"}};
+    return leaf;
+}
+
+[[nodiscard]] composition::ContractBuildInput BuildPortableTextureCompositionInput(
+    const std::vector<std::byte>& producerBytes,
+    const std::vector<std::byte>& consumerBytes)
+{
+    composition::ContractBuildInput input;
+    input.leaves = {
+        MakeTextureProducerLeaf("portable/texture/producer", producerBytes),
+        MakeTextureConsumerLeaf("portable/texture/consumer", consumerBytes)};
+
+    composition::ResourceFlowDeclaration middle;
+    middle.stableKey = "portable/texture/flow/middle";
+    middle.boundary = composition::ResourceBoundary::Internal;
+    middle.producer = {"portable/texture/producer", "portable/texture/output"};
+    middle.consumers = {{"portable/texture/consumer", "portable/texture/input"}};
+
+    composition::ResourceFlowDeclaration output;
+    output.stableKey = "portable/texture/flow/output";
+    output.boundary = composition::ResourceBoundary::CompositionOutput;
+    output.producer = {"portable/texture/consumer", "portable/texture/output"};
+    input.resources = {std::move(middle), std::move(output)};
+    return input;
+}
+
 [[nodiscard]] composition::LeafPackageDeclaration MakeLeaf(
     std::string stableKey,
     const std::vector<std::byte>& packageBytes)
@@ -192,11 +345,11 @@ void VerifyAbi2PortableRoundTrip()
         BuildPortableCompositionInput(leafBytes),
         composition::MakeAuthorityOnlyDynamicContractV1(8));
     Require(static_cast<bool>(first) && static_cast<bool>(second),
-        "Portable SGE4UNI 2.2の生成に失敗しました。");
+        "Portable SGE4UNI 2.3の生成に失敗しました。");
     Require(first.value().FileBytes().size() == second.value().FileBytes().size() &&
         std::equal(first.value().FileBytes().begin(), first.value().FileBytes().end(),
             second.value().FileBytes().begin()),
-        "Portable SGE4UNI 2.2がbyte決定的ではありません。");
+        "Portable SGE4UNI 2.3がbyte決定的ではありません。");
 
     auto outer = ReadSectionedArtifact(
         first.value().FileBytes(), artifact::FrozenCompositionAbi2Magic,
@@ -204,7 +357,7 @@ void VerifyAbi2PortableRoundTrip()
     Require(static_cast<bool>(outer) &&
         outer.value().FormatMinor() == artifact::FrozenCompositionAbi2FormatMinor &&
         outer.value().Sections().size() == artifact::FrozenCompositionAbi2SectionKinds.size(),
-        "Portable SGE4UNI 2.2の平坦Section構造が一致しません。");
+        "Portable SGE4UNI 2.3の平坦Section構造が一致しません。");
 
     const auto leaves = first.value().VerifiedComposition().ValidatedContract().Leaves();
     Require(leaves.size() == 2, "Portable CompositionのLeaf数が一致しません。");
@@ -213,11 +366,11 @@ void VerifyAbi2PortableRoundTrip()
             "ABI 2.0でSchema 17 Leaf Package bytesが保存されませんでした。");
 
     auto roundTrip = composition::ReadFrozenCompositionPackage(first.value().FileBytes());
-    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.2のRound-tripに失敗しました。");
+    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.3のRound-tripに失敗しました。");
     Require(roundTrip.value().FileDigest() == first.value().FileDigest() &&
         roundTrip.value().CompositionCoreDigest() == first.value().CompositionCoreDigest() &&
         roundTrip.value().SemanticDigest() == first.value().SemanticDigest(),
-        "Portable SGE4UNI 2.2のDigestがRound-tripで変化しました。");
+        "Portable SGE4UNI 2.3のDigestがRound-tripで変化しました。");
 
     auto legacyBytes = composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
         BuildPortableCompositionInput(leafBytes),
@@ -228,17 +381,17 @@ void VerifyAbi2PortableRoundTrip()
 
     auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
         legacyBytes.value());
-    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.2へのMigrationに失敗しました。");
+    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.3へのMigrationに失敗しました。");
     Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
         std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
             first.value().FileBytes().begin()),
-        "直接生成とMigration後のPortable SGE4UNI 2.2がbyte一致しません。");
+        "直接生成とMigration後のPortable SGE4UNI 2.3がbyte一致しません。");
     Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
         migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
         migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity &&
         migrated.value().Certificate().scheduleIdentity == first.value().Certificate().scheduleIdentity &&
         migrated.value().Certificate().recoverySetIdentity == first.value().Certificate().recoverySetIdentity,
-        "ABI 1.1から2.2へのMigrationで権威Identityが保存されませんでした。");
+        "ABI 1.1から2.3へのMigrationで権威Identityが保存されませんでした。");
 
     std::vector<composition::ConditionalRegionV1> conditionalRegions;
     conditionalRegions.push_back(composition::MakeConditionalRegionV1(
@@ -270,6 +423,51 @@ void VerifyAbi2PortableRoundTrip()
         BuildPortableCompositionInput(leafBytes),
         composition::MakeAuthorityOnlyDynamicContractV1(8, std::move(crossBranch))),
         "Portable Conditional branchを跨ぐFlowが受理されました。");
+
+    const auto textureProducer = BuildPortableTextureLeafPackage(false);
+    const auto textureConsumer = BuildPortableTextureLeafPackage(true);
+    auto textureFirst = composition::BuildFrozenCompositionPackage(
+        BuildPortableTextureCompositionInput(textureProducer, textureConsumer),
+        composition::MakeAuthorityOnlyDynamicContractV1(1));
+    auto textureSecond = composition::BuildFrozenCompositionPackage(
+        BuildPortableTextureCompositionInput(textureProducer, textureConsumer),
+        composition::MakeAuthorityOnlyDynamicContractV1(1));
+    Require(textureFirst && textureSecond,
+        "Portable限定Texture2D Compositionの生成に失敗しました。");
+    Require(textureFirst.value().FileBytes().size() == textureSecond.value().FileBytes().size() &&
+        std::equal(textureFirst.value().FileBytes().begin(), textureFirst.value().FileBytes().end(),
+            textureSecond.value().FileBytes().begin()),
+        "Portable限定Texture2D Compositionがbyte決定的ではありません。");
+    const auto& textureContract =
+        textureFirst.value().VerifiedComposition().ValidatedContract().Contract();
+    Require(textureContract.resources.size() == 2 &&
+        std::ranges::all_of(textureContract.resources, [](const auto& resource) {
+            return resource.kind == d3d::ResourceKind::Texture2D &&
+                resource.format == d3d::Format::B8G8R8A8Unorm &&
+                resource.sizeBytes == 0 && resource.texture2D.width == 4 &&
+                resource.texture2D.height == 4 && resource.texture2D.rowBytes == 16 &&
+                resource.texture2D.mipLevels == 1 && resource.texture2D.arrayLayers == 1 &&
+                resource.texture2D.sampleCount == 1 && resource.texture2D.planeCount == 1;
+        }),
+        "Portable限定Texture2D shapeがContractへ固定されませんでした。");
+    const auto& texturePlan = textureFirst.value().VerifiedComposition().VerifiedPlan().Plan();
+    Require(texturePlan.allocations.size() == 2 &&
+        std::ranges::all_of(texturePlan.allocations, [](const auto& allocation) {
+            return allocation.kind == d3d::ResourceKind::Texture2D &&
+                allocation.format == d3d::Format::B8G8R8A8Unorm &&
+                allocation.sizeBytes == 64 && allocation.texture2D.width == 4 &&
+                allocation.texture2D.height == 4;
+        }),
+        "Portable限定Texture2D allocationがPlanへ固定されませんでした。");
+    auto textureRoundTrip = composition::ReadFrozenCompositionPackage(
+        textureFirst.value().FileBytes());
+    Require(textureRoundTrip &&
+        textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
+        "Portable限定Texture2D SGE4UNI 2.3のRound-tripに失敗しました。");
+    Require(!composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
+        BuildPortableTextureCompositionInput(textureProducer, textureConsumer),
+        composition::MakeAuthorityOnlyDynamicContractV1(1)),
+        "ABI 1.1移行Corpusが未表現のTexture2D Flowを受理しました。");
 
     VerifyAbi2CorruptionRejection(first.value().FileBytes());
 }

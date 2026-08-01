@@ -46,20 +46,20 @@ Certificateは新たな判断主体ではない。検証済み完全Artifactか�
 ## 4. Frozen hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.2
+SGE4UNI Frozen Composition Package 2.3
   Manifest schema 2
   Leaf Table schema 1
   Embedded complete Schema 17 Leaf Package bytes
-  Contract Data schema 1
-  Verified Decision Data schema 1
+  Contract Data schema 2
+  Verified Decision Data schema 2
   Verification Certificate schema 1
   Authority Ledger schema 2
   Dynamic Contract schema 3
 ```
 
-内側`SGE4CMP` ContainerはProduction ABIから廃止する。Compositionの全実行事実は`SGE4UNI 2.2`が直接所有し、Leaf Packageだけを独立した下位Frozen Artifactとして保持する。
+内側`SGE4CMP` ContainerはProduction ABIから廃止する。Compositionの全実行事実は`SGE4UNI 2.3`が直接所有し、Leaf Packageだけを独立した下位Frozen Artifactとして保持する。
 
-同一bytesは同一意味を持つ。Compilerなしで読込・検証・実行・Recovery再物質化ができなければならない。Production ReaderはABI 2.2だけを受理し、旧ABI Readerはmigration treeへ隔離する。
+同一bytesは同一意味を持つ。Compilerなしで読込・検証・実行・Recovery再物質化ができなければならない。Production ReaderはABI 2.3だけを受理し、旧ABI Readerはmigration treeへ隔離する。
 
 ## 5. Dynamic execution
 
@@ -85,4 +85,9 @@ Composition全体をRecovery unitとする。Recoveryは全Runtime object、旧e
 
 ## Generalization 2 amendment
 
-Production Frozen CompositionはSGE4UNI 2.2、Dynamic Contract schema 3とする。Conditional RegionのpredicateとTrue／False Leaf集合はComposition authorityが所有する。Dynamic Plannerと独立Verifierはexact membership algebraからRegion selectionとenabled Leaf集合を別々に導出し、SGE4INV 1.3へSealする。Runtimeはpredicateを再評価せず、Seal済みenabled LeafだけをFrozen schedule順でSubmitする。
+Production Frozen CompositionはSGE4UNI 2.3、Dynamic Contract schema 3とする。Conditional RegionのpredicateとTrue／False Leaf集合はComposition authorityが所有する。Dynamic Plannerと独立Verifierはexact membership algebraからRegion selectionとenabled Leaf集合を別々に導出し、SGE4INV 1.3へSealする。Runtimeはpredicateを再評価せず、Seal済みenabled LeafだけをFrozen schedule順でSubmitする。
+
+
+## Generalization 3 amendment
+
+Production Frozen CompositionはSGE4UNI 2.3、Contract Data schema 2、Verified Decision Data schema 2とする。Composition Modelは埋込みSchema 17 Leaf endpointからfixed BGRA8 Texture2D shapeを再導出し、Plannerと独立Verifierはsingle writer、same-frame DAG、exact extent／formatを検証する。Runtimeはshared TextureをRTV producerからSRV consumerへstate／completion付きで渡し、ExecutorだけがD3D12 row pitchを処理する。

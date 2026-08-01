@@ -61,6 +61,7 @@ private:
     friend base::Expected<LoadedStaticComposition, StaticRuntimeError> LoadStaticComposition(std::span<const std::byte>, d3d12::Executor&, StaticCompositionLoadInput);
     friend base::Expected<StaticCompositionSubmission, StaticRuntimeError> SubmitStaticComposition(LoadedStaticComposition&, const StaticCompositionFrameInvocation&);
     friend base::Expected<d3d12::ExternalBufferReadback, StaticRuntimeError> ReadStaticCompositionBuffer(LoadedStaticComposition&, ResourceFlowId);
+    friend base::Expected<d3d12::ExternalTexture2DReadback, StaticRuntimeError> ReadStaticCompositionTexture2D(LoadedStaticComposition&, ResourceFlowId);
     friend class WholeCompositionRecovery;
     std::unique_ptr<SharedDeviceDomain> domain_;
     std::unique_ptr<SharedResourceTable> resources_;
@@ -73,6 +74,8 @@ private:
 [[nodiscard]] base::Expected<StaticCompositionSubmission, StaticRuntimeError> SubmitStaticComposition(
     LoadedStaticComposition&, const StaticCompositionFrameInvocation&);
 [[nodiscard]] base::Expected<d3d12::ExternalBufferReadback, StaticRuntimeError> ReadStaticCompositionBuffer(
+    LoadedStaticComposition&, ResourceFlowId);
+[[nodiscard]] base::Expected<d3d12::ExternalTexture2DReadback, StaticRuntimeError> ReadStaticCompositionTexture2D(
     LoadedStaticComposition&, ResourceFlowId);
 [[nodiscard]] base::Expected<void, StaticRuntimeError> ValidateStaticCompositionHandleEpoch(
     const LoadedStaticComposition&,

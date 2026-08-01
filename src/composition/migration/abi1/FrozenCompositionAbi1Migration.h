@@ -14,7 +14,7 @@ BuildFrozenCompositionPackageAbi1ForMigration(
     DynamicContractV1 dynamicContract);
 
 // Production RuntimeはABI 1を受理しない。明示的なMigration Toolだけが
-// SGE4UNI 1.1を読み、意味を再検証してSGE4UNI 2.2へ変換する。
+// SGE4UNI 1.1を読み、意味を再検証してSGE4UNI 2.3へ変換する。
 [[nodiscard]] base::Expected<FrozenCompositionPackage, Error>
 MigrateFrozenCompositionPackageAbi1ToAbi2(std::span<const std::byte> bytes);
 }

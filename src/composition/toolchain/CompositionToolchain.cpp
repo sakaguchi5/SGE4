@@ -442,7 +442,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract));
     if (!manifestSection || !authoritySection || !dynamicSection)
         return Fail<FrozenCompositionPackage>(
-            "CompositionReader", "SGE4UNI 2.2の必須Sectionがありません。");
+            "CompositionReader", "SGE4UNI 2.3の必須Sectionがありません。");
 
     auto manifestResult = artifact::DeserializeFrozenCompositionAbi2Manifest(
         manifestSection->bytes);

@@ -26,6 +26,7 @@
 #include <climits>
 #include <cstring>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <map>
 #include <mutex>

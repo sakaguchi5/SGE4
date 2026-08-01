@@ -167,6 +167,49 @@ BuildConditionalVerifiedDynamicUnified(std::uint32_t universe = 4)
         std::move(built).value());
 }
 
+inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
+BuildLimitedTexture2DUnified(std::uint32_t width = 4, std::uint32_t height = 4)
+{
+    constexpr std::string_view ProducerKey = "unified/texture/producer";
+    constexpr std::string_view ConsumerKey = "unified/texture/consumer";
+    auto producer = fixture::BuildTextureProducerLeaf(width, height);
+    if (!producer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            producer.error());
+    auto consumer = fixture::BuildTextureConsumerLeaf(width, height);
+    if (!consumer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            consumer.error());
+
+    contract::ContractBuildInput input;
+    input.leaves = {
+        fixture::TextureProducerDeclaration(std::string(ProducerKey), producer.value()),
+        fixture::TextureConsumerDeclaration(std::string(ConsumerKey), consumer.value())};
+
+    contract::ResourceFlowDeclaration middle;
+    middle.stableKey = "unified/texture/intermediate";
+    middle.boundary = contract::ResourceBoundary::Internal;
+    middle.producer = fixture::Ref(
+        std::string(ProducerKey), std::string(fixture::TextureOutputEndpoint));
+    middle.consumers = {fixture::Ref(
+        std::string(ConsumerKey), std::string(fixture::TextureInputEndpoint))};
+
+    contract::ResourceFlowDeclaration output;
+    output.stableKey = "unified/texture/output";
+    output.boundary = contract::ResourceBoundary::CompositionOutput;
+    output.producer = fixture::Ref(
+        std::string(ConsumerKey), std::string(fixture::TextureOutputEndpoint));
+    input.resources = {std::move(middle), std::move(output)};
+
+    auto built = composition::BuildFrozenCompositionPackage(
+        std::move(input), composition::MakeAuthorityOnlyDynamicContractV1(1));
+    if (!built)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            built.error().stage + "：" + built.error().message);
+    return sge4::base::Success<composition::FrozenCompositionPackage, std::string>(
+        std::move(built).value());
+}
+
 inline sge4::base::Expected<dynamic::FrozenDynamicInvocationPackage, std::string>
 BuildFrozenInvocation(
     const composition::FrozenCompositionPackage& composition,

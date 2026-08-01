@@ -530,8 +530,10 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
         }
         else if (resource.origin == ResourceOrigin::External)
         {
-            if (resource.resourceKind != ResourceKind::Buffer || resource.flags != 0 ||
-                resource.allocation.IsValid() || resource.rebuildPolicy != RebuildPolicy::RequireExternalRebind ||
+            if ((resource.resourceKind != ResourceKind::Buffer &&
+                 resource.resourceKind != ResourceKind::Texture2D) ||
+                resource.flags != 0 || resource.allocation.IsValid() ||
+                resource.rebuildPolicy != RebuildPolicy::RequireExternalRebind ||
                 resource.physicalInstanceCount != 1 || resource.initialDataSize != 0)
                 return fail(PackageErrorCode::InvalidReference, "Resourceが無効であるか、契約条件を満たしていません。",
                             SectionKind::D3D12ResourceTable);
@@ -640,8 +642,12 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
             (textureView && resource.resourceKind == ResourceKind::Buffer) || (!bufferView && !textureView))
             return fail(PackageErrorCode::InvalidReference, "ResourceがCanonicalな契約と一致しません。",
                         SectionKind::D3D12ViewTable);
-        if (resourceView.viewClass == ViewClass::RenderTarget && resource.resourceKind != ResourceKind::SurfaceImage)
-            return fail(PackageErrorCode::InvalidReference, "Surfaceの参照先または所有関係が無効です。",
+        if (resourceView.viewClass == ViewClass::RenderTarget &&
+            resource.resourceKind != ResourceKind::SurfaceImage &&
+            !(resource.resourceKind == ResourceKind::Texture2D &&
+              resource.origin == ResourceOrigin::External &&
+              resource.format == Format::B8G8R8A8Unorm))
+            return fail(PackageErrorCode::InvalidReference, "RenderTargetの参照先または所有関係が無効です。",
                         SectionKind::D3D12ViewTable);
         if (resourceView.viewClass == ViewClass::DepthStencil &&
             (resource.resourceKind != ResourceKind::Texture2D || resource.format != Format::D32Float))
@@ -893,15 +899,22 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
     {
         if (!slot.resource.IsValid() || slot.resource.value >= view.Resources().size() ||
             externalResources[slot.resource.value] ||
-            slot.requiredKind != ResourceKind::Buffer || slot.requiredFormat != Format::Unknown ||
-            slot.minimumBytes == 0 ||
             slot.synchronizationContract != ExternalSynchronizationContract::CompletionTokenRequired ||
             slot.flags != static_cast<std::uint32_t>(ExternalSlotFlags::Required))
             return fail(PackageErrorCode::InvalidInvocationSchema, "Contractが無効であるか、契約条件を満たしていません。",
                         SectionKind::D3D12ExternalSlotTable);
         const auto& resource = view.Resources()[slot.resource.value];
-        if (resource.origin != ResourceOrigin::External || resource.resourceKind != slot.requiredKind ||
-            resource.format != slot.requiredFormat || resource.sizeBytes != slot.minimumBytes)
+        const bool validBuffer = resource.resourceKind == ResourceKind::Buffer &&
+            slot.requiredKind == ResourceKind::Buffer && slot.requiredFormat == Format::Unknown &&
+            slot.minimumBytes > 0 && resource.format == Format::Unknown &&
+            resource.sizeBytes == slot.minimumBytes;
+        const bool validTexture = resource.resourceKind == ResourceKind::Texture2D &&
+            slot.requiredKind == ResourceKind::Texture2D &&
+            slot.requiredFormat == Format::B8G8R8A8Unorm && slot.minimumBytes == 0 &&
+            resource.format == Format::B8G8R8A8Unorm && resource.sizeBytes == 0 &&
+            resource.width > 0 && resource.height > 0 && resource.depthOrArraySize == 1 &&
+            resource.mipLevels == 1 && resource.sampleCount == 1 && resource.planeCount == 1;
+        if (resource.origin != ResourceOrigin::External || (!validBuffer && !validTexture))
             return fail(PackageErrorCode::InvalidInvocationSchema, "Resourceが無効であるか、契約条件を満たしていません。",
                         SectionKind::D3D12ExternalSlotTable);
         externalResources[slot.resource.value] = true;

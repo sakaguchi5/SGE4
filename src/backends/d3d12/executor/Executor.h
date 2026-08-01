@@ -47,6 +47,16 @@ struct ExternalBufferReadback final
     std::shared_ptr<runtime::ICompletionToken> availableAfter;
 };
 
+struct ExternalTexture2DReadback final
+{
+    std::vector<std::byte> bytes;
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+    std::uint32_t rowBytes = 0;
+    package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
+    std::shared_ptr<runtime::ICompletionToken> availableAfter;
+};
+
 class Executor final : public runtime::IPackageExecutor
 {
 public:
@@ -80,6 +90,23 @@ public:
         package::d3d12_v13::ResourceState initialState,
         std::span<const std::byte> initialBytes);
 
+    [[nodiscard]] base::Expected<ExternalBufferBinding, runtime::RuntimeError> CreateSharedTexture2D(
+        runtime::IPackageDeviceDomain& domain,
+        std::uint32_t resourceIdentity,
+        std::uint32_t width,
+        std::uint32_t height,
+        std::uint32_t rowBytes,
+        package::d3d12_v13::Format format,
+        package::d3d12_v13::ResourceState initialState,
+        std::span<const std::byte> initialBytes);
+
+    [[nodiscard]] base::Expected<std::shared_ptr<runtime::ICompletionToken>, runtime::RuntimeError> TransitionSharedResource(
+        runtime::IPackageDeviceDomain& domain,
+        const std::shared_ptr<runtime::IExternalResource>& resource,
+        const std::shared_ptr<runtime::ICompletionToken>& safeAfter,
+        package::d3d12_v13::ResourceState beforeState,
+        package::d3d12_v13::ResourceState afterState);
+
     [[nodiscard]] base::Expected<std::shared_ptr<runtime::ICompletionToken>, runtime::RuntimeError> TransitionSharedBuffer(
         runtime::IPackageDeviceDomain& domain,
         const std::shared_ptr<runtime::IExternalResource>& resource,
@@ -88,6 +115,12 @@ public:
         package::d3d12_v13::ResourceState afterState);
 
     [[nodiscard]] base::Expected<ExternalBufferReadback, runtime::RuntimeError> ReadSharedBuffer(
+        runtime::IPackageDeviceDomain& domain,
+        const std::shared_ptr<runtime::IExternalResource>& resource,
+        const std::shared_ptr<runtime::ICompletionToken>& safeAfter,
+        package::d3d12_v13::ResourceState restoreState);
+
+    [[nodiscard]] base::Expected<ExternalTexture2DReadback, runtime::RuntimeError> ReadSharedTexture2D(
         runtime::IPackageDeviceDomain& domain,
         const std::shared_ptr<runtime::IExternalResource>& resource,
         const std::shared_ptr<runtime::ICompletionToken>& safeAfter,

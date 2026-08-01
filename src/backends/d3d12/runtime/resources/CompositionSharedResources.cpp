@@ -66,7 +66,7 @@ base::Expected<void, SharedResourceError> SharedResourceTable::PrepareForEndpoin
         return base::Failure<void, SharedResourceError>(Error("resource/transition", "検証または実行の契約に違反しています。"));
     if (record->currentState == endpointContract.requiredIncomingState)
         return base::Success<void, SharedResourceError>();
-    auto transitioned = domain_->Backend().TransitionSharedBuffer(
+    auto transitioned = domain_->Backend().TransitionSharedResource(
         domain_->NativeDomain(), record->resource, record->availableAfter,
         record->currentState, endpointContract.requiredIncomingState);
     if (!transitioned) return base::Failure<void, SharedResourceError>(Error(transitioned.error()));
@@ -119,7 +119,15 @@ base::Expected<SharedResourceTable, SharedResourceError> MaterializeSharedResour
     std::set<std::uint32_t> initialized;
     for (const auto& value : initialData)
     {
-        if (value.resource.value >= bytes.size() || !initialized.insert(value.resource.value).second || value.bytes.size() > contract.resources[value.resource.value].sizeBytes)
+        if (value.resource.value >= bytes.size() || !initialized.insert(value.resource.value).second)
+            return Failure<SharedResourceTable>("resource/initial-data", "入力または内部状態が検証または実行の契約に違反しています。");
+        const auto& resource = contract.resources[value.resource.value];
+        const bool validBuffer = resource.kind == package::d3d12_v13::ResourceKind::Buffer &&
+            value.bytes.size() <= resource.sizeBytes;
+        const bool validTexture = resource.kind == package::d3d12_v13::ResourceKind::Texture2D &&
+            (value.bytes.empty() || value.bytes.size() ==
+                static_cast<std::uint64_t>(resource.texture2D.rowBytes) * resource.texture2D.height);
+        if (!validBuffer && !validTexture)
             return Failure<SharedResourceTable>("resource/initial-data", "入力または内部状態が検証または実行の契約に違反しています。");
         bytes[value.resource.value] = value.bytes;
     }
@@ -145,16 +153,24 @@ base::Expected<SharedResourceTable, SharedResourceError> MaterializeSharedResour
             return Failure<SharedResourceTable>("resource/allocation", "Allocationが検証または実行の契約に違反しています。");
         seenResources[allocation.resource.value] = true;
         const auto state = InitialStateFor(artifact, allocation.resource);
-        auto created = domain.Backend().CreateSharedBuffer(
-            domain.NativeDomain(), allocation.resource.value, allocation.sizeBytes,
-            state, bytes[allocation.resource.value]);
+        base::Expected<d3d12::ExternalBufferBinding, ::sge4::runtime::RuntimeError> created =
+            allocation.kind == package::d3d12_v13::ResourceKind::Texture2D
+                ? domain.Backend().CreateSharedTexture2D(
+                    domain.NativeDomain(), allocation.resource.value,
+                    allocation.texture2D.width, allocation.texture2D.height,
+                    allocation.texture2D.rowBytes, allocation.format, state,
+                    bytes[allocation.resource.value])
+                : domain.Backend().CreateSharedBuffer(
+                    domain.NativeDomain(), allocation.resource.value, allocation.sizeBytes,
+                    state, bytes[allocation.resource.value]);
         if (!created) return base::Failure<SharedResourceTable, SharedResourceError>(Error(created.error()));
         if (!created.value().resource || !created.value().availableAfter ||
             created.value().resource->DeviceEpoch() != domain.DeviceEpoch() ||
             created.value().availableAfter->DeviceEpoch() != domain.DeviceEpoch())
             return Failure<SharedResourceTable>("resource/epoch", "検証または実行の契約に違反しています。");
         table.records_[allocation.resource.value] = {
-            allocation.resource, allocation.ownership, allocation.sizeBytes, state,
+            allocation.resource, allocation.ownership, allocation.kind, allocation.format,
+            allocation.sizeBytes, allocation.texture2D, state,
             std::move(created.value().resource), std::move(created.value().availableAfter)};
     }
     if (std::ranges::any_of(seenResources, [](bool v){ return !v; }))
@@ -167,7 +183,8 @@ base::Expected<d3d12::ExternalBufferReadback, SharedResourceError> ReadSharedRes
     ResourceFlowId resource)
 {
     auto* record = table.Record(resource);
-    if (!table.domain_ || !record || !record->resource || !record->availableAfter)
+    if (!table.domain_ || !record || !record->resource || !record->availableAfter ||
+        record->kind != package::d3d12_v13::ResourceKind::Buffer)
         return Failure<d3d12::ExternalBufferReadback>("resource/readback", "検証または実行の契約に違反しています。");
     auto read = table.domain_->Backend().ReadSharedBuffer(
         table.domain_->NativeDomain(), record->resource, record->availableAfter, record->currentState);
@@ -176,4 +193,20 @@ base::Expected<d3d12::ExternalBufferReadback, SharedResourceError> ReadSharedRes
     if (!update) return base::Failure<d3d12::ExternalBufferReadback, SharedResourceError>(update.error());
     return base::Success<d3d12::ExternalBufferReadback, SharedResourceError>(std::move(read).value());
 }
+base::Expected<d3d12::ExternalTexture2DReadback, SharedResourceError> ReadSharedTexture2DResource(
+    SharedResourceTable& table,
+    ResourceFlowId resource)
+{
+    auto* record = table.Record(resource);
+    if (!table.domain_ || !record || !record->resource || !record->availableAfter ||
+        record->kind != package::d3d12_v13::ResourceKind::Texture2D)
+        return Failure<d3d12::ExternalTexture2DReadback>("resource/readback-texture", "検証または実行の契約に違反しています。");
+    auto read = table.domain_->Backend().ReadSharedTexture2D(
+        table.domain_->NativeDomain(), record->resource, record->availableAfter, record->currentState);
+    if (!read) return base::Failure<d3d12::ExternalTexture2DReadback, SharedResourceError>(Error(read.error()));
+    auto update = table.UpdateAfterObservation(resource, read.value().availableAfter);
+    if (!update) return base::Failure<d3d12::ExternalTexture2DReadback, SharedResourceError>(update.error());
+    return base::Success<d3d12::ExternalTexture2DReadback, SharedResourceError>(std::move(read).value());
+}
+
 }

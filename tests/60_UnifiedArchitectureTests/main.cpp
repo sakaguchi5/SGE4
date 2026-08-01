@@ -57,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.2の平坦Section構造が成立していません。");
+            "SGE4UNI 2.3の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.2の直接Sectionがありません。");
+            "SGE4UNI 2.3の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -74,11 +74,11 @@ int main(int argc, char** argv)
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.2へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.3へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.2とMigration後ABI 2.2がbyte一致しません。");
+            "直接生成したABI 2.3とMigration後ABI 2.3がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
             throw std::runtime_error(
                 "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
         Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
-            "Conditional Region契約がSGE4UNI 2.2へ保存されませんでした。");
+            "Conditional Region契約がSGE4UNI 2.3へ保存されませんでした。");
 
         dynamic::InvocationInputV1 conditionalTrue;
         conditionalTrue.timelineOrdinal = 0;
@@ -323,10 +323,70 @@ int main(int argc, char** argv)
             composition::MakeAuthorityOnlyDynamicContractV1(8, std::move(crossRegions))),
             "異なるConditional branchを跨ぐResource Flowが受理されました。");
 
+        auto textureFirst = tests::BuildLimitedTexture2DUnified();
+        auto textureSecond = tests::BuildLimitedTexture2DUnified();
+        if (!textureFirst || !textureSecond)
+            throw std::runtime_error(
+                "限定Texture2D Compositionの生成に失敗しました：" +
+                (textureFirst ? textureSecond.error() : textureFirst.error()));
+        Require(textureFirst.value().FileBytes().size() == textureSecond.value().FileBytes().size() &&
+            std::equal(textureFirst.value().FileBytes().begin(), textureFirst.value().FileBytes().end(),
+                textureSecond.value().FileBytes().begin()),
+            "限定Texture2D Compositionがbyte決定的ではありません。");
+        const auto& textureContract = textureFirst.value().VerifiedComposition().ValidatedContract().Contract();
+        Require(textureContract.resources.size() == 2 &&
+            std::ranges::all_of(textureContract.resources, [](const auto& resource) {
+                return resource.kind == sge4::package::d3d12_v13::ResourceKind::Texture2D &&
+                    resource.format == sge4::package::d3d12_v13::Format::B8G8R8A8Unorm &&
+                    resource.sizeBytes == 0 && resource.texture2D.width == 4 &&
+                    resource.texture2D.height == 4 && resource.texture2D.rowBytes == 16 &&
+                    resource.texture2D.mipLevels == 1 && resource.texture2D.arrayLayers == 1 &&
+                    resource.texture2D.sampleCount == 1 && resource.texture2D.planeCount == 1;
+            }),
+            "限定Texture2D Flow形状がFrozen Contractへ固定されませんでした。");
+        Require(std::ranges::all_of(
+            textureFirst.value().VerifiedComposition().VerifiedPlan().Plan().allocations,
+            [](const auto& allocation) {
+                return allocation.kind == sge4::package::d3d12_v13::ResourceKind::Texture2D &&
+                    allocation.sizeBytes == 64 && allocation.texture2D.width == 4 &&
+                    allocation.texture2D.height == 4;
+            }),
+            "限定Texture2D allocationがVerified Planへ固定されませんでした。");
+        auto textureRoundTrip = composition::ReadFrozenCompositionPackage(
+            textureFirst.value().FileBytes());
+        Require(static_cast<bool>(textureRoundTrip) &&
+            textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
+            "限定Texture2D FlowのSGE4UNI 2.3 round-tripに失敗しました。");
+
+        auto mismatchProducer = fixture::BuildTextureProducerLeaf(4, 4);
+        auto mismatchConsumer = fixture::BuildTextureConsumerLeaf(2, 2);
+        Require(mismatchProducer && mismatchConsumer,
+            "Texture shape mismatch Fixtureの生成に失敗しました。");
+        composition::ContractBuildInput mismatchInput;
+        mismatchInput.leaves = {
+            fixture::TextureProducerDeclaration("unified/texture/mismatch/producer", mismatchProducer.value()),
+            fixture::TextureConsumerDeclaration("unified/texture/mismatch/consumer", mismatchConsumer.value())};
+        composition::ResourceFlowDeclaration mismatchMiddle;
+        mismatchMiddle.stableKey = "unified/texture/mismatch/intermediate";
+        mismatchMiddle.boundary = composition::ResourceBoundary::Internal;
+        mismatchMiddle.producer = fixture::Ref(
+            "unified/texture/mismatch/producer", std::string(fixture::TextureOutputEndpoint));
+        mismatchMiddle.consumers = {fixture::Ref(
+            "unified/texture/mismatch/consumer", std::string(fixture::TextureInputEndpoint))};
+        composition::ResourceFlowDeclaration mismatchOutput;
+        mismatchOutput.stableKey = "unified/texture/mismatch/output";
+        mismatchOutput.boundary = composition::ResourceBoundary::CompositionOutput;
+        mismatchOutput.producer = fixture::Ref(
+            "unified/texture/mismatch/consumer", std::string(fixture::TextureOutputEndpoint));
+        mismatchInput.resources = {std::move(mismatchMiddle), std::move(mismatchOutput)};
+        Require(!composition::BuildFrozenCompositionPackage(
+            std::move(mismatchInput), composition::MakeAuthorityOnlyDynamicContractV1(1)),
+            "異なるextentのTexture2D endpointが同一Flowとして受理されました。");
+
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.2\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.3\n";
         std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.3\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;

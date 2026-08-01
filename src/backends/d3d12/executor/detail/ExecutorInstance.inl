@@ -775,11 +775,10 @@ private:
             const auto& contract = view_.ExternalSlots()[binding.slot];
             if (binding.resource->DeviceEpoch() != deviceEpoch_ || binding.availableAfter->DeviceEpoch() != deviceEpoch_)
                 return base::Failure<void, runtime::RuntimeError>(Error("invocation", "Bindingが検証または実行の契約に違反しています。"));
-            if (binding.resource->SizeBytes() < contract.minimumBytes)
-                return base::Failure<void, runtime::RuntimeError>(Error("invocation", "検証または実行の契約に違反しています。"));
-            auto* nativeResource = dynamic_cast<ExternalBufferResource*>(binding.resource.get());
+            auto* nativeResource = dynamic_cast<ExternalResourceBase*>(binding.resource.get());
             auto* nativeToken = dynamic_cast<CompletionToken*>(binding.availableAfter.get());
-            if (!nativeResource || !nativeToken ||
+            if (!contract.resource.IsValid() || contract.resource.value >= view_.Resources().size() ||
+                !nativeResource || !nativeToken ||
                 nativeResource->Owner() != ExternalOwner() ||
                 nativeToken->Owner() != ExternalOwner() ||
                 (domain_
@@ -790,6 +789,21 @@ private:
             if (!domain_ && nativeResource->Slot() != binding.slot)
                 return base::Failure<void, runtime::RuntimeError>(
                     Error("invocation", "検証または実行の契約に違反しています。"));
+            const auto& expectedResource = view_.Resources()[contract.resource.value];
+            const bool bufferMatches = contract.requiredKind == pkg::ResourceKind::Buffer &&
+                nativeResource->Kind() == pkg::ResourceKind::Buffer &&
+                nativeResource->Format() == pkg::Format::Unknown &&
+                nativeResource->SizeBytes() >= contract.minimumBytes;
+            const bool textureMatches = contract.requiredKind == pkg::ResourceKind::Texture2D &&
+                nativeResource->Kind() == pkg::ResourceKind::Texture2D &&
+                nativeResource->Format() == contract.requiredFormat &&
+                nativeResource->Width() == expectedResource.width &&
+                nativeResource->Height() == expectedResource.height &&
+                static_cast<std::uint64_t>(nativeResource->RowBytes()) ==
+                    static_cast<std::uint64_t>(expectedResource.width) * 4u;
+            if (!bufferMatches && !textureMatches)
+                return base::Failure<void, runtime::RuntimeError>(
+                    Error("invocation", "Resourceが検証または実行の契約に違反しています。"));
             externalBindings_[binding.slot] = binding;
         }
         for (const auto& binding : externalBindings_)
@@ -1321,7 +1335,7 @@ private:
                 return base::Failure<void, runtime::RuntimeError>(
                     Error("frame/AcquireExternal", "入力または内部状態に重複または二重処理があります。"));
             const auto& contract = view_.ExternalSlots()[slot];
-            auto* native = dynamic_cast<ExternalBufferResource*>(externalBindings_[slot].resource.get());
+            auto* native = dynamic_cast<ExternalResourceBase*>(externalBindings_[slot].resource.get());
             if (!native || native->Owner() != ExternalOwner() || (!domain_ && native->Slot() != slot) ||
                 !contract.resource.IsValid() || contract.resource.value >= externalNativeResources_.size())
                 return base::Failure<void, runtime::RuntimeError>(
@@ -1340,37 +1354,79 @@ private:
             for (std::uint32_t index = resource.firstView; index < viewEnd; ++index)
             {
                 const auto& externalView = view_.Views()[index];
-                if (externalView.viewClass != pkg::ViewClass::ShaderResource &&
-                    externalView.viewClass != pkg::ViewClass::UnorderedAccess)
-                    continue;
-                if (!shaderHeap_ || externalView.strideBytes == 0 || externalView.byteSize == 0 ||
-                    externalView.byteOffset % externalView.strideBytes != 0 ||
-                    externalView.byteSize % externalView.strideBytes != 0)
-                    return base::Failure<void, runtime::RuntimeError>(
-                        Error("frame/AcquireExternal", "Bufferが検証または実行の契約に違反しています。"));
-                auto cpu = shaderHeap_->GetCPUDescriptorHandleForHeapStart();
-                cpu.ptr += static_cast<SIZE_T>(DescriptorIndex(externalView)) * shaderDescriptorIncrement_;
-                if (externalView.viewClass == pkg::ViewClass::ShaderResource)
+                if (resource.resourceKind == pkg::ResourceKind::Buffer)
                 {
-                    D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
-                    srv.Format = ToDxgi(externalView.format);
-                    srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-                    srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                    srv.Buffer.FirstElement = externalView.byteOffset / externalView.strideBytes;
-                    srv.Buffer.NumElements = static_cast<UINT>(externalView.byteSize / externalView.strideBytes);
-                    srv.Buffer.StructureByteStride = externalView.strideBytes;
-                    device_->CreateShaderResourceView(native->Native(), &srv, cpu);
+                    if (externalView.viewClass != pkg::ViewClass::ShaderResource &&
+                        externalView.viewClass != pkg::ViewClass::UnorderedAccess)
+                        continue;
+                    if (!shaderHeap_ || externalView.strideBytes == 0 || externalView.byteSize == 0 ||
+                        externalView.byteOffset % externalView.strideBytes != 0 ||
+                        externalView.byteSize % externalView.strideBytes != 0)
+                        return base::Failure<void, runtime::RuntimeError>(
+                            Error("frame/AcquireExternal", "Bufferが検証または実行の契約に違反しています。"));
+                    auto cpu = shaderHeap_->GetCPUDescriptorHandleForHeapStart();
+                    cpu.ptr += static_cast<SIZE_T>(DescriptorIndex(externalView)) * shaderDescriptorIncrement_;
+                    if (externalView.viewClass == pkg::ViewClass::ShaderResource)
+                    {
+                        D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+                        srv.Format = ToDxgi(externalView.format);
+                        srv.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                        srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                        srv.Buffer.FirstElement = externalView.byteOffset / externalView.strideBytes;
+                        srv.Buffer.NumElements = static_cast<UINT>(externalView.byteSize / externalView.strideBytes);
+                        srv.Buffer.StructureByteStride = externalView.strideBytes;
+                        device_->CreateShaderResourceView(native->Native(), &srv, cpu);
+                    }
+                    else
+                    {
+                        D3D12_UNORDERED_ACCESS_VIEW_DESC uav{};
+                        uav.Format = ToDxgi(externalView.format);
+                        uav.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+                        uav.Buffer.FirstElement = externalView.byteOffset / externalView.strideBytes;
+                        uav.Buffer.NumElements = static_cast<UINT>(externalView.byteSize / externalView.strideBytes);
+                        uav.Buffer.StructureByteStride = externalView.strideBytes;
+                        device_->CreateUnorderedAccessView(native->Native(), nullptr, &uav, cpu);
+                    }
+                }
+                else if (resource.resourceKind == pkg::ResourceKind::Texture2D)
+                {
+                    if (externalView.viewClass == pkg::ViewClass::ShaderResource)
+                    {
+                        if (!shaderHeap_)
+                            return base::Failure<void, runtime::RuntimeError>(
+                                Error("frame/AcquireExternal", "Textureが検証または実行の契約に違反しています。"));
+                        auto cpu = shaderHeap_->GetCPUDescriptorHandleForHeapStart();
+                        cpu.ptr += static_cast<SIZE_T>(DescriptorIndex(externalView)) * shaderDescriptorIncrement_;
+                        D3D12_SHADER_RESOURCE_VIEW_DESC srv{};
+                        srv.Format = ToDxgi(externalView.format);
+                        srv.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                        srv.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                        srv.Texture2D.MostDetailedMip = externalView.firstMip;
+                        srv.Texture2D.MipLevels = externalView.mipCount;
+                        srv.Texture2D.PlaneSlice = externalView.firstPlane;
+                        device_->CreateShaderResourceView(native->Native(), &srv, cpu);
+                    }
+                    else if (externalView.viewClass == pkg::ViewClass::RenderTarget)
+                    {
+                        if (!rtvHeap_)
+                            return base::Failure<void, runtime::RuntimeError>(
+                                Error("frame/AcquireExternal", "Textureが検証または実行の契約に違反しています。"));
+                        auto cpu = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+                        cpu.ptr += static_cast<SIZE_T>(DescriptorIndex(externalView)) * rtvIncrement_;
+                        D3D12_RENDER_TARGET_VIEW_DESC rtv{};
+                        rtv.Format = ToDxgi(externalView.format);
+                        rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+                        rtv.Texture2D.MipSlice = externalView.firstMip;
+                        rtv.Texture2D.PlaneSlice = externalView.firstPlane;
+                        device_->CreateRenderTargetView(native->Native(), &rtv, cpu);
+                    }
+                    else
+                        return base::Failure<void, runtime::RuntimeError>(
+                            Error("frame/AcquireExternal", "Textureが検証または実行の契約に違反しています。"));
                 }
                 else
-                {
-                    D3D12_UNORDERED_ACCESS_VIEW_DESC uav{};
-                    uav.Format = ToDxgi(externalView.format);
-                    uav.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-                    uav.Buffer.FirstElement = externalView.byteOffset / externalView.strideBytes;
-                    uav.Buffer.NumElements = static_cast<UINT>(externalView.byteSize / externalView.strideBytes);
-                    uav.Buffer.StructureByteStride = externalView.strideBytes;
-                    device_->CreateUnorderedAccessView(native->Native(), nullptr, &uav, cpu);
-                }
+                    return base::Failure<void, runtime::RuntimeError>(
+                        Error("frame/AcquireExternal", "Resourceが検証または実行の契約に違反しています。"));
             }
             externalAcquired_[slot] = true;
             return base::Success<void, runtime::RuntimeError>();
@@ -1384,7 +1440,7 @@ private:
                 !externalAcquired_[slot] || externalWaited_[slot])
                 return base::Failure<void, runtime::RuntimeError>(Error("frame/WaitExternal", "PackageがCanonicalな順序または識別子規則に違反しています。"));
             auto* token = dynamic_cast<CompletionToken*>(externalBindings_[slot].availableAfter.get());
-            auto* nativeResource = dynamic_cast<ExternalBufferResource*>(
+            auto* nativeResource = dynamic_cast<ExternalResourceBase*>(
                 externalBindings_[slot].resource.get());
             if (!token || !nativeResource || token->Owner() != ExternalOwner() ||
                 (domain_ ? token->Slot() != nativeResource->Slot() : token->Slot() != slot))
@@ -1574,7 +1630,7 @@ private:
             const auto& contract = view_.ExternalSlots()[slot];
             if (!(TrackedState(contract.resource) == contract.guaranteedOutgoingState))
                 return base::Failure<void, runtime::RuntimeError>(Error("frame/ReleaseExternal", "Packageが検証または実行の契約に違反しています。"));
-            auto* native = dynamic_cast<ExternalBufferResource*>(externalBindings_[slot].resource.get());
+            auto* native = dynamic_cast<ExternalResourceBase*>(externalBindings_[slot].resource.get());
             if (!native || native->Owner() != ExternalOwner())
                 return base::Failure<void, runtime::RuntimeError>(
                     Error("frame/ReleaseExternal", "Resourceが検証または実行の契約に違反しています。"));
@@ -1762,7 +1818,7 @@ private:
         if (artifact.origin == pkg::ResourceOrigin::External)
         {
             if (id.value >= externalNativeResources_.size()) return nullptr;
-            auto* native = dynamic_cast<ExternalBufferResource*>(externalNativeResources_[id.value].get());
+            auto* native = dynamic_cast<ExternalResourceBase*>(externalNativeResources_[id.value].get());
             return native ? native->Native() : nullptr;
         }
         return instanceIndex < resources_[id.value].size() ? resources_[id.value][instanceIndex].Get() : nullptr;
@@ -2711,13 +2767,34 @@ private:
         commandList_->ClearRenderTargetView(rtv, attachment.clearColor.data(), 0, nullptr);
         if (depthView) commandList_->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH, attachment.clearDepth, static_cast<UINT8>(attachment.clearStencil), 0, nullptr);
 
-        if (!surface_)
-            return base::Failure<void, runtime::RuntimeError>(Error("frame/ExecuteRaster", "Packageが検証または実行の契約に違反しています。"));
+        if (!colorView.resource.IsValid() || colorView.resource.value >= view_.Resources().size())
+            return base::Failure<void, runtime::RuntimeError>(Error("frame/ExecuteRaster", "RenderTargetが検証または実行の契約に違反しています。"));
+        const auto& colorResource = view_.Resources()[colorView.resource.value];
+        std::uint32_t targetWidth = 0;
+        std::uint32_t targetHeight = 0;
+        if (colorResource.resourceKind == pkg::ResourceKind::SurfaceImage)
+        {
+            if (!surface_)
+                return base::Failure<void, runtime::RuntimeError>(Error("frame/ExecuteRaster", "Surfaceが検証または実行の契約に違反しています。"));
+            targetWidth = std::max(1u, surface_->ClientWidth());
+            targetHeight = std::max(1u, surface_->ClientHeight());
+        }
+        else if (colorResource.resourceKind == pkg::ResourceKind::Texture2D &&
+                 colorResource.extentMode == pkg::ExtentMode::Fixed &&
+                 colorResource.width > 0 && colorResource.height > 0)
+        {
+            targetWidth = colorResource.width;
+            targetHeight = colorResource.height;
+        }
+        else
+        {
+            return base::Failure<void, runtime::RuntimeError>(Error("frame/ExecuteRaster", "RenderTargetのextent契約が無効です。"));
+        }
         D3D12_VIEWPORT viewport{};
-        viewport.Width = static_cast<float>(std::max(1u, surface_->ClientWidth()));
-        viewport.Height = static_cast<float>(std::max(1u, surface_->ClientHeight()));
+        viewport.Width = static_cast<float>(targetWidth);
+        viewport.Height = static_cast<float>(targetHeight);
         viewport.MinDepth = 0.0f; viewport.MaxDepth = 1.0f;
-        D3D12_RECT scissor{0, 0, static_cast<LONG>(std::max(1u, surface_->ClientWidth())), static_cast<LONG>(std::max(1u, surface_->ClientHeight()))};
+        D3D12_RECT scissor{0, 0, static_cast<LONG>(targetWidth), static_cast<LONG>(targetHeight)};
         commandList_->RSSetViewports(1, &viewport);
         commandList_->RSSetScissorRects(1, &scissor);
         commandList_->SetPipelineState(pipelineStates_[command.executable.value].Get());

@@ -93,8 +93,13 @@ ProposeCompositionPlan(const ValidatedCompositionContract& validatedContract)
     RawCompositionPlan plan;
     plan.contractIdentity = contract.identity;
     for (const auto& resource : contract.resources)
+    {
+        const auto storageBytes = resource.kind == package::d3d12_v13::ResourceKind::Texture2D
+            ? static_cast<std::uint64_t>(resource.texture2D.rowBytes) * resource.texture2D.height
+            : resource.sizeBytes;
         plan.allocations.push_back({resource.id, OwnershipFor(resource.boundary),
-            resource.kind, resource.format, resource.sizeBytes});
+            resource.kind, resource.format, storageBytes, resource.texture2D});
+    }
 
     std::vector<std::uint32_t> ordinalByLeaf(contract.leaves.size(), package::InvalidIndex);
     for (std::uint32_t ordinal = 0; ordinal < scheduleResult.value().size(); ++ordinal)

@@ -354,9 +354,9 @@ Architecture Gateは少なくとも次を拒否する。
 
 ## 16. 現在の能力範囲
 
-ABI 2.0は現在実証済みのComposition能力だけを表す。
+ABI 2.3は現在実証済みのComposition能力だけを表す。
 
-- Buffer-only finite static DAG
+- Bufferおよび限定Texture2Dのfinite static DAG
 - single writer
 - one or more consumers
 - Composition input／internal／output Flow
@@ -364,8 +364,10 @@ ABI 2.0は現在実証済みのComposition能力だけを表す。
 - single DeviceDomain
 - whole-Composition Recovery
 - Frozen Dynamic Invocationとのidentity binding
+- fixed BGRA8 Texture2D、single mip／layer／plane／sample
+- RTV producerからSRV consumerへのsame-frame handoff
 
-Texture Flow、Conditional Region、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。
+Texture2Dの未実証一般化、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。Conditional Regionと限定Texture2D Flowは後続Production amendmentで追加された。
 
 ---
 
@@ -392,3 +394,12 @@ VerifiedDenseSlotでは、埋め込みSchema 17 LeafのDynamic Slot requiredByte
 Level 4 Generalization 2によりProduction minorを2.2へ進め、Dynamic Contractをschema 3へ更新した。schema 3はGeneralization 1のVerifiedDenseSlot routeに加え、非ネスト型Conditional Regionのdense ID、exact-set predicate、True／False Leaf集合をCanonical encodingする。Composition Coreおよび埋込みSchema 17 Leaf bytesは2.1から変更しない。
 
 対応するFrozen Dynamic InvocationはSGE4INV 1.3、Manifest schema 4である。必須Conditional Execution Section schema 1が、独立VerifierにSealされたRegion selection、enabled Leaf集合、Conditional Execution identityを保存する。Runtimeはpredicateを再評価しない。
+
+
+## Production amendment: SGE4UNI 2.3
+
+Level 4 Generalization 3によりProduction minorを2.3へ進めた。Contract DataとVerified Decision Dataをschema 2へ更新し、固定Texture2D形状をCanonical encodingする。Dynamic Contract schema 3、SGE4INV 1.3、Schema 17 Leaf Packageは変更しない。
+
+Contract／Planが追加で所有するTexture形状は、width、height、packed rowBytes、mipLevels、arrayLayers、sampleCount、planeCountである。V1のBuffer record encodingは変更せず、Texture2D recordだけがshape末尾を持つため、ABI 1 Buffer-only migration corpusのsemantic identityを維持する。
+
+Production範囲はB8G8R8A8_UNORM、fixed extent、single mip／layer／plane／sample、single writer、same-frameに限定する。D3D12 upload/readback pitchはExecutorの物理写像であり、Frozen ABIはpacked logical rowsだけを保存する。

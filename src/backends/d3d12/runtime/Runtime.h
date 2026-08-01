@@ -63,6 +63,15 @@ struct BufferReadback final
     std::vector<std::byte> bytes;
 };
 
+struct Texture2DReadback final
+{
+    std::vector<std::byte> bytes;
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+    std::uint32_t rowBytes = 0;
+    package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
+};
+
 class LoadedComposition final
 {
 public:
@@ -96,6 +105,8 @@ private:
     friend base::Expected<void, Error> AcknowledgeExternalRebind(LoadedComposition&);
     friend base::Expected<BufferReadback, Error> ReadBuffer(
         LoadedComposition&, composition::ResourceFlowId);
+    friend base::Expected<Texture2DReadback, Error> ReadTexture2D(
+        LoadedComposition&, composition::ResourceFlowId);
     friend bool ValidateHandleEpoch(
         const LoadedComposition&, const canonical::RepresentationHandleV1&) noexcept;
     friend bool ValidateHandleEpoch(
@@ -120,6 +131,10 @@ private:
     LoadedComposition& loaded);
 
 [[nodiscard]] base::Expected<BufferReadback, Error> ReadBuffer(
+    LoadedComposition& loaded,
+    composition::ResourceFlowId resource);
+
+[[nodiscard]] base::Expected<Texture2DReadback, Error> ReadTexture2D(
     LoadedComposition& loaded,
     composition::ResourceFlowId resource);
 

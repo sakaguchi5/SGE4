@@ -41,6 +41,86 @@ void Require(bool condition, const char* message)
     return true;
 }
 
+[[nodiscard]] bool EqualsTexture(
+    const sge4::d3d12::Texture2DReadback& readback,
+    std::uint32_t width,
+    std::uint32_t height)
+{
+    if (readback.width != width || readback.height != height ||
+        readback.rowBytes != width * 4u ||
+        readback.format != sge4::package::d3d12_v13::Format::B8G8R8A8Unorm ||
+        readback.bytes.size() != static_cast<std::size_t>(width) * height * 4u)
+        return false;
+    for (std::size_t offset = 0; offset < readback.bytes.size(); offset += 4)
+    {
+        if (readback.bytes[offset + 0] != std::byte{192} ||
+            readback.bytes[offset + 1] != std::byte{128} ||
+            readback.bytes[offset + 2] != std::byte{64} ||
+            readback.bytes[offset + 3] != std::byte{255})
+            return false;
+    }
+    return true;
+}
+
+void VerifyLimitedTexture2DFlowQualification()
+{
+    constexpr std::uint32_t Width = 4;
+    constexpr std::uint32_t Height = 4;
+    auto package = tests::BuildLimitedTexture2DUnified(Width, Height);
+    if (!package)
+        throw std::runtime_error(
+            "限定Texture2D Flow Compositionの生成に失敗しました：" + package.error());
+    const auto outputId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/texture/output");
+    Require(outputId.IsValid(), "限定Texture2D Flow outputの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded), "限定Texture2D Flow CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 seed;
+    seed.timelineOrdinal = 0;
+    seed.mode = planning.requiredMode;
+    seed.activeMembers = {0};
+    auto frozenSeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(seed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSeed), "限定Texture2D Flow InitialSeedの生成に失敗しました。");
+    auto submitted = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSeed).value(), {0, {}});
+    Require(submitted && submitted.value().submittedLeafCount == 2,
+        "限定Texture2D Flowの2 Leaf実行に失敗しました。");
+    auto readback = sge4::d3d12::ReadTexture2D(loaded.value(), outputId);
+    Require(readback && EqualsTexture(readback.value(), Width, Height),
+        "限定Texture2D Flowのpacked GPU readbackが一致しません。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "限定Texture2D Flow Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "限定Texture2D Flow Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 1;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {0};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery),
+        "限定Texture2D Flow RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {1, {}});
+    Require(resumed && resumed.value().submittedLeafCount == 2,
+        "限定Texture2D Flow RecoverySeed後の実行に失敗しました。");
+    auto reread = sge4::d3d12::ReadTexture2D(loaded.value(), outputId);
+    Require(reread && EqualsTexture(reread.value(), Width, Height),
+        "限定Texture2D Flow Recovery後のGPU readbackが一致しません。");
+}
+
 void VerifyConditionalRegionQualification()
 {
     constexpr std::uint32_t Universe = 4;
@@ -298,6 +378,7 @@ int main(int argc, char** argv)
     try
     {
         const bool actualRemoval = argc > 1 && std::string_view(argv[1]) == "--actual-removal";
+        VerifyLimitedTexture2DFlowQualification();
         VerifyConditionalRegionQualification();
         VerifyDynamicExecutionQualification();
         auto package = tests::BuildLinearUnified();

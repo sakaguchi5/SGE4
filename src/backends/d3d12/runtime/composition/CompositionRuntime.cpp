@@ -312,6 +312,22 @@ ReadStaticCompositionBuffer(
     return base::Success<d3d12::ExternalBufferReadback, StaticRuntimeError>(
         std::move(read).value());
 }
+base::Expected<d3d12::ExternalTexture2DReadback, StaticRuntimeError>
+ReadStaticCompositionTexture2D(
+    LoadedStaticComposition& loaded,
+    ResourceFlowId resource)
+{
+    if (!loaded.domain_ || !loaded.resources_ ||
+        loaded.domain_->State() != ::sge4::runtime::DeviceRuntimeState::Active)
+        return Failure<d3d12::ExternalTexture2DReadback>(
+            "static-runtime/device-state", "Compositionが検証または実行の契約に違反しています。");
+    auto read = ReadSharedTexture2DResource(*loaded.resources_, resource);
+    if (!read)
+        return base::Failure<d3d12::ExternalTexture2DReadback, StaticRuntimeError>(
+            Error(read.error()));
+    return base::Success<d3d12::ExternalTexture2DReadback, StaticRuntimeError>(
+        std::move(read).value());
+}
 base::Expected<void, StaticRuntimeError> ValidateStaticCompositionHandleEpoch(
     const LoadedStaticComposition& loaded,
     const std::shared_ptr<::sge4::runtime::IExternalResource>& resource,

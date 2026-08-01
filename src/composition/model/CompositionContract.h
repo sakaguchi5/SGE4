@@ -40,6 +40,19 @@ enum class ResourceBoundary : std::uint16_t
     CompositionOutput = 3
 };
 
+
+struct Texture2DFlowShape final
+{
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+    std::uint32_t rowBytes = 0;
+    std::uint16_t mipLevels = 0;
+    std::uint16_t arrayLayers = 0;
+    std::uint16_t sampleCount = 0;
+    std::uint16_t planeCount = 0;
+    auto operator<=>(const Texture2DFlowShape&) const = default;
+};
+
 struct ContractError final
 {
     std::string stage;
@@ -72,6 +85,7 @@ struct CompositionEndpointContract final
     EndpointAccess access = EndpointAccess::ReadOnly;
     package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t minimumBytes = 0;
+    Texture2DFlowShape texture2D;
     package::d3d12_v13::ResourceState requiredIncomingState;
     package::d3d12_v13::ResourceState guaranteedOutgoingState;
     package::d3d12_v13::ExternalSynchronizationContract synchronization =
@@ -88,6 +102,7 @@ struct ResourceFlowContract final
     package::d3d12_v13::ResourceKind kind = package::d3d12_v13::ResourceKind::Buffer;
     package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t sizeBytes = 0;
+    Texture2DFlowShape texture2D;
     CompositionEndpointId producer;
     std::vector<CompositionEndpointId> consumers;
 };

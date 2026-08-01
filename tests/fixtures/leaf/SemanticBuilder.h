@@ -34,6 +34,13 @@ public:
         std::uint32_t rowBytes,
         std::span<const std::byte> initialContent);
 
+    [[nodiscard]] base::Expected<ResourceId, std::string> AddExternalTexture2D(
+        std::string debugName,
+        std::uint32_t width,
+        std::uint32_t height,
+        FormatMeaning formatMeaning,
+        std::uint32_t rowBytes);
+
     [[nodiscard]] base::Expected<ResourceId, std::string> AddDepthAttachmentTexture2D(
         std::string debugName,
         FormatMeaning formatMeaning);

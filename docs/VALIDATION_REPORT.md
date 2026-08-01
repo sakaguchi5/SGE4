@@ -3,7 +3,7 @@
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.2
+Frozen Composition: SGE4UNI 2.3
 Dynamic Contract: schema 3
 Frozen Dynamic Invocation: SGE4INV 1.3
 Invocation Manifest: schema 4
@@ -269,7 +269,7 @@ run_new_sge4_full_gate.bat
 
 ## Level 4 Generalization 2 validation target
 
-- SGE4UNI 2.2／Dynamic Contract schema 3
+- SGE4UNI 2.3／Dynamic Contract schema 3
 - SGE4INV 1.3／Conditional Execution Section
 - True／False branchの独立再導出
 - enabled Leaf集合改竄拒否
@@ -278,3 +278,48 @@ run_new_sge4_full_gate.bat
 - Controlled Recovery後のRecoverySeed再構築
 
 Linux側ではC++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL、WARP、Actual Device removalの最終合格はWindows Full Gateで確定する。
+
+
+## Level 4 Generalization 3 validation target
+
+- SGE4UNI 2.3
+- Contract Data schema 2／Verified Decision Data schema 2
+- fixed B8G8R8A8_UNORM Texture2D shape
+- single mip／layer／plane／sample
+- RTV producer -> SRV consumer state／completion handoff
+- D3D12 pitch-aware initialization and packed readback
+- producer／consumer extent mismatch rejection
+- ABI 1 migration Texture rejection
+- controlled whole-composition Recovery後のTexture再物質化
+
+Linux側ではABI 1 golden bytes、SGE4UNI 2.3 direct／migration／round-trip／corruption、portable Texture Composition、C++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL、WARP、Actual Device removalの最終合格はWindows Full Gateで確定する。
+
+## Level 4 Generalization 3 — RTV descriptor increment build fix
+
+Windows／MSVC buildで、External Texture2D RTV生成経路が存在しない`rtvDescriptorIncrement_`を参照していたことを確認した。正式memberである`rtvIncrement_`へ修正した。
+
+この修正はdescriptor handleの物理address計算だけに限定され、Frozen ABI、Composition／Dynamic authority、Texture2D Flow契約には変更を加えない。Windows Full Gateを再実行してMSVC、HLSL、WARP、Recoveryを確認する。
+
+## Level 4 Generalization 3 — Texture2D Flow Runtime型alias build fix
+
+Windows／MSVC buildで、D3D12 Runtimeの型集約Headerに`Texture2DFlowShape` aliasが欠落していたことを確認した。正式所有者`::sge4::composition::Texture2DFlowShape`を`runtime_detail`へaliasし、`CompositionSharedResources.h`の型解決を修正した。
+
+この修正はC++の名前解決境界だけに限定される。Frozen ABI、Composition Plan、Texture2D Flow形状、D3D12物理Resource、state／completion handoff、readback、Recoveryの意味は変更しない。Windows Full Gateを再実行してMSVC、HLSL、WARP、Recoveryを確認する。
+
+## Level 4 Generalization 3 — Offscreen Raster Semantic Contract fix
+
+Windows統合設計試験で、限定Texture2D producer／consumer Leafが`semantic-analysis`により拒否された。`ColorAttachment`のResourceUse境界は固定External Texture2Dを許可していたが、Raster Work境界にPresentation専用の`PresentSource == 1`条件が残っていた。
+
+Raster契約を次の二形態へ分離した。
+
+- SurfaceImage ColorAttachmentは、同一ResourceのPresentSourceを必須とする。
+- fixed External Texture2D ColorAttachmentは、PresentSourceを禁止する。
+
+Portable Semantic Analysis回帰試験で、offscreen Texture Rasterと従来Surface Rasterを受理し、PresentSourceを欠くSurface Rasterを拒否することを確認した。Frozen ABI、Composition Plan、Texture物質化、state／completion handoffには変更を加えていない。
+
+## Level 4 Generalization 3 SampledTexture Static Sampler修正
+
+- Windows資格FixtureのTexture consumerを、正本`SampledTexture`契約どおり`t0` SRV＋`s0` Static Samplerへ修正した。
+- `Texture2D.Load`を`SampleLevel`へ変更し、D3DCompile最適化後もSamplerがReflectionへ残るようにした。
+- Compiler、Frozen ABI、Composition契約、Runtime、期待packed pixel bytesは変更していない。
+- Portable C++23 strict syntax、静的Architecture監査、SOURCE_MANIFEST照合を再実行した。

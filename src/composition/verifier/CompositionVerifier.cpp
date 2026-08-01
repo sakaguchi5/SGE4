@@ -123,10 +123,13 @@ VerifyAuthority(const ValidatedCompositionContract& validatedContract,
     {
         const auto& source = contract.resources[index];
         const auto& value = raw.allocations[index];
+        const auto expectedBytes = source.kind == package::d3d12_v13::ResourceKind::Texture2D
+            ? static_cast<std::uint64_t>(source.texture2D.rowBytes) * source.texture2D.height
+            : source.sizeBytes;
         if (value.resource != source.id ||
             value.ownership != ExpectedOwnership(source.boundary) ||
             value.kind != source.kind || value.format != source.format ||
-            value.sizeBytes != source.sizeBytes)
+            value.sizeBytes != expectedBytes || value.texture2D != source.texture2D)
             return base::Failure<void, VerificationError>(
                 Error("verify/allocation",
                       "検証または実行の契約に違反しています。"));
