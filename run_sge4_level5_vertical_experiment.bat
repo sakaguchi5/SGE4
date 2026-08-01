@@ -1,9 +1,14 @@
 @echo off
 setlocal
 chcp 65001 >nul
+
+rem 旧Runnerが各Project直下へ生成した不要なbuild treeを削除する。
+for /d %%P in ("%~dp0projects\*") do if exist "%%~fP\build" rmdir /s /q "%%~fP\build"
+for /d %%P in ("%~dp0experiments\*") do if exist "%%~fP\build" rmdir /s /q "%%~fP\build"
+
 call "%~dp0verify_source_manifest.bat" || exit /b 1
 call "%~dp0tools\locate_msbuild.bat" || exit /b 1
-"%MSBUILD_EXE%" "%~dp0experiments\63_Level5VerticalExperiment\63_Level5VerticalExperiment.vcxproj" /m /nr:false /t:Build /p:Configuration=Release /p:Platform=x64 || exit /b 1
+"%MSBUILD_EXE%" "%~dp0NewSGE4.sln" /m /nr:false /t:63_Level5VerticalExperiment /p:Configuration=Release /p:Platform=x64 || exit /b 1
 if not exist "%~dp0build\evidence" mkdir "%~dp0build\evidence"
 
 echo ============================================================
