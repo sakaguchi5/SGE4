@@ -67,7 +67,7 @@ private:
     ContractBuildInput input,
     DynamicContractV1 dynamicContract);
 
-// Plannerを再実行せず、独立Verifierを通過済みのContract／PlanからABI 2.3をFreezeする。
+// Plannerを再実行せず、独立Verifierを通過済みのContract／PlanからABI 2.4をFreezeする。
 [[nodiscard]] base::Expected<FrozenCompositionPackage, Error> FreezeVerifiedCompositionPackage(
     const ValidatedCompositionContract& contract,
     const verification::VerifiedCompositionPlan& verified,

@@ -57,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.3の平坦Section構造が成立していません。");
+            "SGE4UNI 2.4の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.3の直接Sectionがありません。");
+            "SGE4UNI 2.4の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -74,11 +74,11 @@ int main(int argc, char** argv)
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.3へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.4へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.3とMigration後ABI 2.3がbyte一致しません。");
+            "直接生成したABI 2.4とMigration後ABI 2.4がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -109,6 +109,12 @@ int main(int argc, char** argv)
             "入力または内部状態がCanonicalな順序または識別子規則に違反しています。");
         Require(initialFrozen.value().Decision().indirectWorkCount.value() == 3,
             "入力または内部状態がCanonicalな順序または識別子規則に違反しています。");
+        Require(
+            initialFrozen.value().IndirectDispatch().mode ==
+                composition::IndirectExecutionModeV1::None &&
+            initialFrozen.value().IndirectDispatch().workCount == 0 &&
+            initialFrozen.value().IndirectDispatch().threadGroupCountX == 0,
+            "Indirect契約を持たないInvocationにDispatch引数が生成されました。");
         Require(!initialFrozen.value().Artifact().PreviousHistoryIdentity().has_value(),
             "Invocationが検証または実行の契約に違反しています。");
 
@@ -160,7 +166,7 @@ int main(int argc, char** argv)
             invocationArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
             invocationArtifact.value().Sections().size() ==
                 dynamic::FrozenInvocationSectionKinds.size(),
-            "SGE4INV 1.3のSection構造が成立していません。");
+            "SGE4INV 1.4のSection構造が成立していません。");
 
         dynamic::InvocationInputV1 missingPayload;
         missingPayload.timelineOrdinal = 0;
@@ -177,7 +183,7 @@ int main(int argc, char** argv)
             throw std::runtime_error(
                 "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
         Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
-            "Conditional Region契約がSGE4UNI 2.3へ保存されませんでした。");
+            "Conditional Region契約がSGE4UNI 2.4へ保存されませんでした。");
 
         dynamic::InvocationInputV1 conditionalTrue;
         conditionalTrue.timelineOrdinal = 0;
@@ -217,7 +223,7 @@ int main(int argc, char** argv)
             "改竄されたenabled Leaf集合が独立Verifierに受理されました。");
         auto frozenFalse = dynamic::FreezeVerifiedInvocation(*verifiedFalse.verified);
         Require(frozenFalse && frozenFalse.value().Decision().enabledLeaves.empty(),
-            "Conditional false DecisionをSGE4INV 1.3へFreezeできませんでした。");
+            "Conditional false DecisionをSGE4INV 1.4へFreezeできませんでした。");
 
         // Regression: a zero-Leaf false branch still constitutes a successful
         // verified dynamic submission.  Its Clear/Update effects must be committed
@@ -323,6 +329,97 @@ int main(int argc, char** argv)
             composition::MakeAuthorityOnlyDynamicContractV1(8, std::move(crossRegions))),
             "異なるConditional branchを跨ぐResource Flowが受理されました。");
 
+        auto indirectPackage = tests::BuildVerifiedIndirectUnified(8);
+        if (!indirectPackage)
+            throw std::runtime_error(
+                "Verified Indirect Compositionの生成に失敗しました：" +
+                indirectPackage.error());
+        const auto& indirectContract = indirectPackage.value().DynamicContract().indirectDispatch;
+        Require(indirectPackage.value().DynamicContract().schemaVersion == 4 &&
+            indirectContract.mode == composition::IndirectExecutionModeV1::VerifiedDispatch &&
+            indirectContract.targetLeaf.IsValid() &&
+            indirectContract.targetComputeCommand == 0 &&
+            indirectContract.maxWorkCount == 8,
+            "Verified indirect dispatch契約がSGE4UNI 2.4へ固定されませんでした。");
+        Require(!tests::BuildVerifiedIndirectUnified(8, 7),
+            "static Compute Commandと異なるmaxWorkCountが受理されました。");
+
+        dynamic::InvocationInputV1 indirectZeroInput;
+        indirectZeroInput.timelineOrdinal = 0;
+        indirectZeroInput.mode = dynamic::InvocationModeV1::InitialSeed;
+        auto indirectZero = tests::BuildFrozenInvocation(
+            indirectPackage.value(), *epoch, std::move(indirectZeroInput));
+        Require(indirectZero &&
+            indirectZero.value().IndirectDispatch().workCount == 0 &&
+            indirectZero.value().IndirectDispatch().threadGroupCountX == 0 &&
+            indirectZero.value().IndirectDispatch().identity ==
+                indirectZero.value().Artifact().IndirectDispatchIdentityValue(),
+            "zero-work Verified indirect dispatchがSGE4INV 1.4へSealされませんでした。");
+
+        dynamic::InvocationInputV1 indirectInput;
+        indirectInput.timelineOrdinal = 0;
+        indirectInput.mode = dynamic::InvocationModeV1::InitialSeed;
+        indirectInput.activeMembers = {0, 2, 7};
+        auto indirectRequest = dynamic::BuildDynamicInvocationRequest(
+            indirectPackage.value(), *epoch, std::move(indirectInput));
+        Require(static_cast<bool>(indirectRequest),
+            "Verified indirect requestの生成に失敗しました。");
+        auto indirectProposal = dynamic::DynamicInvocationPlannerV1::Plan(
+            indirectRequest.value());
+        Require(indirectProposal.Planned() &&
+            indirectProposal.proposal->decision.indirectDispatch.workCount == 3 &&
+            indirectProposal.proposal->decision.indirectDispatch.threadGroupCountX == 3,
+            "exact transition countがVerified dispatch引数へ導出されませんでした。");
+        auto indirectVerified = dynamic::DynamicInvocationVerifierV1::Verify(
+            indirectRequest.value(), *indirectProposal.proposal);
+        Require(indirectVerified.Accepted(),
+            "Verified indirect Decisionが独立Verifierに拒否されました。");
+        auto tamperedIndirect = *indirectProposal.proposal;
+        tamperedIndirect.decision.indirectDispatch.threadGroupCountX = 4;
+        Require(!dynamic::DynamicInvocationVerifierV1::Verify(
+            indirectRequest.value(), tamperedIndirect).Accepted(),
+            "改竄されたindirect dispatch引数が独立Verifierに受理されました。");
+        auto frozenIndirect = dynamic::FreezeVerifiedInvocation(*indirectVerified.verified);
+        Require(frozenIndirect &&
+            frozenIndirect.value().IndirectDispatch().workCount == 3,
+            "Verified indirect DecisionをSGE4INV 1.4へFreezeできませんでした。");
+        auto indirectArtifact = sge4::ReadSectionedArtifact(
+            frozenIndirect.value().FileBytes(), dynamic::FrozenInvocationMagic,
+            dynamic::FrozenInvocationFormatMajor);
+        Require(indirectArtifact &&
+            indirectArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
+            indirectArtifact.value().Sections().size() == dynamic::FrozenInvocationSectionKinds.size() &&
+            indirectArtifact.value().FindSection(
+                std::to_underlying(dynamic::FrozenInvocationSectionKind::IndirectDispatch)) != nullptr,
+            "SGE4INV 1.4のIndirect Dispatch Sectionが成立していません。");
+
+        auto indirectSession = sge4::runtime::Session::Create(
+            std::move(indirectPackage).value(), 1);
+        Require(static_cast<bool>(indirectSession) &&
+            static_cast<bool>(indirectSession.value().ValidateForSubmission(
+                indirectZero.value())),
+            "Runtime Sessionがzero-work Verified indirect成果物を受理できませんでした。");
+        auto preparedIndirect = indirectSession.value().PrepareDynamicExecution(
+            indirectZero.value());
+        Require(preparedIndirect && preparedIndirect.value().hasIndirectDispatch &&
+            preparedIndirect.value().verifiedTransitionCount == 0 &&
+            preparedIndirect.value().appliedTransitionCount == 0 &&
+            preparedIndirect.value().indirectWorkCount == 0 &&
+            preparedIndirect.value().indirectThreadGroupCountX == 0,
+            "RuntimeがSeal済みzero-work dispatchを機械的に準備できませんでした。");
+
+        Require(static_cast<bool>(indirectSession.value().ValidateForSubmission(
+                frozenIndirect.value())),
+            "Runtime Sessionがwork count 3のVerified indirect成果物を受理できませんでした。");
+        auto preparedIndirectThree = indirectSession.value().PrepareDynamicExecution(
+            frozenIndirect.value());
+        Require(preparedIndirectThree &&
+            preparedIndirectThree.value().verifiedTransitionCount == 3 &&
+            preparedIndirectThree.value().appliedTransitionCount == 0 &&
+            preparedIndirectThree.value().indirectWorkCount == 3 &&
+            preparedIndirectThree.value().indirectThreadGroupCountX == 3,
+            "AuthorityOnlyのexact transition件数とGPU indirect work件数が分離されませんでした。");
+
         auto textureFirst = tests::BuildLimitedTexture2DUnified();
         auto textureSecond = tests::BuildLimitedTexture2DUnified();
         if (!textureFirst || !textureSecond)
@@ -356,7 +453,7 @@ int main(int argc, char** argv)
             textureFirst.value().FileBytes());
         Require(static_cast<bool>(textureRoundTrip) &&
             textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-            "限定Texture2D FlowのSGE4UNI 2.3 round-tripに失敗しました。");
+            "限定Texture2D FlowのSGE4UNI 2.4 round-tripに失敗しました。");
 
         auto mismatchProducer = fixture::BuildTextureProducerLeaf(4, 4);
         auto mismatchConsumer = fixture::BuildTextureConsumerLeaf(2, 2);
@@ -386,8 +483,8 @@ int main(int argc, char** argv)
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.3\n";
-        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.3\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.4\n";
+        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.4\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;
     }

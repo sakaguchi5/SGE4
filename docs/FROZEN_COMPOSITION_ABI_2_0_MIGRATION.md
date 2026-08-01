@@ -23,7 +23,7 @@ SGE4UNI 1.1 bytes
   -> Independent Composition Verifier
   -> v1 Certificate／Authority／Dynamic binding照合
   -> Verified Contract + Verified Plan
-  -> SGE4UNI 2.3 Freeze
+  -> SGE4UNI 2.4 Freeze
 ```
 
 MigratorはPlannerを再実行しない。旧Artifactに保存されたPlanを独立Verifierで再検証し、そのVerified PlanをABI 2.0へFreezeする。
@@ -60,10 +60,10 @@ ABI 2.0は新しいContainerとDigest階層を持つため、次は一致を要�
 
 ```text
 Production Runtime
-  SGE4UNI 2.3のみ
+  SGE4UNI 2.4のみ
 
 Migration qualification
-  SGE4UNI 1.1 -> SGE4UNI 2.3
+  SGE4UNI 1.1 -> SGE4UNI 2.4
 
 Legacy ABI code
   src/composition/migration/abi1/ のみ
@@ -87,15 +87,22 @@ Runtimeでの自動upgrade、v1互換mode、v1／v2の暗黙判別は行わな�
 
 ## 2.1 note
 
-ABI 1.1はauthority-only Dynamic Contractだけを表現できる。Migratorはこれをschema 3の`AuthorityOnly`へ明示変換し、直接生成したSGE4UNI 2.3とbyte一致させる。VerifiedDenseSlotは旧ABIから推測せず、新規Composition入力からのみ生成する。
+ABI 1.1はauthority-only Dynamic Contractだけを表現できる。Migratorはこれをschema 3の`AuthorityOnly`へ明示変換し、直接生成したSGE4UNI 2.4とbyte一致させる。VerifiedDenseSlotは旧ABIから推測せず、新規Composition入力からのみ生成する。
 
 ## 2.2 note
 
-ABI 1.1はConditional Regionを表現しない。Migratorは旧authority-only契約をDynamic Contract schema 3、Conditional Region空集合へ変換する。このため直接生成したSGE4UNI 2.3 authority-only Packageとbyte一致する。Conditional Regionを旧bytesから推測してはならない。
+ABI 1.1はConditional Regionを表現しない。Migratorは旧authority-only契約をDynamic Contract schema 3、Conditional Region空集合へ変換する。このため直接生成したSGE4UNI 2.4 authority-only Packageとbyte一致する。Conditional Regionを旧bytesから推測してはならない。
 
 
 ## 2.3 note
 
-ABI 1.1のComposition ContractはBuffer Flowだけを表現する。MigratorはBuffer-only corpusをContract Data schema 2／Verified Decision Data schema 2へCanonical再符号化し、直接生成したSGE4UNI 2.3 Buffer Compositionとbyte一致させる。
+ABI 1.1のComposition ContractはBuffer Flowだけを表現する。MigratorはBuffer-only corpusをContract Data schema 2／Verified Decision Data schema 2へCanonical再符号化し、直接生成したSGE4UNI 2.4 Buffer Compositionとbyte一致させる。
 
 Texture2D shapeを旧bytes、endpoint名、Leaf shader、formatから推測してはならない。Texture2Dを含むComposition inputをABI 1 migration writerへ渡した場合は明示拒否する。
+
+
+## 2.4 note
+
+ABI 1.1はIndirect Dispatch routeを表現しない。Migratorは旧authority-only契約をDynamic Contract schema 4、`IndirectExecutionMode=None`へ明示変換し、直接生成したSGE4UNI 2.4 authority-only Packageとbyte一致させる。
+
+対象Compute Leaf、Compute Command、maxWorkCountを旧Leaf operationや命名から推測してはならない。Verified Dispatchは新規Composition入力からだけ生成する。

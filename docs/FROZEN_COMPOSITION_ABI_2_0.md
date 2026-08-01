@@ -354,7 +354,7 @@ Architecture Gateは少なくとも次を拒否する。
 
 ## 16. 現在の能力範囲
 
-ABI 2.3は現在実証済みのComposition能力だけを表す。
+ABI 2.4は現在実証済みのComposition能力だけを表す。
 
 - Bufferおよび限定Texture2Dのfinite static DAG
 - single writer
@@ -403,3 +403,12 @@ Level 4 Generalization 3によりProduction minorを2.3へ進めた。Contract D
 Contract／Planが追加で所有するTexture形状は、width、height、packed rowBytes、mipLevels、arrayLayers、sampleCount、planeCountである。V1のBuffer record encodingは変更せず、Texture2D recordだけがshape末尾を持つため、ABI 1 Buffer-only migration corpusのsemantic identityを維持する。
 
 Production範囲はB8G8R8A8_UNORM、fixed extent、single mip／layer／plane／sample、single writer、same-frameに限定する。D3D12 upload/readback pitchはExecutorの物理写像であり、Frozen ABIはpacked logical rowsだけを保存する。
+
+
+## Production amendment: SGE4UNI 2.4
+
+Level 4 Generalization 4によりProduction minorを2.4へ進め、Dynamic Contractをschema 4へ更新した。schema 4は従来のDynamic execution routeとConditional Regionに加え、一つのunconditional Compute Leaf／Compute Command、最大work数、Verified Dispatch modeをCanonical encodingする。
+
+対応するFrozen Dynamic Invocationは`SGE4INV 1.4`、Manifest schema 5である。必須Indirect Dispatch Section schema 1が、独立VerifierにSealされたtarget route、maxWorkCount、workCount、Dispatch X／Y／Z、Indirect Dispatch identityを保存する。
+
+Leaf PackageはSchema 17のまま維持する。Executorは対象Schema 17 `ExecuteCompute` operationだけをD3D12 `ExecuteIndirect(DISPATCH)`へ機械的に置換し、Runtimeはwork countを再計算しない。

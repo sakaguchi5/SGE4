@@ -39,7 +39,8 @@ OpaqueFrozenDynamicInvocationV1 FrozenDynamicInvocationBuilderV1::Freeze(
         verified.SealIdentity(),
         historyIdentity,
         decision.dynamicWriteSetIdentity,
-        request.executionPayloadIdentity);
+        request.executionPayloadIdentity,
+        decision.indirectDispatch.identity);
 
     return OpaqueFrozenDynamicInvocationV1(
         frozenIdentity,
@@ -49,6 +50,7 @@ OpaqueFrozenDynamicInvocationV1 FrozenDynamicInvocationBuilderV1::Freeze(
         verified.SealIdentity(),
         decision.dynamicWriteSetIdentity,
         request.executionPayloadIdentity,
+        decision.indirectDispatch.identity,
         decision.indirectWorkCount,
         request.mode,
         request.previousHistory.has_value()

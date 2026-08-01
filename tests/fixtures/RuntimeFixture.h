@@ -34,6 +34,7 @@ inline constexpr std::string_view InputBEndpoint = "runtime/input/b";
 inline constexpr std::string_view DynamicOutputEndpoint = "runtime/dynamic/output";
 inline constexpr std::string_view DynamicObservationInputEndpoint = "runtime/dynamic-observation/input";
 inline constexpr std::string_view DynamicObservationOutputEndpoint = "runtime/dynamic-observation/output";
+inline constexpr std::string_view IndirectOutputEndpoint = "runtime/indirect/output";
 inline constexpr std::string_view TextureInputEndpoint = "runtime/texture/input";
 inline constexpr std::string_view TextureOutputEndpoint = "runtime/texture/output";
 
@@ -109,6 +110,59 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 
     auto compiled = sge4::compiler::CompileCanonical(
         std::move(builder).Build(), ComputeProfile(4));
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
+}
+
+inline base::Expected<CompiledLeaf, std::string> BuildVerifiedIndirectLeaf(
+    std::uint32_t universe = 8)
+{
+    if (universe == 0)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Indirect universeが検証または実行の契約に違反しています。");
+
+    constexpr std::uint32_t MemberBytes = 16;
+    const auto totalBytes = static_cast<std::uint64_t>(universe) * MemberBytes;
+    sem::SemanticBuilder builder;
+    auto output = builder.AddExternalBuffer(
+        "L4G4.Indirect.Output", totalBytes, MemberBytes);
+    if (!output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Indirect output Bufferが検証または実行の契約に違反しています。");
+    auto outputUse = builder.AddUse(
+        output.value(), sem::Effect::Write, sem::ViewRole::StorageBuffer);
+    if (!outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Indirect output ResourceUseが検証または実行の契約に違反しています。");
+
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.parameters = {
+        {{0}, "Output", sem::ProgramParameterKind::UnorderedBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1}};
+    auto program = builder.AddComputeProgram(
+        "L4G4.Indirect.Program", std::move(interfaceDescription), {R"hlsl(
+RWStructuredBuffer<float4> Output : register(u0);
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    const float value = float(id.x + 1u);
+    Output[id.x] = float4(value, value + 10.0f, value + 20.0f, 1.0f);
+}
+)hlsl", {}, {}, "CSMain"});
+    if (!program)
+        return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, outputUse.value(), {0}}};
+    auto work = builder.AddComputeWorkGeneric(
+        "L4G4.Indirect.Work", program.value(), operands, universe, 1, 1);
+    if (!work)
+        return base::Failure<CompiledLeaf, std::string>(work.error());
+
+    auto compiled = sge4::compiler::CompileCanonical(
+        std::move(builder).Build(), ComputeProfile(2));
     if (!compiled)
         return base::Failure<CompiledLeaf, std::string>(
             compiled.error().stage + "：" + compiled.error().message);
@@ -516,6 +570,12 @@ inline contract::LeafPackageDeclaration VerifiedDynamicDeclaration(
 {
     return {std::move(key), leaf.packageBytes,
         {{0, std::string(DynamicOutputEndpoint)}}};
+}
+inline contract::LeafPackageDeclaration VerifiedIndirectDeclaration(
+    std::string key, const CompiledLeaf& leaf)
+{
+    return {std::move(key), leaf.packageBytes,
+        {{0, std::string(IndirectOutputEndpoint)}}};
 }
 inline contract::LeafPackageDeclaration DynamicObservationDeclaration(
     std::string key, const CompiledLeaf& leaf)

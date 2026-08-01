@@ -27,6 +27,7 @@ struct TransitionRecordSetIdentityTagV1;
 struct DynamicWriteSetIdentityTagV1;
 struct DynamicExecutionPayloadIdentityTagV1;
 struct ConditionalExecutionIdentityTagV1;
+struct IndirectDispatchIdentityTagV1;
 struct DynamicDecisionIdentityTagV1;
 struct DynamicSealIdentityTagV1;
 struct FrozenDynamicInvocationIdentityTagV1;
@@ -37,12 +38,13 @@ using TransitionRecordSetIdentity = canonical::CanonicalIdentityV1<TransitionRec
 using DynamicWriteSetIdentity = canonical::CanonicalIdentityV1<DynamicWriteSetIdentityTagV1>;
 using DynamicExecutionPayloadIdentity = canonical::CanonicalIdentityV1<DynamicExecutionPayloadIdentityTagV1>;
 using ConditionalExecutionIdentity = canonical::CanonicalIdentityV1<ConditionalExecutionIdentityTagV1>;
+using IndirectDispatchIdentity = canonical::CanonicalIdentityV1<IndirectDispatchIdentityTagV1>;
 using DynamicDecisionIdentity = canonical::CanonicalIdentityV1<DynamicDecisionIdentityTagV1>;
 using DynamicSealIdentity = canonical::CanonicalIdentityV1<DynamicSealIdentityTagV1>;
 using FrozenDynamicInvocationIdentity = canonical::CanonicalIdentityV1<FrozenDynamicInvocationIdentityTagV1>;
 
 inline constexpr std::uint64_t InvalidItemGenerationV1 = ~std::uint64_t{0};
-inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 3u;
+inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 4u;
 
 struct ExactIndexSetBuildResultV1;
 
@@ -117,6 +119,21 @@ struct MemberUpdatePayloadV1 final
     std::vector<std::byte> bytes;
 };
 
+
+struct VerifiedIndirectDispatchV1 final
+{
+    composition::IndirectExecutionModeV1 mode =
+        composition::IndirectExecutionModeV1::None;
+    composition::LeafPackageId targetLeaf;
+    std::uint32_t targetComputeCommand = package::InvalidIndex;
+    std::uint32_t maxWorkCount = 0;
+    std::uint32_t workCount = 0;
+    std::uint32_t threadGroupCountX = 0;
+    std::uint32_t threadGroupCountY = 1;
+    std::uint32_t threadGroupCountZ = 1;
+    IndirectDispatchIdentity identity = IndirectDispatchIdentity::FromDigest({});
+};
+
 struct ConditionalRegionSelectionV1 final
 {
     composition::ConditionalRegionId region;
@@ -179,6 +196,7 @@ struct DynamicInvocationRequestV1 final
     std::uint32_t memberBytes = 0;
     std::uint32_t compositionLeafCount = 0;
     std::vector<composition::ConditionalRegionV1> conditionalRegions;
+    composition::VerifiedIndirectDispatchContractV1 indirectDispatchContract;
     DynamicExecutionPayloadIdentity executionPayloadIdentity;
     std::vector<MemberUpdatePayloadV1> updatePayloads;
     std::optional<VerifiedHistoryStateV1> previousHistory;
@@ -199,6 +217,7 @@ struct DynamicInvocationRequestV1 final
     std::uint32_t memberBytes,
     std::uint32_t compositionLeafCount,
     std::vector<composition::ConditionalRegionV1> conditionalRegions,
+    composition::VerifiedIndirectDispatchContractV1 indirectDispatchContract,
     std::vector<MemberUpdatePayloadV1> updatePayloads,
     std::optional<VerifiedHistoryStateV1> previousHistory = std::nullopt);
 
@@ -219,6 +238,8 @@ struct DynamicInvocationRequestV1 final
     std::uint32_t targetDynamicSlot,
     std::uint32_t memberBytes,
     std::span<const MemberUpdatePayloadV1> updatePayloads);
+[[nodiscard]] IndirectDispatchIdentity ComputeIndirectDispatchIdentityV1(
+    const VerifiedIndirectDispatchV1& dispatch);
 [[nodiscard]] ConditionalExecutionIdentity ComputeConditionalExecutionIdentityV1(
     std::uint32_t compositionLeafCount,
     std::span<const ConditionalRegionSelectionV1> selections,
@@ -240,6 +261,7 @@ struct DynamicDecisionV1 final
     std::vector<TransitionRecordV1> transitionRecords;
     canonical::TransitionCount indirectWorkCount;
     DynamicWriteSetIdentity dynamicWriteSetIdentity;
+    VerifiedIndirectDispatchV1 indirectDispatch;
     ConditionalExecutionIdentity conditionalExecutionIdentity;
     std::vector<ConditionalRegionSelectionV1> conditionalSelections;
     std::vector<composition::LeafPackageId> enabledLeaves;
@@ -270,7 +292,8 @@ struct DynamicPlannerProposalV1 final
     DynamicSealIdentity sealIdentity,
     canonical::HistoryValidityIdentity nextHistoryIdentity,
     DynamicWriteSetIdentity dynamicWriteSetIdentity,
-    DynamicExecutionPayloadIdentity executionPayloadIdentity);
+    DynamicExecutionPayloadIdentity executionPayloadIdentity,
+    IndirectDispatchIdentity indirectDispatchIdentity);
 
 class VerifiedDynamicInvocationV1 final
 {
@@ -335,6 +358,9 @@ enum class DynamicVerificationErrorV1 : std::uint8_t
     ExecutionPayloadSizeMismatch,
     ExecutionPayloadSetMismatch,
     ExecutionPayloadIdentityMismatch,
+    IndirectDispatchContractMismatch,
+    IndirectDispatchWorkCountMismatch,
+    IndirectDispatchIdentityMismatch,
     ConditionalContractMismatch,
     ConditionalSelectionMismatch,
     EnabledLeafSetMismatch,

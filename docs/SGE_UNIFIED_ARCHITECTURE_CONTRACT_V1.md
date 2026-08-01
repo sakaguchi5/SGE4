@@ -46,7 +46,7 @@ Certificateは新たな判断主体ではない。検証済み完全Artifactか�
 ## 4. Frozen hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.3
+SGE4UNI Frozen Composition Package 2.4
   Manifest schema 2
   Leaf Table schema 1
   Embedded complete Schema 17 Leaf Package bytes
@@ -54,18 +54,18 @@ SGE4UNI Frozen Composition Package 2.3
   Verified Decision Data schema 2
   Verification Certificate schema 1
   Authority Ledger schema 2
-  Dynamic Contract schema 3
+  Dynamic Contract schema 4
 ```
 
-内側`SGE4CMP` ContainerはProduction ABIから廃止する。Compositionの全実行事実は`SGE4UNI 2.3`が直接所有し、Leaf Packageだけを独立した下位Frozen Artifactとして保持する。
+内側`SGE4CMP` ContainerはProduction ABIから廃止する。Compositionの全実行事実は`SGE4UNI 2.4`が直接所有し、Leaf Packageだけを独立した下位Frozen Artifactとして保持する。
 
-同一bytesは同一意味を持つ。Compilerなしで読込・検証・実行・Recovery再物質化ができなければならない。Production ReaderはABI 2.3だけを受理し、旧ABI Readerはmigration treeへ隔離する。
+同一bytesは同一意味を持つ。Compilerなしで読込・検証・実行・Recovery再物質化ができなければならない。Production ReaderはABI 2.4だけを受理し、旧ABI Readerはmigration treeへ隔離する。
 
 ## 5. Dynamic execution
 
 Dynamic InvocationはComposition構造を変更しない。Active membership、Modified survivor、History、Device epochを明示入力とし、activation、deactivation、update、retain、transition、write set、indirect quantityをPlannerと独立Verifierが再導出する。
 
-Composition Dynamic Contract schema 3は`AuthorityOnly`または`VerifiedDenseSlot`を固定する。VerifiedDenseSlotでは対象Leaf、Dynamic Slot、member byte幅をCompositionが所有し、SGE4INV 1.3がexact Update payloadとpayload identityを所有する。Update payloadのmember集合はexact Update setと完全一致しなければならない。
+Composition Dynamic Contract schema 4は`AuthorityOnly`または`VerifiedDenseSlot`を固定する。VerifiedDenseSlotでは対象Leaf、Dynamic Slot、member byte幅をCompositionが所有し、SGE4INV 1.4がexact Update payloadとpayload identityを所有する。Update payloadのmember集合はexact Update setと完全一致しなければならない。
 
 Runtimeへ渡せるのは`FrozenDynamicInvocationPackage`だけである。ContinueHistory成果物は、Verifierが使用した前History identityをFrozen成果物へ保存し、Runtimeが現在受理しているHistory identityと一致しなければならない。Raw requestをRuntime内部でPlan／Verifyすることは禁止する。Runtimeはverified Update／Clearだけをprivate dense shadowへ適用し、native submission成功後にHistoryとshadowを同時Commitする。
 
@@ -85,9 +85,16 @@ Composition全体をRecovery unitとする。Recoveryは全Runtime object、旧e
 
 ## Generalization 2 amendment
 
-Production Frozen CompositionはSGE4UNI 2.3、Dynamic Contract schema 3とする。Conditional RegionのpredicateとTrue／False Leaf集合はComposition authorityが所有する。Dynamic Plannerと独立Verifierはexact membership algebraからRegion selectionとenabled Leaf集合を別々に導出し、SGE4INV 1.3へSealする。Runtimeはpredicateを再評価せず、Seal済みenabled LeafだけをFrozen schedule順でSubmitする。
+Conditional Regionの意味は現行SGE4UNI 2.4 Dynamic Contract schema 4へ保持する。predicateとTrue／False Leaf集合はComposition authorityが所有し、Dynamic Plannerと独立Verifierはexact membership algebraからRegion selectionとenabled Leaf集合を別々に導出してSGE4INV 1.4へSealする。Runtimeはpredicateを再評価せず、Seal済みenabled LeafだけをFrozen schedule順でSubmitする。
 
 
 ## Generalization 3 amendment
 
-Production Frozen CompositionはSGE4UNI 2.3、Contract Data schema 2、Verified Decision Data schema 2とする。Composition Modelは埋込みSchema 17 Leaf endpointからfixed BGRA8 Texture2D shapeを再導出し、Plannerと独立Verifierはsingle writer、same-frame DAG、exact extent／formatを検証する。Runtimeはshared TextureをRTV producerからSRV consumerへstate／completion付きで渡し、ExecutorだけがD3D12 row pitchを処理する。
+Production Frozen CompositionはSGE4UNI 2.4、Contract Data schema 2、Verified Decision Data schema 2とする。Composition Modelは埋込みSchema 17 Leaf endpointからfixed BGRA8 Texture2D shapeを再導出し、Plannerと独立Verifierはsingle writer、same-frame DAG、exact extent／formatを検証する。Runtimeはshared TextureをRTV producerからSRV consumerへstate／completion付きで渡し、ExecutorだけがD3D12 row pitchを処理する。
+
+
+## Generalization 4 amendment
+
+Production Frozen CompositionはSGE4UNI 2.4、Dynamic Contract schema 4とする。Composition authorityは一つのunconditional Compute Leaf／Compute CommandとmaxWorkCountを固定する。Dynamic Plannerと独立Verifierはexact Transition setからworkCountとDispatch X／Y／Zを別々に導出し、SGE4INV 1.4へSealする。
+
+RuntimeはworkCountを再計算せず、Seal済みroute／identity／上限だけを検査してExecutorへ渡す。D3D12 Executorは対象`ExecuteCompute`だけを`ExecuteIndirect(DISPATCH)`へ置換し、対象外Commandの固定Dispatchを維持する。

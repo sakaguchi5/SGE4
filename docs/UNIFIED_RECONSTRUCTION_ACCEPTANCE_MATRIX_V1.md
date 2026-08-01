@@ -3,9 +3,9 @@
 | Gate | Requirement | Executable／Audit |
 |---|---|---|
 | U1 | complete Leaf bytes and Leaf Certificate correspond | `60_UnifiedArchitectureTests` |
-| U2 | flat SGE4UNI 2.3 Composition Core and Composition Certificate correspond | `60_UnifiedArchitectureTests` |
-| U3 | Debug A／Debug B／Release SGE4UNI 2.3 bytes match | `run_new_sge4_full_gate.bat` |
-| U4 | ABI 2.3 Section／Core／Authority／embedded Leaf corruption is rejected | `60_UnifiedArchitectureTests` |
+| U2 | flat SGE4UNI 2.4 Composition Core and Composition Certificate correspond | `60_UnifiedArchitectureTests` |
+| U3 | Debug A／Debug B／Release SGE4UNI 2.4 bytes match | `run_new_sge4_full_gate.bat` |
+| U4 | ABI 2.4 Section／Core／Authority／embedded Leaf corruption is rejected | `60_UnifiedArchitectureTests` |
 | U5 | exact initial／continue／recovery delta algebra | `60_UnifiedArchitectureTests` |
 | U6 | all 40 carried invariants have a final owner | `62_UnifiedMigrationAcceptance` |
 | U7 | Runtime Core has no Dynamic Planner／Verifier dependency | `tools/static_audit.py` |
@@ -22,7 +22,7 @@
 | U13 | external rebind gate and RecoverySeed are mandatory | `61_UnifiedWindowsQualification` |
 | U14 | actual Device removal and removed-adapter exclusion | `run_new_sge4_actual_removal_qualification.bat` |
 
-現在の追加能力はVerified Dynamic Execution、Conditional Region、限定Texture2D Flowである。Texture一般化、Variant、Partial Recovery、Multiple AdapterはこのMatrixの対象外である。
+現在の追加能力はVerified Dynamic Execution、Conditional Region、限定Texture2D Flow、Verified Indirect Work Executionである。Texture一般化、Variant、Partial Recovery、Multiple AdapterはこのMatrixの対象外である。
 
 ## Level 4 Generalization 2
 
@@ -32,7 +32,7 @@
 | G2-2 | Planner and independent Verifier derive identical selections and enabled Leaves | `60_UnifiedArchitectureTests` |
 | G2-3 | Tampered enabled Leaf set is rejected | `60_UnifiedArchitectureTests` |
 | G2-4 | True, zero-Leaf False, re-enable and RecoverySeed observations pass | `61_UnifiedWindowsQualification` |
-| G2-5 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.3 | `run_new_sge4_full_gate.bat` |
+| G2-5 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.4 | `run_new_sge4_full_gate.bat` |
 
 
 ## Level 4 Generalization 3
@@ -41,7 +41,19 @@
 |---|---|---|
 | G3-1 | fixed BGRA8 Texture2D shape is canonical in Contract and Plan | `60_UnifiedArchitectureTests` |
 | G3-2 | producer／consumer shape mismatch and ABI 1 Texture inference are rejected | `60_UnifiedArchitectureTests` |
-| G3-3 | portable SGE4UNI 2.3 Texture Composition is deterministic and round-trips | `60_UnifiedArchitectureTests` |
+| G3-3 | portable SGE4UNI 2.4 Texture Composition is deterministic and round-trips | `60_UnifiedArchitectureTests` |
 | G3-4 | WARP executes RTV producer -> SRV consumer and packed readback matches | `61_UnifiedWindowsQualification` |
 | G3-5 | controlled Recovery rematerializes the shared Texture and observation matches | `61_UnifiedWindowsQualification` |
-| G3-6 | Debug A／Debug B／Release SGE4UNI 2.3 bytes match | `run_new_sge4_full_gate.bat` |
+| G3-6 | Debug A／Debug B／Release SGE4UNI 2.4 bytes match | `run_new_sge4_full_gate.bat` |
+
+
+## Level 4 Generalization 4
+
+| ID | Acceptance | Gate |
+|---|---|---|
+| G4-1 | SGE4UNI 2.4 schema 4 fixes one unconditional Compute Leaf／Command and maximum work count | `60_UnifiedArchitectureTests` |
+| G4-2 | Planner and independent Verifier derive identical Dispatch arguments from exact Transition count | `60_UnifiedArchitectureTests` |
+| G4-3 | Tampered X／workCount／identity is rejected before Freeze or submission | `60_UnifiedArchitectureTests` |
+| G4-4 | WARP executes zero, three-work, retain-zero and RecoverySeed DispatchIndirect observations | `61_UnifiedWindowsQualification` |
+| G4-5 | target ExecuteCompute is applied exactly once and other Commands retain fixed Dispatch | `61_UnifiedWindowsQualification` |
+| G4-6 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.4／SGE4INV 1.4 | `run_new_sge4_full_gate.bat` |

@@ -20,6 +20,29 @@ enum class DynamicExecutionModeV1 : std::uint32_t
 // Generalization 2 deliberately derives branch selection only from exact sets that
 // are already independently verified by the Dynamic Verifier. Runtime never accepts
 // an unsealed bool and never invents a branch policy.
+enum class IndirectExecutionModeV1 : std::uint32_t
+{
+    None = 0,
+    VerifiedDispatch = 1
+};
+
+struct VerifiedIndirectDispatchContractV1 final
+{
+    IndirectExecutionModeV1 mode = IndirectExecutionModeV1::None;
+    LeafPackageId targetLeaf;
+    std::uint32_t targetComputeCommand = package::InvalidIndex;
+    std::uint32_t maxWorkCount = 0;
+};
+
+[[nodiscard]] inline VerifiedIndirectDispatchContractV1 MakeVerifiedIndirectDispatchContractV1(
+    LeafPackageId targetLeaf,
+    std::uint32_t targetComputeCommand,
+    std::uint32_t maxWorkCount)
+{
+    return {IndirectExecutionModeV1::VerifiedDispatch, targetLeaf,
+        targetComputeCommand, maxWorkCount};
+}
+
 enum class ConditionalPredicateKindV1 : std::uint32_t
 {
     ActiveSetNonEmpty = 1,
@@ -49,13 +72,14 @@ struct ConditionalRegionV1 final
 // predicates are derived from the same verified Dynamic Decision.
 struct DynamicContractV1 final
 {
-    std::uint32_t schemaVersion = 3;
+    std::uint32_t schemaVersion = 4;
     std::uint32_t universeCount = 0;
     DynamicExecutionModeV1 executionMode = DynamicExecutionModeV1::AuthorityOnly;
     LeafPackageId targetLeaf;
     std::uint32_t targetDynamicSlot = package::InvalidIndex;
     std::uint32_t memberBytes = 0;
     std::vector<ConditionalRegionV1> conditionalRegions;
+    VerifiedIndirectDispatchContractV1 indirectDispatch;
 };
 
 [[nodiscard]] inline ConditionalRegionV1 MakeConditionalRegionV1(
@@ -70,10 +94,12 @@ struct DynamicContractV1 final
 
 [[nodiscard]] inline DynamicContractV1 MakeAuthorityOnlyDynamicContractV1(
     std::uint32_t universeCount,
-    std::vector<ConditionalRegionV1> conditionalRegions = {})
+    std::vector<ConditionalRegionV1> conditionalRegions = {},
+    VerifiedIndirectDispatchContractV1 indirectDispatch = {})
 {
-    return {3, universeCount, DynamicExecutionModeV1::AuthorityOnly,
-        {}, package::InvalidIndex, 0, std::move(conditionalRegions)};
+    return {4, universeCount, DynamicExecutionModeV1::AuthorityOnly,
+        {}, package::InvalidIndex, 0, std::move(conditionalRegions),
+        indirectDispatch};
 }
 
 [[nodiscard]] inline DynamicContractV1 MakeVerifiedDenseSlotDynamicContractV1(
@@ -81,9 +107,11 @@ struct DynamicContractV1 final
     LeafPackageId targetLeaf,
     std::uint32_t targetDynamicSlot,
     std::uint32_t memberBytes,
-    std::vector<ConditionalRegionV1> conditionalRegions = {})
+    std::vector<ConditionalRegionV1> conditionalRegions = {},
+    VerifiedIndirectDispatchContractV1 indirectDispatch = {})
 {
-    return {3, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
-        targetLeaf, targetDynamicSlot, memberBytes, std::move(conditionalRegions)};
+    return {4, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
+        targetLeaf, targetDynamicSlot, memberBytes, std::move(conditionalRegions),
+        indirectDispatch};
 }
 }

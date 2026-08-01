@@ -46,12 +46,17 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteBytes(frozen.WriteSetIdentity().Digest());
     writer.WriteBytes(frozen.ExecutionPayloadIdentity().Digest());
     writer.WriteBytes(verified.Decision().conditionalExecutionIdentity.Digest());
+    writer.WriteBytes(verified.Decision().indirectDispatch.identity.Digest());
     writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().conditionalSelections.size()));
     writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().enabledLeaves.size()));
     writer.WriteU32(std::to_underlying(verified.Request().executionMode));
     writer.WriteU32(verified.Request().targetLeaf.value);
     writer.WriteU32(verified.Request().targetDynamicSlot);
     writer.WriteU32(verified.Request().memberBytes);
+    writer.WriteU32(std::to_underlying(verified.Request().indirectDispatchContract.mode));
+    writer.WriteU32(verified.Request().indirectDispatchContract.targetLeaf.value);
+    writer.WriteU32(verified.Request().indirectDispatchContract.targetComputeCommand);
+    writer.WriteU32(verified.Request().indirectDispatchContract.maxWorkCount);
     writer.WriteBytes(frozen.NextHistory().Descriptor().identity.Digest());
     writer.WriteU8(frozen.PreviousHistoryIdentity().has_value() ? 1u : 0u);
     writer.WriteZeroes(7);
@@ -128,6 +133,23 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     return std::move(writer).Take();
 }
 
+[[nodiscard]] std::vector<std::byte> BuildIndirectDispatchBytes(
+    const VerifiedIndirectDispatchV1& dispatch)
+{
+    BinaryWriter writer;
+    writer.WriteU32(1);
+    writer.WriteU32(std::to_underlying(dispatch.mode));
+    writer.WriteU32(dispatch.targetLeaf.value);
+    writer.WriteU32(dispatch.targetComputeCommand);
+    writer.WriteU32(dispatch.maxWorkCount);
+    writer.WriteU32(dispatch.workCount);
+    writer.WriteU32(dispatch.threadGroupCountX);
+    writer.WriteU32(dispatch.threadGroupCountY);
+    writer.WriteU32(dispatch.threadGroupCountZ);
+    writer.WriteBytes(dispatch.identity.Digest());
+    return std::move(writer).Take();
+}
+
 [[nodiscard]] std::vector<std::byte> BuildHistoryBytes(const VerifiedHistoryStateV1& history)
 {
     BinaryWriter writer;
@@ -197,7 +219,8 @@ base::Expected<DynamicInvocationRequestV1, Error> BuildDynamicInvocationRequest(
             execution.executionMode, execution.targetLeaf,
             execution.targetDynamicSlot, execution.memberBytes,
             composition.Certificate().leafCount, execution.conditionalRegions,
-            std::move(payloads), std::move(previousHistory)));
+            execution.indirectDispatch, std::move(payloads),
+            std::move(previousHistory)));
 }
 
 base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
@@ -230,6 +253,10 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
         static_cast<std::uint16_t>(SectionFlags::Required) |
             static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
         8, BuildConditionalExecutionBytes(verified.Decision())});
+    sections.push_back({static_cast<std::uint32_t>(FrozenInvocationSectionKind::IndirectDispatch), 1,
+        static_cast<std::uint16_t>(SectionFlags::Required) |
+            static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
+        8, BuildIndirectDispatchBytes(verified.Decision().indirectDispatch)});
 
     auto bytes = WriteSectionedArtifact(
         FrozenInvocationMagic, FrozenInvocationFormatMajor, FrozenInvocationFormatMinor,
@@ -244,6 +271,6 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
     return base::Success<FrozenDynamicInvocationPackage, Error>(
         FrozenDynamicInvocationPackage(
             std::move(bytes).value(), std::move(frozen), verified.Decision(),
-            std::move(executionPayload)));
+            std::move(executionPayload), verified.Decision().indirectDispatch));
 }
 }

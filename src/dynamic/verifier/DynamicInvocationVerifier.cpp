@@ -86,6 +86,61 @@ DynamicVerificationErrorV1 VerifyExecutionPayload(
     return DynamicVerificationErrorV1::None;
 }
 
+DynamicVerificationErrorV1 DeriveVerifiedIndirectDispatch(
+    const DynamicInvocationRequestV1& request,
+    std::uint32_t workCount,
+    VerifiedIndirectDispatchV1& result)
+{
+    const auto& contract = request.indirectDispatchContract;
+    result.mode = contract.mode;
+    result.targetLeaf = contract.targetLeaf;
+    result.targetComputeCommand = contract.targetComputeCommand;
+    result.maxWorkCount = contract.maxWorkCount;
+    result.workCount = workCount;
+    result.threadGroupCountX = workCount;
+    result.threadGroupCountY = 1;
+    result.threadGroupCountZ = 1;
+
+    if (contract.mode == composition::IndirectExecutionModeV1::None)
+    {
+        if (contract.targetLeaf.IsValid() ||
+            contract.targetComputeCommand != package::InvalidIndex ||
+            contract.maxWorkCount != 0)
+            return DynamicVerificationErrorV1::IndirectDispatchContractMismatch;
+        result.workCount = 0;
+        result.threadGroupCountX = 0;
+        result.identity = ComputeIndirectDispatchIdentityV1(result);
+        return DynamicVerificationErrorV1::None;
+    }
+
+    if (contract.mode != composition::IndirectExecutionModeV1::VerifiedDispatch ||
+        !contract.targetLeaf.IsValid() ||
+        contract.targetLeaf.value >= request.compositionLeafCount ||
+        contract.targetComputeCommand == package::InvalidIndex ||
+        contract.maxWorkCount == 0 ||
+        contract.maxWorkCount != request.universe.value())
+        return DynamicVerificationErrorV1::IndirectDispatchContractMismatch;
+    if (workCount > contract.maxWorkCount)
+        return DynamicVerificationErrorV1::IndirectDispatchWorkCountMismatch;
+
+    result.identity = ComputeIndirectDispatchIdentityV1(result);
+    return DynamicVerificationErrorV1::None;
+}
+
+bool SameIndirectDispatch(
+    const VerifiedIndirectDispatchV1& left,
+    const VerifiedIndirectDispatchV1& right) noexcept
+{
+    return left.mode == right.mode && left.targetLeaf == right.targetLeaf &&
+        left.targetComputeCommand == right.targetComputeCommand &&
+        left.maxWorkCount == right.maxWorkCount &&
+        left.workCount == right.workCount &&
+        left.threadGroupCountX == right.threadGroupCountX &&
+        left.threadGroupCountY == right.threadGroupCountY &&
+        left.threadGroupCountZ == right.threadGroupCountZ &&
+        left.identity == right.identity;
+}
+
 bool IsSupportedPredicate(composition::ConditionalPredicateKindV1 predicate) noexcept
 {
     switch (predicate)
@@ -363,6 +418,11 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
     auto expectedGenerationIdentity = ComputeGenerationVectorIdentityV1(request.universe, generations);
     auto expectedRecordIdentity = ComputeTransitionRecordSetIdentityV1(request.universe, records);
     auto expectedWriteSetIdentity = ComputeDynamicWriteSetIdentityV1(expectedTransition, expectedRecordIdentity);
+    VerifiedIndirectDispatchV1 expectedIndirectDispatch;
+    const auto indirectError = DeriveVerifiedIndirectDispatch(
+        request, static_cast<std::uint32_t>(transition.size()), expectedIndirectDispatch);
+    if (indirectError != DynamicVerificationErrorV1::None)
+        return Failure(indirectError);
     auto expectedConditional = DeriveConditionalExecution(
         request, active, activation, deactivation, update, retain, transition);
 
@@ -390,6 +450,14 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         return Failure(DynamicVerificationErrorV1::IndirectWorkCountMismatch);
     if (actual.dynamicWriteSetIdentity != expectedWriteSetIdentity)
         return Failure(DynamicVerificationErrorV1::DynamicWriteSetMismatch);
+    if (actual.indirectDispatch.mode == composition::IndirectExecutionModeV1::VerifiedDispatch &&
+        actual.indirectDispatch.workCount != actual.indirectWorkCount.value())
+        return Failure(DynamicVerificationErrorV1::IndirectDispatchWorkCountMismatch);
+    if (actual.indirectDispatch.identity !=
+        ComputeIndirectDispatchIdentityV1(actual.indirectDispatch))
+        return Failure(DynamicVerificationErrorV1::IndirectDispatchIdentityMismatch);
+    if (!SameIndirectDispatch(actual.indirectDispatch, expectedIndirectDispatch))
+        return Failure(DynamicVerificationErrorV1::IndirectDispatchContractMismatch);
     if (!SameSelections(actual.conditionalSelections, expectedConditional.selections))
         return Failure(DynamicVerificationErrorV1::ConditionalSelectionMismatch);
     if (!SameLeaves(actual.enabledLeaves, expectedConditional.enabledLeaves))
@@ -402,7 +470,7 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         std::move(expectedDeactivation), std::move(expectedUpdate), std::move(expectedRetain), std::move(expectedTransition),
         expectedGenerationIdentity, std::move(generations), expectedRecordIdentity, std::move(records),
         canonical::TransitionCount(static_cast<std::uint32_t>(transition.size())), expectedWriteSetIdentity,
-        std::move(expectedConditional.identity), std::move(expectedConditional.selections),
+        std::move(expectedIndirectDispatch), std::move(expectedConditional.identity), std::move(expectedConditional.selections),
         std::move(expectedConditional.enabledLeaves), nextHistoryGeneration};
     expectedDecision.identity = ComputeDynamicDecisionIdentityV1(expectedDecision);
     if (actual.identity != expectedDecision.identity)

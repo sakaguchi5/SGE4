@@ -77,6 +77,7 @@ public:
         computePipelineStates_.resize(view_.ComputeExecutables().size());
         dynamicBindings_.resize(view_.DynamicSlots().size());
         dynamicApplied_.resize(view_.DynamicSlots().size(), false);
+        indirectArgumentBuffers_.resize(view_.Profile().framesInFlight);
 
         for (const auto& operation : view_.LoadOperations())
         {
@@ -602,6 +603,10 @@ public:
         if (options_.enableTimestampProfiling && (!timestampQueryIssued_ || !timestampQueryResolved_))
             return base::Failure<runtime::FrameSubmission, runtime::RuntimeError>(
                 Error("profile/frame", "検証または実行の契約に違反しています。"));
+        if (indirectDispatchPresent_ && !indirectDispatchApplied_)
+            return base::Failure<runtime::FrameSubmission, runtime::RuntimeError>(
+                Error("frame/indirect-dispatch",
+                    "Seal済みVerified indirect dispatchが対象Compute Commandへ適用されませんでした。"));
 
         runtime::FrameSubmission submission;
         submission.deviceEpoch = deviceEpoch_;
@@ -742,6 +747,114 @@ private:
         return nullptr;
     }
 
+    base::Expected<void, runtime::RuntimeError> PrepareVerifiedIndirectDispatch(
+        const runtime::FrameInvocation& invocation)
+    {
+        indirectDispatchPresent_ = false;
+        indirectDispatchApplied_ = false;
+        indirectDispatch_ = {};
+
+        if (invocation.indirectDispatches.size() > 1)
+            return base::Failure<void, runtime::RuntimeError>(
+                Error("invocation/indirect-dispatch",
+                    "一つのLeaf Invocationへ複数のVerified indirect dispatchを適用できません。"));
+        if (invocation.indirectDispatches.empty())
+            return base::Success<void, runtime::RuntimeError>();
+
+        const auto& binding = invocation.indirectDispatches.front();
+        if (binding.computeCommand == package::InvalidIndex ||
+            binding.computeCommand >= view_.ComputeCommands().size() ||
+            binding.workCount != binding.threadGroupCountX ||
+            binding.threadGroupCountY != 1 || binding.threadGroupCountZ != 1)
+            return base::Failure<void, runtime::RuntimeError>(
+                Error("invocation/indirect-dispatch",
+                    "Verified indirect dispatch引数がPackage契約に違反しています。"));
+
+        const auto& command = view_.ComputeCommands()[binding.computeCommand];
+        if (command.flags != 0 || command.threadGroupCountX == 0 ||
+            command.threadGroupCountY != 1 || command.threadGroupCountZ != 1 ||
+            binding.threadGroupCountX > command.threadGroupCountX)
+            return base::Failure<void, runtime::RuntimeError>(
+                Error("invocation/indirect-dispatch",
+                    "Verified indirect dispatch引数が固定Compute Commandの上限を満たしません。"));
+
+        std::uint32_t operationCount = 0;
+        for (const auto& operation : view_.FrameOperations())
+        {
+            if (operation.opcode != pkg::D3D12OperationCode::ExecuteCompute) continue;
+            auto payload = pkg::DecodeExecuteCompute(operation.payload);
+            if (!payload)
+                return PackageFailure("invocation/indirect-dispatch", payload.error());
+            if (payload.value().command.value == binding.computeCommand) ++operationCount;
+        }
+        if (operationCount != 1)
+            return base::Failure<void, runtime::RuntimeError>(
+                Error("invocation/indirect-dispatch",
+                    "対象Compute CommandはFrame Operationに一度だけ存在しなければなりません。"));
+
+        if (!dispatchCommandSignature_)
+        {
+            D3D12_INDIRECT_ARGUMENT_DESC argument{};
+            argument.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
+            D3D12_COMMAND_SIGNATURE_DESC description{};
+            description.ByteStride = sizeof(D3D12_DISPATCH_ARGUMENTS);
+            description.NumArgumentDescs = 1;
+            description.pArgumentDescs = &argument;
+            const HRESULT hr = device_->CreateCommandSignature(
+                &description, nullptr, IID_PPV_ARGS(&dispatchCommandSignature_));
+            if (FAILED(hr))
+                return base::Failure<void, runtime::RuntimeError>(
+                    HResultError("invocation/create-dispatch-signature", hr, device_.Get()));
+        }
+
+        if (currentFrameSlot_ >= indirectArgumentBuffers_.size())
+            return base::Failure<void, runtime::RuntimeError>(
+                Error("invocation/indirect-dispatch",
+                    "Frame slotがIndirect Argument Buffer契約に違反しています。"));
+        auto& argumentBuffer = indirectArgumentBuffers_[currentFrameSlot_];
+        if (!argumentBuffer)
+        {
+            D3D12_HEAP_PROPERTIES heap{};
+            heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+            heap.CreationNodeMask = 1;
+            heap.VisibleNodeMask = 1;
+            D3D12_RESOURCE_DESC resource{};
+            resource.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            resource.Width = sizeof(D3D12_DISPATCH_ARGUMENTS);
+            resource.Height = 1;
+            resource.DepthOrArraySize = 1;
+            resource.MipLevels = 1;
+            resource.Format = DXGI_FORMAT_UNKNOWN;
+            resource.SampleDesc.Count = 1;
+            resource.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            const HRESULT hr = device_->CreateCommittedResource(
+                &heap, D3D12_HEAP_FLAG_NONE, &resource,
+                D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+                IID_PPV_ARGS(&argumentBuffer));
+            if (FAILED(hr))
+                return base::Failure<void, runtime::RuntimeError>(
+                    HResultError("invocation/create-dispatch-argument", hr, device_.Get()));
+        }
+
+        D3D12_DISPATCH_ARGUMENTS arguments{
+            binding.threadGroupCountX,
+            binding.threadGroupCountY,
+            binding.threadGroupCountZ};
+        void* mapped = nullptr;
+        D3D12_RANGE noRead{0, 0};
+        HRESULT hr = argumentBuffer->Map(0, &noRead, &mapped);
+        if (FAILED(hr) || !mapped)
+            return base::Failure<void, runtime::RuntimeError>(
+                HResultError("invocation/map-dispatch-argument", hr, device_.Get()));
+        std::memcpy(mapped, &arguments, sizeof(arguments));
+        D3D12_RANGE written{0, sizeof(arguments)};
+        argumentBuffer->Unmap(0, &written);
+
+        indirectDispatch_ = binding;
+        indirectDispatchPresent_ = true;
+        return base::Success<void, runtime::RuntimeError>();
+    }
+
     base::Expected<void, runtime::RuntimeError> PrepareInvocation(const runtime::FrameInvocation& invocation)
     {
         if (invocation.dynamicData.size() != view_.DynamicSlots().size())
@@ -808,7 +921,7 @@ private:
         }
         for (const auto& binding : externalBindings_)
             if (!binding.resource) return base::Failure<void, runtime::RuntimeError>(Error("invocation", "Bindingが検証または実行の契約に違反しています。"));
-        return base::Success<void, runtime::RuntimeError>();
+        return PrepareVerifiedIndirectDispatch(invocation);
     }
 
     base::Expected<void, runtime::RuntimeError> CreateTimestampProfileObjects()
@@ -901,6 +1014,11 @@ private:
         }
         timestampReadback_.Reset();
         timestampQueryHeap_.Reset();
+        dispatchCommandSignature_.Reset();
+        indirectArgumentBuffers_.clear();
+        indirectDispatchPresent_ = false;
+        indirectDispatchApplied_ = false;
+        indirectDispatch_ = {};
         externalNativeResources_.clear();
         externalBindings_.clear();
         externalAcquired_.clear();
@@ -2698,7 +2816,27 @@ private:
             }
             else return base::Failure<void, runtime::RuntimeError>(Error("frame/ExecuteCompute", "入力または内部状態が検証または実行の契約に違反しています。"));
         }
-        commandList_->Dispatch(command.threadGroupCountX, command.threadGroupCountY, command.threadGroupCountZ);
+        if (indirectDispatchPresent_ && indirectDispatch_.computeCommand == id.value)
+        {
+            if (indirectDispatchApplied_ || !dispatchCommandSignature_ ||
+                currentFrameSlot_ >= indirectArgumentBuffers_.size() ||
+                !indirectArgumentBuffers_[currentFrameSlot_])
+                return base::Failure<void, runtime::RuntimeError>(
+                    Error("frame/ExecuteIndirect",
+                        "Verified indirect dispatchの物理引数が実行契約と一致しません。"));
+            commandList_->ExecuteIndirect(
+                dispatchCommandSignature_.Get(), 1,
+                indirectArgumentBuffers_[currentFrameSlot_].Get(), 0,
+                nullptr, 0);
+            indirectDispatchApplied_ = true;
+        }
+        else
+        {
+            commandList_->Dispatch(
+                command.threadGroupCountX,
+                command.threadGroupCountY,
+                command.threadGroupCountZ);
+        }
         return base::Success<void, runtime::RuntimeError>();
     }
 
@@ -2895,6 +3033,11 @@ private:
     ComPtr<ID3D12DescriptorHeap> shaderHeap_;
     ComPtr<ID3D12QueryHeap> timestampQueryHeap_;
     ComPtr<ID3D12Resource> timestampReadback_;
+    ComPtr<ID3D12CommandSignature> dispatchCommandSignature_;
+    std::vector<ComPtr<ID3D12Resource>> indirectArgumentBuffers_;
+    runtime::VerifiedIndirectDispatchBinding indirectDispatch_{};
+    bool indirectDispatchPresent_ = false;
+    bool indirectDispatchApplied_ = false;
     std::uint64_t* mappedTimestampValues_ = nullptr;
     pkg::QueueId timestampQueue_{};
     bool timestampQueryIssued_ = false;

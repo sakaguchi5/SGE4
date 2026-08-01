@@ -168,6 +168,59 @@ BuildConditionalVerifiedDynamicUnified(std::uint32_t universe = 4)
 }
 
 inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
+BuildVerifiedIndirectUnified(
+    std::uint32_t universe = 8,
+    std::uint32_t contractMaxWorkCount = 0)
+{
+    constexpr std::string_view ProducerKey = "unified/indirect/producer";
+    constexpr std::string_view ObserverKey = "unified/indirect/observer";
+
+    auto producer = fixture::BuildVerifiedIndirectLeaf(universe);
+    if (!producer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            producer.error());
+    auto observer = fixture::BuildDynamicObservationLeaf(universe);
+    if (!observer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            observer.error());
+
+    contract::ContractBuildInput input;
+    input.leaves = {
+        fixture::VerifiedIndirectDeclaration(std::string(ProducerKey), producer.value()),
+        fixture::DynamicObservationDeclaration(std::string(ObserverKey), observer.value())};
+
+    contract::ResourceFlowDeclaration middle;
+    middle.stableKey = "unified/indirect/materialized";
+    middle.boundary = contract::ResourceBoundary::Internal;
+    middle.producer = fixture::Ref(
+        std::string(ProducerKey), std::string(fixture::IndirectOutputEndpoint));
+    middle.consumers = {fixture::Ref(
+        std::string(ObserverKey), std::string(fixture::DynamicObservationInputEndpoint))};
+
+    contract::ResourceFlowDeclaration output;
+    output.stableKey = "unified/indirect/output";
+    output.boundary = contract::ResourceBoundary::CompositionOutput;
+    output.producer = fixture::Ref(
+        std::string(ObserverKey), std::string(fixture::DynamicObservationOutputEndpoint));
+    input.resources = {std::move(middle), std::move(output)};
+
+    const auto producerStableKey = composition::ComputeStableLeafKey(ProducerKey);
+    const auto observerStableKey = composition::ComputeStableLeafKey(ObserverKey);
+    const composition::LeafPackageId producerLeaf{
+        producerStableKey < observerStableKey ? 0u : 1u};
+    const auto indirect = composition::MakeVerifiedIndirectDispatchContractV1(
+        producerLeaf, 0, contractMaxWorkCount == 0 ? universe : contractMaxWorkCount);
+    auto built = composition::BuildFrozenCompositionPackage(
+        std::move(input), composition::MakeAuthorityOnlyDynamicContractV1(
+            universe, {}, indirect));
+    if (!built)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            built.error().stage + "：" + built.error().message);
+    return sge4::base::Success<composition::FrozenCompositionPackage, std::string>(
+        std::move(built).value());
+}
+
+inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
 BuildLimitedTexture2DUnified(std::uint32_t width = 4, std::uint32_t height = 4)
 {
     constexpr std::string_view ProducerKey = "unified/texture/producer";

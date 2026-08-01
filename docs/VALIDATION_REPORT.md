@@ -3,9 +3,9 @@
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.3
+Frozen Composition: SGE4UNI 2.4
 Dynamic Contract: schema 3
-Frozen Dynamic Invocation: SGE4INV 1.3
+Frozen Dynamic Invocation: SGE4INV 1.4
 Invocation Manifest: schema 4
 Execution Payload Section: schema 1
 ```
@@ -269,8 +269,8 @@ run_new_sge4_full_gate.bat
 
 ## Level 4 Generalization 2 validation target
 
-- SGE4UNI 2.3／Dynamic Contract schema 3
-- SGE4INV 1.3／Conditional Execution Section
+- SGE4UNI 2.4／Dynamic Contract schema 3
+- SGE4INV 1.4／Conditional Execution Section
 - True／False branchの独立再導出
 - enabled Leaf集合改竄拒否
 - zero-Leaf submissionとResource状態保持
@@ -282,7 +282,7 @@ Linux側ではC++23厳格構文検査、静的Architecture監査、Manifest照�
 
 ## Level 4 Generalization 3 validation target
 
-- SGE4UNI 2.3
+- SGE4UNI 2.4
 - Contract Data schema 2／Verified Decision Data schema 2
 - fixed B8G8R8A8_UNORM Texture2D shape
 - single mip／layer／plane／sample
@@ -292,7 +292,7 @@ Linux側ではC++23厳格構文検査、静的Architecture監査、Manifest照�
 - ABI 1 migration Texture rejection
 - controlled whole-composition Recovery後のTexture再物質化
 
-Linux側ではABI 1 golden bytes、SGE4UNI 2.3 direct／migration／round-trip／corruption、portable Texture Composition、C++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL、WARP、Actual Device removalの最終合格はWindows Full Gateで確定する。
+Linux側ではABI 1 golden bytes、SGE4UNI 2.4 direct／migration／round-trip／corruption、portable Texture Composition、C++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL、WARP、Actual Device removalの最終合格はWindows Full Gateで確定する。
 
 ## Level 4 Generalization 3 — RTV descriptor increment build fix
 
@@ -323,3 +323,30 @@ Portable Semantic Analysis回帰試験で、offscreen Texture Rasterと従来Sur
 - `Texture2D.Load`を`SampleLevel`へ変更し、D3DCompile最適化後もSamplerがReflectionへ残るようにした。
 - Compiler、Frozen ABI、Composition契約、Runtime、期待packed pixel bytesは変更していない。
 - Portable C++23 strict syntax、静的Architecture監査、SOURCE_MANIFEST照合を再実行した。
+
+
+## Level 4 Generalization 4 validation target
+
+- SGE4UNI 2.4／Dynamic Contract schema 4
+- SGE4INV 1.4／Manifest schema 5／Indirect Dispatch Section
+- exact Transition countからworkCount／Dispatch Xを独立導出
+- zero-work DispatchIndirect
+- target route／maximum／identity改竄拒否
+- target Compute Commandの一意なoperation適用
+- fixed Dispatchとの観測意味一致
+- Controlled Recovery後のCommand Signature／argument buffer再物質化
+- RecoverySeedによるwork count再構築
+
+Linux側ではABI 1 golden bytes、SGE4UNI 2.4 authority-only direct／migration／round-trip／corruption、C++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL、WARP、D3D12 ExecuteIndirect、Actual Device removalの最終合格はWindows Full Gateで確定する。
+
+## Level 4 Generalization 4 — None Indirect Work Count検証修正
+
+Windows統合設計試験で、Indirect契約を持たない既存CompositionのInvocationが独立Verifierに拒否された。原因は、Dynamic algebra上の`indirectWorkCount`と、Generalization 4で追加したGPU Dispatch用`VerifiedIndirectDispatchV1::workCount`をmodeに関係なく一致させていたことである。
+
+`VerifiedDispatch`の場合だけ両者を一致させ、`None`の場合は既存どおりtransition countをDynamic Decisionへ保持しつつ、Dispatch引数をzeroに固定するよう修正した。AuthorityOnly回帰試験ではtransition count 3とDispatch workCount 0の同時成立を確認する。
+
+## L4G4 AuthorityOnly transition audit fix
+
+- `AuthorityOnly + VerifiedDispatch`でexact transition countとshadow適用数を分離した。
+- Runtime Session回帰: verified=3、applied=0、DispatchIndirect work=3。
+- Windows資格失敗時にD3D12 Submitのstage／messageを表示する。

@@ -91,6 +91,7 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
     std::uint32_t memberBytes,
     std::uint32_t compositionLeafCount,
     std::vector<composition::ConditionalRegionV1> conditionalRegions,
+    composition::VerifiedIndirectDispatchContractV1 indirectDispatchContract,
     std::vector<MemberUpdatePayloadV1> updatePayloads,
     std::optional<VerifiedHistoryStateV1> previousHistory)
 {
@@ -113,6 +114,7 @@ DynamicInvocationRequestV1 MakeDynamicInvocationRequestV1(
         memberBytes,
         compositionLeafCount,
         std::move(conditionalRegions),
+        indirectDispatchContract,
         DynamicExecutionPayloadIdentity::FromDigest({}),
         std::move(updatePayloads),
         std::move(previousHistory)};
@@ -150,6 +152,10 @@ canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
         AppendU64(payload, static_cast<std::uint64_t>(region.falseLeaves.size()));
         for (const auto leaf : region.falseLeaves) AppendU32(payload, leaf.value);
     }
+    AppendU32(payload, std::to_underlying(request.indirectDispatchContract.mode));
+    AppendU32(payload, request.indirectDispatchContract.targetLeaf.value);
+    AppendU32(payload, request.indirectDispatchContract.targetComputeCommand);
+    AppendU32(payload, request.indirectDispatchContract.maxWorkCount);
     AppendDigest(payload, request.executionPayloadIdentity.Digest());
     AppendU8(payload, request.previousHistory.has_value() ? 1u : 0u);
     if (request.previousHistory.has_value())
@@ -218,6 +224,22 @@ DynamicExecutionPayloadIdentity ComputeDynamicExecutionPayloadIdentityV1(
         "SGE.V2.Dynamic.ExecutionPayload.V1", payload);
 }
 
+IndirectDispatchIdentity ComputeIndirectDispatchIdentityV1(
+    const VerifiedIndirectDispatchV1& dispatch)
+{
+    std::vector<std::byte> payload;
+    AppendU32(payload, std::to_underlying(dispatch.mode));
+    AppendU32(payload, dispatch.targetLeaf.value);
+    AppendU32(payload, dispatch.targetComputeCommand);
+    AppendU32(payload, dispatch.maxWorkCount);
+    AppendU32(payload, dispatch.workCount);
+    AppendU32(payload, dispatch.threadGroupCountX);
+    AppendU32(payload, dispatch.threadGroupCountY);
+    AppendU32(payload, dispatch.threadGroupCountZ);
+    return MakeIdentity<IndirectDispatchIdentity>(
+        "SGE.V2.Dynamic.IndirectDispatch.V1", payload);
+}
+
 ConditionalExecutionIdentity ComputeConditionalExecutionIdentityV1(
     std::uint32_t compositionLeafCount,
     std::span<const ConditionalRegionSelectionV1> selections,
@@ -251,6 +273,7 @@ DynamicDecisionIdentity ComputeDynamicDecisionIdentityV1(const DynamicDecisionV1
     AppendDigest(payload, decision.transitionRecordSetIdentity.Digest());
     AppendU32(payload, decision.indirectWorkCount.value());
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
+    AppendDigest(payload, decision.indirectDispatch.identity.Digest());
     AppendDigest(payload, decision.conditionalExecutionIdentity.Digest());
     AppendU64(payload, decision.nextHistoryGeneration.value());
     return MakeIdentity<DynamicDecisionIdentity>("SGE.V2.Dynamic.Decision.V1", payload);
@@ -267,6 +290,7 @@ DynamicSealIdentity ComputeDynamicSealIdentityV1(
     AppendDigest(payload, decision.identity.Digest());
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
     AppendDigest(payload, request.executionPayloadIdentity.Digest());
+    AppendDigest(payload, decision.indirectDispatch.identity.Digest());
     AppendDigest(payload, decision.conditionalExecutionIdentity.Digest());
     return MakeIdentity<DynamicSealIdentity>("SGE.V2.Dynamic.VerificationSeal.V1", payload);
 }
@@ -299,7 +323,8 @@ FrozenDynamicInvocationIdentity ComputeFrozenDynamicInvocationIdentityV1(
     DynamicSealIdentity sealIdentity,
     canonical::HistoryValidityIdentity nextHistoryIdentity,
     DynamicWriteSetIdentity dynamicWriteSetIdentity,
-    DynamicExecutionPayloadIdentity executionPayloadIdentity)
+    DynamicExecutionPayloadIdentity executionPayloadIdentity,
+    IndirectDispatchIdentity indirectDispatchIdentity)
 {
     std::vector<std::byte> payload;
     AppendDigest(payload, compositionIdentity.Digest());
@@ -309,6 +334,7 @@ FrozenDynamicInvocationIdentity ComputeFrozenDynamicInvocationIdentityV1(
     AppendDigest(payload, nextHistoryIdentity.Digest());
     AppendDigest(payload, dynamicWriteSetIdentity.Digest());
     AppendDigest(payload, executionPayloadIdentity.Digest());
+    AppendDigest(payload, indirectDispatchIdentity.Digest());
     return MakeIdentity<FrozenDynamicInvocationIdentity>("SGE.V2.Dynamic.FrozenInvocation.V1", payload);
 }
 }

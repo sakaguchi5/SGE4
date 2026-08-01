@@ -196,6 +196,30 @@ SubmitStaticComposition(
             return left.slot < right.slot;
         });
 
+    std::vector<std::vector<::sge4::runtime::VerifiedIndirectDispatchBinding>>
+        indirectDispatches(contract.leaves.size());
+    std::set<std::pair<std::uint32_t, std::uint32_t>> indirectKeys;
+    for (const auto& value : invocation.indirectDispatches)
+    {
+        if (!value.leaf.IsValid() || value.leaf.value >= contract.leaves.size() ||
+            !enabled[value.leaf.value] ||
+            value.computeCommand == package::InvalidIndex ||
+            value.threadGroupCountX != value.workCount ||
+            value.threadGroupCountY != 1 || value.threadGroupCountZ != 1 ||
+            !indirectKeys.emplace(value.leaf.value, value.computeCommand).second)
+            return Failure<StaticCompositionSubmission>(
+                "static-runtime/indirect-dispatch",
+                "Verified indirect dispatch bindingが検証または実行の契約に違反しています。");
+        indirectDispatches[value.leaf.value].push_back({
+            value.computeCommand, value.workCount,
+            value.threadGroupCountX, value.threadGroupCountY,
+            value.threadGroupCountZ});
+    }
+    for (auto& bindings : indirectDispatches)
+        std::sort(bindings.begin(), bindings.end(), [](const auto& left, const auto& right) {
+            return left.computeCommand < right.computeCommand;
+        });
+
     std::set<std::uint32_t> waitedConsumers;
     for (const auto& wait : plan.waits) waitedConsumers.insert(wait.consumer.value);
 
@@ -259,7 +283,8 @@ SubmitStaticComposition(
                 "static-runtime/binding", "Endpointが検証または実行の契約に違反しています。");
 
         ::sge4::runtime::FrameInvocation leafInvocation{
-            invocation.frameNumber, dynamics[entry.leaf.value], external};
+            invocation.frameNumber, dynamics[entry.leaf.value], external,
+            indirectDispatches[entry.leaf.value]};
         auto submitted = loaded.domain_->Backend().Submit(*instance, leafInvocation);
         if (!submitted)
             return base::Failure<StaticCompositionSubmission, StaticRuntimeError>(

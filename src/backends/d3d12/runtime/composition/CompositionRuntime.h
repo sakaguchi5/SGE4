@@ -28,11 +28,21 @@ struct LeafDynamicData final
     std::uint32_t slot = package::InvalidIndex;
     std::vector<std::byte> bytes;
 };
+struct LeafIndirectDispatch final
+{
+    LeafPackageId leaf;
+    std::uint32_t computeCommand = package::InvalidIndex;
+    std::uint32_t workCount = 0;
+    std::uint32_t threadGroupCountX = 0;
+    std::uint32_t threadGroupCountY = 1;
+    std::uint32_t threadGroupCountZ = 1;
+};
 struct StaticCompositionFrameInvocation final
 {
     std::uint64_t frameNumber = 0;
     std::vector<LeafDynamicData> dynamicData;
     std::vector<LeafPackageId> enabledLeaves;
+    std::vector<LeafIndirectDispatch> indirectDispatches;
 };
 struct StaticCompositionSubmission final
 {

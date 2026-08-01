@@ -27,6 +27,16 @@ struct PreparedDynamicExecutionV1 final
     std::uint32_t slot = package::InvalidIndex;
     std::vector<std::byte> denseSlotBytes;
     std::vector<composition::LeafPackageId> enabledLeaves;
+    bool hasIndirectDispatch = false;
+    composition::LeafPackageId indirectLeaf;
+    std::uint32_t indirectComputeCommand = package::InvalidIndex;
+    std::uint32_t indirectWorkCount = 0;
+    std::uint32_t indirectThreadGroupCountX = 0;
+    std::uint32_t indirectThreadGroupCountY = 1;
+    std::uint32_t indirectThreadGroupCountZ = 1;
+    // exact Transition setの件数。AuthorityOnlyでも保持し、GPU indirect workと
+    // dense shadow適用数を混同しない。
+    std::uint32_t verifiedTransitionCount = 0;
     std::uint32_t appliedTransitionCount = 0;
     std::uint32_t conditionalRegionCount = 0;
 };

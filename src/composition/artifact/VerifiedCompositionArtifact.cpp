@@ -93,7 +93,7 @@ ReadVerifiedFrozenComposition(std::vector<std::byte> bytes)
             FrozenCompositionAbi2Magic.end(),
             bytes.begin()))
         return Failure<VerifiedFrozenComposition>(
-            "read/container", "Production ReaderはSGE4UNI 2.3だけを受理します。");
+            "read/container", "Production ReaderはSGE4UNI 2.4だけを受理します。");
     return ReadVerifiedFrozenCompositionAbi2(std::move(bytes));
 }
 }

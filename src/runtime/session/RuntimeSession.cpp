@@ -68,6 +68,57 @@ template<class T>
         static_cast<std::size_t>(contract.universeCount) * contract.memberBytes);
 }
 
+[[nodiscard]] base::Expected<void, Error> ValidateIndirectDispatch(
+    const composition::FrozenCompositionPackage& package,
+    const dynamic::FrozenDynamicInvocationPackage& invocation,
+    std::span<const composition::LeafPackageId> enabledLeaves)
+{
+    const auto& contract = package.DynamicContract().indirectDispatch;
+    const auto& dispatch = invocation.IndirectDispatch();
+
+    if (dispatch.mode != contract.mode ||
+        dispatch.targetLeaf != contract.targetLeaf ||
+        dispatch.targetComputeCommand != contract.targetComputeCommand ||
+        dispatch.maxWorkCount != contract.maxWorkCount)
+        return Fail<void>("RuntimeSession/IndirectDispatch",
+            "Frozen Invocationのindirect dispatch routeがComposition契約と一致しません。");
+    if (dispatch.identity != invocation.Artifact().IndirectDispatchIdentityValue() ||
+        dynamic::ComputeIndirectDispatchIdentityV1(dispatch) != dispatch.identity)
+        return Fail<void>("RuntimeSession/IndirectDispatch",
+            "Frozen Invocationのindirect dispatch identityがSeal済み成果物と一致しません。");
+
+    if (contract.mode == composition::IndirectExecutionModeV1::None)
+    {
+        if (dispatch.targetLeaf.value != package::InvalidIndex ||
+            dispatch.targetComputeCommand != package::InvalidIndex ||
+            dispatch.maxWorkCount != 0 || dispatch.workCount != 0 ||
+            dispatch.threadGroupCountX != 0 ||
+            dispatch.threadGroupCountY != 1 || dispatch.threadGroupCountZ != 1)
+            return Fail<void>("RuntimeSession/IndirectDispatch",
+                "Indirect dispatchなしの成果物に実行引数が含まれています。");
+        return base::Success<void, Error>();
+    }
+
+    if (contract.mode != composition::IndirectExecutionModeV1::VerifiedDispatch ||
+        contract.targetLeaf.value >= package.Certificate().leafCount ||
+        contract.targetComputeCommand == package::InvalidIndex ||
+        contract.maxWorkCount == 0 ||
+        dispatch.workCount > contract.maxWorkCount ||
+        dispatch.workCount != invocation.Decision().indirectWorkCount.value() ||
+        dispatch.threadGroupCountX != dispatch.workCount ||
+        dispatch.threadGroupCountY != 1 || dispatch.threadGroupCountZ != 1)
+        return Fail<void>("RuntimeSession/IndirectDispatch",
+            "Verified indirect dispatch引数がCompositionまたはDynamic Decisionと一致しません。");
+
+    const auto selected = std::binary_search(
+        enabledLeaves.begin(), enabledLeaves.end(), contract.targetLeaf,
+        [](const auto& left, const auto& right) { return left.value < right.value; });
+    if (!selected)
+        return Fail<void>("RuntimeSession/IndirectDispatch",
+            "Verified indirect dispatchの対象LeafがSeal済みenabled集合に含まれていません。");
+    return base::Success<void, Error>();
+}
+
 [[nodiscard]] base::Expected<std::vector<composition::LeafPackageId>, Error>
 ValidateConditionalExecution(
     const composition::FrozenCompositionPackage& package,
@@ -204,6 +255,10 @@ base::Expected<void, Error> Session::ValidateForSubmission(
     auto enabledLeaves = ValidateConditionalExecution(package_, invocation.Decision());
     if (!enabledLeaves)
         return Fail<void>(enabledLeaves.error().stage, enabledLeaves.error().message);
+    auto indirectDispatch = ValidateIndirectDispatch(
+        package_, invocation, enabledLeaves.value());
+    if (!indirectDispatch)
+        return Fail<void>(indirectDispatch.error().stage, indirectDispatch.error().message);
 
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
     {
@@ -258,6 +313,21 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
     prepared.enabledLeaves = std::move(enabledLeaves).value();
     prepared.conditionalRegionCount = static_cast<std::uint32_t>(
         contract.conditionalRegions.size());
+    prepared.verifiedTransitionCount =
+        invocation.Decision().indirectWorkCount.value();
+
+    const auto& indirect = invocation.IndirectDispatch();
+    if (indirect.mode == composition::IndirectExecutionModeV1::VerifiedDispatch)
+    {
+        prepared.hasIndirectDispatch = true;
+        prepared.indirectLeaf = indirect.targetLeaf;
+        prepared.indirectComputeCommand = indirect.targetComputeCommand;
+        prepared.indirectWorkCount = indirect.workCount;
+        prepared.indirectThreadGroupCountX = indirect.threadGroupCountX;
+        prepared.indirectThreadGroupCountY = indirect.threadGroupCountY;
+        prepared.indirectThreadGroupCountZ = indirect.threadGroupCountZ;
+    }
+
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
         return base::Success<PreparedDynamicExecutionV1, Error>(std::move(prepared));
     if (contract.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot)

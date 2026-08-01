@@ -83,6 +83,47 @@ DynamicVerificationErrorV1 ValidateExecutionPayload(
     return DynamicVerificationErrorV1::None;
 }
 
+DynamicVerificationErrorV1 BuildVerifiedIndirectDispatch(
+    const DynamicInvocationRequestV1& request,
+    std::uint32_t workCount,
+    VerifiedIndirectDispatchV1& result)
+{
+    const auto& contract = request.indirectDispatchContract;
+    result.mode = contract.mode;
+    result.targetLeaf = contract.targetLeaf;
+    result.targetComputeCommand = contract.targetComputeCommand;
+    result.maxWorkCount = contract.maxWorkCount;
+    result.workCount = workCount;
+    result.threadGroupCountX = workCount;
+    result.threadGroupCountY = 1;
+    result.threadGroupCountZ = 1;
+
+    if (contract.mode == composition::IndirectExecutionModeV1::None)
+    {
+        if (contract.targetLeaf.IsValid() ||
+            contract.targetComputeCommand != package::InvalidIndex ||
+            contract.maxWorkCount != 0)
+            return DynamicVerificationErrorV1::IndirectDispatchContractMismatch;
+        result.workCount = 0;
+        result.threadGroupCountX = 0;
+        result.identity = ComputeIndirectDispatchIdentityV1(result);
+        return DynamicVerificationErrorV1::None;
+    }
+
+    if (contract.mode != composition::IndirectExecutionModeV1::VerifiedDispatch ||
+        !contract.targetLeaf.IsValid() ||
+        contract.targetLeaf.value >= request.compositionLeafCount ||
+        contract.targetComputeCommand == package::InvalidIndex ||
+        contract.maxWorkCount == 0 ||
+        contract.maxWorkCount != request.universe.value())
+        return DynamicVerificationErrorV1::IndirectDispatchContractMismatch;
+    if (workCount > contract.maxWorkCount)
+        return DynamicVerificationErrorV1::IndirectDispatchWorkCountMismatch;
+
+    result.identity = ComputeIndirectDispatchIdentityV1(result);
+    return DynamicVerificationErrorV1::None;
+}
+
 bool IsValidPredicate(composition::ConditionalPredicateKindV1 predicate) noexcept
 {
     const auto value = std::to_underlying(predicate);
@@ -340,6 +381,11 @@ DynamicPlanningResultV1 DynamicInvocationPlannerV1::Plan(const DynamicInvocation
     auto generationIdentity = ComputeGenerationVectorIdentityV1(request.universe, generations);
     auto recordIdentity = ComputeTransitionRecordSetIdentityV1(request.universe, records);
     auto writeSetIdentity = ComputeDynamicWriteSetIdentityV1(transitionSet, recordIdentity);
+    VerifiedIndirectDispatchV1 indirectDispatch;
+    const auto indirectError = BuildVerifiedIndirectDispatch(
+        request, static_cast<std::uint32_t>(transition.size()), indirectDispatch);
+    if (indirectError != DynamicVerificationErrorV1::None)
+        return Failure(indirectError);
     auto conditional = BuildConditionalExecution(
         request, activeIndices, activation, deactivation, update, retain, transition);
 
@@ -348,7 +394,7 @@ DynamicPlanningResultV1 DynamicInvocationPlannerV1::Plan(const DynamicInvocation
         std::move(deactivationSet), std::move(updateSet), std::move(retainSet), std::move(transitionSet),
         generationIdentity, std::move(generations), recordIdentity, std::move(records),
         canonical::TransitionCount(static_cast<std::uint32_t>(transition.size())), writeSetIdentity,
-        std::move(conditional.identity), std::move(conditional.selections),
+        std::move(indirectDispatch), std::move(conditional.identity), std::move(conditional.selections),
         std::move(conditional.enabledLeaves), nextHistoryGeneration};
     decision.identity = ComputeDynamicDecisionIdentityV1(decision);
     return {DynamicVerificationErrorV1::None, DynamicPlannerProposalV1{std::move(decision)}};

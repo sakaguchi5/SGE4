@@ -1,5 +1,7 @@
 # New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Revision 2.4: Level 4 Generalization 4として`Verified Indirect Work Execution`を導入した。Compositionが一つのunconditional Compute Leaf／Compute Commandと最大work数を固定し、`SGE4INV 1.4`がexact transition countから導いたDispatch引数をSealする。Runtimeは件数を再計算せず、Executorが対象CommandだけをD3D12 `ExecuteIndirect(DISPATCH)`へ機械的に置換する。
+>
 > Revision 2.3: Level 4 Generalization 3として限定`Texture2D Flow`を導入した。固定BGRA8、single mip／layer／plane／sample、single writer、same-frameのTexture形状をComposition ContractとPlanへ固定し、shared TextureをRTV producerからSRV consumerへ状態・completion付きで接続する。ExecutorはD3D12 row pitchを機械的に処理し、packed readbackを返す。
 >
 > Revision 2.2: Level 4 Generalization 2として非ネスト型`Conditional Region`を導入した。CompositionがpredicateとTrue／False Leaf集合を固定し、Dynamic Plannerと独立Verifierがexact setからbranch選択とenabled Leaf集合をSealする。Runtimeはpredicateを再評価せず、SGE4INV 1.3の選択結果どおりに未選択LeafをSubmitしない。
@@ -72,7 +74,7 @@ Leaf Compilerは、独立Verifierを通過した完全なSchema 17 Frozen Leaf P
 
 ### 3. Composition authorityを完全Planへ統合
 
-Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.3`へFreezeします。`CompositionCertificate`は、ABI 2.3 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
+Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.4`へFreezeします。`CompositionCertificate`は、ABI 2.4 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
 
 ### 4. RuntimeからPlanner／Verifierを排除
 
@@ -153,7 +155,7 @@ PlannerとVerifierは、Leaf／Composition／Dynamicの各段で別プロジェ�
 ## Frozen artifact hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.3
+SGE4UNI Frozen Composition Package 2.4
   Manifest schema 2
   Leaf Table schema 1
   complete Schema 17 Leaf Package bytes
@@ -161,14 +163,14 @@ SGE4UNI Frozen Composition Package 2.3
   Verified Decision Data schema 2
   Verification Certificate schema 1
   Authority Ledger schema 2
-  Dynamic Contract schema 3
+  Dynamic Contract schema 4
 ```
 
 `CompleteComposition` Sectionと内側`SGE4CMP 1.0`はProduction ABIから廃止しました。Leaf Packageの独立ABIはSchema 17のまま維持し、Leaf bytesを再符号化せず完全に埋め込みます。
 
-Production Readerは`SGE4UNI 2.3`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
+Production Readerは`SGE4UNI 2.4`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
 
-Dynamic Invocationは別の`SGE4INV` major 1／minor 3成果物です。Conditional Execution SectionがRegion選択とenabled Leaf集合を保存し、Execution Payload Sectionが、Compositionに固定されたLeaf／Dynamic Slot route、member byte幅、exact Update payloadとそのidentityを所有します。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、Indirect quantityをPlannerと独立Verifierが確定します。Runtimeは、ABI 2.3 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
+Dynamic Invocationは別の`SGE4INV` major 1／minor 4成果物です。Conditional Execution SectionがRegion選択とenabled Leaf集合を、Execution Payload Sectionがexact Update payloadを、Indirect Dispatch Sectionが対象Compute route、最大work数、Seal済みDispatch引数とidentityを保存します。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、work count、Dispatch引数をPlannerと独立Verifierが別々に確定します。Runtimeは、ABI 2.4 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
 
 詳細は次を参照してください。
 
@@ -178,6 +180,7 @@ docs/FROZEN_COMPOSITION_ABI_2_0_MIGRATION.md
 docs/LEVEL4_GENERALIZATION1_VERIFIED_DYNAMIC_EXECUTION.md
 docs/LEVEL4_GENERALIZATION2_CONDITIONAL_REGION.md
 docs/LEVEL4_GENERALIZATION3_LIMITED_TEXTURE2D_FLOW.md
+docs/LEVEL4_GENERALIZATION4_VERIFIED_INDIRECT_WORK_EXECUTION.md
 ```
 
 ## Build
@@ -201,7 +204,7 @@ Full Gateは次を確認します。
 - Source Manifest
 - Debug／Release build
 - Debug A／Debug B／Release Frozen bytes一致
-- ABI 2.3 flat Section／round-trip／migration／corruption／Dynamic algebra／verified execution payload／Conditional execution／limited Texture2D Flow
+- ABI 2.4 flat Section／round-trip／migration／corruption／Dynamic algebra／verified execution payload／Conditional execution／limited Texture2D Flow／verified DispatchIndirect
 - 40 carried invariants
 - WARP materialization／submission／readback
 - Controlled whole-composition Recovery
@@ -223,6 +226,8 @@ Full Gateは次を確認します。
 - exact sparse membership
 - activation／deactivation／update／retain／transition
 - verified indirect quantity
+- verified DispatchIndirect work execution（Compute Leaf／1 Command限定）
+- zero-work DispatchIndirectと固定上限契約
 - verified dense Dynamic Slot execution
 - non-nested Conditional Region／exact-set predicate
 - sealed True／False branch selectionとenabled Leaf集合
@@ -247,11 +252,11 @@ Full Gateは次を確認します。
 - Multiple Adapter
 - Runtime candidate／performance policy
 - Conditional Regionのネスト、任意bool slot、Conditional Presenter
-- ExecuteIndirect／可変Dispatchによるwork量自体の省略（Generalization 2でもLeaf単位の選択）
+- 一般ExecuteIndirect、複数Indirect target、Dispatch Y／Z可変、GPU生成count、count buffer chain
 
 ## Validation boundary
 
-このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.3直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
+このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.4直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
 
 詳細は次を参照してください。
 

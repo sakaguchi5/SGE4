@@ -48,11 +48,25 @@ struct ExternalResourceBinding final
     std::shared_ptr<ICompletionToken> availableAfter;
 };
 
+// A verified indirect dispatch binding is not an arbitrary Runtime dispatch
+// request.  It is the already-sealed result of the Dynamic Planner and the
+// independent Dynamic Verifier.  The Executor may only map these fixed values
+// to D3D12 ExecuteIndirect; it must not derive or clamp them.
+struct VerifiedIndirectDispatchBinding final
+{
+    std::uint32_t computeCommand = package::InvalidIndex;
+    std::uint32_t workCount = 0;
+    std::uint32_t threadGroupCountX = 0;
+    std::uint32_t threadGroupCountY = 1;
+    std::uint32_t threadGroupCountZ = 1;
+};
+
 struct FrameInvocation final
 {
     std::uint64_t frameNumber = 0;
     std::span<const DynamicDataBinding> dynamicData;
     std::span<const ExternalResourceBinding> externalResources;
+    std::span<const VerifiedIndirectDispatchBinding> indirectDispatches;
 };
 
 struct QueueCompletion final

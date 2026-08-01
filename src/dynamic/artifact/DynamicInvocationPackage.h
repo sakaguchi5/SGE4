@@ -19,8 +19,8 @@ inline constexpr std::array<std::byte, 8> FrozenInvocationMagic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'4'},
     std::byte{'I'}, std::byte{'N'}, std::byte{'V'}, std::byte{0}};
 inline constexpr std::uint16_t FrozenInvocationFormatMajor = 1;
-inline constexpr std::uint16_t FrozenInvocationFormatMinor = 3;
-inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 4;
+inline constexpr std::uint16_t FrozenInvocationFormatMinor = 4;
+inline constexpr std::uint32_t FrozenInvocationManifestSchemaVersion = 5;
 
 enum class FrozenInvocationSectionKind : std::uint32_t
 {
@@ -29,14 +29,16 @@ enum class FrozenInvocationSectionKind : std::uint32_t
     TransitionRecords = 3,
     NextHistory = 4,
     ExecutionPayload = 5,
-    ConditionalExecution = 6
+    ConditionalExecution = 6,
+    IndirectDispatch = 7
 };
 
 inline constexpr std::array FrozenInvocationSectionKinds = {
     FrozenInvocationSectionKind::Manifest, FrozenInvocationSectionKind::ExactSets,
     FrozenInvocationSectionKind::TransitionRecords, FrozenInvocationSectionKind::NextHistory,
     FrozenInvocationSectionKind::ExecutionPayload,
-    FrozenInvocationSectionKind::ConditionalExecution};
+    FrozenInvocationSectionKind::ConditionalExecution,
+    FrozenInvocationSectionKind::IndirectDispatch};
 static_assert(base::ValuesAreUnique(FrozenInvocationSectionKinds,
     [](FrozenInvocationSectionKind value) { return std::to_underlying(value); }));
 static_assert(base::ValuesAreStrictlyIncreasing(FrozenInvocationSectionKinds,
@@ -90,6 +92,10 @@ public:
     {
         return executionPayload_;
     }
+    [[nodiscard]] const VerifiedIndirectDispatchV1& IndirectDispatch() const noexcept
+    {
+        return indirectDispatch_;
+    }
     [[nodiscard]] InvocationModeV1 Mode() const noexcept { return artifact_.Mode(); }
 
 private:
@@ -100,14 +106,17 @@ private:
         std::vector<std::byte> bytes,
         frozen_dynamic_detail::OpaqueFrozenDynamicInvocationV1 artifact,
         DynamicDecisionV1 decision,
-        FrozenDynamicExecutionPayloadV1 executionPayload)
+        FrozenDynamicExecutionPayloadV1 executionPayload,
+        VerifiedIndirectDispatchV1 indirectDispatch)
         : bytes_(std::move(bytes)), artifact_(std::move(artifact)),
-          decision_(std::move(decision)), executionPayload_(std::move(executionPayload)) {}
+          decision_(std::move(decision)), executionPayload_(std::move(executionPayload)),
+          indirectDispatch_(std::move(indirectDispatch)) {}
 
     std::vector<std::byte> bytes_;
     frozen_dynamic_detail::OpaqueFrozenDynamicInvocationV1 artifact_;
     DynamicDecisionV1 decision_;
     FrozenDynamicExecutionPayloadV1 executionPayload_;
+    VerifiedIndirectDispatchV1 indirectDispatch_;
 };
 
 // Converts user-owned exact membership input into a canonical request. This function

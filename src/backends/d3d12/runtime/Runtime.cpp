@@ -114,6 +114,14 @@ base::Expected<Submission, Error> Submit(
         nativeInvocation.dynamicData.push_back({
             prepared.value().leaf, prepared.value().slot,
             prepared.value().denseSlotBytes});
+    if (prepared.value().hasIndirectDispatch)
+        nativeInvocation.indirectDispatches.push_back({
+            prepared.value().indirectLeaf,
+            prepared.value().indirectComputeCommand,
+            prepared.value().indirectWorkCount,
+            prepared.value().indirectThreadGroupCountX,
+            prepared.value().indirectThreadGroupCountY,
+            prepared.value().indirectThreadGroupCountZ});
 
     auto nativeSubmission = native::SubmitStaticComposition(
         loaded.impl_->nativeRuntime, nativeInvocation);
@@ -122,15 +130,18 @@ base::Expected<Submission, Error> Submit(
     if (nativeSubmission.value().deviceEpoch != loaded.impl_->session.DeviceEpoch())
         return Fail<Submission>("D3D12Runtime", "Deviceが検証または実行の契約に違反しています。");
 
-    const auto verifiedTransitionCount = prepared.value().appliedTransitionCount;
+    const auto verifiedTransitionCount = prepared.value().verifiedTransitionCount;
     const auto verifiedDynamicByteCount = prepared.value().hasBinding
         ? prepared.value().denseSlotBytes.size() : 0u;
     const auto verifiedConditionalRegionCount = prepared.value().conditionalRegionCount;
+    const auto verifiedIndirectDispatchCount = prepared.value().hasIndirectDispatch ? 1u : 0u;
+    const auto verifiedIndirectWorkCount = prepared.value().indirectWorkCount;
     loaded.impl_->session.CommitSubmission(invocation, std::move(prepared).value());
     Submission result{std::move(invocation), nativeSubmission.value().deviceEpoch,
         static_cast<std::uint32_t>(nativeSubmission.value().leaves.size()),
         verifiedTransitionCount, verifiedDynamicByteCount,
-        verifiedConditionalRegionCount};
+        verifiedConditionalRegionCount, verifiedIndirectDispatchCount,
+        verifiedIndirectWorkCount};
     return base::Success<Submission, Error>(std::move(result));
 }
 

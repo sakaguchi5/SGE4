@@ -41,6 +41,27 @@ void Require(bool condition, const char* message)
     return true;
 }
 
+[[nodiscard]] bool EqualsIndirect(
+    std::span<const std::byte> bytes,
+    std::uint32_t universe,
+    std::uint32_t executedWorkCount,
+    float tolerance = 0.0001f)
+{
+    if (bytes.size() != static_cast<std::size_t>(universe) * sizeof(std::array<float, 4>))
+        return false;
+    for (std::uint32_t member = 0; member < universe; ++member)
+    {
+        std::array<float, 4> actual{};
+        std::memcpy(actual.data(), bytes.data() + static_cast<std::size_t>(member) * sizeof(actual), sizeof(actual));
+        const std::array<float, 4> expected = member < executedWorkCount
+            ? std::array<float, 4>{float(member + 1u), float(member + 11u), float(member + 21u), 1.0f}
+            : std::array<float, 4>{};
+        for (std::size_t component = 0; component < actual.size(); ++component)
+            if (std::abs(actual[component] - expected[component]) > tolerance) return false;
+    }
+    return true;
+}
+
 [[nodiscard]] bool EqualsTexture(
     const sge4::d3d12::Texture2DReadback& readback,
     std::uint32_t width,
@@ -60,6 +81,105 @@ void Require(bool condition, const char* message)
             return false;
     }
     return true;
+}
+
+void VerifyIndirectWorkQualification()
+{
+    constexpr std::uint32_t Universe = 8;
+    auto package = tests::BuildVerifiedIndirectUnified(Universe);
+    if (!package)
+        throw std::runtime_error(
+            "Verified Indirect Compositionの生成に失敗しました：" + package.error());
+    const auto outputId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/indirect/output");
+    Require(outputId.IsValid(), "Verified Indirect outputの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded), "Verified Indirect CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 zeroSeed;
+    zeroSeed.timelineOrdinal = 0;
+    zeroSeed.mode = planning.requiredMode;
+    auto frozenZero = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(zeroSeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenZero), "zero-work InitialSeedの生成に失敗しました。");
+    auto zeroSubmission = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenZero).value(), {0, {}});
+    Require(zeroSubmission && zeroSubmission.value().submittedLeafCount == 2 &&
+        zeroSubmission.value().verifiedIndirectDispatchCount == 1 &&
+        zeroSubmission.value().verifiedIndirectWorkCount == 0,
+        "zero-work DispatchIndirectがSeal済み件数で実行されませんでした。");
+    auto zeroRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(zeroRead && EqualsIndirect(zeroRead.value().bytes, Universe, 0),
+        "zero-work DispatchIndirectでGPU出力が変更されました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 threeWork;
+    threeWork.timelineOrdinal = 1;
+    threeWork.mode = planning.requiredMode;
+    threeWork.activeMembers = {0, 2, 7};
+    auto frozenThree = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(threeWork),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenThree), "three-work ContinueHistoryの生成に失敗しました。");
+    auto threeSubmission = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenThree).value(), {1, {}});
+    if (!threeSubmission)
+        throw std::runtime_error(
+            "work count 3のD3D12 Submitに失敗しました：" +
+            threeSubmission.error().stage + "：" + threeSubmission.error().message);
+    Require(threeSubmission.value().verifiedTransitionCount == 3 &&
+        threeSubmission.value().verifiedIndirectDispatchCount == 1 &&
+        threeSubmission.value().verifiedIndirectWorkCount == 3,
+        "exact transition count 3のSubmit監査値がDispatchIndirect契約と一致しませんでした。");
+    auto threeRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(threeRead && EqualsIndirect(threeRead.value().bytes, Universe, 3),
+        "DispatchIndirect work count 3のGPU観測結果が一致しません。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 retain;
+    retain.timelineOrdinal = 2;
+    retain.mode = planning.requiredMode;
+    retain.activeMembers = {0, 2, 7};
+    auto frozenRetain = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(retain),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRetain), "zero-transition Retainの生成に失敗しました。");
+    auto retainSubmission = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRetain).value(), {2, {}});
+    Require(retainSubmission && retainSubmission.value().verifiedTransitionCount == 0 &&
+        retainSubmission.value().verifiedIndirectWorkCount == 0,
+        "Retain-only frameがzero-work DispatchIndirectになりませんでした。");
+    auto retainRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(retainRead && EqualsIndirect(retainRead.value().bytes, Universe, 3),
+        "zero-work Retain frameで既存GPU出力が変化しました。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "Verified Indirect Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "Verified Indirect Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 3;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {0, 1};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery), "Verified Indirect RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {3, {}});
+    Require(resumed && resumed.value().verifiedIndirectWorkCount == 2,
+        "RecoverySeedのwork countがDispatchIndirectへ再構築されませんでした。");
+    auto recoveryRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(recoveryRead && EqualsIndirect(recoveryRead.value().bytes, Universe, 2),
+        "Recovery後のVerified indirect GPU観測結果が一致しません。");
 }
 
 void VerifyLimitedTexture2DFlowQualification()
@@ -378,6 +498,7 @@ int main(int argc, char** argv)
     try
     {
         const bool actualRemoval = argc > 1 && std::string_view(argv[1]) == "--actual-removal";
+        VerifyIndirectWorkQualification();
         VerifyLimitedTexture2DFlowQualification();
         VerifyConditionalRegionQualification();
         VerifyDynamicExecutionQualification();
