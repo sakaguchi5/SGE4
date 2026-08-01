@@ -21,7 +21,7 @@ inline constexpr std::array<std::byte, 8> FrozenCompositionAbi2Magic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'4'},
     std::byte{'U'}, std::byte{'N'}, std::byte{'I'}, std::byte{0}};
 inline constexpr std::uint16_t FrozenCompositionAbi2FormatMajor = 2;
-inline constexpr std::uint16_t FrozenCompositionAbi2FormatMinor = 4;
+inline constexpr std::uint16_t FrozenCompositionAbi2FormatMinor = 5;
 inline constexpr std::uint32_t FrozenCompositionAbi2ManifestSchema = 2;
 inline constexpr std::uint32_t FrozenCompositionAbi2CoreSchema = 1;
 inline constexpr std::uint32_t FrozenCompositionAbi2LeafRecordBytes = 128;

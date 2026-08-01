@@ -21,7 +21,7 @@ using ProgramParameterId = base::Id32<ProgramParameterTag>;
 using WorkId = base::Id32<WorkTag>;
 
 enum class ResourceKind : std::uint16_t { Buffer = 1, Texture2D = 2, SurfaceImage = 3 };
-enum class FormatMeaning : std::uint16_t { Unknown = 0, Bgra8Unorm = 1, Depth32Float = 2 };
+enum class FormatMeaning : std::uint16_t { Unknown = 0, Bgra8Unorm = 1, Depth32Float = 2, Rgba32Float = 3 };
 enum class LifetimeIntent : std::uint16_t { Persistent = 1, FrameLocal = 2, Temporal = 3, External = 4, Preparation = 5 };
 enum class UpdateIntent : std::uint16_t { Immutable = 1, DynamicPerFrame = 2, External = 3, GpuWritten = 4 };
 enum class Visibility : std::uint16_t { Internal = 1, Published = 2 };
@@ -41,7 +41,8 @@ enum class ViewRole : std::uint16_t
     StorageBuffer = 7,
     ShaderBuffer = 8,
     CopySource = 9,
-    CopyDestination = 10
+    CopyDestination = 10,
+    StorageTexture2D = 11
 };
 
 enum class TemporalRelation : std::uint16_t { Current = 1, Previous = 2 };
@@ -52,7 +53,8 @@ enum class ProgramParameterKind : std::uint16_t
     ConstantBuffer = 1,
     SampledTexture = 2,
     ReadOnlyBuffer = 3,
-    UnorderedBuffer = 4
+    UnorderedBuffer = 4,
+    UnorderedTexture2D = 5
 };
 enum class ShaderStage : std::uint16_t { Vertex = 1, Pixel = 2, Compute = 3 };
 enum class WorkOperandKind : std::uint16_t

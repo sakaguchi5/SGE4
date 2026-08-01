@@ -14,6 +14,7 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <span>
 #include <string>
 #include <utility>
@@ -37,6 +38,7 @@ inline constexpr std::string_view DynamicObservationOutputEndpoint = "runtime/dy
 inline constexpr std::string_view IndirectOutputEndpoint = "runtime/indirect/output";
 inline constexpr std::string_view TextureInputEndpoint = "runtime/texture/input";
 inline constexpr std::string_view TextureOutputEndpoint = "runtime/texture/output";
+inline constexpr std::string_view TextureUavOutputEndpoint = "runtime/texture-uav/output";
 
 struct CompiledLeaf final
 {
@@ -340,6 +342,61 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         {std::move(compiled).value().packageBytes});
 }
 
+inline base::Expected<CompiledLeaf, std::string> BuildTextureUavProducerLeaf(
+    std::uint32_t width = 4,
+    std::uint32_t height = 4)
+{
+    if (width == 0 || height == 0 ||
+        width > std::numeric_limits<std::uint32_t>::max() / 16u)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Texture UAV extentが検証または実行の契約に違反しています。");
+    sem::SemanticBuilder builder;
+    auto output = builder.AddExternalTexture2D(
+        "L4G5.TextureUavProducer.Output", width, height,
+        sem::FormatMeaning::Rgba32Float, width * 16u);
+    if (!output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Texture UAV producer Resourceが検証または実行の契約に違反しています。");
+    auto outputUse = builder.AddUse(
+        output.value(), sem::Effect::Write, sem::ViewRole::StorageTexture2D);
+    if (!outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Texture UAV producer ResourceUseが検証または実行の契約に違反しています。");
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.parameters = {
+        {{0}, "OutputTexture", sem::ProgramParameterKind::UnorderedTexture2D,
+            sem::ShaderStage::Compute, 0, 0, 1}};
+    auto program = builder.AddComputeProgram(
+        "L4G5.TextureUavProducer.Program", std::move(interfaceDescription), {R"hlsl(
+RWTexture2D<float4> OutputTexture : register(u0);
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    OutputTexture[id.xy] = float4(
+        64.0f / 255.0f,
+        128.0f / 255.0f,
+        192.0f / 255.0f,
+        1.0f);
+}
+)hlsl", {}, {}, "CSMain"});
+    if (!program)
+        return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, outputUse.value(), {0}}};
+    auto work = builder.AddComputeWorkGeneric(
+        "L4G5.TextureUavProducer.Work", program.value(), operands,
+        width, height, 1);
+    if (!work)
+        return base::Failure<CompiledLeaf, std::string>(work.error());
+    auto compiled = sge4::compiler::CompileCanonical(
+        std::move(builder).Build(), ComputeProfile(1));
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
+}
+
 inline base::Expected<CompiledLeaf, std::string> BuildTextureProducerLeaf(
     std::uint32_t width = 4,
     std::uint32_t height = 4)
@@ -390,6 +447,84 @@ float4 PSMain(VSOutput input) : SV_TARGET
         "L4G3.TextureProducer.Work", program.value(), operands, 3);
     if (!work) return base::Failure<CompiledLeaf, std::string>(work.error());
     auto profile = ComputeProfile(0);
+    profile.computeQueueCount = 0;
+    profile.rtvDescriptorCount = 1;
+    auto compiled = sge4::compiler::CompileCanonical(std::move(builder).Build(), profile);
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
+}
+
+inline base::Expected<CompiledLeaf, std::string> BuildTextureFloatConsumerLeaf(
+    std::uint32_t width = 4,
+    std::uint32_t height = 4)
+{
+    struct Vertex final { float position[3]; };
+    const std::array vertices = {
+        Vertex{{-1.0f, -1.0f, 0.0f}},
+        Vertex{{-1.0f,  3.0f, 0.0f}},
+        Vertex{{ 3.0f, -1.0f, 0.0f}}};
+    if (width == 0 || height == 0 ||
+        width > std::numeric_limits<std::uint32_t>::max() / 16u)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Texture float consumer extentが検証または実行の契約に違反しています。");
+    sem::SemanticBuilder builder;
+    auto vertex = builder.AddImmutableBuffer(
+        "L4G5.TextureConsumer.Vertices", sizeof(Vertex),
+        std::as_bytes(std::span<const Vertex>(vertices)));
+    auto input = builder.AddExternalTexture2D(
+        "L4G5.TextureConsumer.Input", width, height,
+        sem::FormatMeaning::Rgba32Float, width * 16u);
+    auto output = builder.AddExternalTexture2D(
+        "L4G5.TextureConsumer.Output", width, height,
+        sem::FormatMeaning::Bgra8Unorm, width * 4u);
+    if (!vertex || !input || !output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Texture float consumer Resourceが検証または実行の契約に違反しています。");
+    auto vertexUse = builder.AddUse(vertex.value(), sem::Effect::Read, sem::ViewRole::VertexData);
+    auto inputUse = builder.AddUse(input.value(), sem::Effect::Read, sem::ViewRole::SampledTexture);
+    auto outputUse = builder.AddUse(output.value(), sem::Effect::Write, sem::ViewRole::ColorAttachment);
+    if (!vertexUse || !inputUse || !outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Texture float consumer ResourceUseが検証または実行の契約に違反しています。");
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.vertexStrideBytes = sizeof(Vertex);
+    interfaceDescription.vertexInputs = {{sem::VertexInput::Meaning::Position, 3, 0}};
+    interfaceDescription.parameters = {
+        {{0}, "InputTexture", sem::ProgramParameterKind::SampledTexture,
+            sem::ShaderStage::Pixel, 0, 0, 1}};
+    auto program = builder.AddRasterProgram(
+        "L4G5.TextureConsumer.Program", std::move(interfaceDescription), {R"hlsl(
+Texture2D<float4> InputTexture : register(t0);
+SamplerState InputSampler : register(s0);
+struct VSInput { float3 position : POSITION; };
+struct VSOutput { float4 position : SV_POSITION; };
+VSOutput VSMain(VSInput input)
+{
+    VSOutput output;
+    output.position = float4(input.position, 1.0f);
+    return output;
+}
+float4 PSMain(VSOutput input) : SV_TARGET
+{
+    uint textureWidth = 0;
+    uint textureHeight = 0;
+    InputTexture.GetDimensions(textureWidth, textureHeight);
+    const float2 uv = input.position.xy / float2(textureWidth, textureHeight);
+    return InputTexture.SampleLevel(InputSampler, uv, 0.0f);
+}
+)hlsl", "VSMain", "PSMain", {}});
+    if (!program) return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::VertexData, vertexUse.value(), {}},
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, inputUse.value(), {0}},
+        sem::WorkOperand{sem::WorkOperandKind::ColorAttachment, outputUse.value(), {}}};
+    auto work = builder.AddRasterWorkGeneric(
+        "L4G5.TextureConsumer.Work", program.value(), operands, 3);
+    if (!work) return base::Failure<CompiledLeaf, std::string>(work.error());
+    auto profile = ComputeProfile(1);
     profile.computeQueueCount = 0;
     profile.rtvDescriptorCount = 1;
     auto compiled = sge4::compiler::CompileCanonical(std::move(builder).Build(), profile);
@@ -583,6 +718,12 @@ inline contract::LeafPackageDeclaration DynamicObservationDeclaration(
     return {std::move(key), leaf.packageBytes,
         {{0, std::string(DynamicObservationInputEndpoint)},
          {1, std::string(DynamicObservationOutputEndpoint)}}};
+}
+inline contract::LeafPackageDeclaration TextureUavProducerDeclaration(
+    std::string key, const CompiledLeaf& leaf)
+{
+    return {std::move(key), leaf.packageBytes,
+        {{0, std::string(TextureUavOutputEndpoint)}}};
 }
 inline contract::LeafPackageDeclaration TextureProducerDeclaration(
     std::string key, const CompiledLeaf& leaf)

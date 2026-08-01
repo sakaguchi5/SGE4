@@ -354,7 +354,7 @@ Architecture Gateは少なくとも次を拒否する。
 
 ## 16. 現在の能力範囲
 
-ABI 2.4は現在実証済みのComposition能力だけを表す。
+ABI 2.5は現在実証済みのComposition能力だけを表す。
 
 - Bufferおよび限定Texture2Dのfinite static DAG
 - single writer
@@ -364,8 +364,8 @@ ABI 2.4は現在実証済みのComposition能力だけを表す。
 - single DeviceDomain
 - whole-Composition Recovery
 - Frozen Dynamic Invocationとのidentity binding
-- fixed BGRA8 Texture2D、single mip／layer／plane／sample
-- RTV producerからSRV consumerへのsame-frame handoff
+- fixed BGRA8 Texture2Dおよびfixed RGBA32F Texture2D、single mip／layer／plane／sample
+- RTV producerまたはCompute UAV producerからSRV consumerへのsame-frame handoff
 
 Texture2Dの未実証一般化、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。Conditional Regionと限定Texture2D Flowは後続Production amendmentで追加された。
 
@@ -412,3 +412,12 @@ Level 4 Generalization 4によりProduction minorを2.4へ進め、Dynamic Contr
 対応するFrozen Dynamic Invocationは`SGE4INV 1.4`、Manifest schema 5である。必須Indirect Dispatch Section schema 1が、独立VerifierにSealされたtarget route、maxWorkCount、workCount、Dispatch X／Y／Z、Indirect Dispatch identityを保存する。
 
 Leaf PackageはSchema 17のまま維持する。Executorは対象Schema 17 `ExecuteCompute` operationだけをD3D12 `ExecuteIndirect(DISPATCH)`へ機械的に置換し、Runtimeはwork countを再計算しない。
+
+
+## Production amendment: SGE4UNI 2.5
+
+Level 4 Generalization 5によりProduction minorを2.5へ進めた。Contract Data schema 2、Verified Decision Data schema 2、Dynamic Contract schema 4、SGE4INV 1.4、Leaf Schema 17は変更しない。
+
+既存Texture2D recordのformatとshape、およびEndpoint／HandoffのResourceStateで、fixed R32G32B32A32_FLOAT Texture2DのUnorderedWrite producerからShaderResource consumerへの経路を表現する。binary record layoutを増やさず、検証済み意味領域だけを拡張する。
+
+BGRA8はRenderTarget writer、RGBA32FはUnorderedAccess writerへ限定する。D3D12 resource flag、UAV descriptor、aligned RowPitchはExecutorの物理写像でありFrozen ABIへ含めない。

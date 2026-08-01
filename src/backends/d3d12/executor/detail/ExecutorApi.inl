@@ -186,13 +186,35 @@ Executor::CreateSharedTexture2D(
     std::span<const std::byte> initialBytes)
 {
     auto* nativeDomain = dynamic_cast<DeviceDomain*>(&domain);
+    const std::uint32_t bytesPerPixel =
+        format == pkg::Format::B8G8R8A8Unorm ? 4u :
+        format == pkg::Format::R32G32B32A32Float ? 16u : 0u;
     const std::uint64_t packedBytes = static_cast<std::uint64_t>(rowBytes) * height;
+    const pkg::ResourceState renderTargetState{
+        pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::RenderTarget)};
+    const pkg::ResourceState unorderedWriteState{
+        pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::UnorderedWrite)};
+    const pkg::ResourceState pixelShaderReadState{
+        pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::PixelShaderRead)};
+    const pkg::ResourceState nonPixelShaderReadState{
+        pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::NonPixelShaderRead)};
+    const bool renderTarget = initialState == renderTargetState;
+    const bool unorderedWrite = initialState == unorderedWriteState;
+    const bool shaderRead = initialState == pixelShaderReadState ||
+        initialState == nonPixelShaderReadState;
     if (!nativeDomain || nativeDomain->State() != runtime::DeviceRuntimeState::Active ||
-        width == 0 || height == 0 ||
-        width > std::numeric_limits<std::uint32_t>::max() / 4u ||
-        static_cast<std::uint64_t>(rowBytes) != static_cast<std::uint64_t>(width) * 4u ||
+        width == 0 || height == 0 || bytesPerPixel == 0 ||
+        width > std::numeric_limits<std::uint32_t>::max() / bytesPerPixel ||
+        static_cast<std::uint64_t>(rowBytes) !=
+            static_cast<std::uint64_t>(width) * bytesPerPixel ||
         packedBytes > std::numeric_limits<std::size_t>::max() ||
-        format != pkg::Format::B8G8R8A8Unorm ||
+        (!renderTarget && !unorderedWrite && !shaderRead) ||
+        (renderTarget && format != pkg::Format::B8G8R8A8Unorm) ||
+        (unorderedWrite && format != pkg::Format::R32G32B32A32Float) ||
         (!initialBytes.empty() && initialBytes.size() != packedBytes))
         return base::Failure<ExternalBufferBinding, runtime::RuntimeError>(
             Error("domain/shared-texture", "Textureが検証または実行の契約に違反しています。"));
@@ -207,7 +229,9 @@ Executor::CreateSharedTexture2D(
     description.Format = ToDxgi(format);
     description.SampleDesc.Count = 1;
     description.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    description.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    description.Flags = renderTarget ? D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET :
+        unorderedWrite ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS :
+        D3D12_RESOURCE_FLAG_NONE;
 
     D3D12_HEAP_PROPERTIES defaultHeap{};
     defaultHeap.Type = D3D12_HEAP_TYPE_DEFAULT;

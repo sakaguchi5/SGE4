@@ -1,5 +1,7 @@
 # New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Revision 2.5: Level 4 Generalization 5として限定`Texture2D UAV／Compute Flow`を導入した。固定RGBA32F、single mip／layer／plane／sampleのCompute UAV writerをComposition ContractとPlanへ固定し、shared TextureをUnorderedWriteからSRV consumerへstate／completion付きで接続する。中間RGBA32Fと最終BGRA8のpacked readback、whole-composition Recoveryを資格化した。
+>
 > Revision 2.4: Level 4 Generalization 4として`Verified Indirect Work Execution`を導入した。Compositionが一つのunconditional Compute Leaf／Compute Commandと最大work数を固定し、`SGE4INV 1.4`がexact transition countから導いたDispatch引数をSealする。Runtimeは件数を再計算せず、Executorが対象CommandだけをD3D12 `ExecuteIndirect(DISPATCH)`へ機械的に置換する。
 >
 > Revision 2.3: Level 4 Generalization 3として限定`Texture2D Flow`を導入した。固定BGRA8、single mip／layer／plane／sample、single writer、same-frameのTexture形状をComposition ContractとPlanへ固定し、shared TextureをRTV producerからSRV consumerへ状態・completion付きで接続する。ExecutorはD3D12 row pitchを機械的に処理し、packed readbackを返す。
@@ -74,7 +76,7 @@ Leaf Compilerは、独立Verifierを通過した完全なSchema 17 Frozen Leaf P
 
 ### 3. Composition authorityを完全Planへ統合
 
-Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.4`へFreezeします。`CompositionCertificate`は、ABI 2.4 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
+Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.5`へFreezeします。`CompositionCertificate`は、ABI 2.5 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
 
 ### 4. RuntimeからPlanner／Verifierを排除
 
@@ -155,7 +157,7 @@ PlannerとVerifierは、Leaf／Composition／Dynamicの各段で別プロジェ�
 ## Frozen artifact hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.4
+SGE4UNI Frozen Composition Package 2.5
   Manifest schema 2
   Leaf Table schema 1
   complete Schema 17 Leaf Package bytes
@@ -168,9 +170,9 @@ SGE4UNI Frozen Composition Package 2.4
 
 `CompleteComposition` Sectionと内側`SGE4CMP 1.0`はProduction ABIから廃止しました。Leaf Packageの独立ABIはSchema 17のまま維持し、Leaf bytesを再符号化せず完全に埋め込みます。
 
-Production Readerは`SGE4UNI 2.4`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
+Production Readerは`SGE4UNI 2.5`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
 
-Dynamic Invocationは別の`SGE4INV` major 1／minor 4成果物です。Conditional Execution SectionがRegion選択とenabled Leaf集合を、Execution Payload Sectionがexact Update payloadを、Indirect Dispatch Sectionが対象Compute route、最大work数、Seal済みDispatch引数とidentityを保存します。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、work count、Dispatch引数をPlannerと独立Verifierが別々に確定します。Runtimeは、ABI 2.4 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
+Dynamic Invocationは別の`SGE4INV` major 1／minor 4成果物です。Conditional Execution SectionがRegion選択とenabled Leaf集合を、Execution Payload Sectionがexact Update payloadを、Indirect Dispatch Sectionが対象Compute route、最大work数、Seal済みDispatch引数とidentityを保存します。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、work count、Dispatch引数をPlannerと独立Verifierが別々に確定します。Runtimeは、ABI 2.5 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
 
 詳細は次を参照してください。
 
@@ -181,6 +183,7 @@ docs/LEVEL4_GENERALIZATION1_VERIFIED_DYNAMIC_EXECUTION.md
 docs/LEVEL4_GENERALIZATION2_CONDITIONAL_REGION.md
 docs/LEVEL4_GENERALIZATION3_LIMITED_TEXTURE2D_FLOW.md
 docs/LEVEL4_GENERALIZATION4_VERIFIED_INDIRECT_WORK_EXECUTION.md
+docs/LEVEL4_GENERALIZATION5_LIMITED_TEXTURE2D_UAV_COMPUTE_FLOW.md
 ```
 
 ## Build
@@ -204,7 +207,7 @@ Full Gateは次を確認します。
 - Source Manifest
 - Debug／Release build
 - Debug A／Debug B／Release Frozen bytes一致
-- ABI 2.4 flat Section／round-trip／migration／corruption／Dynamic algebra／verified execution payload／Conditional execution／limited Texture2D Flow／verified DispatchIndirect
+- ABI 2.5 flat Section／round-trip／migration／corruption／Dynamic algebra／verified execution payload／Conditional execution／limited Texture2D Flow／verified DispatchIndirect
 - 40 carried invariants
 - WARP materialization／submission／readback
 - Controlled whole-composition Recovery
@@ -233,7 +236,9 @@ Full Gateは次を確認します。
 - sealed True／False branch selectionとenabled Leaf集合
 - zero-Leaf submission／未選択Resource状態保持
 - fixed BGRA8 Texture2D Flow（single mip／layer／plane／sample）
-- RTV producer → SRV consumerのstate／completion handoff
+- fixed RGBA32F Texture2D UAV／Compute Flow（single mip／layer／plane／sample）
+- RTV producer → SRV consumerおよびUAV producer → SRV consumerのstate／completion handoff
+- RGBA32F intermediate／BGRA8 outputのpacked readback
 - D3D12 pitch-aware upload／packed readback
 - exact Update payload／Clear／Retainの実GPU反映
 - submit成功後だけのHistory／shadow同時Commit
@@ -245,7 +250,7 @@ Full Gateは次を確認します。
 
 今回追加していないもの:
 
-- Texture2Dのmip／array／MSAA／UAV／Depth／subresource一般化
+- Texture2Dのmip／array／MSAA／Depth／任意UAV format／subresource一般化
 - Frozen Variant Set
 - Streaming／Residency
 - Partial Recovery
@@ -256,7 +261,7 @@ Full Gateは次を確認します。
 
 ## Validation boundary
 
-このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.4直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
+このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.5直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
 
 詳細は次を参照してください。
 

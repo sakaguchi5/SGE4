@@ -40,7 +40,8 @@ base::Expected<void, CompilationError> ValidateD3D12Schema17Capability(
             return Failure<void>("target-feasibility", "検証または実行の契約に違反しています。");
         if (resource.kind == semantic::ResourceKind::Texture2D &&
             resource.texture2D.extentMeaning == semantic::TextureExtentMeaning::Fixed &&
-            resource.texture2D.formatMeaning != semantic::FormatMeaning::Bgra8Unorm)
+            resource.texture2D.formatMeaning != semantic::FormatMeaning::Bgra8Unorm &&
+            resource.texture2D.formatMeaning != semantic::FormatMeaning::Rgba32Float)
             return Failure<void>("target-feasibility", "検証または実行の契約に違反しています。");
         if (resource.kind == semantic::ResourceKind::Texture2D &&
             resource.texture2D.extentMeaning == semantic::TextureExtentMeaning::PresentationSurface &&

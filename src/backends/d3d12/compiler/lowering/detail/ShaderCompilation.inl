@@ -39,6 +39,7 @@ const char* ParameterKindName(semantic::ProgramParameterKind kind) noexcept
     case semantic::ProgramParameterKind::SampledTexture: return "SampledTexture";
     case semantic::ProgramParameterKind::ReadOnlyBuffer: return "ReadOnlyBuffer";
     case semantic::ProgramParameterKind::UnorderedBuffer: return "UnorderedBuffer";
+    case semantic::ProgramParameterKind::UnorderedTexture2D: return "UnorderedTexture2D";
     default: return "Unknown";
     }
 }
@@ -66,6 +67,9 @@ base::Expected<ReflectedBindingKind, CompileError> ReflectedKind(
         return base::Success<ReflectedBindingKind, CompileError>(
             ReflectedBindingKind::ReadOnlyBuffer);
     case D3D_SIT_UAV_RWTYPED:
+        if (binding.Dimension == D3D_SRV_DIMENSION_TEXTURE2D)
+            return base::Success<ReflectedBindingKind, CompileError>(
+                ReflectedBindingKind::UnorderedTexture2D);
         if (binding.Dimension == D3D_SRV_DIMENSION_BUFFER ||
             binding.Dimension == D3D_SRV_DIMENSION_BUFFEREX)
             return base::Success<ReflectedBindingKind, CompileError>(
@@ -119,6 +123,8 @@ std::optional<semantic::ProgramParameterKind> SemanticKind(ReflectedBindingKind 
         return semantic::ProgramParameterKind::ReadOnlyBuffer;
     case ReflectedBindingKind::UnorderedBuffer:
         return semantic::ProgramParameterKind::UnorderedBuffer;
+    case ReflectedBindingKind::UnorderedTexture2D:
+        return semantic::ProgramParameterKind::UnorderedTexture2D;
     default:
         return std::nullopt;
     }

@@ -3,7 +3,7 @@
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.4
+Frozen Composition: SGE4UNI 2.5
 Dynamic Contract: schema 3
 Frozen Dynamic Invocation: SGE4INV 1.4
 Invocation Manifest: schema 4
@@ -350,3 +350,26 @@ Windows統合設計試験で、Indirect契約を持たない既存Compositionの
 - `AuthorityOnly + VerifiedDispatch`でexact transition countとshadow適用数を分離した。
 - Runtime Session回帰: verified=3、applied=0、DispatchIndirect work=3。
 - Windows資格失敗時にD3D12 Submitのstage／messageを表示する。
+
+
+## Generalization 5 validation
+
+追加対象:
+
+- SGE4UNI 2.5、Contract／Decision schema 2維持
+- Semantic Rgba32Float／StorageTexture2D／UnorderedTexture2D
+- typed Texture2D UAV Reflection
+- RGBA32F rowBytes = width * 16
+- UnorderedWrite producer → PixelShaderRead consumer handoff
+- D3D12 ALLOW_UNORDERED_ACCESS shared Texture／UAV descriptor
+- RGBA32F intermediate packed readback
+- BGRA8 consumer output packed readback
+- whole-composition Recovery後の再現
+
+Linux側ではportable SGE4UNI 2.5 direct／migration／round-trip／corruption、portable handcrafted RGBA32F UAV contract／handoff、C++23厳格構文検査、静的Architecture監査、Manifest照合を実施する。MSVC、HLSL Reflection、WARP UAV実行、Actual Device removalの最終合格はWindows Full Gateで確定する。
+
+## Level 4 Generalization 5 — External Texture Invocation rowBytes fix
+
+Windows資格試験で、RGBA32F shared TextureがD3D12 ExecutorのInvocation検証に拒否された。原因はGeneralization 3由来の`rowBytes == width * 4`というBGRA8専用条件が、全External Texture2D formatへ適用されていたことである。
+
+修正後は`requiredFormat`から限定texel byte幅を導出し、BGRA8は`width * 4`、RGBA32Fは`width * 16`としてNative Resourceのpacked rowBytesを検証する。未対応formatは引き続き拒否する。Frozen ABI、Composition authority、UAV物質化、state handoff、readback、Recoveryの意味は変更しない。

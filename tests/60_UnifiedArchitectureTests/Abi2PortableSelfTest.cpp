@@ -135,7 +135,8 @@ void Require(bool condition, const char* message)
 [[nodiscard]] std::vector<std::byte> BuildPortableTextureLeafPackage(
     bool consumer,
     std::uint32_t width = 4,
-    std::uint32_t height = 4)
+    std::uint32_t height = 4,
+    bool uavFlow = false)
 {
     d3d::D3D12PackageDescription description;
     description.profile.shaderModelMajor = 5;
@@ -145,13 +146,17 @@ void Require(bool condition, const char* message)
     description.profile.framesInFlight = 1;
     description.profile.directQueueCount = 1;
     description.profile.surfaceImageCount = 0;
-    description.profile.rtvDescriptorCount = 1;
-    description.profile.shaderDescriptorCount = consumer ? 1u : 0u;
+    description.profile.rtvDescriptorCount = consumer ? 1u : (uavFlow ? 0u : 1u);
+    description.profile.shaderDescriptorCount = consumer || uavFlow ? 1u : 0u;
 
     const std::uint32_t resourceCount = consumer ? 2u : 1u;
     for (std::uint32_t index = 0; index < resourceCount; ++index)
     {
         const bool read = consumer && index == 0;
+        const bool unorderedWrite = uavFlow && !consumer;
+        const auto textureFormat = (uavFlow && (!consumer || index == 0))
+            ? d3d::Format::R32G32B32A32Float
+            : d3d::Format::B8G8R8A8Unorm;
         d3d::ResourceArtifact resource;
         resource.id = d3d::ResourceId{index};
         resource.resourceKind = d3d::ResourceKind::Texture2D;
@@ -159,7 +164,7 @@ void Require(bool condition, const char* message)
         resource.rebuildPolicy = d3d::RebuildPolicy::RequireExternalRebind;
         resource.extentMode = d3d::ExtentMode::Fixed;
         resource.physicalInstanceCount = 1;
-        resource.format = d3d::Format::B8G8R8A8Unorm;
+        resource.format = textureFormat;
         resource.width = width;
         resource.height = height;
         resource.depthOrArraySize = 1;
@@ -171,21 +176,23 @@ void Require(bool condition, const char* message)
         resource.initialState = {
             d3d::StateClass::Explicit, 0,
             read ? std::to_underlying(d3d::ExplicitStateBits::PixelShaderRead)
-                 : std::to_underlying(d3d::ExplicitStateBits::RenderTarget)};
+                 : unorderedWrite ? std::to_underlying(d3d::ExplicitStateBits::UnorderedWrite)
+                                  : std::to_underlying(d3d::ExplicitStateBits::RenderTarget)};
         description.resources.push_back(resource);
 
         d3d::ResourceViewArtifact view;
         view.id = d3d::ViewId{index};
         view.resource = d3d::ResourceId{index};
-        view.viewClass = read ? d3d::ViewClass::ShaderResource : d3d::ViewClass::RenderTarget;
-        view.format = d3d::Format::B8G8R8A8Unorm;
+        view.viewClass = read ? d3d::ViewClass::ShaderResource :
+            unorderedWrite ? d3d::ViewClass::UnorderedAccess : d3d::ViewClass::RenderTarget;
+        view.format = textureFormat;
         view.firstMip = 0;
         view.mipCount = 1;
         view.firstArrayLayer = 0;
         view.arrayLayerCount = 1;
         view.firstPlane = 0;
         view.planeCount = 1;
-        view.descriptorHeapClass = read ? 2u : 1u;
+        view.descriptorHeapClass = read || unorderedWrite ? 2u : 1u;
         view.descriptorIndex = read ? 0u : 0u;
         description.views.push_back(view);
 
@@ -193,7 +200,7 @@ void Require(bool condition, const char* message)
         slot.id = d3d::ExternalSlotId{index};
         slot.resource = d3d::ResourceId{index};
         slot.requiredKind = d3d::ResourceKind::Texture2D;
-        slot.requiredFormat = d3d::Format::B8G8R8A8Unorm;
+        slot.requiredFormat = textureFormat;
         slot.minimumBytes = 0;
         slot.requiredIncomingState = resource.initialState;
         slot.guaranteedOutgoingState = resource.initialState;
@@ -345,11 +352,11 @@ void VerifyAbi2PortableRoundTrip()
         BuildPortableCompositionInput(leafBytes),
         composition::MakeAuthorityOnlyDynamicContractV1(8));
     Require(static_cast<bool>(first) && static_cast<bool>(second),
-        "Portable SGE4UNI 2.4の生成に失敗しました。");
+        "Portable SGE4UNI 2.5の生成に失敗しました。");
     Require(first.value().FileBytes().size() == second.value().FileBytes().size() &&
         std::equal(first.value().FileBytes().begin(), first.value().FileBytes().end(),
             second.value().FileBytes().begin()),
-        "Portable SGE4UNI 2.4がbyte決定的ではありません。");
+        "Portable SGE4UNI 2.5がbyte決定的ではありません。");
 
     auto outer = ReadSectionedArtifact(
         first.value().FileBytes(), artifact::FrozenCompositionAbi2Magic,
@@ -357,7 +364,7 @@ void VerifyAbi2PortableRoundTrip()
     Require(static_cast<bool>(outer) &&
         outer.value().FormatMinor() == artifact::FrozenCompositionAbi2FormatMinor &&
         outer.value().Sections().size() == artifact::FrozenCompositionAbi2SectionKinds.size(),
-        "Portable SGE4UNI 2.4の平坦Section構造が一致しません。");
+        "Portable SGE4UNI 2.5の平坦Section構造が一致しません。");
 
     const auto leaves = first.value().VerifiedComposition().ValidatedContract().Leaves();
     Require(leaves.size() == 2, "Portable CompositionのLeaf数が一致しません。");
@@ -366,11 +373,11 @@ void VerifyAbi2PortableRoundTrip()
             "ABI 2.0でSchema 17 Leaf Package bytesが保存されませんでした。");
 
     auto roundTrip = composition::ReadFrozenCompositionPackage(first.value().FileBytes());
-    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.4のRound-tripに失敗しました。");
+    Require(static_cast<bool>(roundTrip), "Portable SGE4UNI 2.5のRound-tripに失敗しました。");
     Require(roundTrip.value().FileDigest() == first.value().FileDigest() &&
         roundTrip.value().CompositionCoreDigest() == first.value().CompositionCoreDigest() &&
         roundTrip.value().SemanticDigest() == first.value().SemanticDigest(),
-        "Portable SGE4UNI 2.4のDigestがRound-tripで変化しました。");
+        "Portable SGE4UNI 2.5のDigestがRound-tripで変化しました。");
 
     auto legacyBytes = composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
         BuildPortableCompositionInput(leafBytes),
@@ -381,17 +388,17 @@ void VerifyAbi2PortableRoundTrip()
 
     auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
         legacyBytes.value());
-    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.4へのMigrationに失敗しました。");
+    Require(static_cast<bool>(migrated), "Portable ABI 1.1から2.5へのMigrationに失敗しました。");
     Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
         std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
             first.value().FileBytes().begin()),
-        "直接生成とMigration後のPortable SGE4UNI 2.4がbyte一致しません。");
+        "直接生成とMigration後のPortable SGE4UNI 2.5がbyte一致しません。");
     Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
         migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
         migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity &&
         migrated.value().Certificate().scheduleIdentity == first.value().Certificate().scheduleIdentity &&
         migrated.value().Certificate().recoverySetIdentity == first.value().Certificate().recoverySetIdentity,
-        "ABI 1.1から2.4へのMigrationで権威Identityが保存されませんでした。");
+        "ABI 1.1から2.5へのMigrationで権威Identityが保存されませんでした。");
 
     std::vector<composition::ConditionalRegionV1> conditionalRegions;
     conditionalRegions.push_back(composition::MakeConditionalRegionV1(
@@ -463,7 +470,34 @@ void VerifyAbi2PortableRoundTrip()
         textureFirst.value().FileBytes());
     Require(textureRoundTrip &&
         textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-        "Portable限定Texture2D SGE4UNI 2.4のRound-tripに失敗しました。");
+        "Portable限定Texture2D SGE4UNI 2.5のRound-tripに失敗しました。");
+    const auto textureUavProducer = BuildPortableTextureLeafPackage(false, 4, 4, true);
+    const auto textureFloatConsumer = BuildPortableTextureLeafPackage(true, 4, 4, true);
+    auto textureUav = composition::BuildFrozenCompositionPackage(
+        BuildPortableTextureCompositionInput(textureUavProducer, textureFloatConsumer),
+        composition::MakeAuthorityOnlyDynamicContractV1(1));
+    Require(static_cast<bool>(textureUav),
+        "Portable限定Texture2D UAV Compositionの生成に失敗しました。");
+    const auto& textureUavContract =
+        textureUav.value().VerifiedComposition().ValidatedContract().Contract();
+    Require(std::ranges::any_of(textureUavContract.resources, [](const auto& resource) {
+        return resource.kind == d3d::ResourceKind::Texture2D &&
+            resource.format == d3d::Format::R32G32B32A32Float &&
+            resource.texture2D.rowBytes == 64;
+    }), "Portable RGBA32F Texture2D UAV shapeがContractへ固定されませんでした。");
+    const auto& textureUavPlan = textureUav.value().VerifiedComposition().VerifiedPlan().Plan();
+    Require(std::ranges::any_of(textureUavPlan.handoffs, [](const auto& handoff) {
+        return handoff.producerOutgoingState.explicitBits ==
+                std::to_underlying(d3d::ExplicitStateBits::UnorderedWrite) &&
+            handoff.consumerIncomingState.explicitBits ==
+                std::to_underlying(d3d::ExplicitStateBits::PixelShaderRead);
+    }), "Portable Texture2D UAVからSRVへのstate handoffがPlanへ固定されませんでした。");
+    auto textureUavRoundTrip = composition::ReadFrozenCompositionPackage(
+        textureUav.value().FileBytes());
+    Require(textureUavRoundTrip &&
+        textureUavRoundTrip.value().SemanticDigest() == textureUav.value().SemanticDigest(),
+        "Portable限定Texture2D UAV SGE4UNI 2.5のRound-tripに失敗しました。");
+
     Require(!composition::migration::abi1::BuildFrozenCompositionPackageAbi1ForMigration(
         BuildPortableTextureCompositionInput(textureProducer, textureConsumer),
         composition::MakeAuthorityOnlyDynamicContractV1(1)),

@@ -18,7 +18,7 @@ Source authorityを見直し、15製品プロジェクトへ再構成した。Pr
 | `20_CompositionModel` | Contract、Plan、Identity model |
 | `21_CompositionPlanner` | Raw Composition Plan proposal |
 | `22_CompositionVerifier` | Composition Planの独立検証とSeal。ArtifactのFreeze／Readは所有しない |
-| `23_CompositionArtifactToolchain` | 平坦なSGE4UNI 2.4 freeze／read、certificate、ABI 1 migration、toolchain orchestration |
+| `23_CompositionArtifactToolchain` | 平坦なSGE4UNI 2.5 freeze／read、certificate、ABI 1 migration、toolchain orchestration |
 | `30_DynamicModelArtifact` | Dynamic input／decision／history／SGE4INV |
 | `31_DynamicPlanner` | exact Dynamic proposal |
 | `32_DynamicVerifier` | exact Dynamic independent verification |

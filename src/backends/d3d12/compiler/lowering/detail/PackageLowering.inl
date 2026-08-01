@@ -433,6 +433,7 @@ base::Expected<LoweredPackageStage, CompileError> LowerPackageStage(
                 nativeBindings.push_back({NativeBindingKind::Constant, parameter.shaderRegister, sourceParameter.stage});
                 break;
             case semantic::ProgramParameterKind::UnorderedBuffer:
+            case semantic::ProgramParameterKind::UnorderedTexture2D:
                 parameter.kind = pkg::RootParameterKind::UnorderedAccessTable;
                 parameter.staticView = viewMap.at(use->id.value);
                 nativeBindings.push_back({NativeBindingKind::UnorderedAccess, parameter.shaderRegister, sourceParameter.stage});

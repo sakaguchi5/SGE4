@@ -57,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.4の平坦Section構造が成立していません。");
+            "SGE4UNI 2.5の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.4の直接Sectionがありません。");
+            "SGE4UNI 2.5の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -74,11 +74,11 @@ int main(int argc, char** argv)
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.4へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.5へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.4とMigration後ABI 2.4がbyte一致しません。");
+            "直接生成したABI 2.5とMigration後ABI 2.5がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             throw std::runtime_error(
                 "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
         Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
-            "Conditional Region契約がSGE4UNI 2.4へ保存されませんでした。");
+            "Conditional Region契約がSGE4UNI 2.5へ保存されませんでした。");
 
         dynamic::InvocationInputV1 conditionalTrue;
         conditionalTrue.timelineOrdinal = 0;
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
             indirectContract.targetLeaf.IsValid() &&
             indirectContract.targetComputeCommand == 0 &&
             indirectContract.maxWorkCount == 8,
-            "Verified indirect dispatch契約がSGE4UNI 2.4へ固定されませんでした。");
+            "Verified indirect dispatch契約がSGE4UNI 2.5へ固定されませんでした。");
         Require(!tests::BuildVerifiedIndirectUnified(8, 7),
             "static Compute Commandと異なるmaxWorkCountが受理されました。");
 
@@ -453,7 +453,7 @@ int main(int argc, char** argv)
             textureFirst.value().FileBytes());
         Require(static_cast<bool>(textureRoundTrip) &&
             textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-            "限定Texture2D FlowのSGE4UNI 2.4 round-tripに失敗しました。");
+            "限定Texture2D FlowのSGE4UNI 2.5 round-tripに失敗しました。");
 
         auto mismatchProducer = fixture::BuildTextureProducerLeaf(4, 4);
         auto mismatchConsumer = fixture::BuildTextureConsumerLeaf(2, 2);
@@ -480,10 +480,102 @@ int main(int argc, char** argv)
             std::move(mismatchInput), composition::MakeAuthorityOnlyDynamicContractV1(1)),
             "異なるextentのTexture2D endpointが同一Flowとして受理されました。");
 
+        auto textureUavFirst = tests::BuildLimitedTexture2DUavUnified();
+        auto textureUavSecond = tests::BuildLimitedTexture2DUavUnified();
+        if (!textureUavFirst || !textureUavSecond)
+            throw std::runtime_error(
+                "限定Texture2D UAV Compositionの生成に失敗しました：" +
+                (textureUavFirst ? textureUavSecond.error() : textureUavFirst.error()));
+        Require(textureUavFirst.value().FileBytes().size() == textureUavSecond.value().FileBytes().size() &&
+            std::equal(textureUavFirst.value().FileBytes().begin(), textureUavFirst.value().FileBytes().end(),
+                textureUavSecond.value().FileBytes().begin()),
+            "限定Texture2D UAV Compositionがbyte決定的ではありません。");
+        const auto& textureUavContract =
+            textureUavFirst.value().VerifiedComposition().ValidatedContract().Contract();
+        const auto rgbaFormat = sge4::package::d3d12_v13::Format::R32G32B32A32Float;
+        const auto bgraFormat = sge4::package::d3d12_v13::Format::B8G8R8A8Unorm;
+        Require(textureUavContract.resources.size() == 2 &&
+            std::ranges::count_if(textureUavContract.resources, [=](const auto& resource) {
+                return resource.kind == sge4::package::d3d12_v13::ResourceKind::Texture2D &&
+                    resource.format == rgbaFormat && resource.texture2D.width == 4 &&
+                    resource.texture2D.height == 4 && resource.texture2D.rowBytes == 64;
+            }) == 1 &&
+            std::ranges::count_if(textureUavContract.resources, [=](const auto& resource) {
+                return resource.kind == sge4::package::d3d12_v13::ResourceKind::Texture2D &&
+                    resource.format == bgraFormat && resource.texture2D.width == 4 &&
+                    resource.texture2D.height == 4 && resource.texture2D.rowBytes == 16;
+            }) == 1,
+            "限定Texture2D UAV／BGRA output形状がFrozen Contractへ固定されませんでした。");
+        const auto unorderedBits = static_cast<std::uint32_t>(
+            sge4::package::d3d12_v13::ExplicitStateBits::UnorderedWrite);
+        const auto pixelReadBits = static_cast<std::uint32_t>(
+            sge4::package::d3d12_v13::ExplicitStateBits::PixelShaderRead);
+        const auto uavWriter = std::ranges::find_if(textureUavContract.endpoints, [=](const auto& endpoint) {
+            return endpoint.format == rgbaFormat && endpoint.access == composition::EndpointAccess::WriteOnly;
+        });
+        const auto sampledReader = std::ranges::find_if(textureUavContract.endpoints, [=](const auto& endpoint) {
+            return endpoint.format == rgbaFormat && endpoint.access == composition::EndpointAccess::ReadOnly;
+        });
+        Require(uavWriter != textureUavContract.endpoints.end() &&
+            sampledReader != textureUavContract.endpoints.end() &&
+            uavWriter->requiredIncomingState.explicitBits == unorderedBits &&
+            uavWriter->guaranteedOutgoingState.explicitBits == unorderedBits &&
+            sampledReader->requiredIncomingState.explicitBits == pixelReadBits &&
+            sampledReader->guaranteedOutgoingState.explicitBits == pixelReadBits,
+            "Texture2D UAV write／SRV read state契約がFrozen endpointへ固定されませんでした。");
+        const auto& textureUavPlan =
+            textureUavFirst.value().VerifiedComposition().VerifiedPlan().Plan();
+        Require(std::ranges::any_of(textureUavPlan.handoffs, [=](const auto& handoff) {
+            return handoff.producerOutgoingState.explicitBits == unorderedBits &&
+                handoff.consumerIncomingState.explicitBits == pixelReadBits;
+        }),
+            "Texture2D UAVからSRVへのstate handoffがVerified Planへ固定されませんでした。");
+        Require(std::ranges::any_of(textureUavPlan.allocations, [=](const auto& allocation) {
+            return allocation.format == rgbaFormat && allocation.sizeBytes == 256;
+        }),
+            "RGBA32F Texture2D UAV allocationがVerified Planへ固定されませんでした。");
+        auto textureUavRoundTrip = composition::ReadFrozenCompositionPackage(
+            textureUavFirst.value().FileBytes());
+        Require(textureUavRoundTrip &&
+            textureUavRoundTrip.value().SemanticDigest() == textureUavFirst.value().SemanticDigest(),
+            "限定Texture2D UAV FlowのSGE4UNI 2.5 round-tripに失敗しました。");
+
+        auto formatMismatchProducer = fixture::BuildTextureUavProducerLeaf(4, 4);
+        auto formatMismatchConsumer = fixture::BuildTextureConsumerLeaf(4, 4);
+        Require(formatMismatchProducer && formatMismatchConsumer,
+            "Texture UAV format mismatch Fixtureの生成に失敗しました。");
+        composition::ContractBuildInput formatMismatchInput;
+        formatMismatchInput.leaves = {
+            fixture::TextureUavProducerDeclaration(
+                "unified/texture-uav/mismatch/producer", formatMismatchProducer.value()),
+            fixture::TextureConsumerDeclaration(
+                "unified/texture-uav/mismatch/consumer", formatMismatchConsumer.value())};
+        composition::ResourceFlowDeclaration formatMismatchMiddle;
+        formatMismatchMiddle.stableKey = "unified/texture-uav/mismatch/intermediate";
+        formatMismatchMiddle.boundary = composition::ResourceBoundary::Internal;
+        formatMismatchMiddle.producer = fixture::Ref(
+            "unified/texture-uav/mismatch/producer",
+            std::string(fixture::TextureUavOutputEndpoint));
+        formatMismatchMiddle.consumers = {fixture::Ref(
+            "unified/texture-uav/mismatch/consumer",
+            std::string(fixture::TextureInputEndpoint))};
+        composition::ResourceFlowDeclaration formatMismatchOutput;
+        formatMismatchOutput.stableKey = "unified/texture-uav/mismatch/output";
+        formatMismatchOutput.boundary = composition::ResourceBoundary::CompositionOutput;
+        formatMismatchOutput.producer = fixture::Ref(
+            "unified/texture-uav/mismatch/consumer",
+            std::string(fixture::TextureOutputEndpoint));
+        formatMismatchInput.resources = {
+            std::move(formatMismatchMiddle), std::move(formatMismatchOutput)};
+        Require(!composition::BuildFrozenCompositionPackage(
+            std::move(formatMismatchInput),
+            composition::MakeAuthorityOnlyDynamicContractV1(1)),
+            "RGBA32F UAV producerとBGRA8 consumerのformat不一致が受理されました。");
+
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.4\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.5\n";
         std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.4\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;

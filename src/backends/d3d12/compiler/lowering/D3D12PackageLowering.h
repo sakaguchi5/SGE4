@@ -44,7 +44,8 @@ enum class ReflectedBindingKind : std::uint16_t
     SampledTexture = 2,
     ReadOnlyBuffer = 3,
     UnorderedBuffer = 4,
-    StaticSampler = 5
+    StaticSampler = 5,
+    UnorderedTexture2D = 6
 };
 
 struct ReflectedBinding final

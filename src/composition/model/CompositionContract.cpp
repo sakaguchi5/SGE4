@@ -134,14 +134,44 @@ bool IsZeroTextureShape(const Texture2DFlowShape& value) noexcept
     return value == Texture2DFlowShape{};
 }
 
+std::uint32_t TextureBytesPerPixel(pkg::Format format) noexcept
+{
+    if (format == pkg::Format::B8G8R8A8Unorm) return 4u;
+    if (format == pkg::Format::R32G32B32A32Float) return 16u;
+    return 0u;
+}
+
 bool IsLimitedTexture2DShape(const Texture2DFlowShape& value, pkg::Format format) noexcept
 {
-    return format == pkg::Format::B8G8R8A8Unorm && value.width > 0 &&
-        value.height > 0 &&
+    const auto bytesPerPixel = TextureBytesPerPixel(format);
+    return bytesPerPixel != 0 && value.width > 0 && value.height > 0 &&
         static_cast<std::uint64_t>(value.rowBytes) ==
-            static_cast<std::uint64_t>(value.width) * 4u &&
+            static_cast<std::uint64_t>(value.width) * bytesPerPixel &&
         value.mipLevels == 1 && value.arrayLayers == 1 &&
         value.sampleCount == 1 && value.planeCount == 1;
+}
+
+bool ValidLimitedTextureEndpointState(
+    pkg::Format format, EndpointAccess access,
+    const pkg::ResourceState& requiredIncoming,
+    const pkg::ResourceState& guaranteedOutgoing) noexcept
+{
+    const pkg::ResourceState renderTarget{pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::RenderTarget)};
+    const pkg::ResourceState unorderedWrite{pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::UnorderedWrite)};
+    const pkg::ResourceState pixelRead{pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::PixelShaderRead)};
+    const pkg::ResourceState nonPixelRead{pkg::StateClass::Explicit, 0,
+        static_cast<std::uint32_t>(pkg::ExplicitStateBits::NonPixelShaderRead)};
+    if (access == EndpointAccess::ReadOnly)
+        return requiredIncoming == guaranteedOutgoing &&
+            (requiredIncoming == pixelRead || requiredIncoming == nonPixelRead);
+    if (format == pkg::Format::B8G8R8A8Unorm)
+        return requiredIncoming == renderTarget && guaranteedOutgoing == renderTarget;
+    if (format == pkg::Format::R32G32B32A32Float)
+        return requiredIncoming == unorderedWrite && guaranteedOutgoing == unorderedWrite;
+    return false;
 }
 
 struct DerivedEndpoint final
@@ -196,7 +226,8 @@ base::Expected<EndpointAccess, ContractError> DeriveAccess(
         else if (resource.resourceKind == pkg::ResourceKind::Texture2D)
         {
             if (resourceView.viewClass == pkg::ViewClass::ShaderResource) sawRead = true;
-            else if (resourceView.viewClass == pkg::ViewClass::RenderTarget) sawWrite = true;
+            else if (resourceView.viewClass == pkg::ViewClass::RenderTarget ||
+                     resourceView.viewClass == pkg::ViewClass::UnorderedAccess) sawWrite = true;
             else return Failure<EndpointAccess>("contract/leaf-interface", "Textureが検証または実行の契約に違反しています。");
         }
         else
@@ -291,11 +322,13 @@ base::Expected<DecodedLeaf, ContractError> DecodeLeafWithDeclarations(
         const auto& sourceResource = view.value().Resources()[slot.resource.value];
         if (sourceResource.resourceKind == pkg::ResourceKind::Texture2D)
         {
-            if (sourceResource.width > std::numeric_limits<std::uint32_t>::max() / 4u)
+            const auto bytesPerPixel = TextureBytesPerPixel(sourceResource.format);
+            if (bytesPerPixel == 0 ||
+                sourceResource.width > std::numeric_limits<std::uint32_t>::max() / bytesPerPixel)
                 return Failure<DecodedLeaf>(
                     "contract/leaf-interface", "Textureのrow pitchが表現範囲を超えています。");
             endpoint.texture2D = {sourceResource.width, sourceResource.height,
-                sourceResource.width * 4u, sourceResource.mipLevels,
+                sourceResource.width * bytesPerPixel, sourceResource.mipLevels,
                 sourceResource.depthOrArraySize, sourceResource.sampleCount,
                 sourceResource.planeCount};
         }
@@ -310,6 +343,9 @@ base::Expected<DecodedLeaf, ContractError> DecodeLeafWithDeclarations(
             endpoint.minimumBytes == 0 &&
             IsLimitedTexture2DShape(endpoint.texture2D, endpoint.format);
         if ((!validBuffer && !validTexture) ||
+            (validTexture && !ValidLimitedTextureEndpointState(
+                endpoint.format, endpoint.access,
+                endpoint.requiredIncomingState, endpoint.guaranteedOutgoingState)) ||
             endpoint.synchronization != pkg::ExternalSynchronizationContract::CompletionTokenRequired ||
             endpoint.flags != static_cast<std::uint32_t>(pkg::ExternalSlotFlags::Required))
             return Failure<DecodedLeaf>(
@@ -374,11 +410,13 @@ DecodeLeafForValidation(const CanonicalLeafPackage& leaf)
         const auto& sourceResource = view.value().Resources()[slot.resource.value];
         if (sourceResource.resourceKind == pkg::ResourceKind::Texture2D)
         {
-            if (sourceResource.width > std::numeric_limits<std::uint32_t>::max() / 4u)
+            const auto bytesPerPixel = TextureBytesPerPixel(sourceResource.format);
+            if (bytesPerPixel == 0 ||
+                sourceResource.width > std::numeric_limits<std::uint32_t>::max() / bytesPerPixel)
                 return Failure<std::pair<LeafPackageContract, std::vector<DerivedEndpoint>>>(
                     "contract/leaf-interface", "Textureのrow pitchが表現範囲を超えています。");
             endpoint.texture2D = {sourceResource.width, sourceResource.height,
-                sourceResource.width * 4u, sourceResource.mipLevels,
+                sourceResource.width * bytesPerPixel, sourceResource.mipLevels,
                 sourceResource.depthOrArraySize, sourceResource.sampleCount,
                 sourceResource.planeCount};
         }
@@ -541,7 +579,11 @@ base::Expected<void, ContractError> ValidateShapeInternal(
                 endpoint.synchronization != pkg::ExternalSynchronizationContract::CompletionTokenRequired ||
                 endpoint.flags != static_cast<std::uint32_t>(pkg::ExternalSlotFlags::Required) ||
                 (endpoint.access == EndpointAccess::ReadOnly &&
-                 endpoint.requiredIncomingState != endpoint.guaranteedOutgoingState))
+                 endpoint.requiredIncomingState != endpoint.guaranteedOutgoingState) ||
+                (endpoint.kind == pkg::ResourceKind::Texture2D &&
+                 !ValidLimitedTextureEndpointState(
+                     endpoint.format, endpoint.access,
+                     endpoint.requiredIncomingState, endpoint.guaranteedOutgoingState)))
                 return base::Failure<void, ContractError>(
                     Error("contract/validate-endpoint", "EndpointがCanonicalな順序または識別子規則に違反しています。"));
             previousEndpointKey = endpoint.stableKey;

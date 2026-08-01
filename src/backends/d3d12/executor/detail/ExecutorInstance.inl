@@ -907,13 +907,17 @@ private:
                 nativeResource->Kind() == pkg::ResourceKind::Buffer &&
                 nativeResource->Format() == pkg::Format::Unknown &&
                 nativeResource->SizeBytes() >= contract.minimumBytes;
+            const std::uint32_t textureBytesPerPixel =
+                contract.requiredFormat == pkg::Format::B8G8R8A8Unorm ? 4u :
+                contract.requiredFormat == pkg::Format::R32G32B32A32Float ? 16u : 0u;
             const bool textureMatches = contract.requiredKind == pkg::ResourceKind::Texture2D &&
                 nativeResource->Kind() == pkg::ResourceKind::Texture2D &&
                 nativeResource->Format() == contract.requiredFormat &&
                 nativeResource->Width() == expectedResource.width &&
                 nativeResource->Height() == expectedResource.height &&
+                textureBytesPerPixel != 0 &&
                 static_cast<std::uint64_t>(nativeResource->RowBytes()) ==
-                    static_cast<std::uint64_t>(expectedResource.width) * 4u;
+                    static_cast<std::uint64_t>(expectedResource.width) * textureBytesPerPixel;
             if (!bufferMatches && !textureMatches)
                 return base::Failure<void, runtime::RuntimeError>(
                     Error("invocation", "Resourceが検証または実行の契約に違反しています。"));
@@ -1523,6 +1527,20 @@ private:
                         srv.Texture2D.MipLevels = externalView.mipCount;
                         srv.Texture2D.PlaneSlice = externalView.firstPlane;
                         device_->CreateShaderResourceView(native->Native(), &srv, cpu);
+                    }
+                    else if (externalView.viewClass == pkg::ViewClass::UnorderedAccess)
+                    {
+                        if (!shaderHeap_)
+                            return base::Failure<void, runtime::RuntimeError>(
+                                Error("frame/AcquireExternal", "Textureが検証または実行の契約に違反しています。"));
+                        auto cpu = shaderHeap_->GetCPUDescriptorHandleForHeapStart();
+                        cpu.ptr += static_cast<SIZE_T>(DescriptorIndex(externalView)) * shaderDescriptorIncrement_;
+                        D3D12_UNORDERED_ACCESS_VIEW_DESC uav{};
+                        uav.Format = ToDxgi(externalView.format);
+                        uav.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+                        uav.Texture2D.MipSlice = externalView.firstMip;
+                        uav.Texture2D.PlaneSlice = externalView.firstPlane;
+                        device_->CreateUnorderedAccessView(native->Native(), nullptr, &uav, cpu);
                     }
                     else if (externalView.viewClass == pkg::ViewClass::RenderTarget)
                     {

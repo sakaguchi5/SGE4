@@ -178,12 +178,14 @@ void ValidateResource(const Resource& resource, std::uint32_t source,
         }
         else if (resource.update == UpdateIntent::External)
         {
-            const auto minimumRowBytes = static_cast<std::uint64_t>(resource.texture2D.width) * 4u;
+            const std::uint64_t bytesPerPixel =
+                resource.texture2D.formatMeaning == FormatMeaning::Bgra8Unorm ? 4u :
+                resource.texture2D.formatMeaning == FormatMeaning::Rgba32Float ? 16u : 0u;
+            const auto minimumRowBytes = static_cast<std::uint64_t>(resource.texture2D.width) * bytesPerPixel;
             if (resource.lifetime != LifetimeIntent::External ||
                 resource.visibility != Visibility::Published ||
                 resource.texture2D.extentMeaning != TextureExtentMeaning::Fixed ||
-                resource.texture2D.formatMeaning != FormatMeaning::Bgra8Unorm ||
-                resource.texture2D.rowBytes != minimumRowBytes ||
+                bytesPerPixel == 0 || resource.texture2D.rowBytes != minimumRowBytes ||
                 resource.texture2D.mipLevels != 1 || !resource.initialContent.empty())
                 Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
         }
@@ -299,6 +301,12 @@ void ValidateProgram(const Program& program, std::uint32_t source,
                 parameter.requiredAlignment != 1)
                 Push(diagnostics, "BufferがCanonicalな順序または識別子規則に違反しています。", source);
             break;
+        case ProgramParameterKind::UnorderedTexture2D:
+            registerClass = 3;
+            if (parameter.stage != ShaderStage::Compute || parameter.requiredBytes != 0 ||
+                parameter.requiredAlignment != 1)
+                Push(diagnostics, "Texture2DがCanonicalな順序または識別子規則に違反しています。", source);
+            break;
         default:
             Push(diagnostics, "Programが検証または実行の契約に違反しています。", source);
             break;
@@ -326,7 +334,10 @@ void ValidateResourceUse(const ResourceUse& use, const Resource& resource,
             Push(diagnostics, "Bufferが検証または実行の契約に違反しています。", source);
         break;
     case ViewRole::SampledTexture:
-        if (resource.kind != ResourceKind::Texture2D || resource.texture2D.formatMeaning != FormatMeaning::Bgra8Unorm || !read || write)
+        if (resource.kind != ResourceKind::Texture2D ||
+            (resource.texture2D.formatMeaning != FormatMeaning::Bgra8Unorm &&
+             resource.texture2D.formatMeaning != FormatMeaning::Rgba32Float) ||
+            !read || write)
             Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
         break;
     case ViewRole::ShaderBuffer:
@@ -337,6 +348,15 @@ void ValidateResourceUse(const ResourceUse& use, const Resource& resource,
         if (resource.kind != ResourceKind::Buffer || !write ||
             (resource.update != UpdateIntent::GpuWritten && resource.update != UpdateIntent::External))
             Push(diagnostics, "Bufferが検証または実行の契約に違反しています。", source);
+        break;
+    case ViewRole::StorageTexture2D:
+        if (resource.kind != ResourceKind::Texture2D ||
+            resource.lifetime != LifetimeIntent::External ||
+            resource.update != UpdateIntent::External ||
+            resource.texture2D.extentMeaning != TextureExtentMeaning::Fixed ||
+            resource.texture2D.formatMeaning != FormatMeaning::Rgba32Float ||
+            resource.texture2D.mipLevels != 1 || !write || read)
+            Push(diagnostics, "Texture2Dが検証または実行の契約に違反しています。", source);
         break;
     case ViewRole::ColorAttachment:
     {
@@ -395,6 +415,7 @@ bool ParameterRoleMatches(ProgramParameterKind kind, ViewRole role) noexcept
     case ProgramParameterKind::SampledTexture: return role == ViewRole::SampledTexture;
     case ProgramParameterKind::ReadOnlyBuffer: return role == ViewRole::ShaderBuffer;
     case ProgramParameterKind::UnorderedBuffer: return role == ViewRole::StorageBuffer;
+    case ProgramParameterKind::UnorderedTexture2D: return role == ViewRole::StorageTexture2D;
     default: return false;
     }
 }
@@ -414,7 +435,8 @@ std::uint16_t WorkStateClass(ViewRole role) noexcept
     case ViewRole::ConstantData: return 2;
     case ViewRole::SampledTexture:
     case ViewRole::ShaderBuffer: return 3;
-    case ViewRole::StorageBuffer: return 4;
+    case ViewRole::StorageBuffer:
+    case ViewRole::StorageTexture2D: return 4;
     case ViewRole::ColorAttachment: return 5;
     case ViewRole::PresentSource: return 6;
     case ViewRole::DepthAttachment: return 7;

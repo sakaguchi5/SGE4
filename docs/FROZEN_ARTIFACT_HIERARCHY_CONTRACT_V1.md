@@ -21,10 +21,10 @@ Certificate生成のために第二Planner／Verifierを実行してはならな
 
 ## Frozen Composition
 
-Production Frozen Compositionは平坦な`SGE4UNI 2.4`である。
+Production Frozen Compositionは平坦な`SGE4UNI 2.5`である。
 
 ```text
-SGE4UNI 2.4
+SGE4UNI 2.5
   Manifest
   Leaf Table
   complete Schema 17 Leaf Package bytes
@@ -37,7 +37,7 @@ SGE4UNI 2.4
 
 `SGE4CMP 1.0`を内包する`CompleteComposition` Sectionは存在しない。Leaf Packageだけが独立した下位Artifactとして保持される。
 
-`CompositionCertificate`は、ABI 2.4 Composition Core digestと検証済みContract／Plan／Sealから直接生成され、次をbindする。
+`CompositionCertificate`は、ABI 2.5 Composition Core digestと検証済みContract／Plan／Sealから直接生成され、次をbindする。
 
 - Frozen Composition identity
 - Contract identity
@@ -73,9 +73,13 @@ Composition Readerは外側Section、Leaf Table、各Leaf Package、Contract、P
 
 ## Generalization 3 amendment
 
-SGE4UNI 2.4はContract Data／Verified Decision Data schema 2へfixed Texture2D shapeを保存する。Leaf Schema 17とSGE4INV 1.4は変更しない。TextureのAPI row pitchやnative descriptor handleはFrozen階層へ混入させず、D3D12 Executorの物理写像に限定する。
+SGE4UNI 2.5はContract Data／Verified Decision Data schema 2へfixed Texture2D shapeを保存する。Leaf Schema 17とSGE4INV 1.4は変更しない。TextureのAPI row pitchやnative descriptor handleはFrozen階層へ混入させず、D3D12 Executorの物理写像に限定する。
 
 
 ## Generalization 4
 
-SGE4UNI 2.4 Dynamic Contract schema 4はVerified Indirect Dispatch routeを所有する。SGE4INV 1.4 Indirect Dispatch Sectionは独立Verifierが確定したworkCount、Dispatch引数、identityを所有する。Leaf Schema 17はstatic maximum Compute Commandを保持し、Executorが対象operationだけをIndirect実行へ機械的に写像する。
+SGE4UNI 2.5 Dynamic Contract schema 4はVerified Indirect Dispatch routeを所有する。SGE4INV 1.4 Indirect Dispatch Sectionは独立Verifierが確定したworkCount、Dispatch引数、identityを所有する。Leaf Schema 17はstatic maximum Compute Commandを保持し、Executorが対象operationだけをIndirect実行へ機械的に写像する。
+
+## Generalization 5追加境界
+
+SGE4UNI 2.5はContract／Plan schema 2を維持したまま、R32G32B32A32_FLOAT Texture2D、UnorderedWrite producer、ShaderRead consumerを既存format／shape／state recordで表現する。Leaf Schema 17がUAV viewを所有し、Compositionはその事実を再導出する。D3D12 UAV descriptor、native flag、aligned RowPitchはExecutorだけが所有する。

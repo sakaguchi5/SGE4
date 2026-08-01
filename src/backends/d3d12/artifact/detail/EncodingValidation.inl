@@ -498,7 +498,9 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
             if (resource.sizeBytes != 0 || resource.depthOrArraySize != 1 || resource.mipLevels != 1 ||
                 resource.sampleCount != 1 || resource.planeCount != 1 ||
                 (resource.extentMode == ExtentMode::Fixed &&
-                 (resource.width == 0 || resource.height == 0 || resource.format != Format::B8G8R8A8Unorm)) ||
+                 (resource.width == 0 || resource.height == 0 ||
+                  (resource.format != Format::B8G8R8A8Unorm &&
+                   resource.format != Format::R32G32B32A32Float))) ||
                 (resource.extentMode == ExtentMode::SurfaceRelative &&
                  (resource.width != 0 || resource.height != 0 || resource.format != Format::D32Float)) ||
                 (resource.extentMode != ExtentMode::Fixed && resource.extentMode != ExtentMode::SurfaceRelative))
@@ -630,14 +632,17 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
         const bool bufferView = resourceView.viewClass == ViewClass::VertexBuffer ||
             resourceView.viewClass == ViewClass::IndexBuffer ||
             resourceView.viewClass == ViewClass::ConstantBuffer ||
-            resourceView.viewClass == ViewClass::UnorderedAccess ||
             resourceView.viewClass == ViewClass::CopySource ||
             resourceView.viewClass == ViewClass::CopyDestination ||
-            (resourceView.viewClass == ViewClass::ShaderResource && resource.resourceKind == ResourceKind::Buffer);
+            ((resourceView.viewClass == ViewClass::ShaderResource ||
+              resourceView.viewClass == ViewClass::UnorderedAccess) &&
+             resource.resourceKind == ResourceKind::Buffer);
         const bool textureView = resourceView.viewClass == ViewClass::RenderTarget ||
             resourceView.viewClass == ViewClass::DepthStencil ||
             resourceView.viewClass == ViewClass::PresentSource ||
-            (resourceView.viewClass == ViewClass::ShaderResource && resource.resourceKind == ResourceKind::Texture2D);
+            ((resourceView.viewClass == ViewClass::ShaderResource ||
+              resourceView.viewClass == ViewClass::UnorderedAccess) &&
+             resource.resourceKind == ResourceKind::Texture2D);
         if ((bufferView && resource.resourceKind != ResourceKind::Buffer) ||
             (textureView && resource.resourceKind == ResourceKind::Buffer) || (!bufferView && !textureView))
             return fail(PackageErrorCode::InvalidReference, "ResourceがCanonicalな契約と一致しません。",
@@ -648,6 +653,13 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
               resource.origin == ResourceOrigin::External &&
               resource.format == Format::B8G8R8A8Unorm))
             return fail(PackageErrorCode::InvalidReference, "RenderTargetの参照先または所有関係が無効です。",
+                        SectionKind::D3D12ViewTable);
+        if (resourceView.viewClass == ViewClass::UnorderedAccess &&
+            resource.resourceKind == ResourceKind::Texture2D &&
+            (resource.origin != ResourceOrigin::External ||
+             resource.format != Format::R32G32B32A32Float))
+            return fail(PackageErrorCode::InvalidReference,
+                        "Texture2D UAVの参照先または所有関係が無効です。",
                         SectionKind::D3D12ViewTable);
         if (resourceView.viewClass == ViewClass::DepthStencil &&
             (resource.resourceKind != ResourceKind::Texture2D || resource.format != Format::D32Float))
@@ -908,12 +920,15 @@ base::Expected<void, PackageError> ValidateReferences(D3D12PackageView& view)
             slot.requiredKind == ResourceKind::Buffer && slot.requiredFormat == Format::Unknown &&
             slot.minimumBytes > 0 && resource.format == Format::Unknown &&
             resource.sizeBytes == slot.minimumBytes;
+        const bool validTextureFormat =
+            slot.requiredFormat == Format::B8G8R8A8Unorm ||
+            slot.requiredFormat == Format::R32G32B32A32Float;
         const bool validTexture = resource.resourceKind == ResourceKind::Texture2D &&
-            slot.requiredKind == ResourceKind::Texture2D &&
-            slot.requiredFormat == Format::B8G8R8A8Unorm && slot.minimumBytes == 0 &&
-            resource.format == Format::B8G8R8A8Unorm && resource.sizeBytes == 0 &&
-            resource.width > 0 && resource.height > 0 && resource.depthOrArraySize == 1 &&
-            resource.mipLevels == 1 && resource.sampleCount == 1 && resource.planeCount == 1;
+            slot.requiredKind == ResourceKind::Texture2D && validTextureFormat &&
+            slot.minimumBytes == 0 && resource.format == slot.requiredFormat &&
+            resource.sizeBytes == 0 && resource.width > 0 && resource.height > 0 &&
+            resource.depthOrArraySize == 1 && resource.mipLevels == 1 &&
+            resource.sampleCount == 1 && resource.planeCount == 1;
         if (resource.origin != ResourceOrigin::External || (!validBuffer && !validTexture))
             return fail(PackageErrorCode::InvalidInvocationSchema, "Resourceが無効であるか、契約条件を満たしていません。",
                         SectionKind::D3D12ExternalSlotTable);

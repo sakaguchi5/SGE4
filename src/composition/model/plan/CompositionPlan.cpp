@@ -100,13 +100,18 @@ bool ValidAllocationShape(const ResourceAllocationPlan& value) noexcept
         return value.sizeBytes > 0 && value.texture2D == Texture2DFlowShape{} &&
             value.format == package::d3d12_v13::Format::Unknown;
     if (value.kind == package::d3d12_v13::ResourceKind::Texture2D)
-        return value.format == package::d3d12_v13::Format::B8G8R8A8Unorm &&
+    {
+        const std::uint32_t bytesPerPixel =
+            value.format == package::d3d12_v13::Format::B8G8R8A8Unorm ? 4u :
+            value.format == package::d3d12_v13::Format::R32G32B32A32Float ? 16u : 0u;
+        return bytesPerPixel != 0 &&
             value.texture2D.width > 0 && value.texture2D.height > 0 &&
             static_cast<std::uint64_t>(value.texture2D.rowBytes) ==
-                static_cast<std::uint64_t>(value.texture2D.width) * 4u &&
+                static_cast<std::uint64_t>(value.texture2D.width) * bytesPerPixel &&
             value.texture2D.mipLevels == 1 && value.texture2D.arrayLayers == 1 &&
             value.texture2D.sampleCount == 1 && value.texture2D.planeCount == 1 &&
             value.sizeBytes == static_cast<std::uint64_t>(value.texture2D.rowBytes) * value.texture2D.height;
+    }
     return false;
 }
 

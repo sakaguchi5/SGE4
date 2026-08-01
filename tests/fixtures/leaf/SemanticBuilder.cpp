@@ -133,10 +133,13 @@ base::Expected<ResourceId, std::string> SemanticBuilder::AddExternalTexture2D(
     FormatMeaning formatMeaning,
     std::uint32_t rowBytes)
 {
-    if (width == 0 || height == 0 ||
-        width > std::numeric_limits<std::uint32_t>::max() / 4u ||
-        formatMeaning != FormatMeaning::Bgra8Unorm ||
-        static_cast<std::uint64_t>(rowBytes) != static_cast<std::uint64_t>(width) * 4u)
+    const std::uint32_t bytesPerPixel =
+        formatMeaning == FormatMeaning::Bgra8Unorm ? 4u :
+        formatMeaning == FormatMeaning::Rgba32Float ? 16u : 0u;
+    if (width == 0 || height == 0 || bytesPerPixel == 0 ||
+        width > std::numeric_limits<std::uint32_t>::max() / bytesPerPixel ||
+        static_cast<std::uint64_t>(rowBytes) !=
+            static_cast<std::uint64_t>(width) * bytesPerPixel)
         return base::Failure<ResourceId, std::string>(
             "Textureが検証または実行の契約に違反しています。");
     const auto id = NextId<ResourceId>(graph_.resources.size());

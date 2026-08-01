@@ -83,6 +83,30 @@ void Require(bool condition, const char* message)
     return true;
 }
 
+[[nodiscard]] bool EqualsFloatTexture(
+    const sge4::d3d12::Texture2DReadback& readback,
+    std::uint32_t width,
+    std::uint32_t height,
+    float tolerance = 0.0001f)
+{
+    if (readback.width != width || readback.height != height ||
+        readback.rowBytes != width * 16u ||
+        readback.format != sge4::package::d3d12_v13::Format::R32G32B32A32Float ||
+        readback.bytes.size() != static_cast<std::size_t>(width) * height * 16u)
+        return false;
+    const std::array<float, 4> expected{
+        64.0f / 255.0f, 128.0f / 255.0f, 192.0f / 255.0f, 1.0f};
+    for (std::size_t offset = 0; offset < readback.bytes.size(); offset += sizeof(expected))
+    {
+        std::array<float, 4> actual{};
+        std::memcpy(actual.data(), readback.bytes.data() + offset, sizeof(actual));
+        for (std::size_t component = 0; component < actual.size(); ++component)
+            if (std::abs(actual[component] - expected[component]) > tolerance)
+                return false;
+    }
+    return true;
+}
+
 void VerifyIndirectWorkQualification()
 {
     constexpr std::uint32_t Universe = 8;
@@ -180,6 +204,85 @@ void VerifyIndirectWorkQualification()
     auto recoveryRead = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
     Require(recoveryRead && EqualsIndirect(recoveryRead.value().bytes, Universe, 2),
         "Recovery後のVerified indirect GPU観測結果が一致しません。");
+}
+
+void VerifyLimitedTexture2DUavFlowQualification()
+{
+    constexpr std::uint32_t Width = 4;
+    constexpr std::uint32_t Height = 4;
+    auto package = tests::BuildLimitedTexture2DUavUnified(Width, Height);
+    if (!package)
+        throw std::runtime_error(
+            "限定Texture2D UAV Flow Compositionの生成に失敗しました：" + package.error());
+    const auto intermediateId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/texture-uav/intermediate");
+    const auto outputId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/texture-uav/output");
+    Require(intermediateId.IsValid() && outputId.IsValid(),
+        "限定Texture2D UAV Flow resourceの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded),
+        "限定Texture2D UAV Flow CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 seed;
+    seed.timelineOrdinal = 0;
+    seed.mode = planning.requiredMode;
+    seed.activeMembers = {0};
+    auto frozenSeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(seed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSeed),
+        "限定Texture2D UAV Flow InitialSeedの生成に失敗しました。");
+    auto submitted = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSeed).value(), {0, {}});
+    if (!submitted)
+        throw std::runtime_error(
+            "限定Texture2D UAV Flow Submitに失敗しました：" +
+            submitted.error().stage + "：" + submitted.error().message);
+    Require(submitted.value().submittedLeafCount == 2,
+        "限定Texture2D UAV FlowのCompute／Raster 2 Leaf実行に失敗しました。");
+    auto intermediate = sge4::d3d12::ReadTexture2D(
+        loaded.value(), intermediateId);
+    Require(intermediate && EqualsFloatTexture(intermediate.value(), Width, Height),
+        "Compute UAV writerのRGBA32F GPU readbackが一致しません。");
+    auto output = sge4::d3d12::ReadTexture2D(loaded.value(), outputId);
+    Require(output && EqualsTexture(output.value(), Width, Height),
+        "Texture2D UAVからSRV consumerへのBGRA packed readbackが一致しません。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "限定Texture2D UAV Flow Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "限定Texture2D UAV Flow Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 1;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {0};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery),
+        "限定Texture2D UAV Flow RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {1, {}});
+    if (!resumed)
+        throw std::runtime_error(
+            "限定Texture2D UAV Flow Recovery Submitに失敗しました：" +
+            resumed.error().stage + "：" + resumed.error().message);
+    auto recoveredIntermediate = sge4::d3d12::ReadTexture2D(
+        loaded.value(), intermediateId);
+    auto recoveredOutput = sge4::d3d12::ReadTexture2D(
+        loaded.value(), outputId);
+    Require(recoveredIntermediate &&
+        EqualsFloatTexture(recoveredIntermediate.value(), Width, Height) &&
+        recoveredOutput && EqualsTexture(recoveredOutput.value(), Width, Height),
+        "限定Texture2D UAV Flow Recovery後のGPU readbackが一致しません。");
 }
 
 void VerifyLimitedTexture2DFlowQualification()
@@ -499,6 +602,7 @@ int main(int argc, char** argv)
     {
         const bool actualRemoval = argc > 1 && std::string_view(argv[1]) == "--actual-removal";
         VerifyIndirectWorkQualification();
+        VerifyLimitedTexture2DUavFlowQualification();
         VerifyLimitedTexture2DFlowQualification();
         VerifyConditionalRegionQualification();
         VerifyDynamicExecutionQualification();

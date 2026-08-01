@@ -38,7 +38,8 @@ AbstractState RequiredState(semantic::ViewRole role, semantic::WorkKind workKind
     case semantic::ViewRole::ConstantData: return AbstractState::ConstantBuffer;
     case semantic::ViewRole::SampledTexture:
     case semantic::ViewRole::ShaderBuffer: return AbstractState::ShaderRead;
-    case semantic::ViewRole::StorageBuffer: return AbstractState::UnorderedWrite;
+    case semantic::ViewRole::StorageBuffer:
+    case semantic::ViewRole::StorageTexture2D: return AbstractState::UnorderedWrite;
     case semantic::ViewRole::ColorAttachment: return AbstractState::RenderTarget;
     case semantic::ViewRole::PresentSource: return AbstractState::Present;
     case semantic::ViewRole::DepthAttachment: return AbstractState::DepthWrite;

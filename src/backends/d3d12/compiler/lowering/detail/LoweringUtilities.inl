@@ -132,6 +132,7 @@ pkg::Format Format(semantic::FormatMeaning format)
     {
     case semantic::FormatMeaning::Bgra8Unorm: return pkg::Format::B8G8R8A8Unorm;
     case semantic::FormatMeaning::Depth32Float: return pkg::Format::D32Float;
+    case semantic::FormatMeaning::Rgba32Float: return pkg::Format::R32G32B32A32Float;
     default: return pkg::Format::Unknown;
     }
 }
@@ -154,7 +155,8 @@ pkg::ViewClass ViewClass(semantic::ViewRole role)
     case ViewRole::ShaderBuffer: return pkg::ViewClass::ShaderResource;
     case ViewRole::ColorAttachment: return pkg::ViewClass::RenderTarget;
     case ViewRole::DepthAttachment: return pkg::ViewClass::DepthStencil;
-    case ViewRole::StorageBuffer: return pkg::ViewClass::UnorderedAccess;
+    case ViewRole::StorageBuffer:
+    case ViewRole::StorageTexture2D: return pkg::ViewClass::UnorderedAccess;
     case ViewRole::CopySource: return pkg::ViewClass::CopySource;
     case ViewRole::CopyDestination: return pkg::ViewClass::CopyDestination;
     case ViewRole::PresentSource: return pkg::ViewClass::PresentSource;
@@ -171,7 +173,8 @@ pkg::ResourceState RequiredState(semantic::ViewRole role, semantic::WorkKind wor
     case ViewRole::ConstantData: return Explicit(pkg::ExplicitStateBits::ConstantBuffer);
     case ViewRole::ColorAttachment: return Explicit(pkg::ExplicitStateBits::RenderTarget);
     case ViewRole::DepthAttachment: return Explicit(pkg::ExplicitStateBits::DepthWrite);
-    case ViewRole::StorageBuffer: return Explicit(pkg::ExplicitStateBits::UnorderedWrite);
+    case ViewRole::StorageBuffer:
+    case ViewRole::StorageTexture2D: return Explicit(pkg::ExplicitStateBits::UnorderedWrite);
     case ViewRole::CopySource: return Explicit(pkg::ExplicitStateBits::CopySource);
     case ViewRole::CopyDestination: return Explicit(pkg::ExplicitStateBits::CopyDestination);
     case ViewRole::PresentSource: return Present();
