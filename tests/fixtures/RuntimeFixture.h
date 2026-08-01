@@ -284,6 +284,50 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         {std::move(compiled).value().packageBytes});
 }
 
+inline base::Expected<CompiledLeaf, std::string> BuildTemporalProducerLeaf()
+{
+    sem::SemanticBuilder builder;
+    auto output = builder.AddExternalBuffer("L4G7.Temporal.Current", 16, 16);
+    if (!output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Temporal Current Bufferが検証または実行の契約に違反しています。");
+    auto outputUse = builder.AddUse(
+        output.value(), sem::Effect::Write, sem::ViewRole::StorageBuffer);
+    if (!outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Temporal Current useが検証または実行の契約に違反しています。");
+
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.parameters = {
+        {{0}, "Current", sem::ProgramParameterKind::UnorderedBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1}};
+    auto program = builder.AddComputeProgram(
+        "L4G7.Temporal.Producer.Program", std::move(interfaceDescription), {R"hlsl(
+RWStructuredBuffer<float4> Current : register(u0);
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    Current[0] = float4(20.0f, 20.0f, 20.0f, 20.0f);
+}
+)hlsl", {}, {}, "CSMain"});
+    if (!program)
+        return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, outputUse.value(), {0}}};
+    auto work = builder.AddComputeWorkGeneric(
+        "L4G7.Temporal.Producer.Work", program.value(), operands, 1, 1, 1);
+    if (!work)
+        return base::Failure<CompiledLeaf, std::string>(work.error());
+
+    auto compiled = sge4::compiler::CompileCanonical(
+        std::move(builder).Build(), ComputeProfile(4));
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
+}
+
 inline base::Expected<CompiledLeaf, std::string> BuildMergeLeaf()
 {
     sem::SemanticBuilder builder;
@@ -738,6 +782,12 @@ inline contract::LeafPackageDeclaration TextureConsumerDeclaration(
         {{0, std::string(TextureInputEndpoint)},
          {1, std::string(TextureOutputEndpoint)}}};
 }
+inline contract::LeafPackageDeclaration TemporalProducerDeclaration(
+    std::string key, const CompiledLeaf& leaf)
+{
+    return {std::move(key), leaf.packageBytes,
+        {{0, std::string(OutputEndpoint)}}};
+}
 inline contract::LeafPackageDeclaration TransformDeclaration(std::string key, const CompiledLeaf& leaf)
 {
     return {std::move(key), leaf.packageBytes,
@@ -770,6 +820,37 @@ Freeze(contract::ContractBuildInput input)
     const auto bytes = frozen.value().FileBytes();
     return base::Success<std::vector<std::byte>, std::string>(
         std::vector<std::byte>(bytes.begin(), bytes.end()));
+}
+
+inline base::Expected<std::vector<std::byte>, std::string>
+BuildTemporalBufferArtifact()
+{
+    auto producer = BuildTemporalProducerLeaf();
+    auto consumer = BuildTransformLeaf();
+    if (!producer || !consumer)
+        return base::Failure<std::vector<std::byte>, std::string>(
+            producer ? consumer.error() : producer.error());
+
+    contract::ContractBuildInput input;
+    input.leaves = {
+        TemporalProducerDeclaration("l4g7/temporal/producer", producer.value()),
+        TransformDeclaration("l4g7/temporal/consumer", consumer.value())};
+
+    contract::ResourceFlowDeclaration history;
+    history.stableKey = "l4g7/temporal/history";
+    history.boundary = contract::ResourceBoundary::Internal;
+    history.lifetime = contract::ResourceFlowLifetime::TemporalHistory;
+    history.historyDepth = 1;
+    history.producer = Ref("l4g7/temporal/producer", std::string(OutputEndpoint));
+    history.consumers = {
+        Ref("l4g7/temporal/consumer", std::string(InputEndpoint))};
+
+    contract::ResourceFlowDeclaration output;
+    output.stableKey = "l4g7/temporal/output";
+    output.boundary = contract::ResourceBoundary::CompositionOutput;
+    output.producer = Ref("l4g7/temporal/consumer", std::string(OutputEndpoint));
+    input.resources = {std::move(history), std::move(output)};
+    return Freeze(std::move(input));
 }
 
 inline base::Expected<std::vector<std::byte>, std::string>

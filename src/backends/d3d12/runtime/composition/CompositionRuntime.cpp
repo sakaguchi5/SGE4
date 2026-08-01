@@ -88,8 +88,7 @@ base::Expected<void, StaticRuntimeError> ValidateRuntimePlan(
 std::shared_ptr<::sge4::runtime::IExternalResource>
 LoadedStaticComposition::SharedResource(ResourceFlowId resource) const
 {
-    const auto* record = resources_ ? resources_->Record(resource) : nullptr;
-    return record ? record->resource : nullptr;
+    return resources_ ? resources_->ObservableResource(resource) : nullptr;
 }
 
 std::shared_ptr<::sge4::runtime::ICompletionToken>
@@ -260,22 +259,26 @@ SubmitStaticComposition(
                 return base::Failure<StaticCompositionSubmission, StaticRuntimeError>(
                     Error(preparedState.error()));
             const auto resource = loaded.resources_->ResourceForEndpoint(endpoint.id);
-            auto* record = loaded.resources_->Record(resource);
-            if (!record || !record->resource || !record->availableAfter)
+            const auto resourceHandle =
+                loaded.resources_->ResourceForEndpointHandle(endpoint.id);
+            const auto availableAfter =
+                loaded.resources_->AvailableAfterForEndpoint(endpoint.id);
+            if (!resourceHandle || !availableAfter || resource.value >= contract.resources.size())
                 return Failure<StaticCompositionSubmission>(
                     "static-runtime/binding", "検証または実行の契約に違反しています。");
 
-            // v1 deliberately retires fan-out consumers in canonical schedule order.
-            // The current Resource Flow token therefore transitively dominates the
-            // producer and all earlier readers, while still satisfying every F5 wait.
+            // Same-frame fan-out is serialized by the verified wait set. Temporal
+            // Previous readers bind a distinct accepted generation and therefore do
+            // not wait on the Current writer in the same frame.
             if (endpoint.access == EndpointAccess::ReadOnly &&
                 contract.resources[resource.value].boundary == ResourceBoundary::Internal &&
+                contract.resources[resource.value].lifetime == ResourceFlowLifetime::SameFrame &&
                 !waitedConsumers.contains(endpoint.id.value))
                 return Failure<StaticCompositionSubmission>(
                     "static-runtime/wait", "検証または実行の契約に違反しています。");
 
             external[endpoint.localExternalSlot] = {
-                endpoint.localExternalSlot, record->resource, record->availableAfter};
+                endpoint.localExternalSlot, resourceHandle, availableAfter};
             present[endpoint.localExternalSlot] = true;
         }
         if (std::ranges::any_of(present, [](bool value) { return !value; }))
@@ -317,6 +320,10 @@ SubmitStaticComposition(
         result.executionOrder.push_back(entry.leaf);
         result.leaves.push_back(std::move(submitted).value());
     }
+    auto temporalCommit = loaded.resources_->CommitTemporalFrame(result.executionOrder);
+    if (!temporalCommit)
+        return base::Failure<StaticCompositionSubmission, StaticRuntimeError>(
+            Error(temporalCommit.error()));
     return base::Success<StaticCompositionSubmission, StaticRuntimeError>(
         std::move(result));
 }

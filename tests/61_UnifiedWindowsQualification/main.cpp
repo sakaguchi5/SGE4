@@ -460,6 +460,104 @@ void VerifyConditionalRegionQualification()
         "Conditional RecoverySeed後のGPU観測結果が一致しません。");
 }
 
+void VerifyTemporalBufferFlowQualification()
+{
+    const std::array<float, 4> seedValue{10.0f, 10.0f, 10.0f, 10.0f};
+    const std::array<float, 4> firstExpected{11.0f, 11.0f, 11.0f, 11.0f};
+    const std::array<float, 4> currentValue{20.0f, 20.0f, 20.0f, 20.0f};
+    const std::array<float, 4> secondExpected{21.0f, 21.0f, 21.0f, 21.0f};
+
+    auto packageBytes = fixture::BuildTemporalBufferArtifact();
+    if (!packageBytes)
+        throw std::runtime_error(
+            "Verified Temporal Buffer Compositionの生成に失敗しました：" +
+            packageBytes.error());
+    const auto historyId = fixture::FindResourceFlow(
+        packageBytes.value(), "l4g7/temporal/history");
+    const auto outputId = fixture::FindResourceFlow(
+        packageBytes.value(), "l4g7/temporal/output");
+    Require(historyId.IsValid() && outputId.IsValid(),
+        "Verified Temporal Buffer resourceの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    sge4::d3d12::LoadInput loadInput;
+    loadInput.initialResources = {{historyId, fixture::Bytes(seedValue)}};
+    auto loaded = sge4::d3d12::LoadComposition(
+        packageBytes.value(), backend, std::move(loadInput));
+    if (!loaded)
+        throw std::runtime_error(
+            "Verified Temporal Buffer CompositionのLoadに失敗しました：" +
+            loaded.error().stage + "：" + loaded.error().message);
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 first;
+    first.timelineOrdinal = 0;
+    first.mode = planning.requiredMode;
+    first.activeMembers = {0};
+    auto frozenFirst = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(first),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenFirst),
+        "Verified Temporal Buffer InitialSeedの生成に失敗しました。");
+    auto submittedFirst = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenFirst).value(), {0, {}});
+    if (!submittedFirst)
+        throw std::runtime_error(
+            "Verified Temporal Buffer first Submitに失敗しました：" +
+            submittedFirst.error().stage + "：" + submittedFirst.error().message);
+    Require(submittedFirst.value().submittedLeafCount == 2,
+        "Temporal writer／readerの2 Leaf実行に失敗しました。");
+    auto firstOutput = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    auto acceptedHistory = sge4::d3d12::ReadBuffer(loaded.value(), historyId);
+    Require(firstOutput && fixture::Equals(firstOutput.value().bytes, firstExpected),
+        "最初のframeでPrevious seedではなくsame-frame Currentが観測されました。");
+    Require(acceptedHistory && fixture::Equals(acceptedHistory.value().bytes, currentValue),
+        "成功Submit後にCurrent generationがPreviousへ回転しませんでした。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 second;
+    second.timelineOrdinal = 1;
+    second.mode = planning.requiredMode;
+    second.activeMembers = {0};
+    auto frozenSecond = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(second),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSecond),
+        "Verified Temporal Buffer ContinueHistoryの生成に失敗しました。");
+    auto submittedSecond = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSecond).value(), {1, {}});
+    Require(static_cast<bool>(submittedSecond),
+        "Verified Temporal Buffer second Submitに失敗しました。");
+    auto secondOutput = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(secondOutput && fixture::Equals(secondOutput.value().bytes, secondExpected),
+        "次frameのPrevious generation観測が一致しませんでした。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "Verified Temporal Buffer Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "Verified Temporal Buffer Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 2;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {0};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery),
+        "Verified Temporal Buffer RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {2, {}});
+    Require(static_cast<bool>(resumed),
+        "Verified Temporal Buffer Recovery Submitに失敗しました。");
+    auto recoveredOutput = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(recoveredOutput && fixture::Equals(recoveredOutput.value().bytes, firstExpected),
+        "Recovery後にPrevious seedからTemporal historyが再構築されませんでした。");
+}
+
 void VerifyMultiTargetDynamicRoutingQualification()
 {
     constexpr std::uint32_t Universe = 4;
@@ -760,6 +858,7 @@ int main(int argc, char** argv)
         VerifyLimitedTexture2DUavFlowQualification();
         VerifyLimitedTexture2DFlowQualification();
         VerifyConditionalRegionQualification();
+        VerifyTemporalBufferFlowQualification();
         VerifyMultiTargetDynamicRoutingQualification();
         VerifyDynamicExecutionQualification();
         auto package = tests::BuildLinearUnified();

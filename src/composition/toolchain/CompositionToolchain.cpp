@@ -111,6 +111,10 @@ template<class T>
             return Fail<void>("CompositionToolchain/ConditionalRegion",
                 "Conditional flowのproducer Leafが範囲外です。");
         const auto producerMembership = membership[producerLeaf.value];
+        if (resource.lifetime == ResourceFlowLifetime::TemporalHistory &&
+            producerMembership != -1)
+            return Fail<void>("CompositionToolchain/TemporalBuffer",
+                "Temporal BufferのCurrent writerは初期版でunconditional Leafに限定されます。");
 
         for (const auto consumerEndpoint : resource.consumers)
         {
@@ -123,6 +127,10 @@ template<class T>
                 return Fail<void>("CompositionToolchain/ConditionalRegion",
                     "Conditional flowのconsumer Leafが範囲外です。");
             const auto consumerMembership = membership[consumerLeaf.value];
+            if (resource.lifetime == ResourceFlowLifetime::TemporalHistory &&
+                consumerMembership != -1)
+                return Fail<void>("CompositionToolchain/TemporalBuffer",
+                    "Temporal BufferのPrevious readerは初期版でunconditional Leafに限定されます。");
 
             if (producerMembership != -1 && consumerMembership == -1)
                 return Fail<void>("CompositionToolchain/ConditionalRegion",
@@ -578,7 +586,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract));
     if (!manifestSection || !authoritySection || !dynamicSection)
         return Fail<FrozenCompositionPackage>(
-            "CompositionReader", "SGE4UNI 2.6の必須Sectionがありません。");
+            "CompositionReader", "SGE4UNI 2.7の必須Sectionがありません。");
 
     auto manifestResult = artifact::DeserializeFrozenCompositionAbi2Manifest(
         manifestSection->bytes);

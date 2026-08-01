@@ -16,6 +16,7 @@ using CompositionEndpointId = model::CompositionEndpointId;
 using ResourceFlowId = model::ResourceFlowId;
 using StableKey = model::StableKey;
 using ResourceBoundary = model::ResourceBoundary;
+using ResourceFlowLifetime = model::ResourceFlowLifetime;
 using EndpointAccess = model::EndpointAccess;
 using Texture2DFlowShape = model::Texture2DFlowShape;
 using CompositionEndpointContract = model::CompositionEndpointContract;

@@ -25,7 +25,7 @@ using ResourceFlowId = Id32<ResourceFlowTag>;
 using StableKey = base::Digest256;
 
 inline constexpr std::uint32_t InvalidIndex = base::InvalidIndex;
-inline constexpr std::uint32_t CompositionContractVersion = 1;
+inline constexpr std::uint32_t CompositionContractVersion = 2;
 
 enum class EndpointAccess : std::uint16_t
 {
@@ -38,6 +38,15 @@ enum class ResourceBoundary : std::uint16_t
     Internal = 1,
     CompositionInput = 2,
     CompositionOutput = 3
+};
+
+// Generalization 7 distinguishes a normal same-frame edge from a verified
+// depth-one temporal edge.  A temporal edge owns two physical Buffer
+// generations: Current is written this frame and Previous is read this frame.
+enum class ResourceFlowLifetime : std::uint16_t
+{
+    SameFrame = 1,
+    TemporalHistory = 2
 };
 
 
@@ -103,6 +112,8 @@ struct ResourceFlowContract final
     package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t sizeBytes = 0;
     Texture2DFlowShape texture2D;
+    ResourceFlowLifetime lifetime = ResourceFlowLifetime::SameFrame;
+    std::uint16_t historyDepth = 0;
     CompositionEndpointId producer;
     std::vector<CompositionEndpointId> consumers;
 };
@@ -146,6 +157,8 @@ struct ResourceFlowDeclaration final
 {
     std::string stableKey;
     ResourceBoundary boundary = ResourceBoundary::Internal;
+    ResourceFlowLifetime lifetime = ResourceFlowLifetime::SameFrame;
+    std::uint16_t historyDepth = 0;
     std::optional<EndpointReferenceDeclaration> producer;
     std::vector<EndpointReferenceDeclaration> consumers;
 };

@@ -354,7 +354,7 @@ Architecture Gateは少なくとも次を拒否する。
 
 ## 16. 現在の能力範囲
 
-ABI 2.6は現在実証済みのComposition能力だけを表す。
+ABI 2.7は現在実証済みのComposition能力だけを表す。
 
 - Bufferおよび限定Texture2Dのfinite static DAG
 - single writer
@@ -366,8 +366,10 @@ ABI 2.6は現在実証済みのComposition能力だけを表す。
 - Frozen Dynamic Invocationとのidentity binding
 - fixed BGRA8 Texture2Dおよびfixed RGBA32F Texture2D、single mip／layer／plane／sample
 - RTV producerまたはCompute UAV producerからSRV consumerへのsame-frame handoff
+- fixed-size BufferのTemporalHistory、history depth 1、Previous／Current二世代
+- successful full-submit後だけのatomic temporal rotationと明示的seed Recovery
 
-Texture2Dの未実証一般化、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。Conditional Regionと限定Texture2D Flowは後続Production amendmentで追加された。
+Temporal Texture、history depth 2以上、Texture2Dの未実証一般化、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。Conditional Regionと限定Texture2D Flowは後続Production amendmentで追加された。
 
 ---
 
@@ -427,3 +429,12 @@ BGRA8はRenderTarget writer、RGBA32FはUnorderedAccess writerへ限定する。
 Level 4 Generalization 6によりProduction minorを2.6、Dynamic Contractをschema 5へ進めた。Verified execution contractは単一target fieldsを廃止し、`canonicalMemberBytes`とCanonical `executionRoutes[]`を所有する。各routeはtarget Leaf／Dynamic Slot、source byte offset、route member byte幅を固定する。
 
 対応するFrozen Dynamic InvocationはSGE4INV 1.5、Manifest schema 6である。Execution Payload Section schema 2がCanonical member byte幅、全route、exact Update payload、payload identityを保存する。Contract／Plan schema 2、Leaf Schema 17、Conditional Execution、Indirect Dispatchの意味は維持する。
+
+
+## Production amendment: SGE4UNI 2.7
+
+Level 4 Generalization 7によりProduction minorを2.7、Contract DataとVerified Decision Dataをschema 3へ進めた。Resource Flowは`SameFrame`または`TemporalHistory` lifetimeとhistory depthを所有し、allocationはphysical instance countを固定する。専用Temporal Buffer PlanがCurrent producer、Previous consumers、history depth 1、物理instance数2をCanonical encodingする。
+
+Temporal Bufferは同一frame DAG、handoff、signal、waitへ入らない。RuntimeはPrevious／Current二世代を別native Bufferとして物質化し、全Leaf submission成功後だけrole indexを交換する。明示的full-size seedをLoad／Recoveryに要求する。
+
+Dynamic Contract schema 5、SGE4INV 1.5／Manifest schema 6、Leaf Schema 17、Texture2DおよびVerified Indirectの意味は維持する。ABI 1.1 migration corpusはsame-frame Buffer Flowだけを受理し、Temporal Flowを旧形式から推測しない。

@@ -1,4 +1,4 @@
-> Current status: Generalization 6により現行ProductionはSGE4UNI 2.6／SGE4INV 1.5へ進んだ。本書はGeneralization 5完成時点の契約記録である。
+> Current status: Generalization 7により現行ProductionはSGE4UNI 2.7／SGE4INV 1.5へ進んだ。本書はGeneralization 5完成時点の契約記録である。
 
 # Level 4 Generalization 5 — Limited Texture2D UAV／Compute Flow
 

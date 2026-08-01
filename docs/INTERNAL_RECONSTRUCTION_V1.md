@@ -1,6 +1,6 @@
 # Internal Source Reconstruction v1.4
 
-> Status note: 本文はv1.4時点のSource reconstruction記録である。第9章で別作業として延期したmajor 2平坦化は、Frozen Composition ABI 2.0で完了した。現行Production形式は`SGE4UNI 2.6`であり、詳細は`FROZEN_COMPOSITION_ABI_2_0.md`を参照する。
+> Status note: 本文はv1.4時点のSource reconstruction記録である。第9章で別作業として延期したmajor 2平坦化は、Frozen Composition ABI 2.0で完了した。現行Production形式は`SGE4UNI 2.7`であり、詳細は`FROZEN_COMPOSITION_ABI_2_0.md`を参照する。
 
 ## 1. Baseline
 

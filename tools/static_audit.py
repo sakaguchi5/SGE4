@@ -203,20 +203,20 @@ executor_text='\n'.join(x.read_text(encoding='utf-8') for x in (root/'src/backen
 if 'D3D12PackageLowering' in executor_text:
     errors.append('D3D12 Executor depends on target lowering implementation')
 
-# Frozen Composition ABI 2.6 boundary checks.
+# Frozen Composition ABI 2.7 boundary checks.
 abi2_header=(root/'src/composition/artifact/abi2/FrozenCompositionAbi2.h').read_text(encoding='utf-8')
 abi2_source=(root/'src/composition/artifact/abi2/FrozenCompositionAbi2.cpp').read_text(encoding='utf-8')
 production_reader=(root/'src/composition/artifact/VerifiedCompositionArtifact.cpp').read_text(encoding='utf-8')
 toolchain_source=(root/'src/composition/toolchain/CompositionToolchain.cpp').read_text(encoding='utf-8')
 migration_root=root/'src/composition/migration/abi1'
-if 'FrozenCompositionAbi2FormatMajor = 2' not in abi2_header or 'FrozenCompositionAbi2FormatMinor = 6' not in abi2_header:
-    errors.append('Frozen Composition production ABI is not fixed to SGE4UNI 2.6')
+if 'FrozenCompositionAbi2FormatMajor = 2' not in abi2_header or 'FrozenCompositionAbi2FormatMinor = 7' not in abi2_header:
+    errors.append('Frozen Composition production ABI is not fixed to SGE4UNI 2.7')
 for required_kind in ('Manifest','LeafTable','LeafBytes','ContractData','VerifiedDecisionData',
                       'VerificationCertificate','AuthorityLedger','DynamicContract'):
     if required_kind not in abi2_header:
-        errors.append(f'Frozen Composition ABI 2.6 is missing direct section {required_kind}')
+        errors.append(f'Frozen Composition ABI 2.7 is missing direct section {required_kind}')
 if 'CompleteComposition' in abi2_header or 'CompleteComposition' in toolchain_source:
-    errors.append('Production ABI 2.6 reintroduced the nested CompleteComposition section')
+    errors.append('Production ABI 2.7 reintroduced the nested CompleteComposition section')
 if (root/'src/composition/artifact/container').exists():
     errors.append('Legacy SGE4CMP container still resides in the production artifact tree')
 for required in ('FrozenCompositionAbi1Migration.cpp','FrozenCompositionAbi1Migration.h'):
@@ -227,9 +227,9 @@ if not (migration_root/'container/FrozenCompositionReader.cpp').exists():
 if 'FrozenCompositionReader' in production_reader or 'FrozenCompositionWriter' in production_reader:
     errors.append('Production Composition reader directly references the legacy SGE4CMP reader/writer')
 if 'ReadVerifiedFrozenCompositionAbi2' not in production_reader:
-    errors.append('Production Composition reader does not route exclusively to ABI 2.6')
+    errors.append('Production Composition reader does not route exclusively to ABI 2.7')
 if 'FrozenCompositionAbi2EmbeddedSchemaVersion = 17' not in abi2_header or    'FrozenCompositionAbi2EmbeddedRuntimeVersion = 17' not in abi2_header:
-    errors.append('ABI 2.6 does not explicitly preserve embedded Leaf Schema/Runtime 17')
+    errors.append('ABI 2.7 does not explicitly preserve embedded Leaf Schema/Runtime 17')
 dynamic_header=(root/'src/dynamic/artifact/DynamicInvocationPackage.h').read_text(encoding='utf-8')
 if 'FrozenInvocationFormatMajor = 1' not in dynamic_header or 'FrozenInvocationFormatMinor = 5' not in dynamic_header:
     errors.append('Frozen Dynamic Invocation production ABI is not fixed to SGE4INV 1.5')
@@ -275,8 +275,8 @@ if 'Texture2DFlowShape' not in composition_contract or 'Texture2DFlowShape textu
     errors.append('Composition Contract does not freeze limited Texture2D shape')
 if 'Texture2DFlowShape texture2D' not in composition_plan:
     errors.append('Composition Plan does not freeze limited Texture2D allocation shape')
-if 'FrozenCompositionAbi2ContractSchema = 2' not in abi2_header or 'FrozenCompositionAbi2DecisionSchema = 2' not in abi2_header:
-    errors.append('SGE4UNI 2.6 does not use Contract/Decision schema 2')
+if 'FrozenCompositionAbi2ContractSchema = 3' not in abi2_header or 'FrozenCompositionAbi2DecisionSchema = 3' not in abi2_header:
+    errors.append('SGE4UNI 2.7 does not use Contract/Decision schema 3')
 executor_header=(root/'src/backends/d3d12/executor/Executor.h').read_text(encoding='utf-8')
 shared_resources=(root/'src/backends/d3d12/runtime/resources/CompositionSharedResources.cpp').read_text(encoding='utf-8')
 if 'CreateSharedTexture2D' not in executor_header or 'ReadSharedTexture2D' not in executor_header:
@@ -284,8 +284,8 @@ if 'CreateSharedTexture2D' not in executor_header or 'ReadSharedTexture2D' not i
 if 'CreateSharedTexture2D' not in shared_resources or 'TransitionSharedResource' not in shared_resources:
     errors.append('Composition Runtime does not mechanically materialize and transition Texture2D Flow')
 migration_source=(root/'src/composition/migration/abi1/FrozenCompositionAbi1Migration.cpp').read_text(encoding='utf-8')
-if 'ABI 1移行CorpusはBuffer Flowだけ' not in migration_source:
-    errors.append('ABI 1 migration does not explicitly reject Texture2D Flow inference')
+if 'ABI 1移行Corpusはsame-frame Buffer Flowだけ' not in migration_source:
+    errors.append('ABI 1 migration does not explicitly reject Texture2D and Temporal Flow inference')
 semantic_model=(root/'src/leaf/model/semantic/SemanticModel.h').read_text(encoding='utf-8')
 semantic_analysis=(root/'src/leaf/model/analysis/SemanticAnalysis.cpp').read_text(encoding='utf-8')
 if ('Rgba32Float = 3' not in semantic_model or
@@ -317,8 +317,34 @@ if 'invocation.enabledLeaves' not in composition_runtime or 'if (!enabled[entry.
     errors.append('D3D12 Composition Runtime does not mechanically skip unselected Conditional leaves')
 corruption_test=(root/'tests/60_UnifiedArchitectureTests/Abi2CorruptionTests.cpp')
 portable_test=(root/'tests/60_UnifiedArchitectureTests/Abi2PortableSelfTest.cpp')
-if not corruption_test.exists(): errors.append('ABI 2.6 corruption corpus is missing')
-if not portable_test.exists(): errors.append('ABI 2.6 portable round-trip/migration self-test is missing')
+if not corruption_test.exists(): errors.append('ABI 2.7 corruption corpus is missing')
+if not portable_test.exists(): errors.append('ABI 2.7 portable round-trip/migration self-test is missing')
+
+# Generalization 7: Verified Temporal Buffer Flow.
+if ('ResourceFlowLifetime' not in composition_contract or
+        'TemporalHistory' not in composition_contract or
+        'historyDepth' not in composition_contract):
+    errors.append('Composition Contract does not freeze Temporal Buffer lifetime/history depth')
+if ('TemporalBufferPlan' not in composition_plan or
+        'temporalBuffers' not in composition_plan or
+        'physicalInstanceCount' not in composition_plan):
+    errors.append('Composition Plan does not freeze Previous/Current Temporal Buffer generations')
+composition_planner=(root/'src/composition/planner/CompositionPlanner.cpp').read_text(encoding='utf-8')
+composition_verifier=(root/'src/composition/verifier/CompositionVerifier.cpp').read_text(encoding='utf-8')
+if ('TemporalHistory' not in composition_planner or 'temporalBuffers' not in composition_planner):
+    errors.append('Composition Planner does not derive dedicated Temporal Buffer plans')
+if ('TemporalHistory' not in composition_verifier or 'temporalBuffers' not in composition_verifier):
+    errors.append('Composition Verifier does not independently derive Temporal Buffer plans')
+if ('CommitTemporalFrame' not in shared_resources or
+        'previousInstance' not in shared_resources or 'currentInstance' not in shared_resources):
+    errors.append('Composition Runtime does not own atomic Previous/Current Temporal rotation')
+if ('VerifyTemporalBufferFlowQualification' not in windows_qualification or
+        'BuildTemporalBufferArtifact' not in runtime_fixture):
+    errors.append('Windows qualification does not observe Temporal Buffer flow and recovery')
+if 'BuildPortableTemporalCompositionInput' not in portable_test.read_text(encoding='utf-8'):
+    errors.append('Portable ABI self-test does not cover Temporal Buffer round-trip/rejection')
+if not (root/'docs/LEVEL4_GENERALIZATION7_VERIFIED_TEMPORAL_BUFFER_FLOW.md').exists():
+    errors.append('Missing Generalization 7 design contract')
 
 if errors:
     print('New SGE4静的監査に失敗しました')

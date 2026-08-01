@@ -21,15 +21,15 @@ inline constexpr std::array<std::byte, 8> FrozenCompositionAbi2Magic = {
     std::byte{'S'}, std::byte{'G'}, std::byte{'E'}, std::byte{'4'},
     std::byte{'U'}, std::byte{'N'}, std::byte{'I'}, std::byte{0}};
 inline constexpr std::uint16_t FrozenCompositionAbi2FormatMajor = 2;
-inline constexpr std::uint16_t FrozenCompositionAbi2FormatMinor = 6;
+inline constexpr std::uint16_t FrozenCompositionAbi2FormatMinor = 7;
 inline constexpr std::uint32_t FrozenCompositionAbi2ManifestSchema = 2;
 inline constexpr std::uint32_t FrozenCompositionAbi2CoreSchema = 1;
 inline constexpr std::uint32_t FrozenCompositionAbi2LeafRecordBytes = 128;
 inline constexpr std::uint32_t FrozenCompositionAbi2Alignment = 8;
 inline constexpr std::uint32_t FrozenCompositionAbi2EmbeddedSchemaVersion = 17;
 inline constexpr std::uint32_t FrozenCompositionAbi2EmbeddedRuntimeVersion = 17;
-inline constexpr std::uint16_t FrozenCompositionAbi2ContractSchema = 2;
-inline constexpr std::uint16_t FrozenCompositionAbi2DecisionSchema = 2;
+inline constexpr std::uint16_t FrozenCompositionAbi2ContractSchema = 3;
+inline constexpr std::uint16_t FrozenCompositionAbi2DecisionSchema = 3;
 inline constexpr std::uint16_t FrozenCompositionAbi2AuthorityLedgerSchema = 2;
 inline constexpr std::uint16_t FrozenCompositionAbi2DynamicContractSchema = 5;
 

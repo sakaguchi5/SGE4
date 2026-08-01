@@ -3,9 +3,9 @@
 | Gate | Requirement | Executable／Audit |
 |---|---|---|
 | U1 | complete Leaf bytes and Leaf Certificate correspond | `60_UnifiedArchitectureTests` |
-| U2 | flat SGE4UNI 2.6 Composition Core and Composition Certificate correspond | `60_UnifiedArchitectureTests` |
-| U3 | Debug A／Debug B／Release SGE4UNI 2.6 bytes match | `run_new_sge4_full_gate.bat` |
-| U4 | ABI 2.6 Section／Core／Authority／embedded Leaf corruption is rejected | `60_UnifiedArchitectureTests` |
+| U2 | flat SGE4UNI 2.7 Composition Core and Composition Certificate correspond | `60_UnifiedArchitectureTests` |
+| U3 | Debug A／Debug B／Release SGE4UNI 2.7 bytes match | `run_new_sge4_full_gate.bat` |
+| U4 | ABI 2.7 Section／Core／Authority／embedded Leaf corruption is rejected | `60_UnifiedArchitectureTests` |
 | U5 | exact initial／continue／recovery delta algebra | `60_UnifiedArchitectureTests` |
 | U6 | all 40 carried invariants have a final owner | `62_UnifiedMigrationAcceptance` |
 | U7 | Runtime Core has no Dynamic Planner／Verifier dependency | `tools/static_audit.py` |
@@ -22,7 +22,7 @@
 | U13 | external rebind gate and RecoverySeed are mandatory | `61_UnifiedWindowsQualification` |
 | U14 | actual Device removal and removed-adapter exclusion | `run_new_sge4_actual_removal_qualification.bat` |
 
-現在の追加能力はVerified Dynamic Execution、Conditional Region、限定Texture2D Flow、Verified Indirect Work Executionである。Texture一般化、Variant、Partial Recovery、Multiple AdapterはこのMatrixの対象外である。
+現在の追加能力はVerified Dynamic Execution、Conditional Region、限定Texture2D Flow、Verified Indirect Work Execution、Multi-target Dynamic Routing、Verified Temporal Buffer Flowである。Texture一般化、Variant、Partial Recovery、Multiple AdapterはこのMatrixの対象外である。
 
 ## Level 4 Generalization 2
 
@@ -32,7 +32,7 @@
 | G2-2 | Planner and independent Verifier derive identical selections and enabled Leaves | `60_UnifiedArchitectureTests` |
 | G2-3 | Tampered enabled Leaf set is rejected | `60_UnifiedArchitectureTests` |
 | G2-4 | True, zero-Leaf False, re-enable and RecoverySeed observations pass | `61_UnifiedWindowsQualification` |
-| G2-5 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.6 | `run_new_sge4_full_gate.bat` |
+| G2-5 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.7 | `run_new_sge4_full_gate.bat` |
 
 
 ## Level 4 Generalization 3
@@ -41,33 +41,54 @@
 |---|---|---|
 | G3-1 | fixed BGRA8 Texture2D shape is canonical in Contract and Plan | `60_UnifiedArchitectureTests` |
 | G3-2 | producer／consumer shape mismatch and ABI 1 Texture inference are rejected | `60_UnifiedArchitectureTests` |
-| G3-3 | portable SGE4UNI 2.6 Texture Composition is deterministic and round-trips | `60_UnifiedArchitectureTests` |
+| G3-3 | portable SGE4UNI 2.7 Texture Composition is deterministic and round-trips | `60_UnifiedArchitectureTests` |
 | G3-4 | WARP executes RTV producer -> SRV consumer and packed readback matches | `61_UnifiedWindowsQualification` |
 | G3-5 | controlled Recovery rematerializes the shared Texture and observation matches | `61_UnifiedWindowsQualification` |
-| G3-6 | Debug A／Debug B／Release SGE4UNI 2.6 bytes match | `run_new_sge4_full_gate.bat` |
+| G3-6 | Debug A／Debug B／Release SGE4UNI 2.7 bytes match | `run_new_sge4_full_gate.bat` |
 
 
 ## Level 4 Generalization 4
 
 | ID | Acceptance | Gate |
 |---|---|---|
-| G4-1 | SGE4UNI 2.6 Dynamic Contract schema 5 preserves one unconditional Compute Leaf／Command and maximum work count | `60_UnifiedArchitectureTests` |
+| G4-1 | SGE4UNI 2.7 Dynamic Contract schema 5 preserves one unconditional Compute Leaf／Command and maximum work count | `60_UnifiedArchitectureTests` |
 | G4-2 | Planner and independent Verifier derive identical Dispatch arguments from exact Transition count | `60_UnifiedArchitectureTests` |
 | G4-3 | Tampered X／workCount／identity is rejected before Freeze or submission | `60_UnifiedArchitectureTests` |
 | G4-4 | WARP executes zero, three-work, retain-zero and RecoverySeed DispatchIndirect observations | `61_UnifiedWindowsQualification` |
 | G4-5 | target ExecuteCompute is applied exactly once and other Commands retain fixed Dispatch | `61_UnifiedWindowsQualification` |
-| G4-6 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.6／SGE4INV 1.5 | `run_new_sge4_full_gate.bat` |
+| G4-6 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.7／SGE4INV 1.5 | `run_new_sge4_full_gate.bat` |
 
-| G5-1 | SGE4UNI 2.6 accepts fixed RGBA32F Texture2D UAV writer and freezes width／height／rowBytes | `60_UnifiedArchitectureTests` |
+## Level 4 Generalization 5
+
+| ID | Acceptance | Gate |
+|---|---|---|
+| G5-1 | SGE4UNI 2.7 accepts fixed RGBA32F Texture2D UAV writer and freezes width／height／rowBytes | `60_UnifiedArchitectureTests` |
 | G5-2 | Semantic／Reflection independently match StorageTexture2D and typed RWTexture2D | `60_UnifiedArchitectureTests` |
 | G5-3 | Plan freezes UnorderedWrite → ShaderRead handoff and rejects format mismatch | `60_UnifiedArchitectureTests` |
 | G5-4 | WARP observes RGBA32F UAV intermediate and BGRA8 SRV-consumer output | `61_UnifiedWindowsQualification` |
 | G5-5 | Controlled Recovery rematerializes UAV Texture／descriptors and reproduces both readbacks | `61_UnifiedWindowsQualification` |
-| G5-6 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.6／SGE4INV 1.5 | `run_new_sge4_full_gate.bat` |
+| G5-6 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.7／SGE4INV 1.5 | `run_new_sge4_full_gate.bat` |
 
+## Level 4 Generalization 6
+
+| ID | Acceptance | Gate |
+|---|---|---|
 | G6-1 | Dynamic Contract schema 5 freezes canonicalMemberBytes and canonical multi-route table | `60_UnifiedArchitectureTests` |
 | G6-2 | SGE4INV 1.5 Execution Payload schema 2 binds all routes and Canonical Update payloads | `60_UnifiedArchitectureTests` |
 | G6-3 | route order／duplicate target／out-of-range slice／payload width corruption is rejected | `60_UnifiedArchitectureTests` |
 | G6-4 | Update／Clear is applied to all route shadows and committed atomically with History | `60_UnifiedArchitectureTests` |
 | G6-5 | two GPU Leaves receive separate slices from one Canonical member payload | `61_UnifiedWindowsQualification` |
 | G6-6 | controlled Recovery rebuilds all routed shadows and GPU outputs | `61_UnifiedWindowsQualification` |
+
+
+## Level 4 Generalization 7
+
+| ID | Acceptance | Gate |
+|---|---|---|
+| G7-1 | SGE4UNI 2.7 Contract／Decision schema 3 freezes TemporalHistory and history depth 1 | `60_UnifiedArchitectureTests` |
+| G7-2 | Plan freezes two physical generations, Current writer and Previous readers | `60_UnifiedArchitectureTests` |
+| G7-3 | Temporal Buffer is absent from same-frame handoff／signal／wait and invalid depth is rejected | `60_UnifiedArchitectureTests` |
+| G7-4 | Portable SGE4UNI 2.7 Temporal Composition round-trips and ABI 1 migration rejects Temporal inference | `60_UnifiedArchitectureTests` |
+| G7-5 | WARP observes seed→11, accepted Current→20, next-frame→21 | `61_UnifiedWindowsQualification` |
+| G7-6 | Controlled Recovery invalidates temporal history and rebuilds Previous from explicit seed | `61_UnifiedWindowsQualification` |
+| G7-7 | Debug A／Debug B／Release Frozen bytes match for SGE4UNI 2.7 | `run_new_sge4_full_gate.bat` |

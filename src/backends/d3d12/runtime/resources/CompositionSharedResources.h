@@ -21,6 +21,13 @@ struct SharedResourceInitialData final
     std::vector<std::byte> bytes;
 };
 
+struct SharedResourceInstance final
+{
+    package::d3d12_v13::ResourceState currentState;
+    std::shared_ptr<::sge4::runtime::IExternalResource> resource;
+    std::shared_ptr<::sge4::runtime::ICompletionToken> availableAfter;
+};
+
 struct SharedResourceRecord final
 {
     ResourceFlowId id;
@@ -29,9 +36,11 @@ struct SharedResourceRecord final
     package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t sizeBytes = 0;
     Texture2DFlowShape texture2D;
-    package::d3d12_v13::ResourceState currentState;
-    std::shared_ptr<::sge4::runtime::IExternalResource> resource;
-    std::shared_ptr<::sge4::runtime::ICompletionToken> availableAfter;
+    ResourceFlowLifetime lifetime = ResourceFlowLifetime::SameFrame;
+    std::uint16_t historyDepth = 0;
+    std::uint32_t previousInstance = 0;
+    std::uint32_t currentInstance = 0;
+    std::vector<SharedResourceInstance> instances;
 };
 
 class SharedResourceTable final
@@ -47,6 +56,8 @@ public:
     [[nodiscard]] SharedResourceRecord* Record(ResourceFlowId resource) noexcept;
     [[nodiscard]] ResourceFlowId ResourceForEndpoint(CompositionEndpointId endpoint) const noexcept;
     [[nodiscard]] std::shared_ptr<::sge4::runtime::IExternalResource> ResourceForEndpointHandle(CompositionEndpointId endpoint) const;
+    [[nodiscard]] std::shared_ptr<::sge4::runtime::ICompletionToken> AvailableAfterForEndpoint(CompositionEndpointId endpoint) const;
+    [[nodiscard]] std::shared_ptr<::sge4::runtime::IExternalResource> ObservableResource(ResourceFlowId resource) const;
     [[nodiscard]] std::shared_ptr<::sge4::runtime::ICompletionToken> AvailableAfter(ResourceFlowId resource) const;
     [[nodiscard]] package::d3d12_v13::ResourceState CurrentState(ResourceFlowId resource) const noexcept;
 
@@ -57,9 +68,16 @@ public:
     [[nodiscard]] base::Expected<void, SharedResourceError> UpdateAfterObservation(
         ResourceFlowId resource,
         std::shared_ptr<::sge4::runtime::ICompletionToken> token);
+    [[nodiscard]] base::Expected<void, SharedResourceError> CommitTemporalFrame(
+        std::span<const LeafPackageId> executionOrder);
 
 private:
     explicit SharedResourceTable(SharedDeviceDomain& domain) : domain_(&domain) {}
+    [[nodiscard]] SharedResourceInstance* InstanceForEndpoint(CompositionEndpointId endpoint) noexcept;
+    [[nodiscard]] const SharedResourceInstance* InstanceForEndpoint(CompositionEndpointId endpoint) const noexcept;
+    [[nodiscard]] SharedResourceInstance* ObservableInstance(ResourceFlowId resource) noexcept;
+    [[nodiscard]] const SharedResourceInstance* ObservableInstance(ResourceFlowId resource) const noexcept;
+
     friend base::Expected<SharedResourceTable, SharedResourceError> MaterializeSharedResources(
         SharedDeviceDomain&, std::span<const SharedResourceInitialData>);
     friend base::Expected<d3d12::ExternalBufferReadback, SharedResourceError> ReadSharedResource(

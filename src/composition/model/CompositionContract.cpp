@@ -512,6 +512,8 @@ std::vector<std::byte> SerializeBody(const PackageCompositionContract& contract)
         writer.WriteU64(resource.sizeBytes);
         if (resource.kind == pkg::ResourceKind::Texture2D)
             WriteTexture2DShape(writer, resource.texture2D);
+        writer.WriteU16(static_cast<std::uint16_t>(resource.lifetime));
+        writer.WriteU16(resource.historyDepth);
         writer.WriteU32(resource.producer.value);
         writer.WriteCountU32(resource.consumers.size());
         for (const auto consumer : resource.consumers) writer.WriteU32(consumer.value);
@@ -610,6 +612,17 @@ base::Expected<void, ContractError> ValidateShapeInternal(
              resource.boundary != ResourceBoundary::CompositionOutput))
             return base::Failure<void, ContractError>(
                 Error("contract/validate-resource", "Resource Flowが検証または実行の契約に違反しています。"));
+        const bool sameFrame = resource.lifetime == ResourceFlowLifetime::SameFrame &&
+            resource.historyDepth == 0;
+        const bool temporal = resource.lifetime == ResourceFlowLifetime::TemporalHistory &&
+            resource.historyDepth == 1 &&
+            resource.boundary == ResourceBoundary::Internal &&
+            resource.kind == pkg::ResourceKind::Buffer;
+        if (!sameFrame && !temporal)
+            return base::Failure<void, ContractError>(
+                Error("contract/validate-temporal",
+                    "Temporal Resource Flowが検証または実行の契約に違反しています。"));
+
         const bool requiresProducer = resource.boundary != ResourceBoundary::CompositionInput;
         const bool requiresConsumers = resource.boundary != ResourceBoundary::CompositionOutput;
         if ((requiresProducer && !resource.producer.IsValid()) ||
@@ -647,6 +660,15 @@ base::Expected<void, ContractError> ValidateShapeInternal(
                 return base::Failure<void, ContractError>(
                     Error("contract/validate-access", "検証または実行の契約に違反しています。"));
             members.push_back(consumer);
+        }
+        if (temporal)
+        {
+            const auto producerLeaf = contract.endpoints[resource.producer.value].leaf;
+            for (const auto consumer : resource.consumers)
+                if (contract.endpoints[consumer.value].leaf == producerLeaf)
+                    return base::Failure<void, ContractError>(
+                        Error("contract/validate-temporal",
+                            "Temporal producerとPrevious consumerは別Leafでなければなりません。"));
         }
         const auto& first = contract.endpoints[members.front().value];
         std::uint64_t requiredBytes = 0;
@@ -812,6 +834,8 @@ BuildCompositionContract(ContractBuildInput input)
         resource.id = {static_cast<std::uint32_t>(contract.resources.size())};
         resource.stableKey = item.stableKey;
         resource.boundary = item.declaration.boundary;
+        resource.lifetime = item.declaration.lifetime;
+        resource.historyDepth = item.declaration.historyDepth;
         const bool needsProducer = resource.boundary != ResourceBoundary::CompositionInput;
         const bool needsConsumers = resource.boundary != ResourceBoundary::CompositionOutput;
         if ((needsProducer && !item.declaration.producer.has_value()) ||
@@ -1100,10 +1124,13 @@ DeserializeCompositionContract(std::span<const std::byte> bytes)
             base::Success<Texture2DFlowShape, ContractError>({});
         if (kind && static_cast<pkg::ResourceKind>(kind.value()) == pkg::ResourceKind::Texture2D)
             texture2D = ReadTexture2DShape(reader);
+        auto lifetime = reader.ReadU16();
+        auto historyDepth = reader.ReadU16();
         auto producer = reader.ReadU32();
         auto consumers = reader.ReadU32();
-        if (!id || !stableKey || !boundary || !kind || !format || !size || !texture2D || !producer ||
-            !consumers || consumers.value() > MaximumRecords)
+        if (!id || !stableKey || !boundary || !kind || !format || !size || !texture2D ||
+            !lifetime || !historyDepth || !producer || !consumers ||
+            consumers.value() > MaximumRecords)
             return Failure<PackageCompositionContract>("contract/read", "Resource Flowが検証または実行の契約に違反しています。");
         resource.id = {id.value()};
         resource.stableKey = stableKey.value();
@@ -1112,6 +1139,8 @@ DeserializeCompositionContract(std::span<const std::byte> bytes)
         resource.format = static_cast<pkg::Format>(format.value());
         resource.sizeBytes = size.value();
         resource.texture2D = texture2D.value();
+        resource.lifetime = static_cast<ResourceFlowLifetime>(lifetime.value());
+        resource.historyDepth = historyDepth.value();
         resource.producer = {producer.value()};
         for (std::uint32_t consumerIndex = 0; consumerIndex < consumers.value(); ++consumerIndex)
         {

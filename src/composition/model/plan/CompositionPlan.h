@@ -33,6 +33,9 @@ struct ResourceAllocationPlan final
     package::d3d12_v13::Format format = package::d3d12_v13::Format::Unknown;
     std::uint64_t sizeBytes = 0;
     Texture2DFlowShape texture2D;
+    ResourceFlowLifetime lifetime = ResourceFlowLifetime::SameFrame;
+    std::uint16_t historyDepth = 0;
+    std::uint16_t physicalInstanceCount = 1;
 };
 
 struct LeafScheduleEntry final
@@ -80,6 +83,17 @@ struct WaitPointPlan final
     std::uint32_t consumerScheduleOrdinal = InvalidIndex;
 };
 
+
+struct TemporalBufferPlan final
+{
+    ResourceFlowId resource;
+    CompositionEndpointId currentProducer;
+    LeafPackageId currentProducerLeaf;
+    std::uint16_t historyDepth = 1;
+    std::uint16_t physicalInstanceCount = 2;
+    std::vector<CompositionEndpointId> previousConsumers;
+};
+
 struct RecoveryPlan final
 {
     std::uint32_t schemaVersion = 1;
@@ -98,6 +112,7 @@ struct RawCompositionPlan final
     std::vector<StateHandoffPlan> handoffs;
     std::vector<SignalPointPlan> signals;
     std::vector<WaitPointPlan> waits;
+    std::vector<TemporalBufferPlan> temporalBuffers;
     RecoveryPlan recovery;
     base::Digest256 identity{};
 };

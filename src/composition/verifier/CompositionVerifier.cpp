@@ -54,7 +54,8 @@ DeriveCanonicalSchedule(const PackageCompositionContract& contract)
     std::vector<std::uint32_t> indegree(contract.leaves.size(), 0);
     for (const auto& resource : contract.resources)
     {
-        if (resource.boundary != ResourceBoundary::Internal) continue;
+        if (resource.boundary != ResourceBoundary::Internal ||
+            resource.lifetime == ResourceFlowLifetime::TemporalHistory) continue;
         if (!resource.producer.IsValid() ||
             resource.producer.value >= contract.endpoints.size())
             return Failure<std::vector<std::uint32_t>>(
@@ -129,7 +130,11 @@ VerifyAuthority(const ValidatedCompositionContract& validatedContract,
         if (value.resource != source.id ||
             value.ownership != ExpectedOwnership(source.boundary) ||
             value.kind != source.kind || value.format != source.format ||
-            value.sizeBytes != expectedBytes || value.texture2D != source.texture2D)
+            value.sizeBytes != expectedBytes || value.texture2D != source.texture2D ||
+            value.lifetime != source.lifetime ||
+            value.historyDepth != source.historyDepth ||
+            value.physicalInstanceCount !=
+                (source.lifetime == ResourceFlowLifetime::TemporalHistory ? 2u : 1u))
             return base::Failure<void, VerificationError>(
                 Error("verify/allocation",
                       "検証または実行の契約に違反しています。"));
@@ -171,7 +176,8 @@ VerifyAuthority(const ValidatedCompositionContract& validatedContract,
     std::vector<planning::StateHandoffPlan> expectedHandoffs;
     for (const auto& resource : contract.resources)
     {
-        if (resource.boundary != ResourceBoundary::Internal) continue;
+        if (resource.boundary != ResourceBoundary::Internal ||
+            resource.lifetime == ResourceFlowLifetime::TemporalHistory) continue;
         const auto& producer = contract.endpoints[resource.producer.value];
         if (producer.synchronization !=
                 package::d3d12_v13::ExternalSynchronizationContract::CompletionTokenRequired ||
@@ -225,7 +231,8 @@ VerifyAuthority(const ValidatedCompositionContract& validatedContract,
     std::map<std::uint32_t, std::uint32_t> signalByResource;
     for (const auto& resource : contract.resources)
     {
-        if (resource.boundary != ResourceBoundary::Internal) continue;
+        if (resource.boundary != ResourceBoundary::Internal ||
+            resource.lifetime == ResourceFlowLifetime::TemporalHistory) continue;
         const auto& producer = contract.endpoints[resource.producer.value];
         const std::uint32_t id = static_cast<std::uint32_t>(expectedSignals.size());
         signalByResource.emplace(resource.id.value, id);
@@ -264,6 +271,37 @@ VerifyAuthority(const ValidatedCompositionContract& validatedContract,
             return base::Failure<void, VerificationError>(
                 Error("verify/wait",
                       "Waitが検証または実行の契約に違反しています。"));
+    }
+
+    std::vector<planning::TemporalBufferPlan> expectedTemporalBuffers;
+    for (const auto& resource : contract.resources)
+    {
+        if (resource.lifetime != ResourceFlowLifetime::TemporalHistory) continue;
+        const auto& producer = contract.endpoints[resource.producer.value];
+        planning::TemporalBufferPlan temporal;
+        temporal.resource = resource.id;
+        temporal.currentProducer = producer.id;
+        temporal.currentProducerLeaf = producer.leaf;
+        temporal.historyDepth = resource.historyDepth;
+        temporal.physicalInstanceCount = 2;
+        temporal.previousConsumers = resource.consumers;
+        expectedTemporalBuffers.push_back(std::move(temporal));
+    }
+    if (raw.temporalBuffers.size() != expectedTemporalBuffers.size())
+        return base::Failure<void, VerificationError>(
+            Error("verify/temporal", "Temporal BufferがVerified Planへ固定されていません。"));
+    for (std::uint32_t index = 0; index < expectedTemporalBuffers.size(); ++index)
+    {
+        const auto& expected = expectedTemporalBuffers[index];
+        const auto& actual = raw.temporalBuffers[index];
+        if (actual.resource != expected.resource ||
+            actual.currentProducer != expected.currentProducer ||
+            actual.currentProducerLeaf != expected.currentProducerLeaf ||
+            actual.historyDepth != expected.historyDepth ||
+            actual.physicalInstanceCount != expected.physicalInstanceCount ||
+            actual.previousConsumers != expected.previousConsumers)
+            return base::Failure<void, VerificationError>(
+                Error("verify/temporal", "Temporal Bufferが検証または実行の契約に違反しています。"));
     }
 
     if (raw.recovery.schemaVersion != VerifierSchemaVersion ||

@@ -3,7 +3,7 @@
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.6
+Frozen Composition: SGE4UNI 2.7
 Dynamic Contract: schema 3
 Frozen Dynamic Invocation: SGE4INV 1.5
 Invocation Manifest: schema 4
@@ -378,7 +378,7 @@ Windows資格試験で、RGBA32F shared TextureがD3D12 ExecutorのInvocation検
 
 Portable確認:
 
-- SGE4UNI 2.6 direct／ABI 1.1 authority-only migration／round-trip／corruption rejection
+- SGE4UNI 2.7 direct／ABI 1.1 authority-only migration／round-trip／corruption rejection
 - Dynamic Contract schema 5のCanonical route table
 - SGE4INV 1.5／Manifest schema 6／Execution Payload schema 2
 - route別private shadowへのbyte-slice Update／Clear
@@ -402,6 +402,31 @@ Windows Debug buildで、D3D12 Runtime facadeのroute ownership検査に使用�
 
 ## Level 4 Generalization 6 — Indirect Contract schema Gate fix
 
-Windows統合設計試験で、Generalization 4のVerified Indirect Dispatch回帰が旧Dynamic Contract schema 4を要求し、正しいSGE4UNI 2.6 schema 5成果物を拒否した。
+Windows統合設計試験で、Generalization 4のVerified Indirect Dispatch回帰が旧Dynamic Contract schema 4を要求し、正しいSGE4UNI 2.7 schema 5成果物を拒否した。
 
-Indirect routeはschema 5へ正しく保持されていたため、製品コードは変更せず、G4 Indirect回帰とG6 Multi-target回帰のschema照合を`FrozenCompositionAbi2DynamicContractSchema`へ統一した。SGE4UNI 2.6をschema 4と記載していたauthority map／acceptance matrixもschema 5へ修正した。
+Indirect routeはschema 5へ正しく保持されていたため、製品コードは変更せず、G4 Indirect回帰とG6 Multi-target回帰のschema照合を`FrozenCompositionAbi2DynamicContractSchema`へ統一した。SGE4UNI 2.7をschema 4と記載していたauthority map／acceptance matrixもschema 5へ修正した。
+
+
+## Level 4 Generalization 7 — Verified Temporal Buffer Flow
+
+Portable確認:
+
+- SGE4UNI 2.7 direct／ABI 1.1 same-frame authority-only migration／round-trip／corruption rejection
+- Contract Data schema 3／Verified Decision Data schema 3
+- fixed-size Buffer、TemporalHistory、history depth 1
+- Previous／Current二物理instanceと専用Temporal Plan
+- Temporal resourceのsame-frame handoff／signal／wait除外
+- history depth 0拒否とABI 1.1 Temporal推測拒否
+- Debug相当`-O0`およびRelease相当`-O2 -DNDEBUG`のportable実行試験
+- C++23 `-Wall -Wextra -Wpedantic -Werror`構文検査
+- static architecture audit／SOURCE_MANIFEST照合
+
+Windowsで最終確認する事項:
+
+- MSVC／WARPでPrevious seedとCurrent writerが別native Bufferへbindされること
+- Frame 0でconsumer=11、accepted Previous=20、Frame 1でconsumer=21となること
+- 全Leaf submit成功後だけTemporal generationが回転すること
+- Controlled Recovery後に旧historyが失効しseedからconsumer=11へ戻ること
+- Actual Device removal
+
+最終合格はWindows上の`run_new_sge4_full_gate.bat`で確定する。

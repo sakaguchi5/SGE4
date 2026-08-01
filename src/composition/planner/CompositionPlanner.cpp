@@ -36,7 +36,8 @@ DeriveSchedule(const PackageCompositionContract& contract)
 
     for (const auto& resource : contract.resources)
     {
-        if (resource.boundary != ResourceBoundary::Internal) continue;
+        if (resource.boundary != ResourceBoundary::Internal ||
+            resource.lifetime == ResourceFlowLifetime::TemporalHistory) continue;
         if (!resource.producer.IsValid() || resource.producer.value >= contract.endpoints.size())
             return Failure<std::vector<std::uint32_t>>(
                 "plan/dependency", "検証または実行の契約に違反しています。");
@@ -97,8 +98,18 @@ ProposeCompositionPlan(const ValidatedCompositionContract& validatedContract)
         const auto storageBytes = resource.kind == package::d3d12_v13::ResourceKind::Texture2D
             ? static_cast<std::uint64_t>(resource.texture2D.rowBytes) * resource.texture2D.height
             : resource.sizeBytes;
-        plan.allocations.push_back({resource.id, OwnershipFor(resource.boundary),
-            resource.kind, resource.format, storageBytes, resource.texture2D});
+        ResourceAllocationPlan allocation;
+        allocation.resource = resource.id;
+        allocation.ownership = OwnershipFor(resource.boundary);
+        allocation.kind = resource.kind;
+        allocation.format = resource.format;
+        allocation.sizeBytes = storageBytes;
+        allocation.texture2D = resource.texture2D;
+        allocation.lifetime = resource.lifetime;
+        allocation.historyDepth = resource.historyDepth;
+        allocation.physicalInstanceCount =
+            resource.lifetime == ResourceFlowLifetime::TemporalHistory ? 2u : 1u;
+        plan.allocations.push_back(allocation);
     }
 
     std::vector<std::uint32_t> ordinalByLeaf(contract.leaves.size(), package::InvalidIndex);
@@ -120,6 +131,18 @@ ProposeCompositionPlan(const ValidatedCompositionContract& validatedContract)
     {
         if (resource.boundary != ResourceBoundary::Internal) continue;
         const auto& producer = contract.endpoints[resource.producer.value];
+        if (resource.lifetime == ResourceFlowLifetime::TemporalHistory)
+        {
+            TemporalBufferPlan temporal;
+            temporal.resource = resource.id;
+            temporal.currentProducer = producer.id;
+            temporal.currentProducerLeaf = producer.leaf;
+            temporal.historyDepth = resource.historyDepth;
+            temporal.physicalInstanceCount = 2;
+            temporal.previousConsumers = resource.consumers;
+            plan.temporalBuffers.push_back(std::move(temporal));
+            continue;
+        }
         for (const auto consumerId : resource.consumers)
         {
             const auto& consumer = contract.endpoints[consumerId.value];
@@ -136,7 +159,8 @@ ProposeCompositionPlan(const ValidatedCompositionContract& validatedContract)
     std::map<std::uint32_t, std::uint32_t> signalByResource;
     for (const auto& resource : contract.resources)
     {
-        if (resource.boundary != ResourceBoundary::Internal) continue;
+        if (resource.boundary != ResourceBoundary::Internal ||
+            resource.lifetime == ResourceFlowLifetime::TemporalHistory) continue;
         const auto& producer = contract.endpoints[resource.producer.value];
         const auto signalId = static_cast<std::uint32_t>(plan.signals.size());
         signalByResource.emplace(resource.id.value, signalId);

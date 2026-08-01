@@ -207,10 +207,12 @@ BuildFrozenCompositionPackageAbi1ForMigration(
     if (!contract)
         return Fail<std::vector<std::byte>>(contract.error().stage, contract.error().message);
     if (std::ranges::any_of(contract.value().Contract().resources, [](const auto& resource) {
-            return resource.kind != package::d3d12_v13::ResourceKind::Buffer;
+            return resource.kind != package::d3d12_v13::ResourceKind::Buffer ||
+                resource.lifetime != ResourceFlowLifetime::SameFrame ||
+                resource.historyDepth != 0;
         }))
         return Fail<std::vector<std::byte>>(
-            "abi1/build", "ABI 1移行CorpusはBuffer Flowだけを表現します。");
+            "abi1/build", "ABI 1移行Corpusはsame-frame Buffer Flowだけを表現します。");
     auto proposal = planning::ProposeCompositionPlan(contract.value());
     if (!proposal)
         return Fail<std::vector<std::byte>>(proposal.error().stage, proposal.error().message);

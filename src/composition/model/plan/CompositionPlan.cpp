@@ -3,7 +3,6 @@
 #include "../../../canonical/base/BinaryIO.h"
 
 #include <algorithm>
-#include <map>
 #include <set>
 #include <tuple>
 #include <utility>
@@ -13,7 +12,8 @@ namespace sge4::composition::planning
 namespace
 {
 constexpr std::uint32_t PlanMagic = 0x3450'4753u; // "SGP4" little-endian
-constexpr std::uint32_t PlanVersion = 1;
+constexpr std::uint32_t PlanVersion = 2;
+constexpr std::uint32_t MaximumRecords = 1'000'000;
 
 PlanError Error(std::string stage, std::string message)
 {
@@ -23,8 +23,7 @@ PlanError Error(std::string stage, std::string message)
 template<class T>
 base::Expected<T, PlanError> Failure(std::string stage, std::string message)
 {
-    return base::Failure<T, PlanError>(
-        Error(std::move(stage), std::move(message)));
+    return base::Failure<T, PlanError>(Error(std::move(stage), std::move(message)));
 }
 
 void WriteDigest(base::BinaryWriter& writer, const base::Digest256& value)
@@ -85,22 +84,37 @@ base::Expected<Texture2DFlowShape, PlanError> ReadTexture2DShape(base::BinaryRea
     auto arrayLayers = reader.ReadU16();
     auto sampleCount = reader.ReadU16();
     auto planeCount = reader.ReadU16();
-    if (!width || !height || !rowBytes || !mipLevels || !arrayLayers || !sampleCount || !planeCount)
-        return Failure<Texture2DFlowShape>("plan/read", "Textureが検証または実行の契約に違反しています。");
+    if (!width || !height || !rowBytes || !mipLevels || !arrayLayers ||
+        !sampleCount || !planeCount)
+        return Failure<Texture2DFlowShape>(
+            "plan/read", "Textureが検証または実行の契約に違反しています。");
     Texture2DFlowShape result;
-    result.width = width.value(); result.height = height.value(); result.rowBytes = rowBytes.value();
-    result.mipLevels = mipLevels.value(); result.arrayLayers = arrayLayers.value();
-    result.sampleCount = sampleCount.value(); result.planeCount = planeCount.value();
+    result.width = width.value();
+    result.height = height.value();
+    result.rowBytes = rowBytes.value();
+    result.mipLevels = mipLevels.value();
+    result.arrayLayers = arrayLayers.value();
+    result.sampleCount = sampleCount.value();
+    result.planeCount = planeCount.value();
     return base::Success<Texture2DFlowShape, PlanError>(result);
 }
 
 bool ValidAllocationShape(const ResourceAllocationPlan& value) noexcept
 {
+    const bool sameFrame = value.lifetime == ResourceFlowLifetime::SameFrame &&
+        value.historyDepth == 0 && value.physicalInstanceCount == 1;
+    const bool temporal = value.lifetime == ResourceFlowLifetime::TemporalHistory &&
+        value.historyDepth == 1 && value.physicalInstanceCount == 2 &&
+        value.ownership == AllocationOwnership::CompositionOwned &&
+        value.kind == package::d3d12_v13::ResourceKind::Buffer;
+    if (!sameFrame && !temporal) return false;
+
     if (value.kind == package::d3d12_v13::ResourceKind::Buffer)
         return value.sizeBytes > 0 && value.texture2D == Texture2DFlowShape{} &&
             value.format == package::d3d12_v13::Format::Unknown;
     if (value.kind == package::d3d12_v13::ResourceKind::Texture2D)
     {
+        if (!sameFrame) return false;
         const std::uint32_t bytesPerPixel =
             value.format == package::d3d12_v13::Format::B8G8R8A8Unorm ? 4u :
             value.format == package::d3d12_v13::Format::R32G32B32A32Float ? 16u : 0u;
@@ -110,7 +124,8 @@ bool ValidAllocationShape(const ResourceAllocationPlan& value) noexcept
                 static_cast<std::uint64_t>(value.texture2D.width) * bytesPerPixel &&
             value.texture2D.mipLevels == 1 && value.texture2D.arrayLayers == 1 &&
             value.texture2D.sampleCount == 1 && value.texture2D.planeCount == 1 &&
-            value.sizeBytes == static_cast<std::uint64_t>(value.texture2D.rowBytes) * value.texture2D.height;
+            value.sizeBytes ==
+                static_cast<std::uint64_t>(value.texture2D.rowBytes) * value.texture2D.height;
     }
     return false;
 }
@@ -127,6 +142,7 @@ std::vector<std::byte> SerializeBody(const RawCompositionPlan& plan)
     writer.WriteCountU32(plan.handoffs.size());
     writer.WriteCountU32(plan.signals.size());
     writer.WriteCountU32(plan.waits.size());
+    writer.WriteCountU32(plan.temporalBuffers.size());
 
     for (const auto& allocation : plan.allocations)
     {
@@ -135,6 +151,10 @@ std::vector<std::byte> SerializeBody(const RawCompositionPlan& plan)
         writer.WriteU16(static_cast<std::uint16_t>(allocation.kind));
         writer.WriteU32(static_cast<std::uint32_t>(allocation.format));
         writer.WriteU64(allocation.sizeBytes);
+        writer.WriteU16(static_cast<std::uint16_t>(allocation.lifetime));
+        writer.WriteU16(allocation.historyDepth);
+        writer.WriteU16(allocation.physicalInstanceCount);
+        writer.WriteU16(0);
         if (allocation.kind == package::d3d12_v13::ResourceKind::Texture2D)
             WriteTexture2DShape(writer, allocation.texture2D);
     }
@@ -179,6 +199,17 @@ std::vector<std::byte> SerializeBody(const RawCompositionPlan& plan)
         writer.WriteU32(wait.consumerLeaf.value);
         writer.WriteU32(wait.consumerScheduleOrdinal);
     }
+    for (const auto& temporal : plan.temporalBuffers)
+    {
+        writer.WriteU32(temporal.resource.value);
+        writer.WriteU32(temporal.currentProducer.value);
+        writer.WriteU32(temporal.currentProducerLeaf.value);
+        writer.WriteU16(temporal.historyDepth);
+        writer.WriteU16(temporal.physicalInstanceCount);
+        writer.WriteCountU32(temporal.previousConsumers.size());
+        for (const auto consumer : temporal.previousConsumers)
+            writer.WriteU32(consumer.value);
+    }
 
     writer.WriteU32(plan.recovery.schemaVersion);
     writer.WriteCountU32(plan.recovery.recreateLeaves.size());
@@ -190,7 +221,6 @@ std::vector<std::byte> SerializeBody(const RawCompositionPlan& plan)
     for (const auto resource : plan.recovery.recreateResources) writer.WriteU32(resource.value);
     return std::move(writer).Take();
 }
-
 }
 
 base::Expected<void, PlanError>
@@ -248,6 +278,37 @@ ValidateRawCompositionPlanShape(const RawCompositionPlan& plan)
             return base::Failure<void, PlanError>(
                 Error("plan/shape-wait", "Signalが検証または実行の契約に違反しています。"));
 
+    std::uint32_t previousTemporalResource = InvalidIndex;
+    bool hasPreviousTemporal = false;
+    for (const auto& temporal : plan.temporalBuffers)
+    {
+        if (!temporal.resource.IsValid() || temporal.resource.value >= plan.allocations.size() ||
+            (hasPreviousTemporal && temporal.resource.value <= previousTemporalResource) ||
+            !temporal.currentProducer.IsValid() || !temporal.currentProducerLeaf.IsValid() ||
+            temporal.historyDepth != 1 || temporal.physicalInstanceCount != 2 ||
+            temporal.previousConsumers.empty() ||
+            plan.allocations[temporal.resource.value].lifetime != ResourceFlowLifetime::TemporalHistory ||
+            !std::is_sorted(temporal.previousConsumers.begin(), temporal.previousConsumers.end(),
+                [](auto left, auto right) { return left.value < right.value; }) ||
+            std::adjacent_find(temporal.previousConsumers.begin(), temporal.previousConsumers.end(),
+                [](auto left, auto right) { return left.value == right.value; }) != temporal.previousConsumers.end())
+            return base::Failure<void, PlanError>(
+                Error("plan/shape-temporal", "Temporal Bufferが検証または実行の契約に違反しています。"));
+        previousTemporalResource = temporal.resource.value;
+        hasPreviousTemporal = true;
+    }
+    for (const auto& allocation : plan.allocations)
+    {
+        const bool hasTemporalPlan = std::ranges::any_of(
+            plan.temporalBuffers,
+            [&](const TemporalBufferPlan& value) {
+                return value.resource == allocation.resource;
+            });
+        if ((allocation.lifetime == ResourceFlowLifetime::TemporalHistory) != hasTemporalPlan)
+            return base::Failure<void, PlanError>(
+                Error("plan/shape-temporal", "Temporal BufferがPlanへ完全に固定されていません。"));
+    }
+
     if (plan.recovery.schemaVersion != 1 ||
         !plan.recovery.resetTemporalState ||
         !plan.recovery.requireExternalRebind ||
@@ -266,19 +327,16 @@ ValidateRawCompositionPlanShape(const RawCompositionPlan& plan)
     return base::Success<void, PlanError>();
 }
 
-std::vector<std::byte>
-SerializeRawCompositionPlan(const RawCompositionPlan& plan)
+std::vector<std::byte> SerializeRawCompositionPlan(const RawCompositionPlan& plan)
 {
     auto bytes = SerializeBody(plan);
     bytes.insert(bytes.end(), plan.identity.begin(), plan.identity.end());
     return bytes;
 }
 
-base::Digest256
-ComputeRawCompositionPlanIdentity(const RawCompositionPlan& plan)
+base::Digest256 ComputeRawCompositionPlanIdentity(const RawCompositionPlan& plan)
 {
-    const auto body = SerializeBody(plan);
-    return base::Sha256(body);
+    return base::Sha256(SerializeBody(plan));
 }
 
 base::Expected<RawCompositionPlan, PlanError>
@@ -303,14 +361,13 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
     auto handoffCount = reader.ReadU32();
     auto signalCount = reader.ReadU32();
     auto waitCount = reader.ReadU32();
+    auto temporalCount = reader.ReadU32();
     if (!allocationCount || !scheduleCount || !bindingCount || !handoffCount ||
-        !signalCount || !waitCount)
-        return Failure<RawCompositionPlan>("plan/read", "Planが検証または実行の契約に違反しています。");
-
-    constexpr std::uint32_t MaximumRecords = 1'000'000;
-    if (allocationCount.value() > MaximumRecords || scheduleCount.value() > MaximumRecords ||
+        !signalCount || !waitCount || !temporalCount ||
+        allocationCount.value() > MaximumRecords || scheduleCount.value() > MaximumRecords ||
         bindingCount.value() > MaximumRecords || handoffCount.value() > MaximumRecords ||
-        signalCount.value() > MaximumRecords || waitCount.value() > MaximumRecords)
+        signalCount.value() > MaximumRecords || waitCount.value() > MaximumRecords ||
+        temporalCount.value() > MaximumRecords)
         return Failure<RawCompositionPlan>("plan/read", "Planが検証または実行の契約に違反しています。");
 
     for (std::uint32_t i = 0; i < allocationCount.value(); ++i)
@@ -320,18 +377,29 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         auto kind = reader.ReadU16();
         auto format = reader.ReadU32();
         auto size = reader.ReadU64();
+        auto lifetime = reader.ReadU16();
+        auto historyDepth = reader.ReadU16();
+        auto physicalInstanceCount = reader.ReadU16();
+        auto reserved = reader.ReadU16();
         base::Expected<Texture2DFlowShape, PlanError> texture2D =
             base::Success<Texture2DFlowShape, PlanError>({});
         if (kind && static_cast<package::d3d12_v13::ResourceKind>(kind.value()) ==
                 package::d3d12_v13::ResourceKind::Texture2D)
             texture2D = ReadTexture2DShape(reader);
-        if (!resource || !ownership || !kind || !format || !size || !texture2D)
+        if (!resource || !ownership || !kind || !format || !size || !lifetime ||
+            !historyDepth || !physicalInstanceCount || !reserved || reserved.value() != 0 || !texture2D)
             return Failure<RawCompositionPlan>("plan/read", "Allocationが検証または実行の契約に違反しています。");
-        plan.allocations.push_back({
-            {resource.value()}, static_cast<AllocationOwnership>(ownership.value()),
-            static_cast<package::d3d12_v13::ResourceKind>(kind.value()),
-            static_cast<package::d3d12_v13::Format>(format.value()), size.value(),
-            texture2D.value()});
+        ResourceAllocationPlan allocation;
+        allocation.resource = {resource.value()};
+        allocation.ownership = static_cast<AllocationOwnership>(ownership.value());
+        allocation.kind = static_cast<package::d3d12_v13::ResourceKind>(kind.value());
+        allocation.format = static_cast<package::d3d12_v13::Format>(format.value());
+        allocation.sizeBytes = size.value();
+        allocation.texture2D = texture2D.value();
+        allocation.lifetime = static_cast<ResourceFlowLifetime>(lifetime.value());
+        allocation.historyDepth = historyDepth.value();
+        allocation.physicalInstanceCount = physicalInstanceCount.value();
+        plan.allocations.push_back(allocation);
     }
     for (std::uint32_t i = 0; i < scheduleCount.value(); ++i)
     {
@@ -351,8 +419,7 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         auto reserved = reader.ReadU16();
         if (!endpoint || !resource || !leaf || !slot || !access || !reserved || reserved.value() != 0)
             return Failure<RawCompositionPlan>("plan/read", "検証または実行の契約に違反しています。");
-        plan.bindings.push_back({
-            {endpoint.value()}, {resource.value()}, {leaf.value()}, slot.value(),
+        plan.bindings.push_back({{endpoint.value()}, {resource.value()}, {leaf.value()}, slot.value(),
             static_cast<EndpointAccess>(access.value())});
     }
     for (std::uint32_t i = 0; i < handoffCount.value(); ++i)
@@ -366,8 +433,7 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         auto incoming = ReadState(reader);
         if (!resource || !producer || !consumer || !producerLeaf || !consumerLeaf || !outgoing || !incoming)
             return Failure<RawCompositionPlan>("plan/read", "入力または内部状態が検証または実行の契約に違反しています。");
-        plan.handoffs.push_back({
-            {resource.value()}, {producer.value()}, {consumer.value()},
+        plan.handoffs.push_back({{resource.value()}, {producer.value()}, {consumer.value()},
             {producerLeaf.value()}, {consumerLeaf.value()}, outgoing.value(), incoming.value()});
     }
     for (std::uint32_t i = 0; i < signalCount.value(); ++i)
@@ -379,8 +445,7 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         auto ordinal = reader.ReadU32();
         if (!id || !resource || !producer || !leaf || !ordinal)
             return Failure<RawCompositionPlan>("plan/read", "Signalが検証または実行の契約に違反しています。");
-        plan.signals.push_back({id.value(), {resource.value()}, {producer.value()},
-                                {leaf.value()}, ordinal.value()});
+        plan.signals.push_back({id.value(), {resource.value()}, {producer.value()}, {leaf.value()}, ordinal.value()});
     }
     for (std::uint32_t i = 0; i < waitCount.value(); ++i)
     {
@@ -392,8 +457,33 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         auto ordinal = reader.ReadU32();
         if (!id || !signal || !resource || !consumer || !leaf || !ordinal)
             return Failure<RawCompositionPlan>("plan/read", "Waitが検証または実行の契約に違反しています。");
-        plan.waits.push_back({id.value(), signal.value(), {resource.value()},
-                              {consumer.value()}, {leaf.value()}, ordinal.value()});
+        plan.waits.push_back({id.value(), signal.value(), {resource.value()}, {consumer.value()}, {leaf.value()}, ordinal.value()});
+    }
+    for (std::uint32_t i = 0; i < temporalCount.value(); ++i)
+    {
+        auto resource = reader.ReadU32();
+        auto producer = reader.ReadU32();
+        auto producerLeaf = reader.ReadU32();
+        auto historyDepth = reader.ReadU16();
+        auto physicalCount = reader.ReadU16();
+        auto consumerCount = reader.ReadU32();
+        if (!resource || !producer || !producerLeaf || !historyDepth || !physicalCount ||
+            !consumerCount || consumerCount.value() == 0 || consumerCount.value() > MaximumRecords)
+            return Failure<RawCompositionPlan>("plan/read", "Temporal Bufferが検証または実行の契約に違反しています。");
+        TemporalBufferPlan temporal;
+        temporal.resource = {resource.value()};
+        temporal.currentProducer = {producer.value()};
+        temporal.currentProducerLeaf = {producerLeaf.value()};
+        temporal.historyDepth = historyDepth.value();
+        temporal.physicalInstanceCount = physicalCount.value();
+        for (std::uint32_t c = 0; c < consumerCount.value(); ++c)
+        {
+            auto consumer = reader.ReadU32();
+            if (!consumer)
+                return Failure<RawCompositionPlan>("plan/read", "Temporal Bufferが検証または実行の契約に違反しています。");
+            temporal.previousConsumers.push_back({consumer.value()});
+        }
+        plan.temporalBuffers.push_back(std::move(temporal));
     }
 
     auto recoveryVersion = reader.ReadU32();
@@ -430,8 +520,7 @@ DeserializeRawCompositionPlan(std::span<const std::byte> bytes)
         return Failure<RawCompositionPlan>("plan/read", "Planが検証または実行の契約に違反しています。");
 
     auto validation = ValidateRawCompositionPlanShape(plan);
-    if (!validation)
-        return base::Failure<RawCompositionPlan, PlanError>(validation.error());
+    if (!validation) return base::Failure<RawCompositionPlan, PlanError>(validation.error());
     return base::Success<RawCompositionPlan, PlanError>(std::move(plan));
 }
 }

@@ -57,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.6の平坦Section構造が成立していません。");
+            "SGE4UNI 2.7の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.6の直接Sectionがありません。");
+            "SGE4UNI 2.7の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -74,11 +74,11 @@ int main(int argc, char** argv)
             "Production ReaderがSGE4UNI 1.1を受理しました。");
         auto migrated = composition::migration::abi1::MigrateFrozenCompositionPackageAbi1ToAbi2(
             legacyBytes.value());
-        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.6へのMigrationに失敗しました。");
+        Require(static_cast<bool>(migrated), "SGE4UNI 1.1から2.7へのMigrationに失敗しました。");
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.6とMigration後ABI 2.6がbyte一致しません。");
+            "直接生成したABI 2.7とMigration後ABI 2.7がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             throw std::runtime_error(
                 "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
         Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
-            "Conditional Region契約がSGE4UNI 2.6へ保存されませんでした。");
+            "Conditional Region契約がSGE4UNI 2.7へ保存されませんでした。");
 
         dynamic::InvocationInputV1 conditionalTrue;
         conditionalTrue.timelineOrdinal = 0;
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
             composition::artifact::FrozenCompositionAbi2DynamicContractSchema &&
             multiPackage.value().DynamicContract().canonicalMemberBytes == 32 &&
             multiPackage.value().DynamicContract().executionRoutes.size() == 2,
-            "Multi-target Dynamic ContractがSGE4UNI 2.6へ固定されませんでした。");
+            "Multi-target Dynamic ContractがSGE4UNI 2.7へ固定されませんでした。");
         auto multiSession = sge4::runtime::Session::Create(
             std::move(multiPackage).value(), 1);
         Require(static_cast<bool>(multiSession),
@@ -461,7 +461,7 @@ int main(int argc, char** argv)
             indirectContract.targetLeaf.IsValid() &&
             indirectContract.targetComputeCommand == 0 &&
             indirectContract.maxWorkCount == 8,
-            "Verified indirect dispatch契約がSGE4UNI 2.6へ固定されませんでした。");
+            "Verified indirect dispatch契約がSGE4UNI 2.7へ固定されませんでした。");
         Require(!tests::BuildVerifiedIndirectUnified(8, 7),
             "static Compute Commandと異なるmaxWorkCountが受理されました。");
 
@@ -574,7 +574,7 @@ int main(int argc, char** argv)
             textureFirst.value().FileBytes());
         Require(static_cast<bool>(textureRoundTrip) &&
             textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-            "限定Texture2D FlowのSGE4UNI 2.6 round-tripに失敗しました。");
+            "限定Texture2D FlowのSGE4UNI 2.7 round-tripに失敗しました。");
 
         auto mismatchProducer = fixture::BuildTextureProducerLeaf(4, 4);
         auto mismatchConsumer = fixture::BuildTextureConsumerLeaf(2, 2);
@@ -659,7 +659,7 @@ int main(int argc, char** argv)
             textureUavFirst.value().FileBytes());
         Require(textureUavRoundTrip &&
             textureUavRoundTrip.value().SemanticDigest() == textureUavFirst.value().SemanticDigest(),
-            "限定Texture2D UAV FlowのSGE4UNI 2.6 round-tripに失敗しました。");
+            "限定Texture2D UAV FlowのSGE4UNI 2.7 round-tripに失敗しました。");
 
         auto formatMismatchProducer = fixture::BuildTextureUavProducerLeaf(4, 4);
         auto formatMismatchConsumer = fixture::BuildTextureConsumerLeaf(4, 4);
@@ -693,10 +693,85 @@ int main(int argc, char** argv)
             composition::MakeAuthorityOnlyDynamicContractV1(1)),
             "RGBA32F UAV producerとBGRA8 consumerのformat不一致が受理されました。");
 
+        auto temporalBytes = fixture::BuildTemporalBufferArtifact();
+        if (!temporalBytes)
+            throw std::runtime_error(
+                "Verified Temporal Buffer Compositionの生成に失敗しました：" +
+                temporalBytes.error());
+        auto temporalArtifact = composition::ReadFrozenCompositionPackage(
+            temporalBytes.value());
+        Require(static_cast<bool>(temporalArtifact),
+            "Verified Temporal Buffer SGE4UNI 2.7の読込みに失敗しました。");
+        const auto& temporalContract =
+            temporalArtifact.value().VerifiedComposition().ValidatedContract().Contract();
+        const auto temporalResource = std::ranges::find_if(
+            temporalContract.resources, [](const auto& value) {
+                return value.lifetime == composition::ResourceFlowLifetime::TemporalHistory;
+            });
+        Require(temporalResource != temporalContract.resources.end() &&
+            temporalResource->boundary == composition::ResourceBoundary::Internal &&
+            temporalResource->kind == sge4::package::d3d12_v13::ResourceKind::Buffer &&
+            temporalResource->sizeBytes == 16 && temporalResource->historyDepth == 1 &&
+            temporalResource->producer.IsValid() &&
+            temporalResource->consumers.size() == 1,
+            "Temporal BufferのPrevious／Current契約がFrozen Contractへ固定されませんでした。");
+        const auto& temporalPlan =
+            temporalArtifact.value().VerifiedComposition().VerifiedPlan().Plan();
+        Require(temporalPlan.temporalBuffers.size() == 1 &&
+            temporalPlan.temporalBuffers.front().resource == temporalResource->id &&
+            temporalPlan.temporalBuffers.front().historyDepth == 1 &&
+            temporalPlan.temporalBuffers.front().physicalInstanceCount == 2 &&
+            temporalPlan.temporalBuffers.front().previousConsumers == temporalResource->consumers,
+            "Temporal Bufferの二世代Planが独立Verifierへ固定されませんでした。");
+        Require(temporalPlan.allocations[temporalResource->id.value].lifetime ==
+                composition::ResourceFlowLifetime::TemporalHistory &&
+            temporalPlan.allocations[temporalResource->id.value].physicalInstanceCount == 2 &&
+            std::ranges::none_of(temporalPlan.handoffs,
+                [&](const auto& value) { return value.resource == temporalResource->id; }) &&
+            std::ranges::none_of(temporalPlan.signals,
+                [&](const auto& value) { return value.resource == temporalResource->id; }) &&
+            std::ranges::none_of(temporalPlan.waits,
+                [&](const auto& value) { return value.resource == temporalResource->id; }),
+            "Temporal Bufferがsame-frame handoff／waitへ誤って混入しました。");
+        Require(temporalPlan.schedule.size() == 2 &&
+            temporalPlan.schedule[0].leaf.value == 0 &&
+            temporalPlan.schedule[1].leaf.value == 1,
+            "Temporal edgeがsame-frame Schedule依存として扱われました。");
+
+        auto badTemporalProducer = fixture::BuildTemporalProducerLeaf();
+        auto badTemporalConsumer = fixture::BuildTransformLeaf();
+        Require(badTemporalProducer && badTemporalConsumer,
+            "Temporal negative Fixtureの生成に失敗しました。");
+        composition::ContractBuildInput badTemporalInput;
+        badTemporalInput.leaves = {
+            fixture::TemporalProducerDeclaration(
+                "l4g7/negative/producer", badTemporalProducer.value()),
+            fixture::TransformDeclaration(
+                "l4g7/negative/consumer", badTemporalConsumer.value())};
+        composition::ResourceFlowDeclaration badHistory;
+        badHistory.stableKey = "l4g7/negative/history";
+        badHistory.boundary = composition::ResourceBoundary::Internal;
+        badHistory.lifetime = composition::ResourceFlowLifetime::TemporalHistory;
+        badHistory.historyDepth = 0;
+        badHistory.producer = fixture::Ref(
+            "l4g7/negative/producer", std::string(fixture::OutputEndpoint));
+        badHistory.consumers = {fixture::Ref(
+            "l4g7/negative/consumer", std::string(fixture::InputEndpoint))};
+        composition::ResourceFlowDeclaration badOutput;
+        badOutput.stableKey = "l4g7/negative/output";
+        badOutput.boundary = composition::ResourceBoundary::CompositionOutput;
+        badOutput.producer = fixture::Ref(
+            "l4g7/negative/consumer", std::string(fixture::OutputEndpoint));
+        badTemporalInput.resources = {std::move(badHistory), std::move(badOutput)};
+        Require(!composition::BuildFrozenCompositionPackage(
+            std::move(badTemporalInput),
+            composition::MakeAuthorityOnlyDynamicContractV1(1)),
+            "history depth 0のTemporal Bufferが受理されました。");
+
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.6\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.7\n";
         std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.5\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;
