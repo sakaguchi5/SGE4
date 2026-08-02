@@ -294,3 +294,13 @@ RunnerはSource Manifest検証、Release build、WARP quick資格、実GPU 64×6
 - Temporal差分aggregateそのものの性能比較
 
 この実験は、Generalization 8の任意疎実行能力をLevel 5の同値候補比較へ接続し、Kと分布の二軸を初めて分離して測定する。
+
+## 13. 正式結果
+
+Windows／WARP／実GPUで取得した正式結果は次へ固定した。
+
+```text
+docs/LEVEL5_VERTICAL_EXPERIMENT2_RESULT.md
+```
+
+実GPUではUniverse 4096、5分布、3密度の全15 case、全360 paired sampleでSparseが勝利し、分類は`ArbitrarySparseAdvantageDistributionStable`となった。Active率25%～100%およびUniverse依存の交差位置は、Level 5垂直実験2bで測定する。

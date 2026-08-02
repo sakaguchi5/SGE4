@@ -486,3 +486,66 @@ Portable C++23 Debug／Release相当回帰Harnessで、Authority-only `{0,2,7}`�
 ```bat
 run_sge4_level5_arbitrary_sparse_worklist_experiment.bat
 ```
+
+
+## Level 5 Vertical Experiment 2 Result
+
+- `level5_vertical_v2_hardware.csv`のSHA-256は`acdea914c8a6f19f5642183c6bd7f761826adb35d342ff5ba9c754acfda7a797`である。
+- Universe 4096、5分布、3密度、各24 sampleの全15 caseでState／Temporal／RGBA32F Texture／Controlled Recoveryの候補同値を確認した。
+- 実GPUの全360 paired sampleでVerified Compact Sparse WorklistがDense Directより短いGPU timestampとなった。
+- 同じKにおけるSparse中央値spreadは最大7.14%で、正式分類を`ArbitrarySparseAdvantageDistributionStable`とした。
+- WARPは正しさ資格として扱い、性能一般化の主証拠には使用しない。
+- 正式結果は`docs/LEVEL5_VERTICAL_EXPERIMENT2_RESULT.md`へ固定した。
+
+## Level 5 Vertical Experiment 2b — Density × Universe × Distribution Surface
+
+- 21番目のSolution projectとして`65_Level5DensityUniverseDistributionExperiment`を追加する。Product projectは15のままである。
+- Product ABIは`SGE4UNI 2.8`／`SGE4INV 1.6`のまま変更しない。
+- Active率25%／37.5%／50%／62.5%／75%／87.5%／100%を測定する。25%～87.5%は5分布、100%は重複を除いたFull一caseとする。
+- 実GPU標準Universeは1024／4096／16384で、各Universe 31 case、合計93 caseである。
+- Universeごとのglobal warmupと各caseのlocal warmupを分離し、同じExecutorをUniverse内で再利用する。
+- Raw EvidenceとUniverse×Distributionの交差bracket Surface Summaryを別CSVへ保存する。
+- Portable C++23 strict syntax、vcxproj／Solution XML、Workset corpus、静的Architecture監査、SOURCE_MANIFESTを確認する。MSVC、HLSL、WARP、実GPU timestampの最終結果はWindows Runnerで確定する。
+
+実行入口:
+
+```bat
+run_sge4_level5_density_universe_distribution_experiment.bat
+```
+
+## Level 5 Vertical Experiment 2b — Measurement Regime Qualification
+
+- 固定warmupをadaptive warmupへ置き換え、global 12～64、case 16～64 paired frameの範囲で収束を確認する。
+- 直近8 frameを前後半へ分け、Dense／Sparse双方の対称中央値比1.05以下をwarmup受理条件とする。
+- 16 measurement samplesの前後半比がDenseまたはSparseで1.20を超えたcaseを`MeasurementRegimeTransition`としてRaw Evidenceへ残し、Surfaceから除外する。
+- 不安定Density点を含む系列では交差点を補間せず、`MeasurementRegimeIncomplete`／`CrossoverSurfaceIncomplete`を返す。
+- `*_timing.csv`へ候補生成、Recovery、global warmup、case load、case warmup、measurement、Evidence write、process totalを保存する。
+- 修正前実GPUCSVへの回帰分析で、Universe 1024の2 case、Universe 16384の3 caseを検出し、Universe 4096では誤検出しないことを確認した。
+- Product ABI、G8 authority、Leaf Package、Dense／Sparse Composition、測定点は変更していない。
+
+## Level 5 Vertical Experiment 2b WARP semantic qualification fix
+
+WARP quick実行を実GPU performance-regime資格から分離した。WARPでは最小warmup後に意味同値資格を継続し、Raw timestamp／regime ratioを保存するが、性能収束およびSurface crossover判定には使用しない。実Hardwareの5% adaptive warmupと20% measurement transition判定は維持する。
+
+## Level 5 Vertical Experiment 2b — Boundary Requalification final harness
+
+- 完全93 case Runnerと既存Evidenceを保持した。
+- 87.5%全5分布、100% Full、既知の不安定sentinelをUniverse別7／8／7 case、合計22 caseへ限定した。
+- 各case開始／終了時にFull State／Temporal／Texture同値を確認する。
+- adaptive warmupと12 formal samplesをObservation-only同一経路へ固定した。
+- 前半6／後半6のhalf ratioに加え、最初4／最後4のedge ratioを1.20閾値で検査する。
+- Boundary classificationを`BoundaryCrossoverRequalified`／`BoundaryRequalificationIncomplete`／`BoundaryResultChanged`へ分離した。
+- Raw Evidenceへedge中央値、edge ratio、Full qualification wall-clockを追加した。
+- Product ABI、Runtime、G8 authority、Leaf Package、Dense／Sparse Candidateは変更していない。
+
+### Boundary sentinel回帰分析
+
+最新の完全交差面Raw Evidenceへ最初4／最後4のedge ratio 1.20判定を適用し、次を検出した。
+
+```text
+Universe 4096  Suffix 25%
+Universe 4096  SeededRandom 50%
+Universe 16384 UniformStride 37.5%
+```
+
+3 caseはすべてBoundary Requalificationのsentinelへ含めた。以前の探索runで遷移したUniverse 1024 Clustered4 75%もhistorical sentinelとして追加し、全22 caseを構成した。

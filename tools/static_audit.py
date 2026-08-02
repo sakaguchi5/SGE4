@@ -52,7 +52,7 @@ for p in projects:
         if target_guid is not None and declared is not None and target_guid.text.upper()!=declared.text.upper():
             errors.append(f'Reference GUID mismatch: {p.relative_to(root)} -> {target.relative_to(root)}')
 
-if len(projects)!=20: errors.append(f'Expected 20 projects, found {len(projects)}')
+if len(projects)!=21: errors.append(f'Expected 21 projects, found {len(projects)}')
 if len(product_projects)!=15: errors.append(f'Expected 15 product projects, found {len(product_projects)}')
 if (root/'legacy').exists(): errors.append('legacy/ still exists')
 if (root/'src/internal').exists(): errors.append('src/internal/ still exists')
@@ -406,6 +406,22 @@ if level5_v2_fixture.exists():
     level5_v2_fixture_text=level5_v2_fixture.read_text(encoding='utf-8')
     for token in ('CompactIndices','MakeVerifiedCompactWorklistDispatchContractV1','MakeVerifiedRoutedSlotsDynamicContractV1','TemporalHistory','StorageTexture2D'):
         if token not in level5_v2_fixture_text: errors.append(f'Level 5 Vertical Experiment 2 Fixture is missing {token}')
+
+# Level 5 Vertical Experiment 2b maps the Dense/Sparse crossover surface without changing Product ABI.
+level5_v2b_project=root/'experiments/65_Level5DensityUniverseDistributionExperiment/65_Level5DensityUniverseDistributionExperiment.vcxproj'
+level5_v2b_main=root/'experiments/65_Level5DensityUniverseDistributionExperiment/main.cpp'
+level5_v2b_fixture=root/'experiments/65_Level5DensityUniverseDistributionExperiment/DensityUniverseDistributionFixture.h'
+level5_v2b_runner=root/'run_sge4_level5_density_universe_distribution_experiment.bat'
+level5_v2b_doc=root/'docs/LEVEL5_VERTICAL_EXPERIMENT2B_DENSITY_UNIVERSE_DISTRIBUTION_SURFACE.md'
+level5_v2_result=root/'docs/LEVEL5_VERTICAL_EXPERIMENT2_RESULT.md'
+for required_path in (level5_v2b_project, level5_v2b_main, level5_v2b_fixture, level5_v2b_runner, level5_v2b_doc, level5_v2_result):
+    if not required_path.exists(): errors.append(f'Missing Level 5 Vertical Experiment 2b file: {required_path.relative_to(root)}')
+if level5_v2b_main.exists():
+    level5_v2b_text=level5_v2b_main.read_text(encoding='utf-8')
+    for token in ('DensityPoints','CrossoverSurfaceBracketed','RunGlobalWarmup','SurfacePath','Full','DeferredByOwner'):
+        if token not in level5_v2b_text: errors.append(f'Level 5 Vertical Experiment 2b is missing {token}')
+if level5_v2b_fixture.exists() and 'ArbitrarySparseWorklistFixture.h' not in level5_v2b_fixture.read_text(encoding='utf-8'):
+    errors.append('Level 5 Vertical Experiment 2b does not reuse the Experiment 2 frozen fixture')
 
 if errors:
     print('New SGE4静的監査に失敗しました')

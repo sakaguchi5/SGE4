@@ -18,3 +18,4 @@
 {E5562769-6357-5B6A-BBBD-E33EA6E4F45E} tests/62_UnifiedMigrationAcceptance/62_UnifiedMigrationAcceptance.vcxproj
 {8DF35A80-ED87-56C0-8A2F-930E890E89B0} experiments/63_Level5VerticalExperiment/63_Level5VerticalExperiment.vcxproj
 {453AC3A6-B0EB-5EB5-8BFA-99846D77151D} experiments/64_Level5ArbitrarySparseWorklistExperiment/64_Level5ArbitrarySparseWorklistExperiment.vcxproj
+{8DA7BF26-74C7-5F82-99C7-1E7B6B93312E} experiments/65_Level5DensityUniverseDistributionExperiment/65_Level5DensityUniverseDistributionExperiment.vcxproj

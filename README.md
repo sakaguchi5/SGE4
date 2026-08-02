@@ -1,5 +1,14 @@
 ﻿# New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Level 5 Vertical Experiment 2b Boundary Requalification: 完全93 case交差面Evidenceを保持したまま、87.5%全5分布、100% Full、既知のレジーム遷移sentinelだけをUniverse 1024／4096／16384で再資格する。22 case、12 paired samples、Observation-only同一測定経路とcase開始／終了時のFull State／Temporal／Texture資格により、交差境界を短時間で再確認する。
+>
+
+> Level 5 Vertical Experiment 2b Measurement Qualification: 固定warmup後のsample途中でGPU timestampが段階移行するcaseを確認したため、直近windowの前後半中央値によるadaptive warmupと、measurement前後半のレジーム照合を導入した。不均質caseはRaw Evidenceへ保持するがSurfaceから除外し、`CrossoverSurfaceIncomplete`として偽の交差bracketを拒否する。段階別wall-clockは`*_timing.csv`へ保存する。
+>
+> Level 5 Vertical Experiment 2b: 垂直実験2で確認した任意疎Worklistを、Active率25%～100%、Universe 1024／4096／16384、Prefix／Suffix／UniformStride／Clustered4／固定seed乱択へ展開し、Dense DirectとSparse Worklistが同等へ収束する交差区間を測定する。Universeごとのglobal warmupとcase-local warmupを分離し、Owner decisionは`DeferredByOwner`のままとする。
+>
+> Level 5 Vertical Experiment 2 Result: Universe 4096のPrefix／Suffix／UniformStride／Clustered4／固定seed乱択について、State／Temporal／Texture／Recoveryの観測同値を確認した。Active率1.5625%／6.25%／25%の全15 case、全360 paired sampleでSparseが勝利し、実GPU分類は`ArbitrarySparseAdvantageDistributionStable`となった。正式結果は`docs/LEVEL5_VERTICAL_EXPERIMENT2_RESULT.md`へ固定した。
+>
 > Level 5 Vertical Experiment 2: Generalization 8のVerified Compact Sparse Worklistを使い、Prefix／Suffix／UniformStride／Clustered4／固定seed乱択の任意疎集合を同一Kで比較する。Dense DirectとSparse Worklistは同じSchema 17 Leaf集合を共有し、State／Temporal／RGBA32F Texture観測同値を先に確認してから、分布とmemory localityがState Writer GPU時間へ与える影響をEvidence化する。Owner decisionは`DeferredByOwner`のままとする。
 >
 > Revision 2.8: Level 4 Generalization 8として`Verified Compact Sparse Worklist`を導入した。exact Transition setをCanonical昇順のuint32 member ID列へ独立再導出し、`SGE4INV 1.6`の必須Compact Worklist SectionへSealする。Runtimeは固定長Dynamic Slotへzero padding付きで物質化し、Dispatch ordinalを任意のverified member IDへ接続する。
@@ -162,6 +171,14 @@ PortableなCanonical／Composition／Dynamic／Runtime CoreにはWindows／D3D12
 62_UnifiedMigrationAcceptance
 ```
 
+### Level 5 Evidence — 3 projects
+
+```text
+63_Level5VerticalExperiment
+64_Level5ArbitrarySparseWorklistExperiment
+65_Level5DensityUniverseDistributionExperiment
+```
+
 PlannerとVerifierは、Leaf／Composition／Dynamicの各段で別プロジェクトのままです。共通化するのは型、Canonical encoding、Digestなど、判定結果を作らない基盤だけです。
 
 ## Frozen artifact hierarchy
@@ -200,6 +217,9 @@ docs/LEVEL4_GENERALIZATION8_VERIFIED_COMPACT_SPARSE_WORKLIST.md
 docs/LEVEL5_VERTICAL_EXPERIMENT1_SPARSE_INDIRECT_TEMPORAL_IMAGE.md
 docs/LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md
 docs/LEVEL5_VERTICAL_EXPERIMENT2_ARBITRARY_SPARSE_WORKLIST.md
+docs/LEVEL5_VERTICAL_EXPERIMENT2_RESULT.md
+docs/LEVEL5_VERTICAL_EXPERIMENT2B_DENSITY_UNIVERSE_DISTRIBUTION_SURFACE.md
+docs/LEVEL5_VERTICAL_EXPERIMENT2B_BOUNDARY_REQUALIFICATION.md
 ```
 
 ## Build
@@ -215,6 +235,8 @@ Level 5垂直実験はFull Gateとは別のEvidence Runnerで実行します。
 ```bat
 run_sge4_level5_vertical_experiment.bat
 run_sge4_level5_arbitrary_sparse_worklist_experiment.bat
+run_sge4_level5_density_universe_distribution_experiment.bat
+run_sge4_level5_density_universe_distribution_boundary_requalification.bat
 ```
 
 ## Full Gate
