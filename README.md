@@ -1,5 +1,8 @@
 ﻿# New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Level 5 Vertical Experiment 2b Result: Universe 1024／4096／16384の完全93 case交差面は全15系列で`[87.5%, 100%]`を記録し、22 caseのBoundary Requalificationも全件安定して同じ境界を再資格した。WARPは`SemanticQualificationOnly`、実GPU Surfaceは`CrossoverSurfaceBracketed`、Boundaryは`BoundaryCrossoverRequalified`、Owner decisionは`DeferredByOwner`のままとする。正式結果は`docs/LEVEL5_VERTICAL_EXPERIMENT2B_RESULT.md`へ固定した。
+>
+
 > Level 5 Vertical Experiment 2b Boundary Requalification: 完全93 case交差面Evidenceを保持したまま、87.5%全5分布、100% Full、既知のレジーム遷移sentinelだけをUniverse 1024／4096／16384で再資格する。22 case、12 paired samples、Observation-only同一測定経路とcase開始／終了時のFull State／Temporal／Texture資格により、交差境界を短時間で再確認する。
 >
 
@@ -220,6 +223,7 @@ docs/LEVEL5_VERTICAL_EXPERIMENT2_ARBITRARY_SPARSE_WORKLIST.md
 docs/LEVEL5_VERTICAL_EXPERIMENT2_RESULT.md
 docs/LEVEL5_VERTICAL_EXPERIMENT2B_DENSITY_UNIVERSE_DISTRIBUTION_SURFACE.md
 docs/LEVEL5_VERTICAL_EXPERIMENT2B_BOUNDARY_REQUALIFICATION.md
+docs/LEVEL5_VERTICAL_EXPERIMENT2B_RESULT.md
 ```
 
 ## Build
