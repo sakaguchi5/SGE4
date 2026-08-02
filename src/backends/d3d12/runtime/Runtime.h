@@ -47,6 +47,8 @@ struct Submission final
     std::uint32_t verifiedConditionalRegionCount = 0;
     std::uint32_t verifiedIndirectDispatchCount = 0;
     std::uint32_t verifiedIndirectWorkCount = 0;
+    std::uint32_t verifiedCompactWorklistBindingCount = 0;
+    std::uint32_t verifiedCompactWorklistIndexCount = 0;
 };
 
 struct RecoveryReport final

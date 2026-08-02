@@ -172,6 +172,78 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         {std::move(compiled).value().packageBytes});
 }
 
+inline base::Expected<CompiledLeaf, std::string> BuildVerifiedCompactWorklistLeaf(
+    std::uint32_t universe = 8)
+{
+    if (universe == 0)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Compact worklist universeが検証または実行の契約に違反しています。");
+
+    constexpr std::uint32_t MemberBytes = 16;
+    constexpr std::uint32_t IndexBytes = 4;
+    const auto dataBytes = static_cast<std::uint64_t>(universe) * MemberBytes;
+    const auto indexBytes = static_cast<std::uint64_t>(universe) * IndexBytes;
+    sem::SemanticBuilder builder;
+    auto dynamicValues = builder.AddDynamicBuffer(
+        "L4G8.Worklist.Values", dataBytes, MemberBytes, MemberBytes);
+    auto compactIndices = builder.AddDynamicBuffer(
+        "L4G8.Worklist.Indices", indexBytes, IndexBytes, IndexBytes);
+    auto output = builder.AddExternalBuffer(
+        "L4G8.Worklist.Output", dataBytes, MemberBytes);
+    if (!dynamicValues || !compactIndices || !output)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Compact worklist Bufferが検証または実行の契約に違反しています。");
+
+    auto valuesUse = builder.AddUse(
+        dynamicValues.value(), sem::Effect::Read, sem::ViewRole::ShaderBuffer);
+    auto indicesUse = builder.AddUse(
+        compactIndices.value(), sem::Effect::Read, sem::ViewRole::ShaderBuffer);
+    auto outputUse = builder.AddUse(
+        output.value(), sem::Effect::Write, sem::ViewRole::StorageBuffer);
+    if (!valuesUse || !indicesUse || !outputUse)
+        return base::Failure<CompiledLeaf, std::string>(
+            "Compact worklist ResourceUseが検証または実行の契約に違反しています。");
+
+    sem::ProgramInterface interfaceDescription;
+    interfaceDescription.parameters = {
+        {{0}, "DynamicValues", sem::ProgramParameterKind::ReadOnlyBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1},
+        {{1}, "CompactIndices", sem::ProgramParameterKind::ReadOnlyBuffer,
+            sem::ShaderStage::Compute, 1, 0, 1},
+        {{2}, "Output", sem::ProgramParameterKind::UnorderedBuffer,
+            sem::ShaderStage::Compute, 0, 0, 1}};
+    auto program = builder.AddComputeProgram(
+        "L4G8.Worklist.Program", std::move(interfaceDescription), {R"hlsl(
+StructuredBuffer<float4> DynamicValues : register(t0);
+StructuredBuffer<uint> CompactIndices : register(t1);
+RWStructuredBuffer<float4> Output : register(u0);
+[numthreads(1, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    const uint member = CompactIndices[id.x];
+    Output[member] = DynamicValues[member];
+}
+)hlsl", {}, {}, "CSMain"});
+    if (!program)
+        return base::Failure<CompiledLeaf, std::string>(program.error());
+    const std::array operands = {
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, valuesUse.value(), {0}},
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, indicesUse.value(), {1}},
+        sem::WorkOperand{sem::WorkOperandKind::ProgramParameter, outputUse.value(), {2}}};
+    auto work = builder.AddComputeWorkGeneric(
+        "L4G8.Worklist.Work", program.value(), operands, universe, 1, 1);
+    if (!work)
+        return base::Failure<CompiledLeaf, std::string>(work.error());
+
+    auto compiled = sge4::compiler::CompileCanonical(
+        std::move(builder).Build(), ComputeProfile(6));
+    if (!compiled)
+        return base::Failure<CompiledLeaf, std::string>(
+            compiled.error().stage + "：" + compiled.error().message);
+    return base::Success<CompiledLeaf, std::string>(
+        {std::move(compiled).value().packageBytes});
+}
+
 inline base::Expected<CompiledLeaf, std::string> BuildDynamicObservationLeaf(
     std::uint32_t universe = 4)
 {

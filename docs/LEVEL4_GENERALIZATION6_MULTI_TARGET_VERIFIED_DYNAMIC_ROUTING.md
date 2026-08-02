@@ -1,4 +1,4 @@
-> Current status: Generalization 7により現行ProductionはSGE4UNI 2.7／SGE4INV 1.5へ進んだ。本書はGeneralization 6完成時点の契約記録である。
+> Current status: Generalization 8により現行ProductionはSGE4UNI 2.8／SGE4INV 1.6へ進んだ。本書は当該Generalization完成時点の契約記録であり、その意味は維持される。
 
 # Level 4 Generalization 6 — Multi-target Verified Dynamic Routing
 

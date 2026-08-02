@@ -1,4 +1,4 @@
-> Current status: Generalization 7により現行ProductionはSGE4UNI 2.7／SGE4INV 1.5へ進んだ。本書の2.2記述はGeneralization 2完成時点の契約記録であり、Conditional Region／SGE4INV 1.3の意味は維持される。
+> Current status: Generalization 8により現行ProductionはSGE4UNI 2.8／SGE4INV 1.6へ進んだ。本書は当該Generalization完成時点の契約記録であり、その意味は維持される。
 
 # Level 4 Generalization 2 — Conditional Region
 

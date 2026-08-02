@@ -28,6 +28,7 @@ struct DynamicWriteSetIdentityTagV1;
 struct DynamicExecutionPayloadIdentityTagV1;
 struct ConditionalExecutionIdentityTagV1;
 struct IndirectDispatchIdentityTagV1;
+struct CompactWorklistIdentityTagV1;
 struct DynamicDecisionIdentityTagV1;
 struct DynamicSealIdentityTagV1;
 struct FrozenDynamicInvocationIdentityTagV1;
@@ -39,12 +40,13 @@ using DynamicWriteSetIdentity = canonical::CanonicalIdentityV1<DynamicWriteSetId
 using DynamicExecutionPayloadIdentity = canonical::CanonicalIdentityV1<DynamicExecutionPayloadIdentityTagV1>;
 using ConditionalExecutionIdentity = canonical::CanonicalIdentityV1<ConditionalExecutionIdentityTagV1>;
 using IndirectDispatchIdentity = canonical::CanonicalIdentityV1<IndirectDispatchIdentityTagV1>;
+using CompactWorklistIdentity = canonical::CanonicalIdentityV1<CompactWorklistIdentityTagV1>;
 using DynamicDecisionIdentity = canonical::CanonicalIdentityV1<DynamicDecisionIdentityTagV1>;
 using DynamicSealIdentity = canonical::CanonicalIdentityV1<DynamicSealIdentityTagV1>;
 using FrozenDynamicInvocationIdentity = canonical::CanonicalIdentityV1<FrozenDynamicInvocationIdentityTagV1>;
 
 inline constexpr std::uint64_t InvalidItemGenerationV1 = ~std::uint64_t{0};
-inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 5u;
+inline constexpr std::uint32_t DynamicInvocationSchemaVersionV1 = 6u;
 
 struct ExactIndexSetBuildResultV1;
 
@@ -132,6 +134,18 @@ struct VerifiedIndirectDispatchV1 final
     std::uint32_t threadGroupCountY = 1;
     std::uint32_t threadGroupCountZ = 1;
     IndirectDispatchIdentity identity = IndirectDispatchIdentity::FromDigest({});
+};
+
+
+struct VerifiedCompactWorklistV1 final
+{
+    composition::CompactWorklistModeV1 mode =
+        composition::CompactWorklistModeV1::None;
+    composition::LeafPackageId targetLeaf;
+    std::uint32_t targetDynamicSlot = package::InvalidIndex;
+    std::uint32_t maxIndexCount = 0;
+    std::vector<std::uint32_t> memberIndices;
+    CompactWorklistIdentity identity = CompactWorklistIdentity::FromDigest({});
 };
 
 struct ConditionalRegionSelectionV1 final
@@ -237,6 +251,8 @@ struct DynamicInvocationRequestV1 final
     std::span<const MemberUpdatePayloadV1> updatePayloads);
 [[nodiscard]] IndirectDispatchIdentity ComputeIndirectDispatchIdentityV1(
     const VerifiedIndirectDispatchV1& dispatch);
+[[nodiscard]] CompactWorklistIdentity ComputeCompactWorklistIdentityV1(
+    const VerifiedCompactWorklistV1& worklist);
 [[nodiscard]] ConditionalExecutionIdentity ComputeConditionalExecutionIdentityV1(
     std::uint32_t compositionLeafCount,
     std::span<const ConditionalRegionSelectionV1> selections,
@@ -259,6 +275,7 @@ struct DynamicDecisionV1 final
     canonical::TransitionCount indirectWorkCount;
     DynamicWriteSetIdentity dynamicWriteSetIdentity;
     VerifiedIndirectDispatchV1 indirectDispatch;
+    VerifiedCompactWorklistV1 compactWorklist;
     ConditionalExecutionIdentity conditionalExecutionIdentity;
     std::vector<ConditionalRegionSelectionV1> conditionalSelections;
     std::vector<composition::LeafPackageId> enabledLeaves;
@@ -290,7 +307,8 @@ struct DynamicPlannerProposalV1 final
     canonical::HistoryValidityIdentity nextHistoryIdentity,
     DynamicWriteSetIdentity dynamicWriteSetIdentity,
     DynamicExecutionPayloadIdentity executionPayloadIdentity,
-    IndirectDispatchIdentity indirectDispatchIdentity);
+    IndirectDispatchIdentity indirectDispatchIdentity,
+    CompactWorklistIdentity compactWorklistIdentity);
 
 class VerifiedDynamicInvocationV1 final
 {
@@ -358,6 +376,9 @@ enum class DynamicVerificationErrorV1 : std::uint8_t
     IndirectDispatchContractMismatch,
     IndirectDispatchWorkCountMismatch,
     IndirectDispatchIdentityMismatch,
+    CompactWorklistContractMismatch,
+    CompactWorklistSetMismatch,
+    CompactWorklistIdentityMismatch,
     ConditionalContractMismatch,
     ConditionalSelectionMismatch,
     EnabledLeafSetMismatch,

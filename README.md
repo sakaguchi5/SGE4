@@ -1,6 +1,8 @@
 # New SGE4 — Unified Two-Stage Compiler Reconstruction
 
-> Level 5 Vertical Experiment 1: `SGE4UNI 2.7`を変更せず、Multi-target Dynamic routing、Verified DispatchIndirect、RGBA32F Texture UAV／packed readback、Temporal Bufferを一つのCompositionへ接続した。Dense DirectとVerified Sparse IndirectのState／Temporal／Texture観測同値を先に検証し、State WriterのGPU timestampをK別に測定する。Owner decisionは自動化せず`DeferredByOwner`とする。
+> Revision 2.8: Level 4 Generalization 8として`Verified Compact Sparse Worklist`を導入した。exact Transition setをCanonical昇順のuint32 member ID列へ独立再導出し、`SGE4INV 1.6`の必須Compact Worklist SectionへSealする。Runtimeは固定長Dynamic Slotへzero padding付きで物質化し、Dispatch ordinalを任意のverified member IDへ接続する。
+>
+> Level 5 Vertical Experiment 1 Result: `SGE4UNI 2.7`上のDense DirectとVerified Sparse Indirectについて、State／Temporal／Texture／Recoveryの観測同値を確認した。実GPUではActive率1.5625%、6.25%、25%でSparseが全paired sampleに勝ち、100%では同一中央値へ収束した。正式結果は`docs/LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md`へ固定した。
 >
 > Revision 2.7: Level 4 Generalization 7として`Verified Temporal Buffer Flow`を導入した。固定size Buffer、history depth 1、Previous／Current二世代、single unconditional writerをComposition ContractとPlanへ固定し、全LeafのSubmit成功後だけ世代を原子的に回転する。明示的seed、packed readback、whole-composition Recoveryを資格化した。
 >
@@ -82,7 +84,7 @@ Leaf Compilerは、独立Verifierを通過した完全なSchema 17 Frozen Leaf P
 
 ### 3. Composition authorityを完全Planへ統合
 
-Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.7`へFreezeします。`CompositionCertificate`は、ABI 2.7 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
+Compositionは、ContractからPlanを一度だけ提案し、独立VerifierでSealし、平坦な`SGE4UNI 2.8`へFreezeします。`CompositionCertificate`は、ABI 2.8 Composition Core、検証済みContract、Plan、Seal、Schedule、Recovery Setから直接決定されます。identityだけの第二Composition経路はありません。
 
 ### 4. RuntimeからPlanner／Verifierを排除
 
@@ -163,7 +165,7 @@ PlannerとVerifierは、Leaf／Composition／Dynamicの各段で別プロジェ�
 ## Frozen artifact hierarchy
 
 ```text
-SGE4UNI Frozen Composition Package 2.7
+SGE4UNI Frozen Composition Package 2.8
   Manifest schema 2
   Leaf Table schema 1
   complete Schema 17 Leaf Package bytes
@@ -171,14 +173,14 @@ SGE4UNI Frozen Composition Package 2.7
   Verified Decision Data schema 3
   Verification Certificate schema 1
   Authority Ledger schema 2
-  Dynamic Contract schema 5
+  Dynamic Contract schema 6
 ```
 
 `CompleteComposition` Sectionと内側`SGE4CMP 1.0`はProduction ABIから廃止しました。Leaf Packageの独立ABIはSchema 17のまま維持し、Leaf bytesを再符号化せず完全に埋め込みます。
 
-Production Readerは`SGE4UNI 2.7`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
+Production Readerは`SGE4UNI 2.8`だけを受理します。`SGE4UNI 1.1`／`SGE4CMP 1.0` Reader／Writerは`src/composition/migration/abi1/`へ隔離され、明示的な資格試験用Migration Toolだけが使用します。
 
-Dynamic Invocationは別の`SGE4INV` major 1／minor 5、Manifest schema 6成果物です。Conditional Execution SectionがRegion選択とenabled Leaf集合を、Execution Payload schema 2がCanonical member payload、複数route、exact Update payloadを、Indirect Dispatch Sectionが対象Compute route、最大work数、Seal済みDispatch引数とidentityを保存します。Active、Modified Survivor、前History identity、Device epochを明示的にbindし、Activation、Deactivation、Update、Retain、Transition、work count、route shadows、Dispatch引数をPlannerと独立Verifierが別々に確定します。Runtimeは、ABI 2.7 Composition identityおよび受理済みHistory identityと一致する成果物だけをSubmitできます。
+Dynamic Invocationは別の`SGE4INV` major 1／minor 6、Manifest schema 7成果物です。Conditional Execution SectionがRegion選択とenabled Leaf集合を、Execution Payload schema 2がCanonical member payload、複数route、exact Update payloadを、Indirect Dispatch Sectionが対象Compute routeとSeal済みDispatch引数を、Compact Worklist Sectionがexact Transition setから独立導出されたCanonical uint32 member ID列を保存します。Runtimeは、ABI 2.8 Composition identity、受理済みHistory identity、worklist identityが一致する成果物だけをSubmitできます。
 
 詳細は次を参照してください。
 
@@ -192,7 +194,9 @@ docs/LEVEL4_GENERALIZATION4_VERIFIED_INDIRECT_WORK_EXECUTION.md
 docs/LEVEL4_GENERALIZATION5_LIMITED_TEXTURE2D_UAV_COMPUTE_FLOW.md
 docs/LEVEL4_GENERALIZATION6_MULTI_TARGET_VERIFIED_DYNAMIC_ROUTING.md
 docs/LEVEL4_GENERALIZATION7_VERIFIED_TEMPORAL_BUFFER_FLOW.md
+docs/LEVEL4_GENERALIZATION8_VERIFIED_COMPACT_SPARSE_WORKLIST.md
 docs/LEVEL5_VERTICAL_EXPERIMENT1_SPARSE_INDIRECT_TEMPORAL_IMAGE.md
+docs/LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md
 ```
 
 ## Build
@@ -222,7 +226,7 @@ Full Gateは次を確認します。
 - Source Manifest
 - Debug／Release build
 - Debug A／Debug B／Release Frozen bytes一致
-- ABI 2.7 flat Section／round-trip／migration／corruption／Dynamic algebra／multi-route execution payload／Conditional execution／limited Texture2D Flow／verified DispatchIndirect／Temporal Buffer Flow
+- ABI 2.8 flat Section／round-trip／migration／corruption／Dynamic algebra／multi-route execution payload／Conditional execution／limited Texture2D Flow／verified DispatchIndirect／Verified Compact Worklist／Temporal Buffer Flow
 - 40 carried invariants
 - WARP materialization／submission／readback
 - Controlled whole-composition Recovery
@@ -249,6 +253,9 @@ Full Gateは次を確認します。
 - verified indirect quantity
 - verified DispatchIndirect work execution（Compute Leaf／1 Command限定）
 - zero-work DispatchIndirectと固定上限契約
+- exact Transition setからCanonical uint32 Compact Worklistへの独立導出
+- fixed-size index-list Dynamic Slotへのzero padding付きmaterialization
+- Dispatch ordinalから任意verified member IDへの写像
 - verified dense Dynamic Slot execution
 - one Canonical member payloadから複数Leaf／複数Dynamic Slotへのverified byte-slice routing
 - 全route shadowのUpdate／Clear一括適用とsubmit成功後の原子的Commit
@@ -277,13 +284,13 @@ Full Gateは次を確認します。
 - Multiple Adapter
 - Runtime candidate／performance policy
 - Conditional Regionのネスト、任意bool slot、Conditional Presenter
-- routeごとの独立membership、Runtime変換、可変長member、GPU生成scatter
+- routeごとの独立membership、Runtime変換、可変長member、GPU生成worklist／scatter
 - 一般ExecuteIndirect、複数Indirect target、Dispatch Y／Z可変、GPU生成count、count buffer chain
 - Temporal Texture、history depth 2以上、Conditional Temporal writer／reader、partial temporal recovery
 
 ## Validation boundary
 
-このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.7直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
+このLinux環境では、Portable C++23厳格構文検査、ABI 1.x Oracle、ABI 2.8直接生成／Round-trip／Migration／corruption、Canonical Artifact、Migration Acceptance、Project／dependency／source ownership監査、Manifest検証を実施します。MSVC、HLSL、WARP、Actual Device removalの最終合格は、Windows上の`run_new_sge4_full_gate.bat`で確定します。
 
 詳細は次を参照してください。
 

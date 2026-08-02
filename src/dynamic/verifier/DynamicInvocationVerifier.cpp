@@ -124,7 +124,9 @@ DynamicVerificationErrorV1 DeriveVerifiedIndirectDispatch(
     {
         if (contract.targetLeaf.IsValid() ||
             contract.targetComputeCommand != package::InvalidIndex ||
-            contract.maxWorkCount != 0)
+            contract.maxWorkCount != 0 ||
+            contract.compactWorklistMode != composition::CompactWorklistModeV1::None ||
+            contract.targetIndexListDynamicSlot != package::InvalidIndex)
             return DynamicVerificationErrorV1::IndirectDispatchContractMismatch;
         result.workCount = 0;
         result.threadGroupCountX = 0;
@@ -158,6 +160,51 @@ bool SameIndirectDispatch(
         left.threadGroupCountY == right.threadGroupCountY &&
         left.threadGroupCountZ == right.threadGroupCountZ &&
         left.identity == right.identity;
+}
+
+DynamicVerificationErrorV1 DeriveVerifiedCompactWorklist(
+    const DynamicInvocationRequestV1& request,
+    std::span<const std::uint32_t> transition,
+    VerifiedCompactWorklistV1& result)
+{
+    const auto& contract = request.indirectDispatchContract;
+    result.mode = contract.compactWorklistMode;
+    result.targetLeaf = contract.targetLeaf;
+    result.targetDynamicSlot = contract.targetIndexListDynamicSlot;
+    result.maxIndexCount = contract.maxWorkCount;
+
+    if (contract.compactWorklistMode == composition::CompactWorklistModeV1::None)
+    {
+        if (contract.targetIndexListDynamicSlot != package::InvalidIndex)
+            return DynamicVerificationErrorV1::CompactWorklistContractMismatch;
+        result.targetLeaf = composition::LeafPackageId{};
+        result.maxIndexCount = 0;
+        result.identity = ComputeCompactWorklistIdentityV1(result);
+        return DynamicVerificationErrorV1::None;
+    }
+    if (contract.compactWorklistMode != composition::CompactWorklistModeV1::VerifiedU32 ||
+        contract.mode != composition::IndirectExecutionModeV1::VerifiedDispatch ||
+        request.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
+        !contract.targetLeaf.IsValid() ||
+        contract.targetLeaf.value >= request.compositionLeafCount ||
+        contract.targetIndexListDynamicSlot == package::InvalidIndex ||
+        contract.maxWorkCount == 0 || contract.maxWorkCount != request.universe.value() ||
+        transition.size() > contract.maxWorkCount)
+        return DynamicVerificationErrorV1::CompactWorklistContractMismatch;
+
+    result.memberIndices.assign(transition.begin(), transition.end());
+    result.identity = ComputeCompactWorklistIdentityV1(result);
+    return DynamicVerificationErrorV1::None;
+}
+
+bool SameCompactWorklist(
+    const VerifiedCompactWorklistV1& left,
+    const VerifiedCompactWorklistV1& right) noexcept
+{
+    return left.mode == right.mode && left.targetLeaf == right.targetLeaf &&
+        left.targetDynamicSlot == right.targetDynamicSlot &&
+        left.maxIndexCount == right.maxIndexCount &&
+        left.memberIndices == right.memberIndices && left.identity == right.identity;
 }
 
 bool IsSupportedPredicate(composition::ConditionalPredicateKindV1 predicate) noexcept
@@ -442,6 +489,11 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         request, static_cast<std::uint32_t>(transition.size()), expectedIndirectDispatch);
     if (indirectError != DynamicVerificationErrorV1::None)
         return Failure(indirectError);
+    VerifiedCompactWorklistV1 expectedCompactWorklist;
+    const auto worklistError = DeriveVerifiedCompactWorklist(
+        request, transition, expectedCompactWorklist);
+    if (worklistError != DynamicVerificationErrorV1::None)
+        return Failure(worklistError);
     auto expectedConditional = DeriveConditionalExecution(
         request, active, activation, deactivation, update, retain, transition);
 
@@ -477,6 +529,14 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         return Failure(DynamicVerificationErrorV1::IndirectDispatchIdentityMismatch);
     if (!SameIndirectDispatch(actual.indirectDispatch, expectedIndirectDispatch))
         return Failure(DynamicVerificationErrorV1::IndirectDispatchContractMismatch);
+    if (actual.compactWorklist.identity !=
+        ComputeCompactWorklistIdentityV1(actual.compactWorklist))
+        return Failure(DynamicVerificationErrorV1::CompactWorklistIdentityMismatch);
+    if (actual.compactWorklist.mode == composition::CompactWorklistModeV1::VerifiedU32 &&
+        actual.compactWorklist.memberIndices != transition)
+        return Failure(DynamicVerificationErrorV1::CompactWorklistSetMismatch);
+    if (!SameCompactWorklist(actual.compactWorklist, expectedCompactWorklist))
+        return Failure(DynamicVerificationErrorV1::CompactWorklistContractMismatch);
     if (!SameSelections(actual.conditionalSelections, expectedConditional.selections))
         return Failure(DynamicVerificationErrorV1::ConditionalSelectionMismatch);
     if (!SameLeaves(actual.enabledLeaves, expectedConditional.enabledLeaves))
@@ -489,7 +549,8 @@ DynamicVerificationResultV1 DynamicInvocationVerifierV1::Verify(
         std::move(expectedDeactivation), std::move(expectedUpdate), std::move(expectedRetain), std::move(expectedTransition),
         expectedGenerationIdentity, std::move(generations), expectedRecordIdentity, std::move(records),
         canonical::TransitionCount(static_cast<std::uint32_t>(transition.size())), expectedWriteSetIdentity,
-        std::move(expectedIndirectDispatch), std::move(expectedConditional.identity), std::move(expectedConditional.selections),
+        std::move(expectedIndirectDispatch), std::move(expectedCompactWorklist),
+        std::move(expectedConditional.identity), std::move(expectedConditional.selections),
         std::move(expectedConditional.enabledLeaves), nextHistoryGeneration};
     expectedDecision.identity = ComputeDynamicDecisionIdentityV1(expectedDecision);
     if (actual.identity != expectedDecision.identity)

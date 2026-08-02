@@ -191,7 +191,7 @@ BuildFrozenCompositionPackageAbi1ForMigration(
     ContractBuildInput input,
     DynamicContractV1 dynamicContract)
 {
-    if (dynamicContract.schemaVersion != 5 || dynamicContract.universeCount == 0 ||
+    if (dynamicContract.schemaVersion != 6 || dynamicContract.universeCount == 0 ||
         dynamicContract.executionMode != DynamicExecutionModeV1::AuthorityOnly ||
         dynamicContract.canonicalMemberBytes != 0 ||
         !dynamicContract.executionRoutes.empty() ||
@@ -199,7 +199,9 @@ BuildFrozenCompositionPackageAbi1ForMigration(
         dynamicContract.indirectDispatch.mode != IndirectExecutionModeV1::None ||
         dynamicContract.indirectDispatch.targetLeaf.IsValid() ||
         dynamicContract.indirectDispatch.targetComputeCommand != package::InvalidIndex ||
-        dynamicContract.indirectDispatch.maxWorkCount != 0)
+        dynamicContract.indirectDispatch.maxWorkCount != 0 ||
+        dynamicContract.indirectDispatch.compactWorklistMode != CompactWorklistModeV1::None ||
+        dynamicContract.indirectDispatch.targetIndexListDynamicSlot != package::InvalidIndex)
         return Fail<std::vector<std::byte>>(
             "abi1/build", "ABI 1移行Corpusはauthority-only Dynamic Contractだけを受理します。");
 

@@ -277,6 +277,62 @@ BuildVerifiedIndirectUnified(
 }
 
 inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
+BuildVerifiedCompactWorklistUnified(
+    std::uint32_t universe = 8,
+    std::uint32_t targetIndexListDynamicSlot = 1)
+{
+    constexpr std::string_view ProducerKey = "unified/worklist/producer";
+    constexpr std::string_view ObserverKey = "unified/worklist/observer";
+
+    auto producer = fixture::BuildVerifiedCompactWorklistLeaf(universe);
+    if (!producer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            producer.error());
+    auto observer = fixture::BuildDynamicObservationLeaf(universe);
+    if (!observer)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            observer.error());
+
+    contract::ContractBuildInput input;
+    input.leaves = {
+        fixture::VerifiedIndirectDeclaration(std::string(ProducerKey), producer.value()),
+        fixture::DynamicObservationDeclaration(std::string(ObserverKey), observer.value())};
+
+    contract::ResourceFlowDeclaration middle;
+    middle.stableKey = "unified/worklist/materialized";
+    middle.boundary = contract::ResourceBoundary::Internal;
+    middle.producer = fixture::Ref(
+        std::string(ProducerKey), std::string(fixture::IndirectOutputEndpoint));
+    middle.consumers = {fixture::Ref(
+        std::string(ObserverKey), std::string(fixture::DynamicObservationInputEndpoint))};
+
+    contract::ResourceFlowDeclaration output;
+    output.stableKey = "unified/worklist/output";
+    output.boundary = contract::ResourceBoundary::CompositionOutput;
+    output.producer = fixture::Ref(
+        std::string(ObserverKey), std::string(fixture::DynamicObservationOutputEndpoint));
+    input.resources = {std::move(middle), std::move(output)};
+
+    const auto producerStableKey = composition::ComputeStableLeafKey(ProducerKey);
+    const auto observerStableKey = composition::ComputeStableLeafKey(ObserverKey);
+    const composition::LeafPackageId producerLeaf{
+        producerStableKey < observerStableKey ? 0u : 1u};
+    std::vector<composition::DynamicExecutionRouteV1> routes = {
+        composition::MakeDynamicExecutionRouteV1(producerLeaf, 0, 0, 16)};
+    const auto indirect =
+        composition::MakeVerifiedCompactWorklistDispatchContractV1(
+            producerLeaf, 0, universe, targetIndexListDynamicSlot);
+    auto built = composition::BuildFrozenCompositionPackage(
+        std::move(input), composition::MakeVerifiedRoutedSlotsDynamicContractV1(
+            universe, 16, std::move(routes), {}, indirect));
+    if (!built)
+        return sge4::base::Failure<composition::FrozenCompositionPackage, std::string>(
+            built.error().stage + "：" + built.error().message);
+    return sge4::base::Success<composition::FrozenCompositionPackage, std::string>(
+        std::move(built).value());
+}
+
+inline sge4::base::Expected<composition::FrozenCompositionPackage, std::string>
 BuildLimitedTexture2DUnified(std::uint32_t width = 4, std::uint32_t height = 4)
 {
     constexpr std::string_view ProducerKey = "unified/texture/producer";

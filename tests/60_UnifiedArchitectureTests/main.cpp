@@ -57,12 +57,12 @@ int main(int argc, char** argv)
             flat.value().FormatMinor() == composition::artifact::FrozenCompositionAbi2FormatMinor &&
             flat.value().Sections().size() ==
                 composition::artifact::FrozenCompositionAbi2SectionKinds.size(),
-            "SGE4UNI 2.7の平坦Section構造が成立していません。");
+            "SGE4UNI 2.8の平坦Section構造が成立していません。");
         Require(flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::LeafTable)) != nullptr &&
             flat.value().FindSection(
             std::to_underlying(composition::artifact::FrozenCompositionAbi2SectionKind::AuthorityLedger)) != nullptr,
-            "SGE4UNI 2.7の直接Sectionがありません。");
+            "SGE4UNI 2.8の直接Sectionがありません。");
 
         auto legacyInput = tests::BuildLinearInput();
         Require(static_cast<bool>(legacyInput), "ABI 1移行入力の生成に失敗しました。");
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         Require(migrated.value().FileBytes().size() == first.value().FileBytes().size() &&
             std::equal(migrated.value().FileBytes().begin(), migrated.value().FileBytes().end(),
                 first.value().FileBytes().begin()),
-            "直接生成したABI 2.7とMigration後ABI 2.7がbyte一致しません。");
+            "直接生成したABI 2.8とMigration後ABI 2.8がbyte一致しません。");
         Require(migrated.value().Certificate().contractIdentity == first.value().Certificate().contractIdentity &&
             migrated.value().Certificate().planIdentity == first.value().Certificate().planIdentity &&
             migrated.value().Certificate().sealIdentity == first.value().Certificate().sealIdentity,
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
             invocationArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
             invocationArtifact.value().Sections().size() ==
                 dynamic::FrozenInvocationSectionKinds.size(),
-            "SGE4INV 1.5のSection構造が成立していません。");
+            "SGE4INV 1.6のSection構造が成立していません。");
 
         dynamic::InvocationInputV1 missingPayload;
         missingPayload.timelineOrdinal = 0;
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             throw std::runtime_error(
                 "Conditional Region Compositionの生成に失敗しました：" + conditional.error());
         Require(conditional.value().DynamicContract().conditionalRegions.size() == 1,
-            "Conditional Region契約がSGE4UNI 2.7へ保存されませんでした。");
+            "Conditional Region契約がSGE4UNI 2.8へ保存されませんでした。");
 
         dynamic::InvocationInputV1 conditionalTrue;
         conditionalTrue.timelineOrdinal = 0;
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
             "改竄されたenabled Leaf集合が独立Verifierに受理されました。");
         auto frozenFalse = dynamic::FreezeVerifiedInvocation(*verifiedFalse.verified);
         Require(frozenFalse && frozenFalse.value().Decision().enabledLeaves.empty(),
-            "Conditional false DecisionをSGE4INV 1.5へFreezeできませんでした。");
+            "Conditional false DecisionをSGE4INV 1.6へFreezeできませんでした。");
 
         // Regression: a zero-Leaf false branch still constitutes a successful
         // verified dynamic submission.  Its Clear/Update effects must be committed
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
             composition::artifact::FrozenCompositionAbi2DynamicContractSchema &&
             multiPackage.value().DynamicContract().canonicalMemberBytes == 32 &&
             multiPackage.value().DynamicContract().executionRoutes.size() == 2,
-            "Multi-target Dynamic ContractがSGE4UNI 2.7へ固定されませんでした。");
+            "Multi-target Dynamic ContractがSGE4UNI 2.8へ固定されませんでした。");
         auto multiSession = sge4::runtime::Session::Create(
             std::move(multiPackage).value(), 1);
         Require(static_cast<bool>(multiSession),
@@ -358,7 +358,7 @@ int main(int argc, char** argv)
         Require(static_cast<bool>(multiSeedFrozen) &&
             multiSeedFrozen.value().ExecutionPayload().routes.size() == 2 &&
             multiSeedFrozen.value().ExecutionPayload().canonicalMemberBytes == 32,
-            "Multi-target payloadをSGE4INV 1.5へFreezeできませんでした。");
+            "Multi-target payloadをSGE4INV 1.6へFreezeできませんでした。");
         Require(static_cast<bool>(multiSession.value().ValidateForSubmission(
             multiSeedFrozen.value())),
             "Multi-target InitialSeedのRuntime検証に失敗しました。");
@@ -461,7 +461,7 @@ int main(int argc, char** argv)
             indirectContract.targetLeaf.IsValid() &&
             indirectContract.targetComputeCommand == 0 &&
             indirectContract.maxWorkCount == 8,
-            "Verified indirect dispatch契約がSGE4UNI 2.7へ固定されませんでした。");
+            "Verified indirect dispatch契約がSGE4UNI 2.8へ固定されませんでした。");
         Require(!tests::BuildVerifiedIndirectUnified(8, 7),
             "static Compute Commandと異なるmaxWorkCountが受理されました。");
 
@@ -475,7 +475,7 @@ int main(int argc, char** argv)
             indirectZero.value().IndirectDispatch().threadGroupCountX == 0 &&
             indirectZero.value().IndirectDispatch().identity ==
                 indirectZero.value().Artifact().IndirectDispatchIdentityValue(),
-            "zero-work Verified indirect dispatchがSGE4INV 1.5へSealされませんでした。");
+            "zero-work Verified indirect dispatchがSGE4INV 1.6へSealされませんでした。");
 
         dynamic::InvocationInputV1 indirectInput;
         indirectInput.timelineOrdinal = 0;
@@ -503,7 +503,7 @@ int main(int argc, char** argv)
         auto frozenIndirect = dynamic::FreezeVerifiedInvocation(*indirectVerified.verified);
         Require(frozenIndirect &&
             frozenIndirect.value().IndirectDispatch().workCount == 3,
-            "Verified indirect DecisionをSGE4INV 1.5へFreezeできませんでした。");
+            "Verified indirect DecisionをSGE4INV 1.6へFreezeできませんでした。");
         auto indirectArtifact = sge4::ReadSectionedArtifact(
             frozenIndirect.value().FileBytes(), dynamic::FrozenInvocationMagic,
             dynamic::FrozenInvocationFormatMajor);
@@ -512,7 +512,7 @@ int main(int argc, char** argv)
             indirectArtifact.value().Sections().size() == dynamic::FrozenInvocationSectionKinds.size() &&
             indirectArtifact.value().FindSection(
                 std::to_underlying(dynamic::FrozenInvocationSectionKind::IndirectDispatch)) != nullptr,
-            "SGE4INV 1.5のIndirect Dispatch Sectionが成立していません。");
+            "SGE4INV 1.6のIndirect Dispatch Sectionが成立していません。");
 
         auto indirectSession = sge4::runtime::Session::Create(
             std::move(indirectPackage).value(), 1);
@@ -540,6 +540,107 @@ int main(int argc, char** argv)
             preparedIndirectThree.value().indirectWorkCount == 3 &&
             preparedIndirectThree.value().indirectThreadGroupCountX == 3,
             "AuthorityOnlyのexact transition件数とGPU indirect work件数が分離されませんでした。");
+
+        auto collidingWorklistPackage =
+            tests::BuildVerifiedCompactWorklistUnified(8, 0);
+        Require(!collidingWorklistPackage,
+            "Compact Worklist Slotとdense execution routeの二重所有が受理されました。");
+
+        auto worklistPackage = tests::BuildVerifiedCompactWorklistUnified(8);
+        if (!worklistPackage)
+            throw std::runtime_error(
+                "Verified Compact Worklist Compositionの生成に失敗しました：" +
+                worklistPackage.error());
+        const auto& worklistContract = worklistPackage.value().DynamicContract();
+        Require(worklistContract.schemaVersion ==
+                composition::artifact::FrozenCompositionAbi2DynamicContractSchema &&
+            worklistContract.indirectDispatch.mode ==
+                composition::IndirectExecutionModeV1::VerifiedDispatch &&
+            worklistContract.indirectDispatch.compactWorklistMode ==
+                composition::CompactWorklistModeV1::VerifiedU32 &&
+            worklistContract.indirectDispatch.targetIndexListDynamicSlot == 1,
+            "Verified Compact Worklist契約がSGE4UNI 2.8へ固定されませんでした。");
+
+        dynamic::InvocationInputV1 worklistInput;
+        worklistInput.timelineOrdinal = 0;
+        worklistInput.mode = dynamic::InvocationModeV1::InitialSeed;
+        worklistInput.activeMembers = {1, 4, 7};
+        worklistInput.updatePayloads = {
+            {1, fixture::Bytes(std::array<float, 4>{1.0f, 1.0f, 1.0f, 1.0f})},
+            {4, fixture::Bytes(std::array<float, 4>{4.0f, 4.0f, 4.0f, 1.0f})},
+            {7, fixture::Bytes(std::array<float, 4>{7.0f, 7.0f, 7.0f, 1.0f})}};
+        auto worklistRequest = dynamic::BuildDynamicInvocationRequest(
+            worklistPackage.value(), *epoch, std::move(worklistInput));
+        Require(static_cast<bool>(worklistRequest),
+            "Verified Compact Worklist requestの生成に失敗しました。");
+        auto worklistProposal = dynamic::DynamicInvocationPlannerV1::Plan(
+            worklistRequest.value());
+        Require(worklistProposal.Planned() &&
+            worklistProposal.proposal->decision.compactWorklist.memberIndices ==
+                std::vector<std::uint32_t>({1, 4, 7}) &&
+            worklistProposal.proposal->decision.indirectDispatch.workCount == 3,
+            "exact Transition setがCanonical compact worklistへ導出されませんでした。");
+        auto worklistVerified = dynamic::DynamicInvocationVerifierV1::Verify(
+            worklistRequest.value(), *worklistProposal.proposal);
+        Require(worklistVerified.Accepted(),
+            "Verified Compact Worklist Decisionが独立Verifierに拒否されました。");
+
+        auto tamperedWorklist = *worklistProposal.proposal;
+        tamperedWorklist.decision.compactWorklist.memberIndices = {1, 7, 4};
+        tamperedWorklist.decision.compactWorklist.identity =
+            dynamic::ComputeCompactWorklistIdentityV1(
+                tamperedWorklist.decision.compactWorklist);
+        Require(!dynamic::DynamicInvocationVerifierV1::Verify(
+            worklistRequest.value(), tamperedWorklist).Accepted(),
+            "非Canonical順のcompact worklistが独立Verifierに受理されました。");
+
+        auto frozenWorklist = dynamic::FreezeVerifiedInvocation(
+            *worklistVerified.verified);
+        Require(frozenWorklist &&
+            frozenWorklist.value().CompactWorklist().memberIndices ==
+                std::vector<std::uint32_t>({1, 4, 7}) &&
+            frozenWorklist.value().CompactWorklist().identity ==
+                frozenWorklist.value().Artifact().CompactWorklistIdentityValue(),
+            "Verified Compact WorklistをSGE4INV 1.6へFreezeできませんでした。");
+        auto worklistArtifact = sge4::ReadSectionedArtifact(
+            frozenWorklist.value().FileBytes(), dynamic::FrozenInvocationMagic,
+            dynamic::FrozenInvocationFormatMajor);
+        Require(worklistArtifact &&
+            worklistArtifact.value().FormatMinor() == dynamic::FrozenInvocationFormatMinor &&
+            worklistArtifact.value().Sections().size() ==
+                dynamic::FrozenInvocationSectionKinds.size() &&
+            worklistArtifact.value().FindSection(
+                std::to_underlying(dynamic::FrozenInvocationSectionKind::CompactWorklist)) != nullptr,
+            "SGE4INV 1.6のCompact Worklist Sectionが成立していません。");
+
+        const auto expectedWorklistLeaf =
+            worklistContract.indirectDispatch.targetLeaf;
+        auto worklistSession = sge4::runtime::Session::Create(
+            std::move(worklistPackage.value()), 1);
+        Require(static_cast<bool>(worklistSession) &&
+            static_cast<bool>(worklistSession.value().ValidateForSubmission(
+                frozenWorklist.value())),
+            "Runtime SessionがVerified Compact Worklistを受理できませんでした。");
+        auto preparedWorklist = worklistSession.value().PrepareDynamicExecution(
+            frozenWorklist.value());
+        Require(preparedWorklist && preparedWorklist.value().hasCompactWorklist &&
+            preparedWorklist.value().compactWorklistCount == 3 &&
+            preparedWorklist.value().compactWorklistBinding.leaf ==
+                expectedWorklistLeaf &&
+            preparedWorklist.value().compactWorklistBinding.slot == 1 &&
+            preparedWorklist.value().compactWorklistBinding.denseSlotBytes.size() == 32,
+            "Runtimeが固定長Compact Worklist bindingを準備できませんでした。");
+        const auto readWorklistU32 = [&](std::size_t index) {
+            const auto& bytes = preparedWorklist.value().compactWorklistBinding.denseSlotBytes;
+            const auto offset = index * 4;
+            return std::to_integer<std::uint32_t>(bytes[offset]) |
+                (std::to_integer<std::uint32_t>(bytes[offset + 1]) << 8u) |
+                (std::to_integer<std::uint32_t>(bytes[offset + 2]) << 16u) |
+                (std::to_integer<std::uint32_t>(bytes[offset + 3]) << 24u);
+        };
+        Require(readWorklistU32(0) == 1 && readWorklistU32(1) == 4 &&
+            readWorklistU32(2) == 7 && readWorklistU32(3) == 0,
+            "RuntimeがCompact WorklistをCanonical順またはzero paddingで物質化しませんでした。");
 
         auto textureFirst = tests::BuildLimitedTexture2DUnified();
         auto textureSecond = tests::BuildLimitedTexture2DUnified();
@@ -574,7 +675,7 @@ int main(int argc, char** argv)
             textureFirst.value().FileBytes());
         Require(static_cast<bool>(textureRoundTrip) &&
             textureRoundTrip.value().SemanticDigest() == textureFirst.value().SemanticDigest(),
-            "限定Texture2D FlowのSGE4UNI 2.7 round-tripに失敗しました。");
+            "限定Texture2D FlowのSGE4UNI 2.8 round-tripに失敗しました。");
 
         auto mismatchProducer = fixture::BuildTextureProducerLeaf(4, 4);
         auto mismatchConsumer = fixture::BuildTextureConsumerLeaf(2, 2);
@@ -659,7 +760,7 @@ int main(int argc, char** argv)
             textureUavFirst.value().FileBytes());
         Require(textureUavRoundTrip &&
             textureUavRoundTrip.value().SemanticDigest() == textureUavFirst.value().SemanticDigest(),
-            "限定Texture2D UAV FlowのSGE4UNI 2.7 round-tripに失敗しました。");
+            "限定Texture2D UAV FlowのSGE4UNI 2.8 round-tripに失敗しました。");
 
         auto formatMismatchProducer = fixture::BuildTextureUavProducerLeaf(4, 4);
         auto formatMismatchConsumer = fixture::BuildTextureConsumerLeaf(4, 4);
@@ -701,7 +802,7 @@ int main(int argc, char** argv)
         auto temporalArtifact = composition::ReadFrozenCompositionPackage(
             temporalBytes.value());
         Require(static_cast<bool>(temporalArtifact),
-            "Verified Temporal Buffer SGE4UNI 2.7の読込みに失敗しました。");
+            "Verified Temporal Buffer SGE4UNI 2.8の読込みに失敗しました。");
         const auto& temporalContract =
             temporalArtifact.value().VerifiedComposition().ValidatedContract().Contract();
         const auto temporalResource = std::ranges::find_if(
@@ -771,8 +872,8 @@ int main(int argc, char** argv)
         tests::VerifyAbi2CorruptionRejection(first.value().FileBytes());
 
         std::cout << "New SGE4統合設計試験に合格しました。\n";
-        std::cout << "Frozen Composition ABI：SGE4UNI 2.7\n";
-        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.5\n";
+        std::cout << "Frozen Composition ABI：SGE4UNI 2.8\n";
+        std::cout << "Frozen Dynamic Invocation ABI：SGE4INV 1.6\n";
         std::cout << "Frozen Leaf成果物数：2\n資源接続数：3\n対象要素数：8\n";
         return 0;
     }

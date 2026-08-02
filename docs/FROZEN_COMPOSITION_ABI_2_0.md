@@ -354,7 +354,7 @@ Architecture Gateは少なくとも次を拒否する。
 
 ## 16. 現在の能力範囲
 
-ABI 2.7は現在実証済みのComposition能力だけを表す。
+ABI 2.8は現在実証済みのComposition能力だけを表す。
 
 - Bufferおよび限定Texture2Dのfinite static DAG
 - single writer
@@ -368,6 +368,8 @@ ABI 2.7は現在実証済みのComposition能力だけを表す。
 - RTV producerまたはCompute UAV producerからSRV consumerへのsame-frame handoff
 - fixed-size BufferのTemporalHistory、history depth 1、Previous／Current二世代
 - successful full-submit後だけのatomic temporal rotationと明示的seed Recovery
+- exact Transition setからCanonical uint32 Compact Worklistへのverified写像
+- Dispatch ordinalから任意member IDへの間接実行
 
 Temporal Texture、history depth 2以上、Texture2Dの未実証一般化、Variant Set、Streaming、Partial Recovery、Multiple Adapterの空Sectionは先回りして追加しない。Conditional Regionと限定Texture2D Flowは後続Production amendmentで追加された。
 
@@ -438,3 +440,14 @@ Level 4 Generalization 7によりProduction minorを2.7、Contract DataとVerifi
 Temporal Bufferは同一frame DAG、handoff、signal、waitへ入らない。RuntimeはPrevious／Current二世代を別native Bufferとして物質化し、全Leaf submission成功後だけrole indexを交換する。明示的full-size seedをLoad／Recoveryに要求する。
 
 Dynamic Contract schema 5、SGE4INV 1.5／Manifest schema 6、Leaf Schema 17、Texture2DおよびVerified Indirectの意味は維持する。ABI 1.1 migration corpusはsame-frame Buffer Flowだけを受理し、Temporal Flowを旧形式から推測しない。
+
+
+## Production amendment: SGE4UNI 2.8
+
+Level 4 Generalization 8によりProduction minorを2.8、Dynamic Contractをschema 6へ進めた。Verified Indirect Dispatch Contractは`CompactWorklistMode`と`targetIndexListDynamicSlot`を所有し、`VerifiedU32`では固定長`maxWorkCount * 4`のDynamic Slotを要求する。
+
+対応するFrozen Dynamic Invocationは`SGE4INV 1.6`、Manifest schema 7である。必須かつexecution-affectingなCompact Worklist Section kind 8／schema 1が、target Leaf／Slot、maximum index count、Canonical昇順uint32 member ID列、Compact Worklist identityを保存する。
+
+Dynamic Plannerと独立Verifierはexact Transition setから同じmember ID列を別々に導出する。Runtimeはlistを再構成せず、fixed-size Slotへcopyしてzero paddingし、Seal済みDispatch引数と同時に対象Leafへ渡す。Leaf Schema 17、Contract Data schema 3、Verified Decision Data schema 3、Temporal Bufferの意味は維持する。
+
+ABI 1.1はCompact Worklistを表現しない。MigrationはDynamic Contract schema 6の`CompactWorklistMode=None`へ明示変換し、旧bytesからtarget Slotまたはindex listを推測しない。

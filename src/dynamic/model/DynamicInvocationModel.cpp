@@ -160,6 +160,9 @@ canonical::InvocationIdentity ComputeDynamicInvocationIdentityV1(
     AppendU32(payload, request.indirectDispatchContract.targetLeaf.value);
     AppendU32(payload, request.indirectDispatchContract.targetComputeCommand);
     AppendU32(payload, request.indirectDispatchContract.maxWorkCount);
+    AppendU32(payload, std::to_underlying(
+        request.indirectDispatchContract.compactWorklistMode));
+    AppendU32(payload, request.indirectDispatchContract.targetIndexListDynamicSlot);
     AppendDigest(payload, request.executionPayloadIdentity.Digest());
     AppendU8(payload, request.previousHistory.has_value() ? 1u : 0u);
     if (request.previousHistory.has_value())
@@ -249,6 +252,20 @@ IndirectDispatchIdentity ComputeIndirectDispatchIdentityV1(
         "SGE.V2.Dynamic.IndirectDispatch.V1", payload);
 }
 
+CompactWorklistIdentity ComputeCompactWorklistIdentityV1(
+    const VerifiedCompactWorklistV1& worklist)
+{
+    std::vector<std::byte> payload;
+    AppendU32(payload, std::to_underlying(worklist.mode));
+    AppendU32(payload, worklist.targetLeaf.value);
+    AppendU32(payload, worklist.targetDynamicSlot);
+    AppendU32(payload, worklist.maxIndexCount);
+    AppendU64(payload, static_cast<std::uint64_t>(worklist.memberIndices.size()));
+    for (const auto member : worklist.memberIndices) AppendU32(payload, member);
+    return MakeIdentity<CompactWorklistIdentity>(
+        "SGE.V2.Dynamic.CompactWorklist.V1", payload);
+}
+
 ConditionalExecutionIdentity ComputeConditionalExecutionIdentityV1(
     std::uint32_t compositionLeafCount,
     std::span<const ConditionalRegionSelectionV1> selections,
@@ -283,6 +300,7 @@ DynamicDecisionIdentity ComputeDynamicDecisionIdentityV1(const DynamicDecisionV1
     AppendU32(payload, decision.indirectWorkCount.value());
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
     AppendDigest(payload, decision.indirectDispatch.identity.Digest());
+    AppendDigest(payload, decision.compactWorklist.identity.Digest());
     AppendDigest(payload, decision.conditionalExecutionIdentity.Digest());
     AppendU64(payload, decision.nextHistoryGeneration.value());
     return MakeIdentity<DynamicDecisionIdentity>("SGE.V2.Dynamic.Decision.V1", payload);
@@ -300,6 +318,7 @@ DynamicSealIdentity ComputeDynamicSealIdentityV1(
     AppendDigest(payload, decision.dynamicWriteSetIdentity.Digest());
     AppendDigest(payload, request.executionPayloadIdentity.Digest());
     AppendDigest(payload, decision.indirectDispatch.identity.Digest());
+    AppendDigest(payload, decision.compactWorklist.identity.Digest());
     AppendDigest(payload, decision.conditionalExecutionIdentity.Digest());
     return MakeIdentity<DynamicSealIdentity>("SGE.V2.Dynamic.VerificationSeal.V1", payload);
 }
@@ -333,7 +352,8 @@ FrozenDynamicInvocationIdentity ComputeFrozenDynamicInvocationIdentityV1(
     canonical::HistoryValidityIdentity nextHistoryIdentity,
     DynamicWriteSetIdentity dynamicWriteSetIdentity,
     DynamicExecutionPayloadIdentity executionPayloadIdentity,
-    IndirectDispatchIdentity indirectDispatchIdentity)
+    IndirectDispatchIdentity indirectDispatchIdentity,
+    CompactWorklistIdentity compactWorklistIdentity)
 {
     std::vector<std::byte> payload;
     AppendDigest(payload, compositionIdentity.Digest());
@@ -344,6 +364,7 @@ FrozenDynamicInvocationIdentity ComputeFrozenDynamicInvocationIdentityV1(
     AppendDigest(payload, dynamicWriteSetIdentity.Digest());
     AppendDigest(payload, executionPayloadIdentity.Digest());
     AppendDigest(payload, indirectDispatchIdentity.Digest());
+    AppendDigest(payload, compactWorklistIdentity.Digest());
     return MakeIdentity<FrozenDynamicInvocationIdentity>("SGE.V2.Dynamic.FrozenInvocation.V1", payload);
 }
 }

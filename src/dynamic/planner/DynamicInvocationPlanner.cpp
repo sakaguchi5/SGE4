@@ -119,7 +119,9 @@ DynamicVerificationErrorV1 BuildVerifiedIndirectDispatch(
     {
         if (contract.targetLeaf.IsValid() ||
             contract.targetComputeCommand != package::InvalidIndex ||
-            contract.maxWorkCount != 0)
+            contract.maxWorkCount != 0 ||
+            contract.compactWorklistMode != composition::CompactWorklistModeV1::None ||
+            contract.targetIndexListDynamicSlot != package::InvalidIndex)
             return DynamicVerificationErrorV1::IndirectDispatchContractMismatch;
         result.workCount = 0;
         result.threadGroupCountX = 0;
@@ -138,6 +140,41 @@ DynamicVerificationErrorV1 BuildVerifiedIndirectDispatch(
         return DynamicVerificationErrorV1::IndirectDispatchWorkCountMismatch;
 
     result.identity = ComputeIndirectDispatchIdentityV1(result);
+    return DynamicVerificationErrorV1::None;
+}
+
+DynamicVerificationErrorV1 BuildVerifiedCompactWorklist(
+    const DynamicInvocationRequestV1& request,
+    std::span<const std::uint32_t> transition,
+    VerifiedCompactWorklistV1& result)
+{
+    const auto& contract = request.indirectDispatchContract;
+    result.mode = contract.compactWorklistMode;
+    result.targetLeaf = contract.targetLeaf;
+    result.targetDynamicSlot = contract.targetIndexListDynamicSlot;
+    result.maxIndexCount = contract.maxWorkCount;
+
+    if (contract.compactWorklistMode == composition::CompactWorklistModeV1::None)
+    {
+        if (contract.targetIndexListDynamicSlot != package::InvalidIndex)
+            return DynamicVerificationErrorV1::CompactWorklistContractMismatch;
+        result.targetLeaf = composition::LeafPackageId{};
+        result.maxIndexCount = 0;
+        result.identity = ComputeCompactWorklistIdentityV1(result);
+        return DynamicVerificationErrorV1::None;
+    }
+    if (contract.compactWorklistMode != composition::CompactWorklistModeV1::VerifiedU32 ||
+        contract.mode != composition::IndirectExecutionModeV1::VerifiedDispatch ||
+        request.executionMode != composition::DynamicExecutionModeV1::VerifiedDenseSlot ||
+        !contract.targetLeaf.IsValid() ||
+        contract.targetLeaf.value >= request.compositionLeafCount ||
+        contract.targetIndexListDynamicSlot == package::InvalidIndex ||
+        contract.maxWorkCount == 0 || contract.maxWorkCount != request.universe.value() ||
+        transition.size() > contract.maxWorkCount)
+        return DynamicVerificationErrorV1::CompactWorklistContractMismatch;
+
+    result.memberIndices.assign(transition.begin(), transition.end());
+    result.identity = ComputeCompactWorklistIdentityV1(result);
     return DynamicVerificationErrorV1::None;
 }
 
@@ -403,6 +440,11 @@ DynamicPlanningResultV1 DynamicInvocationPlannerV1::Plan(const DynamicInvocation
         request, static_cast<std::uint32_t>(transition.size()), indirectDispatch);
     if (indirectError != DynamicVerificationErrorV1::None)
         return Failure(indirectError);
+    VerifiedCompactWorklistV1 compactWorklist;
+    const auto worklistError = BuildVerifiedCompactWorklist(
+        request, transition, compactWorklist);
+    if (worklistError != DynamicVerificationErrorV1::None)
+        return Failure(worklistError);
     auto conditional = BuildConditionalExecution(
         request, activeIndices, activation, deactivation, update, retain, transition);
 
@@ -411,7 +453,8 @@ DynamicPlanningResultV1 DynamicInvocationPlannerV1::Plan(const DynamicInvocation
         std::move(deactivationSet), std::move(updateSet), std::move(retainSet), std::move(transitionSet),
         generationIdentity, std::move(generations), recordIdentity, std::move(records),
         canonical::TransitionCount(static_cast<std::uint32_t>(transition.size())), writeSetIdentity,
-        std::move(indirectDispatch), std::move(conditional.identity), std::move(conditional.selections),
+        std::move(indirectDispatch), std::move(compactWorklist),
+        std::move(conditional.identity), std::move(conditional.selections),
         std::move(conditional.enabledLeaves), nextHistoryGeneration};
     decision.identity = ComputeDynamicDecisionIdentityV1(decision);
     return {DynamicVerificationErrorV1::None, DynamicPlannerProposalV1{std::move(decision)}};

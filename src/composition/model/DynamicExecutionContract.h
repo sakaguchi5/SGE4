@@ -45,12 +45,24 @@ enum class IndirectExecutionModeV1 : std::uint32_t
     VerifiedDispatch = 1
 };
 
+// Generalization 8 adds a compact, canonical uint32 member-index list to the
+// already verified DispatchIndirect route.  The list is derived from the exact
+// Transition set; Runtime may materialize it but may not reorder, filter or
+// infer member IDs.
+enum class CompactWorklistModeV1 : std::uint32_t
+{
+    None = 0,
+    VerifiedU32 = 1
+};
+
 struct VerifiedIndirectDispatchContractV1 final
 {
     IndirectExecutionModeV1 mode = IndirectExecutionModeV1::None;
     LeafPackageId targetLeaf;
     std::uint32_t targetComputeCommand = package::InvalidIndex;
     std::uint32_t maxWorkCount = 0;
+    CompactWorklistModeV1 compactWorklistMode = CompactWorklistModeV1::None;
+    std::uint32_t targetIndexListDynamicSlot = package::InvalidIndex;
 };
 
 [[nodiscard]] inline VerifiedIndirectDispatchContractV1 MakeVerifiedIndirectDispatchContractV1(
@@ -59,7 +71,20 @@ struct VerifiedIndirectDispatchContractV1 final
     std::uint32_t maxWorkCount)
 {
     return {IndirectExecutionModeV1::VerifiedDispatch, targetLeaf,
-        targetComputeCommand, maxWorkCount};
+        targetComputeCommand, maxWorkCount,
+        CompactWorklistModeV1::None, package::InvalidIndex};
+}
+
+[[nodiscard]] inline VerifiedIndirectDispatchContractV1
+MakeVerifiedCompactWorklistDispatchContractV1(
+    LeafPackageId targetLeaf,
+    std::uint32_t targetComputeCommand,
+    std::uint32_t maxWorkCount,
+    std::uint32_t targetIndexListDynamicSlot)
+{
+    return {IndirectExecutionModeV1::VerifiedDispatch, targetLeaf,
+        targetComputeCommand, maxWorkCount,
+        CompactWorklistModeV1::VerifiedU32, targetIndexListDynamicSlot};
 }
 
 enum class ConditionalPredicateKindV1 : std::uint32_t
@@ -87,7 +112,7 @@ struct ConditionalRegionV1 final
 // or infer them.
 struct DynamicContractV1 final
 {
-    std::uint32_t schemaVersion = 5;
+    std::uint32_t schemaVersion = 6;
     std::uint32_t universeCount = 0;
     DynamicExecutionModeV1 executionMode = DynamicExecutionModeV1::AuthorityOnly;
     std::uint32_t canonicalMemberBytes = 0;
@@ -111,7 +136,7 @@ struct DynamicContractV1 final
     std::vector<ConditionalRegionV1> conditionalRegions = {},
     VerifiedIndirectDispatchContractV1 indirectDispatch = {})
 {
-    return {5, universeCount, DynamicExecutionModeV1::AuthorityOnly,
+    return {6, universeCount, DynamicExecutionModeV1::AuthorityOnly,
         0, {}, std::move(conditionalRegions), indirectDispatch};
 }
 
@@ -126,7 +151,7 @@ struct DynamicContractV1 final
     std::vector<DynamicExecutionRouteV1> routes;
     routes.push_back(MakeDynamicExecutionRouteV1(
         targetLeaf, targetDynamicSlot, 0, memberBytes));
-    return {5, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
+    return {6, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
         memberBytes, std::move(routes), std::move(conditionalRegions),
         indirectDispatch};
 }
@@ -138,7 +163,7 @@ struct DynamicContractV1 final
     std::vector<ConditionalRegionV1> conditionalRegions = {},
     VerifiedIndirectDispatchContractV1 indirectDispatch = {})
 {
-    return {5, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
+    return {6, universeCount, DynamicExecutionModeV1::VerifiedDenseSlot,
         canonicalMemberBytes, std::move(routes), std::move(conditionalRegions),
         indirectDispatch};
 }

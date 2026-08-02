@@ -47,6 +47,7 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteBytes(frozen.ExecutionPayloadIdentity().Digest());
     writer.WriteBytes(verified.Decision().conditionalExecutionIdentity.Digest());
     writer.WriteBytes(verified.Decision().indirectDispatch.identity.Digest());
+    writer.WriteBytes(verified.Decision().compactWorklist.identity.Digest());
     writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().conditionalSelections.size()));
     writer.WriteU32(static_cast<std::uint32_t>(verified.Decision().enabledLeaves.size()));
     writer.WriteU32(std::to_underlying(verified.Request().executionMode));
@@ -56,6 +57,10 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteU32(verified.Request().indirectDispatchContract.targetLeaf.value);
     writer.WriteU32(verified.Request().indirectDispatchContract.targetComputeCommand);
     writer.WriteU32(verified.Request().indirectDispatchContract.maxWorkCount);
+    writer.WriteU32(std::to_underlying(
+        verified.Request().indirectDispatchContract.compactWorklistMode));
+    writer.WriteU32(
+        verified.Request().indirectDispatchContract.targetIndexListDynamicSlot);
     writer.WriteBytes(frozen.NextHistory().Descriptor().identity.Digest());
     writer.WriteU8(frozen.PreviousHistoryIdentity().has_value() ? 1u : 0u);
     writer.WriteZeroes(7);
@@ -151,6 +156,21 @@ void WriteSet(BinaryWriter& writer, const ExactIndexSetV1& set)
     writer.WriteU32(dispatch.threadGroupCountY);
     writer.WriteU32(dispatch.threadGroupCountZ);
     writer.WriteBytes(dispatch.identity.Digest());
+    return std::move(writer).Take();
+}
+
+[[nodiscard]] std::vector<std::byte> BuildCompactWorklistBytes(
+    const VerifiedCompactWorklistV1& worklist)
+{
+    BinaryWriter writer;
+    writer.WriteU32(1);
+    writer.WriteU32(std::to_underlying(worklist.mode));
+    writer.WriteU32(worklist.targetLeaf.value);
+    writer.WriteU32(worklist.targetDynamicSlot);
+    writer.WriteU32(worklist.maxIndexCount);
+    writer.WriteCountU32(worklist.memberIndices.size());
+    writer.WriteBytes(worklist.identity.Digest());
+    for (const auto member : worklist.memberIndices) writer.WriteU32(member);
     return std::move(writer).Take();
 }
 
@@ -261,6 +281,10 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
         static_cast<std::uint16_t>(SectionFlags::Required) |
             static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
         8, BuildIndirectDispatchBytes(verified.Decision().indirectDispatch)});
+    sections.push_back({static_cast<std::uint32_t>(FrozenInvocationSectionKind::CompactWorklist), 1,
+        static_cast<std::uint16_t>(SectionFlags::Required) |
+            static_cast<std::uint16_t>(SectionFlags::ExecutionAffecting),
+        8, BuildCompactWorklistBytes(verified.Decision().compactWorklist)});
 
     auto bytes = WriteSectionedArtifact(
         FrozenInvocationMagic, FrozenInvocationFormatMajor, FrozenInvocationFormatMinor,
@@ -275,6 +299,7 @@ base::Expected<FrozenDynamicInvocationPackage, Error> FreezeVerifiedInvocation(
     return base::Success<FrozenDynamicInvocationPackage, Error>(
         FrozenDynamicInvocationPackage(
             std::move(bytes).value(), std::move(frozen), verified.Decision(),
-            std::move(executionPayload), verified.Decision().indirectDispatch));
+            std::move(executionPayload), verified.Decision().indirectDispatch,
+            verified.Decision().compactWorklist));
 }
 }

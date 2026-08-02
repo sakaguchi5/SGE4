@@ -105,8 +105,11 @@ base::Expected<Submission, Error> Submit(
     std::size_t enabledRouteCount = 0;
     for (const auto& binding : prepared.value().bindings)
         if (binding.enabled) ++enabledRouteCount;
+    const auto enabledWorklistCount =
+        prepared.value().hasCompactWorklist &&
+        prepared.value().compactWorklistBinding.enabled ? 1u : 0u;
     nativeInvocation.dynamicData.reserve(
-        frame.leafDynamicData.size() + enabledRouteCount);
+        frame.leafDynamicData.size() + enabledRouteCount + enabledWorklistCount);
     for (auto& item : frame.leafDynamicData)
     {
         const auto owned = std::any_of(
@@ -114,15 +117,24 @@ base::Expected<Submission, Error> Submit(
             [&](const auto& binding) {
                 return item.leaf == binding.leaf && item.slot == binding.slot;
             });
-        if (owned)
+        const auto worklistOwned = prepared.value().hasCompactWorklist &&
+            item.leaf == prepared.value().compactWorklistBinding.leaf &&
+            item.slot == prepared.value().compactWorklistBinding.slot;
+        if (owned || worklistOwned)
             return Fail<Submission>("D3D12Runtime/DynamicExecution",
-                "Verified Dynamic routeをFrameInputから上書きできません。");
+                "Verified Dynamic routeまたはcompact worklistをFrameInputから上書きできません。");
         nativeInvocation.dynamicData.push_back({item.leaf, item.slot, std::move(item.bytes)});
     }
     for (const auto& binding : prepared.value().bindings)
         if (binding.enabled)
             nativeInvocation.dynamicData.push_back({
                 binding.leaf, binding.slot, binding.denseSlotBytes});
+    if (prepared.value().hasCompactWorklist &&
+        prepared.value().compactWorklistBinding.enabled)
+        nativeInvocation.dynamicData.push_back({
+            prepared.value().compactWorklistBinding.leaf,
+            prepared.value().compactWorklistBinding.slot,
+            prepared.value().compactWorklistBinding.denseSlotBytes});
     if (prepared.value().hasIndirectDispatch)
         nativeInvocation.indirectDispatches.push_back({
             prepared.value().indirectLeaf,
@@ -151,12 +163,18 @@ base::Expected<Submission, Error> Submit(
     const auto verifiedConditionalRegionCount = prepared.value().conditionalRegionCount;
     const auto verifiedIndirectDispatchCount = prepared.value().hasIndirectDispatch ? 1u : 0u;
     const auto verifiedIndirectWorkCount = prepared.value().indirectWorkCount;
+    const auto verifiedCompactWorklistBindingCount =
+        prepared.value().hasCompactWorklist ? 1u : 0u;
+    const auto verifiedCompactWorklistIndexCount =
+        prepared.value().compactWorklistCount;
     loaded.impl_->session.CommitSubmission(invocation, std::move(prepared).value());
     Submission result{std::move(invocation), nativeSubmission.value().deviceEpoch,
         static_cast<std::uint32_t>(nativeSubmission.value().leaves.size()),
         verifiedTransitionCount, verifiedDynamicRouteCount,
         verifiedDynamicByteCount, verifiedConditionalRegionCount,
-        verifiedIndirectDispatchCount, verifiedIndirectWorkCount};
+        verifiedIndirectDispatchCount, verifiedIndirectWorkCount,
+        verifiedCompactWorklistBindingCount,
+        verifiedCompactWorklistIndexCount};
     return base::Success<Submission, Error>(std::move(result));
 }
 

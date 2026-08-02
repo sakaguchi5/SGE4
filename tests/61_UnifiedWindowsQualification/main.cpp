@@ -55,6 +55,26 @@ void Require(bool condition, const char* message)
     return true;
 }
 
+
+[[nodiscard]] bool EqualsSparseDense(
+    std::span<const std::byte> bytes,
+    const std::vector<std::array<float, 4>>& expected,
+    float tolerance = 0.0001f)
+{
+    if (bytes.size() != expected.size() * sizeof(std::array<float, 4>))
+        return false;
+    for (std::size_t member = 0; member < expected.size(); ++member)
+    {
+        std::array<float, 4> actual{};
+        std::memcpy(actual.data(),
+            bytes.data() + member * sizeof(actual), sizeof(actual));
+        for (std::size_t component = 0; component < actual.size(); ++component)
+            if (std::abs(actual[component] - expected[member][component]) > tolerance)
+                return false;
+    }
+    return true;
+}
+
 [[nodiscard]] bool EqualsIndirect(
     std::span<const std::byte> bytes,
     std::uint32_t universe,
@@ -119,6 +139,154 @@ void Require(bool condition, const char* message)
                 return false;
     }
     return true;
+}
+
+
+void VerifyCompactSparseWorklistQualification()
+{
+    constexpr std::uint32_t Universe = 8;
+    const std::array<float, 4> zero{};
+    const std::array<float, 4> valueOne{1, 11, 21, 1};
+    const std::array<float, 4> valueFour{4, 14, 24, 1};
+    const std::array<float, 4> valueSeven{7, 17, 27, 1};
+    const std::array<float, 4> valueZeroNext{100, 110, 120, 1};
+    const std::array<float, 4> valueThreeNext{103, 113, 123, 1};
+    const std::array<float, 4> valueSevenNext{107, 117, 127, 1};
+    const std::array<float, 4> valueTwoRecovery{202, 212, 222, 1};
+    const std::array<float, 4> valueSixRecovery{206, 216, 226, 1};
+
+    auto package = tests::BuildVerifiedCompactWorklistUnified(Universe);
+    if (!package)
+        throw std::runtime_error(
+            "Verified Compact Sparse Worklist Compositionの生成に失敗しました：" +
+            package.error());
+    const auto outputId = fixture::FindResourceFlow(
+        package.value().FileBytes(), "unified/worklist/output");
+    Require(outputId.IsValid(),
+        "Verified Compact Sparse Worklist outputの解決に失敗しました。");
+
+    sge4::d3d12::Executor backend({true, false, false});
+    auto loaded = sge4::d3d12::LoadComposition(package.value().FileBytes(), backend);
+    Require(static_cast<bool>(loaded),
+        "Verified Compact Sparse Worklist CompositionのLoadに失敗しました。");
+
+    auto planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 seed;
+    seed.timelineOrdinal = 0;
+    seed.mode = planning.requiredMode;
+    seed.activeMembers = {1, 4, 7};
+    seed.updatePayloads = {
+        UpdatePayload(1, valueOne),
+        UpdatePayload(4, valueFour),
+        UpdatePayload(7, valueSeven)};
+    auto frozenSeed = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(seed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenSeed),
+        "Verified Compact Sparse Worklist InitialSeedの生成に失敗しました。");
+    auto submittedSeed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenSeed).value(), {0, {}});
+    if (!submittedSeed)
+        throw std::runtime_error(
+            "Verified Compact Sparse Worklist InitialSeed Submitに失敗しました：" +
+            submittedSeed.error().stage + "：" + submittedSeed.error().message);
+    Require(submittedSeed.value().verifiedIndirectDispatchCount == 1 &&
+        submittedSeed.value().verifiedIndirectWorkCount == 3 &&
+        submittedSeed.value().verifiedCompactWorklistBindingCount == 1 &&
+        submittedSeed.value().verifiedCompactWorklistIndexCount == 3,
+        "非prefix exact set {1,4,7}がCompact WorklistとDispatchIndirectへ接続されませんでした。");
+
+    std::vector<std::array<float, 4>> expected(Universe, zero);
+    expected[1] = valueOne;
+    expected[4] = valueFour;
+    expected[7] = valueSeven;
+    auto read = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(read && EqualsSparseDense(read.value().bytes, expected),
+        "非prefix Compact Worklist InitialSeedのGPU観測結果が一致しません。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 next;
+    next.timelineOrdinal = 1;
+    next.mode = planning.requiredMode;
+    next.activeMembers = {0, 3, 7};
+    next.modifiedSurvivors = {7};
+    next.updatePayloads = {
+        UpdatePayload(0, valueZeroNext),
+        UpdatePayload(3, valueThreeNext),
+        UpdatePayload(7, valueSevenNext)};
+    auto frozenNext = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(next),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenNext),
+        "Verified Compact Sparse Worklist ContinueHistoryの生成に失敗しました。");
+    auto submittedNext = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenNext).value(), {1, {}});
+    Require(submittedNext && submittedNext.value().verifiedTransitionCount == 5 &&
+        submittedNext.value().verifiedIndirectWorkCount == 5 &&
+        submittedNext.value().verifiedCompactWorklistIndexCount == 5,
+        "Activation／Deactivation／Updateの非prefix worklistが一括実行されませんでした。");
+
+    expected.assign(Universe, zero);
+    expected[0] = valueZeroNext;
+    expected[3] = valueThreeNext;
+    expected[7] = valueSevenNext;
+    read = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(read && EqualsSparseDense(read.value().bytes, expected),
+        "Compact WorklistのUpdate／Clear GPU観測結果が一致しません。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 collision;
+    collision.timelineOrdinal = 2;
+    collision.mode = planning.requiredMode;
+    collision.activeMembers = {0, 3, 7};
+    collision.modifiedSurvivors = {7};
+    collision.updatePayloads = {UpdatePayload(7, valueSevenNext)};
+    auto frozenCollision = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(collision),
+        planning.previousHistory);
+    Require(static_cast<bool>(frozenCollision),
+        "Compact Worklist collision Invocationの生成に失敗しました。");
+    sge4::d3d12::FrameInput competing;
+    competing.frameNumber = 2;
+    const auto& indirect = loaded.value().Package().DynamicContract().indirectDispatch;
+    competing.leafDynamicData.push_back({indirect.targetLeaf,
+        indirect.targetIndexListDynamicSlot,
+        std::vector<std::byte>(Universe * sizeof(std::uint32_t), std::byte{0})});
+    Require(!sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenCollision).value(), std::move(competing)),
+        "Frozen Compact Worklist SlotへのCaller上書きが受理されました。");
+
+    auto recovery = sge4::d3d12::Recover(
+        loaded.value(), sge4::runtime::DeviceRecoveryMode::ControlledRebuild);
+    Require(recovery && recovery.value().newEpoch > recovery.value().previousEpoch,
+        "Verified Compact Sparse Worklist Compositionの制御回復に失敗しました。");
+    Require(static_cast<bool>(sge4::d3d12::AcknowledgeExternalRebind(loaded.value())),
+        "Verified Compact Sparse Worklist Compositionの外部再bind確認に失敗しました。");
+
+    planning = loaded.value().PlanningContext();
+    sge4::dynamic::InvocationInputV1 recoverySeed;
+    recoverySeed.timelineOrdinal = 2;
+    recoverySeed.mode = planning.requiredMode;
+    recoverySeed.activeMembers = {2, 6};
+    recoverySeed.updatePayloads = {
+        UpdatePayload(2, valueTwoRecovery),
+        UpdatePayload(6, valueSixRecovery)};
+    auto frozenRecovery = tests::BuildFrozenInvocation(
+        loaded.value().Package(), planning.deviceEpoch, std::move(recoverySeed),
+        std::move(planning.previousHistory));
+    Require(static_cast<bool>(frozenRecovery),
+        "Verified Compact Sparse Worklist RecoverySeedの生成に失敗しました。");
+    auto resumed = sge4::d3d12::Submit(
+        loaded.value(), std::move(frozenRecovery).value(), {2, {}});
+    Require(resumed && resumed.value().verifiedIndirectWorkCount == 2 &&
+        resumed.value().verifiedCompactWorklistIndexCount == 2,
+        "RecoverySeedの非prefix Compact Worklistが再構築されませんでした。");
+    expected.assign(Universe, zero);
+    expected[2] = valueTwoRecovery;
+    expected[6] = valueSixRecovery;
+    read = sge4::d3d12::ReadBuffer(loaded.value(), outputId);
+    Require(read && EqualsSparseDense(read.value().bytes, expected),
+        "Recovery後のCompact Worklist GPU観測結果が一致しません。");
 }
 
 void VerifyIndirectWorkQualification()
@@ -854,6 +1022,7 @@ int main(int argc, char** argv)
     try
     {
         const bool actualRemoval = argc > 1 && std::string_view(argv[1]) == "--actual-removal";
+        VerifyCompactSparseWorklistQualification();
         VerifyIndirectWorkQualification();
         VerifyLimitedTexture2DUavFlowQualification();
         VerifyLimitedTexture2DFlowQualification();

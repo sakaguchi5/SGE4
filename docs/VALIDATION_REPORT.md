@@ -1,13 +1,14 @@
-# Validation Addendum — Level 4 Generalization 2
+# Current Validation Snapshot — Level 4 Generalization 8
 
 ## Production formats
 
 ```text
-Frozen Composition: SGE4UNI 2.7
-Dynamic Contract: schema 3
-Frozen Dynamic Invocation: SGE4INV 1.5
-Invocation Manifest: schema 4
-Execution Payload Section: schema 1
+Frozen Composition: SGE4UNI 2.8
+Dynamic Contract: schema 6
+Frozen Dynamic Invocation: SGE4INV 1.6
+Invocation Manifest: schema 7
+Execution Payload Section: schema 2
+Compact Worklist Section: schema 1
 ```
 
 ## Implemented evidence
@@ -22,7 +23,7 @@ Execution Payload Section: schema 1
 
 ## Validation completed in this environment
 
-- `tools/static_audit.py`: passed; 18 projects, 15 product projects, 47 active translation units, 40 carried invariants.
+- `tools/static_audit.py`: passed; 19 projects, 15 product projects, 47 active translation units, 40 carried invariants.
 - C++23 strict syntax checks passed for all modified portable Product sources.
 - C++23 strict syntax checks passed for Architecture tests, ABI corruption tests, D3D12 Runtime facade, and Windows qualification source.
 - Project／filters ownership for the new `DynamicExecutionContract.h` passed.
@@ -43,7 +44,7 @@ The patch has not been claimed as MSVC／HLSL／WARP qualified in this environme
 run_new_sge4_full_gate.bat
 ```
 
-The updated Windows qualification additionally checks InitialSeed, ContinueHistory Update／Retain／Clear, zero-transition retention, caller collision rejection, payload omission rejection, and RecoverySeed rematerialization against GPU readback.
+The updated Windows qualification additionally checks arbitrary sparse Compact Worklist InitialSeed `{1,4,7}`, Activation／Deactivation／Modified worklist `{0,1,3,4,7}`, caller collision rejection, and RecoverySeed `{2,6}` against GPU readback.
 
 ---
 
@@ -449,3 +450,22 @@ Windowsで最終確認する事項:
 ```bat
 run_sge4_level5_vertical_experiment.bat
 ```
+
+
+## Level 4 Generalization 8 — Verified Compact Sparse Worklist
+
+- Production ABIを`SGE4UNI 2.8`、Dynamic Contract schema 6へ更新した。
+- Frozen Dynamic Invocationを`SGE4INV 1.6`、Manifest schema 7へ更新し、必須Compact Worklist Section kind 8を追加した。
+- exact Transition setからCanonical昇順uint32 member ID列をPlannerと独立Verifierが別々に導出する。
+- Runtimeはfixed-size index-list Dynamic SlotへSeal済みlistをcopyし、残余をzero paddingする。sort、deduplicate、clamp、member推測は行わない。
+- Architecture Gateは`{1,4,7}`の非prefix list、非Canonical改竄拒否、identity、Slot二重所有拒否、zero paddingを検査する。
+- Windows GateはInitialSeed、Activation／Deactivation／Modified、Caller collision、Controlled Recovery後の`{2,6}`再構築を実GPU経路で検査する。
+- Portable C++23厳格構文検査、ABI 2.8 authority-only direct／migration／round-trip／corruption corpus、Manifest監査を実施した。MSVC、HLSL、WARP、Actual Device removalの最終確定はWindows Full Gateに委ねる。
+
+## Generalization 8 fix — None Worklist Verifier Regression
+
+Windows統合設計試験で、Compact Worklist契約を持たない既存Invocationが非空Transition setを持つ場合に、独立Verifierが誤って`memberIndices == transitionSet`を要求する回帰を確認した。
+
+`CompactWorklistModeV1::VerifiedU32`の場合だけexact Transition setとのmember列一致を要求し、`None`の場合はExpected None Worklistとのshape／identity照合だけを行うよう修正した。
+
+Portable C++23 Debug／Release相当回帰Harnessで、Authority-only `{0,2,7}`とVerifiedU32 `{1,4,7}`の双方が通過することを確認した。ABI、Planner、Runtime、資格Fixtureの意味は変更していない。

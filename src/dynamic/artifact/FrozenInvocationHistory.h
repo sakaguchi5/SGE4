@@ -25,6 +25,10 @@ public:
     {
         return indirectDispatchIdentity_;
     }
+    [[nodiscard]] const CompactWorklistIdentity& CompactWorklistIdentityValue() const noexcept
+    {
+        return compactWorklistIdentity_;
+    }
     [[nodiscard]] canonical::TransitionCount IndirectWorkCount() const noexcept { return indirectWorkCount_; }
     [[nodiscard]] InvocationModeV1 Mode() const noexcept { return mode_; }
     [[nodiscard]] const std::optional<canonical::HistoryValidityIdentity>& PreviousHistoryIdentity() const noexcept
@@ -45,6 +49,7 @@ private:
         DynamicWriteSetIdentity dynamicWriteSetIdentity,
         DynamicExecutionPayloadIdentity executionPayloadIdentity,
         IndirectDispatchIdentity indirectDispatchIdentity,
+        CompactWorklistIdentity compactWorklistIdentity,
         canonical::TransitionCount indirectWorkCount,
         InvocationModeV1 mode,
         std::optional<canonical::HistoryValidityIdentity> previousHistoryIdentity,
@@ -54,6 +59,7 @@ private:
           sealIdentity_(std::move(sealIdentity)), dynamicWriteSetIdentity_(std::move(dynamicWriteSetIdentity)),
           executionPayloadIdentity_(std::move(executionPayloadIdentity)),
           indirectDispatchIdentity_(std::move(indirectDispatchIdentity)),
+          compactWorklistIdentity_(std::move(compactWorklistIdentity)),
           indirectWorkCount_(indirectWorkCount), mode_(mode),
           previousHistoryIdentity_(std::move(previousHistoryIdentity)), nextHistory_(std::move(nextHistory)) {}
 
@@ -65,6 +71,7 @@ private:
     DynamicWriteSetIdentity dynamicWriteSetIdentity_;
     DynamicExecutionPayloadIdentity executionPayloadIdentity_;
     IndirectDispatchIdentity indirectDispatchIdentity_;
+    CompactWorklistIdentity compactWorklistIdentity_;
     canonical::TransitionCount indirectWorkCount_;
     InvocationModeV1 mode_;
     std::optional<canonical::HistoryValidityIdentity> previousHistoryIdentity_;

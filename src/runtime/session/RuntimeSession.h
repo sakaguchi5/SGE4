@@ -39,6 +39,9 @@ struct PreparedDynamicExecutionV1 final
     std::uint32_t indirectThreadGroupCountX = 0;
     std::uint32_t indirectThreadGroupCountY = 1;
     std::uint32_t indirectThreadGroupCountZ = 1;
+    bool hasCompactWorklist = false;
+    PreparedDynamicBindingV1 compactWorklistBinding;
+    std::uint32_t compactWorklistCount = 0;
     std::uint32_t verifiedTransitionCount = 0;
     std::uint32_t appliedTransitionCount = 0;
     std::uint32_t conditionalRegionCount = 0;

@@ -267,8 +267,10 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     payload.WriteU32(dynamicContract.indirectDispatch.targetLeaf.value);
     payload.WriteU32(dynamicContract.indirectDispatch.targetComputeCommand);
     payload.WriteU32(dynamicContract.indirectDispatch.maxWorkCount);
+    payload.WriteU32(std::to_underlying(dynamicContract.indirectDispatch.compactWorklistMode));
+    payload.WriteU32(dynamicContract.indirectDispatch.targetIndexListDynamicSlot);
     return core::SemanticIdentity::FromDigest(
-        ComputeDomainDigest("sge4.composition.dynamic-semantic", 5, payload.Bytes()));
+        ComputeDomainDigest("sge4.composition.dynamic-semantic", 6, payload.Bytes()));
 }
 
 [[nodiscard]] std::vector<std::byte> BuildAuthorityLedger(
@@ -305,6 +307,8 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     writer.WriteU32(dynamicContract.indirectDispatch.targetLeaf.value);
     writer.WriteU32(dynamicContract.indirectDispatch.targetComputeCommand);
     writer.WriteU32(dynamicContract.indirectDispatch.maxWorkCount);
+    writer.WriteU32(std::to_underlying(dynamicContract.indirectDispatch.compactWorklistMode));
+    writer.WriteU32(dynamicContract.indirectDispatch.targetIndexListDynamicSlot);
     writer.WriteBytes(compositionIdentity.Digest());
     writer.WriteBytes(semanticIdentity.Digest());
     return std::move(writer).Take();
@@ -333,7 +337,7 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     const DynamicContractV1& dynamicContract)
 {
     const auto& contract = validated.Contract();
-    if (dynamicContract.schemaVersion != 5 || dynamicContract.universeCount == 0)
+    if (dynamicContract.schemaVersion != 6 || dynamicContract.universeCount == 0)
         return Fail<void>(
             "CompositionToolchain", "Dynamic Contractが検証または実行の契約に違反しています。");
 
@@ -411,7 +415,9 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     {
         if (indirect.targetLeaf.IsValid() ||
             indirect.targetComputeCommand != package::InvalidIndex ||
-            indirect.maxWorkCount != 0)
+            indirect.maxWorkCount != 0 ||
+            indirect.compactWorklistMode != CompactWorklistModeV1::None ||
+            indirect.targetIndexListDynamicSlot != package::InvalidIndex)
             return Fail<void>("CompositionToolchain/IndirectDispatch",
                 "Indirect無効契約へrouteが混入しています。");
         return base::Success<void, Error>();
@@ -470,6 +476,35 @@ ReadConditionalRegions(BinaryReader& reader, std::uint32_t leafCount)
     if (executeCount != 1)
         return Fail<void>("CompositionToolchain/IndirectDispatch",
             "Indirect target Compute CommandはFrame Operation内で一度だけ実行される必要があります。");
+
+    if (indirect.compactWorklistMode == CompactWorklistModeV1::None)
+    {
+        if (indirect.targetIndexListDynamicSlot != package::InvalidIndex)
+            return Fail<void>("CompositionToolchain/CompactWorklist",
+                "Compact worklistなしの契約へDynamic Slotが混入しています。");
+        return base::Success<void, Error>();
+    }
+    if (indirect.compactWorklistMode != CompactWorklistModeV1::VerifiedU32 ||
+        dynamicContract.executionMode != DynamicExecutionModeV1::VerifiedDenseSlot ||
+        indirect.targetIndexListDynamicSlot == package::InvalidIndex ||
+        indirect.targetIndexListDynamicSlot >= indirectView.value().DynamicSlots().size())
+        return Fail<void>("CompositionToolchain/CompactWorklist",
+            "Verified compact worklist契約が無効です。");
+
+    const auto& worklistSlot =
+        indirectView.value().DynamicSlots()[indirect.targetIndexListDynamicSlot];
+    const auto requiredWorklistBytes =
+        static_cast<std::uint64_t>(indirect.maxWorkCount) * sizeof(std::uint32_t);
+    if (worklistSlot.requiredBytes != requiredWorklistBytes)
+        return Fail<void>("CompositionToolchain/CompactWorklist",
+            "Compact worklist Dynamic SlotのrequiredBytesが固定上限契約と一致しません。");
+    for (const auto& route : dynamicContract.executionRoutes)
+    {
+        if (route.targetLeaf == indirect.targetLeaf &&
+            route.targetDynamicSlot == indirect.targetIndexListDynamicSlot)
+            return Fail<void>("CompositionToolchain/CompactWorklist",
+                "Compact worklist Slotをdense execution routeと共有できません。");
+    }
     return base::Success<void, Error>();
 }
 }
@@ -586,7 +621,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::to_underlying(artifact::FrozenCompositionAbi2SectionKind::DynamicContract));
     if (!manifestSection || !authoritySection || !dynamicSection)
         return Fail<FrozenCompositionPackage>(
-            "CompositionReader", "SGE4UNI 2.7の必須Sectionがありません。");
+            "CompositionReader", "SGE4UNI 2.8の必須Sectionがありません。");
 
     auto manifestResult = artifact::DeserializeFrozenCompositionAbi2Manifest(
         manifestSection->bytes);
@@ -636,7 +671,7 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
     auto dynamicExecutionMode = dynamic.ReadU32();
     auto dynamicCanonicalMemberBytes = dynamic.ReadU32();
     if (!dynamicSchema || !dynamicUniverse || !dynamicExecutionMode ||
-        !dynamicCanonicalMemberBytes || dynamicSchema.value() != 5 ||
+        !dynamicCanonicalMemberBytes || dynamicSchema.value() != 6 ||
         dynamicUniverse.value() == 0 || dynamicExecutionMode.value() >
             std::to_underlying(DynamicExecutionModeV1::VerifiedDenseSlot))
         return Fail<FrozenCompositionPackage>(
@@ -654,9 +689,14 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
     auto indirectTargetLeaf = dynamic.ReadU32();
     auto indirectTargetCommand = dynamic.ReadU32();
     auto indirectMaxWorkCount = dynamic.ReadU32();
+    auto compactWorklistMode = dynamic.ReadU32();
+    auto targetIndexListDynamicSlot = dynamic.ReadU32();
     if (!indirectMode || !indirectTargetLeaf || !indirectTargetCommand ||
-        !indirectMaxWorkCount || indirectMode.value() >
-            std::to_underlying(IndirectExecutionModeV1::VerifiedDispatch))
+        !indirectMaxWorkCount || !compactWorklistMode ||
+        !targetIndexListDynamicSlot || indirectMode.value() >
+            std::to_underlying(IndirectExecutionModeV1::VerifiedDispatch) ||
+        compactWorklistMode.value() >
+            std::to_underlying(CompactWorklistModeV1::VerifiedU32))
         return Fail<FrozenCompositionPackage>(
             "CompositionReader", "Indirect Dispatch Contract headerが無効です。");
     auto dynamicCompositionIdentity = ReadDigest(dynamic, "CompositionReader/DynamicContract");
@@ -673,7 +713,9 @@ base::Expected<FrozenCompositionPackage, Error> ReadFrozenCompositionPackage(
         std::move(conditionalRegions).value(),
         {static_cast<IndirectExecutionModeV1>(indirectMode.value()),
             LeafPackageId{indirectTargetLeaf.value()}, indirectTargetCommand.value(),
-            indirectMaxWorkCount.value()}};
+            indirectMaxWorkCount.value(),
+            static_cast<CompactWorklistModeV1>(compactWorklistMode.value()),
+            targetIndexListDynamicSlot.value()}};
     auto dynamicValid = ValidateDynamicContract(verified.ValidatedContract(), dynamicContract);
     if (!dynamicValid)
         return Fail<FrozenCompositionPackage>(dynamicValid.error().stage, dynamicValid.error().message);

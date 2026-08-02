@@ -136,6 +136,54 @@ BuildInitialShadows(const composition::DynamicContractV1& contract)
     return base::Success<void, Error>();
 }
 
+[[nodiscard]] base::Expected<void, Error> ValidateCompactWorklist(
+    const composition::FrozenCompositionPackage& package,
+    const dynamic::FrozenDynamicInvocationPackage& invocation,
+    std::span<const composition::LeafPackageId> enabledLeaves)
+{
+    const auto& contract = package.DynamicContract().indirectDispatch;
+    const auto& worklist = invocation.CompactWorklist();
+    if (worklist.mode != contract.compactWorklistMode ||
+        worklist.identity != invocation.Artifact().CompactWorklistIdentityValue() ||
+        dynamic::ComputeCompactWorklistIdentityV1(worklist) != worklist.identity)
+        return Fail<void>("RuntimeSession/CompactWorklist",
+            "Frozen Invocationのcompact worklist identityが契約と一致しません。");
+
+    if (contract.compactWorklistMode == composition::CompactWorklistModeV1::None)
+    {
+        if (worklist.targetLeaf.IsValid() ||
+            worklist.targetDynamicSlot != package::InvalidIndex ||
+            worklist.maxIndexCount != 0 || !worklist.memberIndices.empty())
+            return Fail<void>("RuntimeSession/CompactWorklist",
+                "Compact worklistなしの成果物にindex listが含まれています。");
+        return base::Success<void, Error>();
+    }
+
+    if (contract.compactWorklistMode != composition::CompactWorklistModeV1::VerifiedU32 ||
+        contract.mode != composition::IndirectExecutionModeV1::VerifiedDispatch ||
+        worklist.targetLeaf != contract.targetLeaf ||
+        worklist.targetDynamicSlot != contract.targetIndexListDynamicSlot ||
+        worklist.maxIndexCount != contract.maxWorkCount ||
+        worklist.memberIndices.size() != invocation.IndirectDispatch().workCount ||
+        worklist.memberIndices.size() > worklist.maxIndexCount)
+        return Fail<void>("RuntimeSession/CompactWorklist",
+            "Compact worklist routeまたは件数がComposition契約と一致しません。");
+
+    const auto transition = invocation.Decision().transitionSet.Indices();
+    if (worklist.memberIndices.size() != transition.size() ||
+        !std::equal(worklist.memberIndices.begin(), worklist.memberIndices.end(),
+            transition.begin(), transition.end()))
+        return Fail<void>("RuntimeSession/CompactWorklist",
+            "Compact worklistがexact Transition setと一致しません。");
+    const auto selected = std::binary_search(
+        enabledLeaves.begin(), enabledLeaves.end(), contract.targetLeaf,
+        [](const auto& left, const auto& right) { return left.value < right.value; });
+    if (!selected)
+        return Fail<void>("RuntimeSession/CompactWorklist",
+            "Compact worklistの対象LeafがSeal済みenabled集合に含まれていません。");
+    return base::Success<void, Error>();
+}
+
 [[nodiscard]] base::Expected<std::vector<composition::LeafPackageId>, Error>
 ValidateConditionalExecution(
     const composition::FrozenCompositionPackage& package,
@@ -275,6 +323,10 @@ base::Expected<void, Error> Session::ValidateForSubmission(
         package_, invocation, enabledLeaves.value());
     if (!indirectDispatch)
         return Fail<void>(indirectDispatch.error().stage, indirectDispatch.error().message);
+    auto compactWorklist = ValidateCompactWorklist(
+        package_, invocation, enabledLeaves.value());
+    if (!compactWorklist)
+        return Fail<void>(compactWorklist.error().stage, compactWorklist.error().message);
 
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
     {
@@ -346,6 +398,26 @@ base::Expected<PreparedDynamicExecutionV1, Error> Session::PrepareDynamicExecuti
         prepared.indirectThreadGroupCountX = indirect.threadGroupCountX;
         prepared.indirectThreadGroupCountY = indirect.threadGroupCountY;
         prepared.indirectThreadGroupCountZ = indirect.threadGroupCountZ;
+    }
+
+    const auto& worklist = invocation.CompactWorklist();
+    if (worklist.mode == composition::CompactWorklistModeV1::VerifiedU32)
+    {
+        base::BinaryWriter writer;
+        for (const auto member : worklist.memberIndices) writer.WriteU32(member);
+        const auto remaining = static_cast<std::size_t>(worklist.maxIndexCount) -
+            worklist.memberIndices.size();
+        writer.WriteZeroes(remaining * sizeof(std::uint32_t));
+        prepared.hasCompactWorklist = true;
+        prepared.compactWorklistCount = static_cast<std::uint32_t>(
+            worklist.memberIndices.size());
+        prepared.compactWorklistBinding.enabled = std::binary_search(
+            prepared.enabledLeaves.begin(), prepared.enabledLeaves.end(),
+            worklist.targetLeaf,
+            [](const auto& left, const auto& right) { return left.value < right.value; });
+        prepared.compactWorklistBinding.leaf = worklist.targetLeaf;
+        prepared.compactWorklistBinding.slot = worklist.targetDynamicSlot;
+        prepared.compactWorklistBinding.denseSlotBytes = std::move(writer).Take();
     }
 
     if (contract.executionMode == composition::DynamicExecutionModeV1::AuthorityOnly)
