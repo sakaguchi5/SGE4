@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{3A4FE6BB-ACB6-5E57-A4A1-3219D915EC6A}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{103F37E9-8D53-5D60-B997-EF8A91D78ED5}</UniqueIdentifier></Filter>
+    <Filter Include="Shared Fixture"><UniqueIdentifier>{3C4F20A4-6F0D-571D-A36D-D98E32C4D13A}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="..\..\tests\fixtures\leaf\SemanticBuilder.cpp"><Filter>Shared Fixture</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ArbitrarySparseWorklistFixture.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="..\..\tests\fixtures\leaf\SemanticBuilder.h"><Filter>Shared Fixture</Filter></ClInclude>
+  </ItemGroup>
+</Project>

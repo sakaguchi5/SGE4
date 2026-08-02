@@ -42,4 +42,4 @@
 
 - Generalization 8のCompact Worklistはexact Transition setをCanonical昇順のuint32 member ID列へ写像する。index-list Slotは固定長`universeCount * 4`で、Runtimeは先頭へSeal済みindexをcopyし残りをzero paddingする。
 - Compact Worklistは一つのunconditional Compute Leaf／Commandと一つのindex-list Dynamic Slotに限定する。GPU生成worklist、uint64 index、duplicate index、非Canonical順、複数target、routeごとの独立worklist、Temporal worklistは含まない。
-- Level 5 Vertical Experiment 1の正式結果は`LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md`へ固定した。同実験のprefix限定はGeneralization 8で実行能力として解消するが、任意分布の性能結果はLevel 5垂直実験2で別途測定する必要がある。
+- Level 5 Vertical Experiment 1の正式結果は`LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md`へ固定した。同実験のprefix限定はGeneralization 8で実行能力として解消するが、任意分布の性能結果はLevel 5垂直実験2のWindows／実GPU Evidenceで確定する必要がある。

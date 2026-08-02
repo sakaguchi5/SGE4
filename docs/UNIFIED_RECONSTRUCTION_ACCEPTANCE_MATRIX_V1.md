@@ -105,6 +105,19 @@
 | L5V1-5 | State writer GPU timestamps are recorded in balanced A/B order for four K values | `run_sge4_level5_vertical_experiment.bat` |
 | L5V1-6 | classification is evidence only and Owner decision remains DeferredByOwner | CSV evidence |
 
+
+## Level 5 Vertical Experiment 2
+
+| ID | Acceptance | Gate |
+|---|---|---|
+| L5V2-1 | Dense／Sparse candidates contain identical Schema 17 Leaf set and Composition Contract while only Sparse owns VerifiedU32 Compact Worklist authority | `64_Level5ArbitrarySparseWorklistExperiment` |
+| L5V2-2 | Prefix／Suffix／UniformStride／Clustered4／fixed-seed Random are canonical sorted unique worksets for the same K | `64_Level5ArbitrarySparseWorklistExperiment --warp` |
+| L5V2-3 | Frozen Compact Worklist member IDs equal the requested arbitrary Active／Modified set and drive DispatchIndirect count | `64_Level5ArbitrarySparseWorklistExperiment --warp` |
+| L5V2-4 | State Observation、accepted Temporal Aggregate、packed RGBA32F Texture digest agree before timing samples are accepted | `64_Level5ArbitrarySparseWorklistExperiment --warp` |
+| L5V2-5 | Workset digest／span／contiguous runs／gap metrics and balanced A-B／B-A raw timestamps are preserved in CSV | `run_sge4_level5_arbitrary_sparse_worklist_experiment.bat` |
+| L5V2-6 | Controlled Recovery invalidates old worklist／Temporal state and rebuilds the fixed-seed arbitrary sparse set | `64_Level5ArbitrarySparseWorklistExperiment --warp` |
+| L5V2-7 | classification is evidence only and Owner decision remains DeferredByOwner | CSV evidence |
+
 ## Level 4 Generalization 8
 
 | ID | Acceptance | Gate |

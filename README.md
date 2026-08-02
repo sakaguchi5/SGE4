@@ -1,5 +1,7 @@
-# New SGE4 — Unified Two-Stage Compiler Reconstruction
+﻿# New SGE4 — Unified Two-Stage Compiler Reconstruction
 
+> Level 5 Vertical Experiment 2: Generalization 8のVerified Compact Sparse Worklistを使い、Prefix／Suffix／UniformStride／Clustered4／固定seed乱択の任意疎集合を同一Kで比較する。Dense DirectとSparse Worklistは同じSchema 17 Leaf集合を共有し、State／Temporal／RGBA32F Texture観測同値を先に確認してから、分布とmemory localityがState Writer GPU時間へ与える影響をEvidence化する。Owner decisionは`DeferredByOwner`のままとする。
+>
 > Revision 2.8: Level 4 Generalization 8として`Verified Compact Sparse Worklist`を導入した。exact Transition setをCanonical昇順のuint32 member ID列へ独立再導出し、`SGE4INV 1.6`の必須Compact Worklist SectionへSealする。Runtimeは固定長Dynamic Slotへzero padding付きで物質化し、Dispatch ordinalを任意のverified member IDへ接続する。
 >
 > Level 5 Vertical Experiment 1 Result: `SGE4UNI 2.7`上のDense DirectとVerified Sparse Indirectについて、State／Temporal／Texture／Recoveryの観測同値を確認した。実GPUではActive率1.5625%、6.25%、25%でSparseが全paired sampleに勝ち、100%では同一中央値へ収束した。正式結果は`docs/LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md`へ固定した。
@@ -197,6 +199,7 @@ docs/LEVEL4_GENERALIZATION7_VERIFIED_TEMPORAL_BUFFER_FLOW.md
 docs/LEVEL4_GENERALIZATION8_VERIFIED_COMPACT_SPARSE_WORKLIST.md
 docs/LEVEL5_VERTICAL_EXPERIMENT1_SPARSE_INDIRECT_TEMPORAL_IMAGE.md
 docs/LEVEL5_VERTICAL_EXPERIMENT1_RESULT.md
+docs/LEVEL5_VERTICAL_EXPERIMENT2_ARBITRARY_SPARSE_WORKLIST.md
 ```
 
 ## Build
@@ -211,6 +214,7 @@ Level 5垂直実験はFull Gateとは別のEvidence Runnerで実行します。
 
 ```bat
 run_sge4_level5_vertical_experiment.bat
+run_sge4_level5_arbitrary_sparse_worklist_experiment.bat
 ```
 
 ## Full Gate

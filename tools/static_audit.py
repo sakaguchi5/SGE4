@@ -52,7 +52,7 @@ for p in projects:
         if target_guid is not None and declared is not None and target_guid.text.upper()!=declared.text.upper():
             errors.append(f'Reference GUID mismatch: {p.relative_to(root)} -> {target.relative_to(root)}')
 
-if len(projects)!=19: errors.append(f'Expected 19 projects, found {len(projects)}')
+if len(projects)!=20: errors.append(f'Expected 20 projects, found {len(projects)}')
 if len(product_projects)!=15: errors.append(f'Expected 15 product projects, found {len(product_projects)}')
 if (root/'legacy').exists(): errors.append('legacy/ still exists')
 if (root/'src/internal').exists(): errors.append('src/internal/ still exists')
@@ -389,6 +389,23 @@ if level5_fixture.exists():
     level5_fixture_text=level5_fixture.read_text(encoding='utf-8')
     for token in ('MakeVerifiedRoutedSlotsDynamicContractV1','MakeVerifiedIndirectDispatchContractV1','TemporalHistory','StorageTexture2D'):
         if token not in level5_fixture_text: errors.append(f'Level 5 Vertical Fixture is missing {token}')
+
+# Level 5 Vertical Experiment 2 consumes Generalization 8 without changing Product ABI.
+level5_v2_project=root/'experiments/64_Level5ArbitrarySparseWorklistExperiment/64_Level5ArbitrarySparseWorklistExperiment.vcxproj'
+level5_v2_main=root/'experiments/64_Level5ArbitrarySparseWorklistExperiment/main.cpp'
+level5_v2_fixture=root/'experiments/64_Level5ArbitrarySparseWorklistExperiment/ArbitrarySparseWorklistFixture.h'
+level5_v2_runner=root/'run_sge4_level5_arbitrary_sparse_worklist_experiment.bat'
+level5_v2_doc=root/'docs/LEVEL5_VERTICAL_EXPERIMENT2_ARBITRARY_SPARSE_WORKLIST.md'
+for required_path in (level5_v2_project, level5_v2_main, level5_v2_fixture, level5_v2_runner, level5_v2_doc):
+    if not required_path.exists(): errors.append(f'Missing Level 5 Vertical Experiment 2 file: {required_path.relative_to(root)}')
+if level5_v2_main.exists():
+    level5_v2_text=level5_v2_main.read_text(encoding='utf-8')
+    for token in ('Dense Direct + identity index list','Verified Compact Sparse Worklist','UniformStride','Clustered4','SeededRandom','DeferredByOwner','VerifyControlledRecovery'):
+        if token not in level5_v2_text: errors.append(f'Level 5 Vertical Experiment 2 is missing {token}')
+if level5_v2_fixture.exists():
+    level5_v2_fixture_text=level5_v2_fixture.read_text(encoding='utf-8')
+    for token in ('CompactIndices','MakeVerifiedCompactWorklistDispatchContractV1','MakeVerifiedRoutedSlotsDynamicContractV1','TemporalHistory','StorageTexture2D'):
+        if token not in level5_v2_fixture_text: errors.append(f'Level 5 Vertical Experiment 2 Fixture is missing {token}')
 
 if errors:
     print('New SGE4静的監査に失敗しました')

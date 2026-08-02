@@ -40,6 +40,8 @@ Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "62_UnifiedMigrationAcceptan
 EndProject
 Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "63_Level5VerticalExperiment", "experiments\63_Level5VerticalExperiment\63_Level5VerticalExperiment.vcxproj", "{8DF35A80-ED87-56C0-8A2F-930E890E89B0}"
 EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "64_Level5ArbitrarySparseWorklistExperiment", "experiments\64_Level5ArbitrarySparseWorklistExperiment\64_Level5ArbitrarySparseWorklistExperiment.vcxproj", "{453AC3A6-B0EB-5EB5-8BFA-99846D77151D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -122,6 +124,10 @@ Global
 		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Debug|x64.Build.0 = Debug|x64
 		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Release|x64.ActiveCfg = Release|x64
 		{8DF35A80-ED87-56C0-8A2F-930E890E89B0}.Release|x64.Build.0 = Release|x64
+		{453AC3A6-B0EB-5EB5-8BFA-99846D77151D}.Debug|x64.ActiveCfg = Debug|x64
+		{453AC3A6-B0EB-5EB5-8BFA-99846D77151D}.Debug|x64.Build.0 = Debug|x64
+		{453AC3A6-B0EB-5EB5-8BFA-99846D77151D}.Release|x64.ActiveCfg = Release|x64
+		{453AC3A6-B0EB-5EB5-8BFA-99846D77151D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

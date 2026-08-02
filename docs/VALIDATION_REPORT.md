@@ -23,7 +23,7 @@ Compact Worklist Section: schema 1
 
 ## Validation completed in this environment
 
-- `tools/static_audit.py`: passed; 19 projects, 15 product projects, 47 active translation units, 40 carried invariants.
+- `tools/static_audit.py`: passed; 20 projects, 15 product projects, 47 active translation units, 40 carried invariants.
 - C++23 strict syntax checks passed for all modified portable Product sources.
 - C++23 strict syntax checks passed for Architecture tests, ABI corruption tests, D3D12 Runtime facade, and Windows qualification source.
 - Project／filters ownership for the new `DynamicExecutionContract.h` passed.
@@ -469,3 +469,20 @@ Windows統合設計試験で、Compact Worklist契約を持たない既存Invoca
 `CompactWorklistModeV1::VerifiedU32`の場合だけexact Transition setとのmember列一致を要求し、`None`の場合はExpected None Worklistとのshape／identity照合だけを行うよう修正した。
 
 Portable C++23 Debug／Release相当回帰Harnessで、Authority-only `{0,2,7}`とVerifiedU32 `{1,4,7}`の双方が通過することを確認した。ABI、Planner、Runtime、資格Fixtureの意味は変更していない。
+
+## Level 5 Vertical Experiment 2 — Arbitrary Sparse Worklist
+
+- Product ABIは`SGE4UNI 2.8`／`SGE4INV 1.6`のまま変更しない。
+- 20番目のSolution projectとして`64_Level5ArbitrarySparseWorklistExperiment`を追加した。Product projectは15のままである。
+- Dense DirectとVerified Compact Sparse Worklistは同じ4個のSchema 17 Leaf Package、同じComposition Contract、同じResource graphを共有する。
+- State Writerは両候補ともDynamic State Slot 0、uint32 Index Slot 1、State Outputを使用する。Denseはidentity index listでUniverse全体を直接Dispatchし、SparseはSGE4INV 1.6のCompact Worklistとverified DispatchIndirectを使用する。
+- Prefix／Suffix／UniformStride／Clustered4／固定seed乱択の5分布を、Universe/64、Universe/16、Universe/4の3密度で測定する。
+- Workset SHA-256、span、contiguous run数、平均gap、最大gapをraw timestampと同じCSVへ記録する。
+- State／Temporal／RGBA32F Textureの候補同値とControlled Recoveryを確認したsampleだけを測定証拠として受理する。
+- Portable C++23 strict syntax、Solution／vcxproj XML、静的Architecture監査、Source Manifest照合を実施する。MSVC、HLSL、WARP、実GPU timestampの最終結果はWindows Runnerで確定する。
+
+実行入口:
+
+```bat
+run_sge4_level5_arbitrary_sparse_worklist_experiment.bat
+```
